@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: sc.fiji:Image_5D:2.0.3-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/sc/fiji/Image_5D/2.0.3-SNAPSHOT/Image_5D-2.0.3-20170430.035022-1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/sc/fiji/Image_5D/2.0.3-SNAPSHOT/Image_5D-2.0.3-20170430.035022-1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/sc/fiji/Image_5D/2.0.3-SNAPSHOT/Image_5D-2.0.3-20170430.035022-1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
