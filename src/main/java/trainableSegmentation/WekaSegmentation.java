@@ -341,6 +341,16 @@ public class WekaSegmentation {
 		return rois;
 	}
 
+	public ArrayList< Example > getExamples()
+	{
+		return examples;
+	}
+
+	public void setExamples( ArrayList< Example > examples )
+	{
+		this.examples = examples;
+	}
+
 	public int getNumExamples(int classNum)
 	{
 		int n =0 ;
@@ -353,6 +363,20 @@ public class WekaSegmentation {
 		}
 		return n;
 	}
+
+
+	public int getNumClassesInExamples()
+	{
+		Set<Integer> classNums = new HashSet<>();
+
+		for ( Example example : examples )
+		{
+			classNums.add(example.classNum);
+		}
+		return classNums.size();
+	}
+
+
 
 	/**
 	 * Set flag to homogenize classes before training
@@ -400,13 +424,8 @@ public class WekaSegmentation {
 	 */
 	public void addClass()
 	{
-		/*
-		if(null != trainingImage)
-			for(int i=1; i <= trainingImage.getImageStackSize(); i++)
-				examples[i-1].add(new ArrayList<Roi>());
-		*/
 		// increase number of available classes
-		numOfClasses ++;
+		numOfClasses++;
 	}
 
 	/**
@@ -3164,7 +3183,6 @@ public class WekaSegmentation {
 			}
 		}
 
-
 		// Check if classes match
 		Attribute classAttribute = data.classAttribute();
 		Enumeration<Object> classValues  = classAttribute.enumerateValues();
@@ -3604,18 +3622,19 @@ public class WekaSegmentation {
 
 		// Create feature stack if necessary (training from traces
 		// and the features stack is empty or the settings changed)
-		if( nonEmpty > 1 || updateFeatures )
+		if( updateFeatures )
 		{
 			IJ.showStatus("Creating feature stack...");
 			IJ.log("Creating feature stack...");
 
 			// TODO: here, different FeatureImages can be initalized depending on the algorithm
 			featureImages = new FeatureImagesMultiResolution( trainingImage );
+			featureImages.setMaximumSigma( maximumSigma );
 
 			// set the reference slice to one with traces
 			featureImages.setReference(sliceWithTraces);
 
-			if( !featureImages.updateFeaturesMT() )
+			if( ! featureImages.updateFeaturesMT() )
 			{
 				IJ.log("Features were not updated.");
 				IJ.showStatus("Feature stack 3D was not updated.");
@@ -5085,7 +5104,7 @@ public class WekaSegmentation {
 						new ReusableDenseInstance( 1.0, values );
 				ins.setDataset(dataInfo);
 
-				long tStart, durationFeatureFetching = 0 , durationRandomForrest = 0;
+				long tStart, durationFeatureFetching = 0 , durationRandomForest = 0;
 
 				int slicePrevious = -1;
 
@@ -5108,7 +5127,25 @@ public class WekaSegmentation {
 
 						if ( slice != slicePrevious )
 						{
-							IJ.log( "Classifying slice " + slice );
+							if( slicePrevious > 0 )
+							{
+								counter.getAndAdd(1);
+								String[] logs = IJ.getLog().split("\n");
+								if ( logs[logs.length-1].contains("Slices classified") )
+								{
+									IJ.log( "\\Update:Slices classified: "+ counter +
+									"; Feature fetching [s] " +
+											Math.round( (double)durationFeatureFetching/1000000000L ) +
+									"; Random Forest [s] " +
+													Math.round( (double)durationRandomForest/1000000000L )
+									);
+								}
+								else
+								{
+									IJ.log( "Slices classified: " + counter );
+								}
+							}
+
 
 							if (Thread.currentThread().isInterrupted())
 								return null;
@@ -5134,7 +5171,8 @@ public class WekaSegmentation {
 						{
 							classificationResult[0][i] = classifier.classifyInstance( ins );
 						}
-						durationRandomForrest += ( System.nanoTime() - tStart );
+
+						durationRandomForest += ( System.nanoTime() - tStart );
 
 					}
 					catch(Exception e)
@@ -5146,8 +5184,8 @@ public class WekaSegmentation {
 					}
 				}
 
-				IJ.log( "Duration feature fetching [s]: " + Math.round( (double)durationFeatureFetching/1000000000L ) );
-				IJ.log( "Duration random forrest [s]: " + Math.round( (double) durationRandomForrest/1000000000L ) );
+				//IJ.log( "Duration feature fetching [s]: " + Math.round( (double)durationFeatureFetching/1000000000L ) );
+				//IJ.log( "Duration random forrest [s]: " + Math.round( (double) durationRandomForest/1000000000L ) );
 
 
 				return classificationResult;
@@ -5257,7 +5295,7 @@ public class WekaSegmentation {
 	public void setMaximumSigma(float sigma)
 	{
 		maximumSigma = sigma;
-		featureImages.setMaximumSigma(sigma);
+		featureImages.setMaximumSigma( sigma );
 	}
 
 	/**
@@ -5409,7 +5447,7 @@ public class WekaSegmentation {
 	 */
 	public boolean[] getEnabledFeatures()
 	{
-		return new boolean[2];
+		return new boolean[]{true, true};
 	}
 
 	/**

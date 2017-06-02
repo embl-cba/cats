@@ -53,11 +53,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -141,7 +137,7 @@ public class Weka_Segmentation implements PlugIn
 	/** GUI window */
 	private CustomWindow win = null;
 	/** number of classes in the GUI */
-	private int numOfClasses = 3;
+	private int numOfClasses = 2;
 	/** array of number of traces per class */
 	private int[] traceCounter = new int[WekaSegmentation.MAX_NUM_CLASSES];
 	/** flag to display the overlay image */
@@ -165,10 +161,16 @@ public class Weka_Segmentation implements PlugIn
 	private JButton loadClassifierButton = null;
 	/** save classifier button */
 	private JButton saveClassifierButton = null;
+	/** load annotations button */
+	private JButton loadAnnotationsButton = null;
+	/** save annotations button */
+	private JButton saveAnnotationsButton = null;
 	/** load data button */
 	private JButton loadDataButton = null;
 	/** save data button */
 	private JButton saveDataButton = null;
+
+
 	/** settings button */
 	private JButton settingsButton = null;
 	/** Weka button */
@@ -217,6 +219,10 @@ public class Weka_Segmentation implements PlugIn
 	public static final String LOAD_DATA = "loadData";
 	/** name of the macro method to save the current data into an ARFF file */
 	public static final String SAVE_DATA = "saveData";
+	/** name of the macro method to load data from an ARFF file */
+	public static final String LOAD_ANNOTATIONS = "loadAnnotations";
+	/** name of the macro method to save the current data into an ARFF file */
+	public static final String SAVE_ANNOTATIONS = "saveAnnotations";
 	/** name of the macro method to create a new class */
 	public static final String CREATE_CLASS = "createNewClass";
 	/** name of the macro method to launch the Weka Chooser */
@@ -339,6 +345,12 @@ public class Weka_Segmentation implements PlugIn
 		saveDataButton.setToolTipText("Save current segmentation into an ARFF file");
 		saveDataButton.setEnabled(false);
 
+		loadAnnotationsButton = new JButton ("Load annotations");
+		loadAnnotationsButton.setEnabled(true);
+
+		saveAnnotationsButton = new JButton ("Save annotations");
+		saveAnnotationsButton.setEnabled(false);
+
 		addClassButton = new JButton ("Create new class");
 		addClassButton.setToolTipText("Add one more label to mark different areas");
 
@@ -415,6 +427,12 @@ public class Weka_Segmentation implements PlugIn
 					}
 					else if(e.getSource() == saveDataButton){
 						saveTrainingData();
+					}
+					else if(e.getSource() == loadAnnotationsButton){
+						loadAnnotations();
+					}
+					else if(e.getSource() == saveAnnotationsButton){
+						saveAnnotations();
 					}
 					else if(e.getSource() == addClassButton){
 						addNewClass();
@@ -654,6 +672,8 @@ public class Weka_Segmentation implements PlugIn
 			saveClassifierButton.addActionListener(listener);
 			loadDataButton.addActionListener(listener);
 			saveDataButton.addActionListener(listener);
+			loadAnnotationsButton.addActionListener(listener);
+			saveAnnotationsButton.addActionListener(listener);
 			addClassButton.addActionListener(listener);
 			settingsButton.addActionListener(listener);
 			wekaButton.addActionListener(listener);
@@ -823,6 +843,10 @@ public class Weka_Segmentation implements PlugIn
 			optionsConstraints.gridy++;
 			optionsJPanel.add(saveDataButton, optionsConstraints);
 			optionsConstraints.gridy++;
+			optionsJPanel.add(loadAnnotationsButton, optionsConstraints);
+			optionsConstraints.gridy++;
+			optionsJPanel.add(saveAnnotationsButton, optionsConstraints);
+			optionsConstraints.gridy++;
 			optionsJPanel.add(addClassButton, optionsConstraints);
 			optionsConstraints.gridy++;
 			optionsJPanel.add(settingsButton, optionsConstraints);
@@ -925,12 +949,14 @@ public class Weka_Segmentation implements PlugIn
 					saveClassifierButton.removeActionListener(listener);
 					loadDataButton.removeActionListener(listener);
 					saveDataButton.removeActionListener(listener);
+					loadAnnotationsButton.removeActionListener(listener);
+					saveAnnotationsButton.removeActionListener(listener);
 					addClassButton.removeActionListener(listener);
 					settingsButton.removeActionListener(listener);
 					wekaButton.removeActionListener(listener);
 
-					// Set number of classes back to 3
-					wekaSegmentation.setNumOfClasses(3);
+					// Set number of classes back to 2
+					wekaSegmentation.setNumOfClasses(2);
 				}
 			});
 
@@ -998,6 +1024,8 @@ public class Weka_Segmentation implements PlugIn
 			for(int i = 0; i < wekaSegmentation.getNumClasses(); i++)
 			{
 				exampleList[i].removeAll();
+				exampleList[i].addActionListener(listener);
+				exampleList[i].addItemListener(itemListener);
 				for(int j = 0; j < wekaSegmentation.getExampleRois(i, z, t).size(); j++)
 					exampleList[i].add("trace " + j + " (Z=" + z+" T="+t+")");
 			}
@@ -1110,6 +1138,7 @@ public class Weka_Segmentation implements PlugIn
 			saveClassifierButton.setEnabled(s);
 			loadDataButton.setEnabled(s);
 			saveDataButton.setEnabled(s);
+			saveAnnotationsButton.setEnabled(s);
 			addClassButton.setEnabled(s);
 			settingsButton.setEnabled(s);
 			wekaButton.setEnabled(s);
@@ -1171,6 +1200,8 @@ public class Weka_Segmentation implements PlugIn
 				boolean loadedTrainingData = null != wekaSegmentation.getLoadedTrainingData();
 
 				saveDataButton.setEnabled(!examplesEmpty || loadedTrainingData);
+				saveAnnotationsButton.setEnabled( !examplesEmpty );
+
 
 				for(int i = 0 ; i < wekaSegmentation.getNumClasses(); i++)
 				{
@@ -1261,7 +1292,7 @@ public class Weka_Segmentation implements PlugIn
 		//get current image
 		if (null == WindowManager.getCurrentImage())
 		{
-			trainingImage = IJ.openImage();
+			trainingImage = IJ.openImage(); // this implicitely gets the open="..." filePath
 			if (null == trainingImage) return; // user canceled open dialog
 		}
 		else
@@ -1282,15 +1313,19 @@ public class Weka_Segmentation implements PlugIn
 		wekaSegmentation.setTrainingImage(trainingImage);
 		
 		displayImage = trainingImage; //.duplicate();
-		displayImage.setSlice( trainingImage.getSlice() );
-		displayImage.setTitle( Weka_Segmentation.PLUGIN_NAME + " " + Weka_Segmentation.PLUGIN_VERSION );
+		displayImage.setSlice(trainingImage.getSlice());
+		displayImage.setTitle(Weka_Segmentation.PLUGIN_NAME + " " + Weka_Segmentation.PLUGIN_VERSION);
+
+
+		wekaSegmentation.setMaximumSigma(Math.min(81f, (float) trainingImage.getWidth() / 4));
 
 		ij.gui.Toolbar.getInstance().setTool(ij.gui.Toolbar.FREELINE);
 
 		//Build GUI
 		SwingUtilities.invokeLater(
 				new Runnable() {
-					public void run() {
+					public void run()
+					{
 						win = new CustomWindow(displayImage);
 						win.pack();
 					}
@@ -1399,13 +1434,19 @@ public class Weka_Segmentation implements PlugIn
 				//delete item from ROI
 				int index = exampleList[iClass].getSelectedIndex();
 
+				List<Roi> exampleRois = wekaSegmentation.getExampleRois(
+						iClass,
+						displayImage.getZ(),
+						displayImage.getT());
+
+				Roi selectedRoi = exampleRois.get(index);
+
 				// kill Roi from displayed image
 				if(displayImage.getRoi().equals( 
-						wekaSegmentation.getExampleRois(
-								iClass,
-								displayImage.getT(),
-								displayImage.getZ()).get(index) ))
+						selectedRoi ))
+				{
 					displayImage.killRoi();
+				}
 
 				// delete item from the list of ROIs of that class and slice
 				wekaSegmentation.deleteExample(
@@ -1573,14 +1614,14 @@ public class Weka_Segmentation implements PlugIn
 	{
 		boolean aux = ImageConverter.getDoScaling();
 		
-		ImageConverter.setDoScaling( false );
+		ImageConverter.setDoScaling(false);
 		
 		if( image.getImageStackSize() > 1)			
 			(new StackConverter( image )).convertToGray8();
 		else
 			(new ImageConverter( image )).convertToGray8();
 		
-		ImageConverter.setDoScaling( aux );
+		ImageConverter.setDoScaling(aux);
 	}
 	
 	/**
@@ -1629,9 +1670,9 @@ public class Weka_Segmentation implements PlugIn
 		
 		if(null == data)
 		{
-			IJ.error( "Error in plot result", 
+			IJ.error("Error in plot result",
 					"No data available yet to plot results: you need to trace\n"
-					+ "some training samples or load data from file." );
+							+ "some training samples or load data from file.");
 			win.updateButtonsEnabling();
 			return;
 		}
@@ -1677,7 +1718,7 @@ public class Weka_Segmentation implements PlugIn
 		}
 		String plotName = vmc.getName();
 		JFrame jf = new JFrame("Weka Classifier Visualize: "+plotName);
-		jf.setSize(500,400);
+		jf.setSize(500, 400);
 		jf.getContentPane().setLayout(new BorderLayout());
 		jf.getContentPane().add(vmc, BorderLayout.CENTER);
 		jf.setVisible(true);
@@ -1908,7 +1949,8 @@ public class Weka_Segmentation implements PlugIn
 			return;
 		}
 
-		IJ.log("Read header from " + od.getDirectory() + od.getFileName() + " (number of attributes = " + wekaSegmentation.getTrainHeader().numAttributes() + ")");
+		IJ.log("Read header from " + od.getDirectory() + od.getFileName() + " (number of attributes = " +
+				wekaSegmentation.getTrainHeader().numAttributes() + ")");
 
 		if(wekaSegmentation.getTrainHeader().numAttributes() < 1)
 		{
@@ -2116,6 +2158,98 @@ public class Weka_Segmentation implements PlugIn
 		
 		win.updateButtonsEnabling();
 	}
+
+
+	/**
+	 * Load annotations from a file
+	 */
+	public void loadAnnotations()
+	{
+		OpenDialog od = new OpenDialog("Choose data file", OpenDialog.getLastDirectory(), "annotations.ser");
+		if (od.getFileName()==null)
+			return;
+
+		// Macro recording
+		String[] arg = new String[] { od.getDirectory() + od.getFileName() };
+		record(SAVE_ANNOTATIONS, arg);
+
+		win.setButtonsEnabled(false);
+
+		try
+		{
+			FileInputStream fin = new FileInputStream(od.getDirectory() + od.getFileName());
+			ObjectInputStream ois = new ObjectInputStream(fin);
+			ArrayList < Example > examples = (ArrayList < Example >) ois.readObject();
+			wekaSegmentation.setExamples(examples);
+			wekaSegmentation.setNumOfClasses(0);
+
+			int numClassesInExamples = wekaSegmentation.getNumClassesInExamples();
+			for ( int c = 1; c <= numClassesInExamples; c++ )
+			{
+				wekaSegmentation.setClassLabel(wekaSegmentation.getNumClasses(), "class " + c);
+				wekaSegmentation.addClass();
+
+				if ( c > numOfClasses )
+				{
+					win.addClass();
+				}
+
+			}
+
+			repaintWindow();
+			win.updateExampleLists();
+
+		}
+		catch (IOException e)
+		{
+			IJ.showMessage(e.toString());
+		}
+		catch (ClassNotFoundException e)
+		{
+			e.printStackTrace();
+		}
+
+		win.updateButtonsEnabling();
+	}
+
+
+
+	/**
+	 * Save annotations into a file
+	 */
+	public void saveAnnotations()
+	{
+		SaveDialog sd = new SaveDialog("Choose save file", "annotations",".ser");
+		if (sd.getFileName()==null)
+			return;
+
+		// Macro recording
+		String[] arg = new String[] { sd.getDirectory() + sd.getFileName() };
+		record(SAVE_ANNOTATIONS, arg);
+
+		win.setButtonsEnabled(false);
+
+		try
+		{
+			FileOutputStream fout = new FileOutputStream(sd.getDirectory() + sd.getFileName());
+			ObjectOutputStream oos = new ObjectOutputStream(fout);
+			oos.writeObject( wekaSegmentation.getExamples() );
+		}
+		catch (Exception e)
+		{
+			IJ.showMessage(e.toString());
+		}
+
+
+		//
+		//if( ! saveAnnotations(sd.getDirectory() + sd.getFileName()) )
+		//	IJ.showMessage("Saving failed");
+		//
+
+		win.updateButtonsEnabling();
+	}
+
+
 
 
 	/**
@@ -2408,7 +2542,7 @@ public class Weka_Segmentation implements PlugIn
 			wekaSegmentation.setFeaturesDirty();
 		}
 		else	// This checks if the feature stacks were updated while using the save feature stack button
-			if( !wekaSegmentation.getFeatureImages().isEmpty()
+			if( ! wekaSegmentation.getFeatureImages().isEmpty()
 					&& wekaSegmentation.getFeatureImages().getReferenceSliceIndex() != -1)
 				wekaSegmentation.setUpdateFeatures(false);
 
@@ -2541,16 +2675,18 @@ public class Weka_Segmentation implements PlugIn
 	 * @param nSlice string representing the slice number
 	 * @param index string representing the index of the trace to remove
 	 */
-	public static void deleteTrace(
+	public void deleteTrace(
 			String classNum,
 			String nSlice,
 			String nTimePoint,
 			String index)
 	{
-		final ImageWindow iw = WindowManager.getCurrentImage().getWindow();
-		if( iw instanceof CustomWindow )
-		{
-			final CustomWindow win = (CustomWindow) iw;
+		//final ImageWindow iw = WindowManager.getCurrentImage().getWindow();
+
+		//if( iw instanceof CustomWindow )
+		//{
+		//	final CustomWindow win = (CustomWindow) iw;
+
 			final WekaSegmentation wekaSegmentation = win.getWekaSegmentation();
 			wekaSegmentation.deleteExample(Integer.parseInt(classNum),
 					Integer.parseInt(nSlice),
@@ -2559,7 +2695,7 @@ public class Weka_Segmentation implements PlugIn
 			win.getDisplayImage().killRoi();
 			win.drawExamples();
 			win.updateExampleLists();
-		}
+		//}
 	}
 
 	/**
@@ -2909,7 +3045,6 @@ public class Weka_Segmentation implements PlugIn
 
 			// Add new class label and list
 			win.addClass();
-
 			win.updateAddClassButtons();
 		}
 	}

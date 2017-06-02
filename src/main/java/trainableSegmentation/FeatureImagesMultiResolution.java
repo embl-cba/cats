@@ -163,7 +163,7 @@ public class FeatureImagesMultiResolution implements FeatureImages
         width = image.getWidth();
         height = image.getHeight();
         originalImage = image;
-        originalImage.setTitle("O");
+        originalImage.setTitle("Orig");
 
     }
 
@@ -317,6 +317,10 @@ public class FeatureImagesMultiResolution implements FeatureImages
                     channel.getImageStack().addSlice("pad-back", channels[ch].getImageStack().getProcessor( channels[ ch ].getImageStackSize()));
                     channel.getImageStack().addSlice("pad-front", channels[ch].getImageStack().getProcessor( 1 ), 1);
 
+                    // TODO:
+                    // - replace by multi-threaded version:
+                    // https://github.com/hanslovsky/imglib2-algorithm-hessian-examples/blob/master/src/main/java/de/hanslovsky/examples/Hessian3D.java
+
                     final ArrayList<ImagePlus> result = ImageScience.computeHessianImages(sigma, absolute, channel);
                     final ImageStack smallest = result.get(0).getImageStack();
                     final ImageStack middle   = result.get(1).getImageStack();
@@ -329,9 +333,9 @@ public class FeatureImagesMultiResolution implements FeatureImages
                     largest.deleteLastSlice();
                     largest.deleteSlice(1);
 
-                    results[ ch ].add(new ImagePlus("HL_" + originalImage.getTitle(), smallest));
-                    results[ ch ].add(new ImagePlus("HM_" + originalImage.getTitle(), middle));
-                    results[ ch ].add(new ImagePlus("HS_" + originalImage.getTitle(), largest ) );
+                    results[ ch ].add(new ImagePlus("HessL_" + originalImage.getTitle(), smallest));
+                    results[ ch ].add(new ImagePlus("HessM_" + originalImage.getTitle(), middle));
+                    results[ ch ].add(new ImagePlus("HessS_" + originalImage.getTitle(), largest ) );
                 }
 
                 return mergeResultChannels(results);
@@ -484,9 +488,9 @@ public class FeatureImagesMultiResolution implements FeatureImages
                     largest.deleteLastSlice();
                     largest.deleteSlice(1);
 
-                    results[ ch ].add( new ImagePlus("SL_" + originalImage.getTitle(), largest ) );
-                    results[ ch ].add( new ImagePlus("SM_" + originalImage.getTitle(), middle ) );
-                    results[ ch ].add( new ImagePlus("SS_" + originalImage.getTitle(), smallest ) );
+                    results[ ch ].add( new ImagePlus("StrucL_" + originalImage.getTitle(), largest ) );
+                    results[ ch ].add( new ImagePlus("StrucM_" + originalImage.getTitle(), middle ) );
+                    results[ ch ].add( new ImagePlus("StrucS_" + originalImage.getTitle(), smallest ) );
 
                 }
 
@@ -560,15 +564,14 @@ public class FeatureImagesMultiResolution implements FeatureImages
         return;
     }
 
-
     public void setMinimumSigma( double sigma )
     {
-
+        minimumSigma = (float) sigma;
     }
 
     public void setMaximumSigma( double sigma )
     {
-
+        maximumSigma = (float) sigma;
     }
 
     /**
@@ -732,11 +735,11 @@ public class FeatureImagesMultiResolution implements FeatureImages
         }*/
 
 
-        multiResolutionFeatureImages = new ArrayList<ArrayList<ArrayList<ImagePlus>>>();
+        multiResolutionFeatureImages = new ArrayList<>();
 
         for ( int frame = 1 ; frame <= originalImage.getNFrames() ; frame++ )
         {
-            multiResolutionFeatureImages.add(new ArrayList<ArrayList<ImagePlus>>());
+            multiResolutionFeatureImages.add(new ArrayList<>());
         }
 
 
@@ -748,132 +751,138 @@ public class FeatureImagesMultiResolution implements FeatureImages
         calibration.setUnit("um");
         originalImage.setCalibration(calibration);
 
-        // Add original image to first resolution layer
-        ArrayList<ImagePlus> singleResolutionFeatureImages = new ArrayList<ImagePlus>();
-        singleResolutionFeatureImages.add( originalImage );
-        multiResolutionFeatureImages.get(t).add( singleResolutionFeatureImages );
 
-        int currentIndex = 0;
         IJ.showStatus("Updating features...");
 
         try{
 
-            int numScales = 3; // 3,9,27,81
+            int scalingFactor = 3;
+
+            int numScales = (int) Math.ceil( Math.log( maximumSigma ) / Math.log(scalingFactor) );
+
+            int[] binning = new int[3];
 
             // loop through resolutions
             for ( int iScale = 0; iScale < numScales; iScale++ )
             {
-                IJ.log("Resolution level "+(iScale+1));
-
-                ArrayList<ImagePlus> featureImagesPreviousResolution =
-                        multiResolutionFeatureImages.get( t ).get( iScale );
+                IJ.log("# Resolution level "+iScale);
 
                 final ArrayList<ImagePlus> featureImagesThisResolution = new ArrayList<>();
+                final ArrayList<ImagePlus> featureImagesPreviousResolution;
 
-                // determine binning for this resolution layer
-                int[] binning = new int[3];
+                int nOriginalImages = 0;
 
-                binning[0] = 3; // x-binning
-                binning[1] = 3; // y-binning
-
-                if ( originalImage.getNSlices() > 1 )
+                if ( iScale == 0)
                 {
-                    // don't bin in z if there are much less slices
-                    int previousResolutionWidth = featureImagesPreviousResolution.get(0).getWidth();
-                    int previousResolutionDepth = featureImagesPreviousResolution.get(0).getNSlices();
-                    if ( previousResolutionWidth > 3 * previousResolutionDepth )
-                    {
-                        binning[2] = 1; // no z-binning
-                    }
-                    else
-                    {
-                        binning[2] = 3; // z-binning
-                    }
+                    featureImagesPreviousResolution = null;
+
+                    // add original image
+                    featureImagesThisResolution.add( originalImage );
+                    nOriginalImages++;
+
                 }
                 else
                 {
-                    binning[2] = 1; // no z-binning
-                }
 
-                // add average binning of raw data as 1st feature image
-                // in order to compute features in the next resolution layer
-                ImagePlus avgBinnedOrigPrevResolution = featureImagesPreviousResolution.get(0);
-                featureImagesThisResolution.add( bin(avgBinnedOrigPrevResolution, binning, new Binner().AVERAGE) );
+                    featureImagesPreviousResolution = multiResolutionFeatureImages.get( t ).get( iScale - 1 );
 
-                // max-pooling and min-pooling of all (non-structure eigenvalue) images of the previous resolution layer
-                // in order to represent distances to image features at different scales
-                for ( final ImagePlus featureImagePreviousResolution : featureImagesPreviousResolution )
-                {
+                    setBinning( featureImagesPreviousResolution.get(0), scalingFactor, binning );
 
-                    String title = featureImagePreviousResolution.getTitle();
-
-                    // don't overdo it...
-                    if ( ! ( title.contains("Max_Max_") || title.contains("Min_Min_") ) )
+                    for ( ImagePlus featureImage : featureImagesPreviousResolution )
                     {
-                        // don't do Max_Min as this seems not so useful
-                        if ( title.contains("Max_") )
-                        {
-                            featureImagesThisResolution.add(
-                                    bin( featureImagePreviousResolution, binning, new Binner().MAX) );
-                        }
 
-                        // don't do Min_Max as this seems not so useful
-                        if ( title.contains("Min_") )
+                        String title = featureImage.getTitle();
+
+                        // (further) bin only original (could be also features)
+
+                        if ( ! title.contains("Hess") )
                         {
-                            // Structure tensor eigenvalues are positive => no min-pooling
-                            if (!title.contains("_S"))
+                            if ( ! ( title.contains("Max") || title.contains("Min") ) )
                             {
+                                // ... and add this as the first feature image
                                 featureImagesThisResolution.add(
-                                        bin( featureImagePreviousResolution, binning, new Binner().MIN) );
+                                        bin( featureImage, binning, new Binner().AVERAGE) );
+                                nOriginalImages++;
                             }
+
+                            if ( ! ( title.contains("Avg") || title.contains("Min") ) )
+                            {
+                                // ... and add this as the first feature image
+                                featureImagesThisResolution.add(
+                                        bin( featureImage, binning, new Binner().MAX) );
+                                nOriginalImages++;
+                            }
+
+                            if ( ! ( title.contains("Avg") || title.contains("Max")) )
+                            {
+                                // ... and add this as the first feature image
+                                featureImagesThisResolution.add(
+                                        bin( featureImage, binning, new Binner().MIN) );
+                                nOriginalImages++;
+                            }
+
                         }
 
                     }
+
                 }
 
+                Calibration calibrationThisResolution = featureImagesThisResolution.get( 0 ).getCalibration().copy();
+
+
                 // compute new features
-
-                // temporarily remove calibration while computing the features
-                Calibration calibration1 = avgBinnedOrigPrevResolution.getCalibration().copy();
-                removeCalibration( avgBinnedOrigPrevResolution );
-
-                if (Thread.currentThread().isInterrupted())
-                    return false;
-
+                //
                 final ArrayList<Future<ArrayList<ImagePlus>>> futures = new ArrayList<Future<ArrayList<ImagePlus>>>();
 
-                // Hessian
-                boolean absoluteValues = false;
-                futures.add( exe.submit( getHessian( avgBinnedOrigPrevResolution, 1, absoluteValues )) );
+                for ( int iOriginalImage = 0 ; iOriginalImage < nOriginalImages ; iOriginalImage++ )
+                {
 
-                // Structure tensor
-                // https://en.wikipedia.org/wiki/Structure_tensor
-                // https://imagescience.org/meijering/software/featurej/structure/
-                float integrationScale = 1; // TODO: is that correct?
-                futures.add( exe.submit( getStructure( avgBinnedOrigPrevResolution, 1, integrationScale)) );
+                    if (Thread.currentThread().isInterrupted())
+                        return false;
 
-                // put calibration back
-                avgBinnedOrigPrevResolution.setCalibration(calibration1);
+                    // get the binned images from previous resolution layer to compute new features on
+                    ImagePlus originalImageThisResolution = featureImagesThisResolution.get( iOriginalImage );
 
-                // Wait for jobs to be done
+                    // temporarily remove calibration while computing features
+                    removeCalibration( originalImageThisResolution );
+
+                    // hessian
+                    boolean absoluteValues = false;
+                    futures.add( exe.submit( getHessian( originalImageThisResolution, 1, absoluteValues ) ) );
+
+
+                    // Structure tensor
+                    //
+                    // https://en.wikipedia.org/wiki/Structure_tensor
+                    // https://imagescience.org/meijering/software/featurej/structure/
+                    //float integrationScale = 1; // TODO: is that correct?
+                    //futures.add(exe.submit(getStructure(originalImageThisResolution, 1, integrationScale)));
+
+
+                }
+
+                // Wait for new features to be computed
                 for (Future<ArrayList<ImagePlus>> f : futures)
                 {
                     final ArrayList<ImagePlus> newFeatureImages = f.get();
-                    IJ.showStatus("Updating features at resolution scale " + iScale);
 
                     for (final ImagePlus newFeatureImage : newFeatureImages)
                     {
-                        // add back the calibration
-                        newFeatureImage.setCalibration( calibration1.copy() );
 
-                        // Bin the new convolution results of this resolution layer
-                        featureImagesThisResolution.add( bin( newFeatureImage, binning, new Binner().MAX) );
-                        featureImagesThisResolution.add( bin( newFeatureImage, binning, new Binner().MIN) );
-
+                        // add new feature image to this resolution layer
+                        featureImagesThisResolution.add( newFeatureImage );
                     }
                 }
 
-                multiResolutionFeatureImages.get(t).add(featureImagesThisResolution);
+                // set calibrations of all images
+                for ( ImagePlus featureImage : featureImagesThisResolution)
+                {
+                    featureImage.setCalibration( calibrationThisResolution.copy() );
+                }
+
+
+                // add everything to the multi-resolution array
+                multiResolutionFeatureImages.get(t).add( featureImagesThisResolution );
 
             }
 
@@ -894,10 +903,10 @@ public class FeatureImagesMultiResolution implements FeatureImages
             int iScale = 0;
             for ( ArrayList<ImagePlus> featureStacks : multiResolutionFeatureImages.get(t))
             {
-                IJ.log("##### Level " + (iScale++) );
+                IJ.log("# Resolution level " + (iScale++) );
                 for ( ImagePlus featureImage : featureStacks )
                 {
-                    //featureImage.show();
+                    featureImage.show();
                     IJ.log(featureImage.getTitle()+": "
                             +featureImage.getWidth()+" "
                             +featureImage.getHeight()+" "
@@ -931,6 +940,43 @@ public class FeatureImagesMultiResolution implements FeatureImages
         IJ.showStatus("Features stack is updated now!");
         reportMemoryStatus();
         return true;
+    }
+
+
+    public boolean is3D()
+    {
+        if ( originalImage.getNSlices() > 1 )
+            return true;
+        else
+            return false;
+    }
+
+
+
+    private void setBinning( ImagePlus imp, int scalingFactor, int[] binning )
+    {
+        // determine binning for this resolution layer
+        binning[0] = scalingFactor; // x-binning
+        binning[1] = scalingFactor; // y-binning
+
+        if ( is3D() )
+        {
+            // don't bin in z if there are much less slices
+            int previousResolutionWidth = imp.getWidth();
+            int previousResolutionDepth = imp.getNSlices();
+            if (previousResolutionWidth > scalingFactor * previousResolutionDepth)
+            {
+                binning[2] = 1; // no z-binning
+            }
+            else
+            {
+                binning[2] = scalingFactor; // z-binning
+            }
+        }
+        else
+        {
+            binning[2] = 1; // no z-binning
+        }
     }
 
     public void reportMemoryStatus()

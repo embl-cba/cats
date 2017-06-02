@@ -2,10 +2,12 @@ package trainableSegmentation;
 
 import ij.gui.Roi;
 
+import java.io.Serializable;
+
 /**
  * Created by tischi on 29/05/17.
  */
-public class Example {
+public class Example implements Serializable {
 
     public int classNum;
     public Roi roi;

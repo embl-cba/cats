@@ -22,8 +22,10 @@ public class TestGUI {
 		// will pop up an Open dialog)		
 		//Debug.run("Trainable Weka Segmentation 3D", "");
 
-		Debug.run("Trainable Deep Weka Segmentation", "open=/Users/tischi/Desktop/EM--crop2.tif");
+		//Debug.run("Trainable Deep Weka Segmentation", "open=/Users/tischi/Desktop/EM--crop2.tif");
 		//Debug.run("Trainable Deep Weka Segmentation", "open=/Users/tischi/Desktop/example-data/weka-test-3d.tif");
+		Debug.run("Trainable Deep Weka Segmentation",
+				"open=/Users/tischi/Desktop/EM--crop--registered--iso10nm--invert.tif");
 
 	}
 
