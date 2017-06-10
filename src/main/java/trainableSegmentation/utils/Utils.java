@@ -35,6 +35,8 @@ import ij.process.ImageStatistics;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.scijava.vecmath.Point3f;
 
@@ -86,8 +88,39 @@ public final class Utils {
 		}
 
 	}
-	
-	
+
+	public static void joinThreads(ArrayList<Future> futures)
+	{
+
+		if ( futures.size() > 0)
+		{
+			try
+			{
+				for (Future future : futures)
+					future.get();
+			}
+			catch (InterruptedException e)
+			{
+				e.printStackTrace();
+				return;
+			}
+			catch (ExecutionException e)
+			{
+				e.printStackTrace();
+				return;
+			}
+			catch (OutOfMemoryError err)
+			{
+				IJ.log("ERROR: trainClassifier run out of memory. Please, "
+						+ "provide more memory and/or use less threads [ImageJ > Edit > Options > Memory & Threads].");
+				err.printStackTrace();
+				return;
+			}
+		}
+
+		return;
+	}
+
 	/**
 	 * Connected components based on Find Connected Regions (from Mark Longair)
 	 * @param im input image

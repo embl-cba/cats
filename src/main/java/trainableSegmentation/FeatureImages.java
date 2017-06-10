@@ -21,6 +21,7 @@ package trainableSegmentation;
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
+import bigDataTools.Region5D;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.Prefs;
@@ -48,7 +49,7 @@ public interface FeatureImages
 	/**
 	 * Update all feature stacks in the list (multi-thread fashion)
 	 */
-	public boolean updateFeaturesMT();
+	public boolean updateFeaturesMT(boolean showFeatureImages);
 
 	/**
 	 * Get the number of feature stacks
@@ -81,12 +82,33 @@ public interface FeatureImages
 			final ReusableDenseInstance ins,
 			final double[] auxArray );
 
+	double[] getInstanceValues(
+			int x,
+			int y,
+			int z,
+			int t,
+			int classValue
+	);
+
+	/**
+	 * Set the features enabled for the reference stack
+	 * @param newFeatures boolean flags for the features to use
+	 */
+	void setEnabledFeatures(boolean[] enabledFeatures);
+
+	void setOriginalImage( ImagePlus imp );
 
 	void setFeatureSlice(int slice, int frame, double[][][] featureSlice);
+
+	void setInterpolatedFeatureSlice(int slice, int frame, double[][][] featureSlice);
+
+	void setInterpolatedFeatureSliceRegion(int z, int t, int xs, int xe, int ys, int ye, double[][][] featureSlice);
 
 	void setMinimumSigma( double sigma );
 
 	void setMaximumSigma( double sigma );
+
+	int getSizeLargestFeatureRegion();
 
 	boolean saveStackAsTiff( String filePath );
 

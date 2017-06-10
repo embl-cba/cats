@@ -21,6 +21,9 @@ package trainableSegmentation;
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
+import bigDataTools.Region5D;
+import bigDataTools.logging.IJLazySwingLogger;
+import bigDataTools.logging.Logger;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -30,15 +33,15 @@ import ij.plugin.Binner;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
+import net.imglib2.exception.IncompatibleTypeException;
+import trainableSegmentation.filters.HessianImgLib2;
+import trainableSegmentation.utils.Utils;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
 
 import java.util.ArrayList;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 /**
  * This class stores the feature stacks of a set of input slices.
@@ -71,66 +74,34 @@ public class FeatureImagesMultiResolution implements FeatureImages
     /** maximum sigma/radius used in the filters */
     private float maximumSigma = 8;
 
-    /** Gaussian filter flag index */
-    public static final int GAUSSIAN 				=  0;
+    // TODO: make an enum filter class
+
     /** Hessian filter flag index */
-    public static final int HESSIAN 				=  1;
-    /** Derivatives filter flag index */
-    public static final int DERIVATIVES				=  2;
-    /** Laplacian filter flag index */
-    public static final int LAPLACIAN				=  3;
+    public static final int HESSIAN 				=  0;
     /** structure tensor filter flag index */
-    public static final int STRUCTURE				=  4;
-    /** edge filter flag index */
-    public static final int EDGES					=  5;
-    /** difference of Gaussian filter flag index */
-    public static final int DOG						=  6;
+    public static final int STRUCTURE 				=  1;
     /** Minimum flag index */
-    public static final int MINIMUM					=  7;
+    public static final int MINIMUM					=  2;
     /** Maximum flag index */
-    public static final int MAXIMUM					=  8;
+    public static final int MAXIMUM					=  3;
     /** Mean flag index */
-    public static final int MEAN					=  9;
+    public static final int AVERAGE =  4;
     /** Median flag index */
-    public static final int MEDIAN					=  10;
-    /** Variance flag index */
-    public static final int VARIANCE				=  11;
 
-
-    /** Features only available if the ImageScience library is present. */
-    public static final boolean[] IMAGESCIENCE_FEATURES = {
-            false, // Gaussian_blur
-            true,  // Hessian
-            true,  // Derivatives
-            true,  // Laplacian
-            true,  // Structure
-            true,  // Edges
-            false,  // Difference of Gaussian
-            false, // Minimum
-            false, // Maximum
-            false, // Mean
-            false, // Median
-            false  // Variance
-    };
 
     /** flags of filters to be used */
-    private boolean[] enableFeatures = new boolean[]{
-            false, 	/* Gaussian_blur */
+    private boolean[] enabledFeatures = new boolean[]{
             true, 	/* Hessian */
-            false, 	/* Derivatives */
-            false, 	/* Laplacian */
-            false,	/* Structure */
-            false,	/* Edges */
-            false,	/* Difference of Gaussian */
-            false,	/* Minimum */
-            false,	/* Maximum */
-            false,	/* Mean */
-            false,	/* Median */
-            false	/* Variance */
-    };
+            true,	/* Structure */
+            true,	/* Minimum */
+            true,	/* Maximum */
+            true,	/* Mean */
+            };
 
-    // TODO: possibliy need multiple of above in case there is more than one image
-    // in the hyperstack
+    /** names of available filters */
+    public static final String[] availableFeatures
+            = new String[]{	"Hessian", "Structure", "Minimum", "Maximum", "Mean" };
+
 
     /** index of the feature stack that is used as reference (to read attribute, etc.).
      * -1 if not defined yet. */
@@ -138,9 +109,7 @@ public class FeatureImagesMultiResolution implements FeatureImages
 
     private ExecutorService exe;
 
-    /** names of available filters */
-    public static final String[] availableFeatures
-            = new String[]{	"Hessian", "Structure"};
+    private Logger logger = new IJLazySwingLogger();
 
     /**
      * Initialize a feature stack list of a specific size
@@ -157,14 +126,17 @@ public class FeatureImagesMultiResolution implements FeatureImages
     {
     }
 
-    public FeatureImagesMultiResolution( ImagePlus image )
+    public FeatureImagesMultiResolution( ImagePlus imp )
     {
+        setOriginalImage(imp);
+    }
 
-        width = image.getWidth();
-        height = image.getHeight();
-        originalImage = image;
+    public void setOriginalImage( ImagePlus imp )
+    {
+        width = imp.getWidth();
+        height = imp.getHeight();
+        originalImage = imp;
         originalImage.setTitle("Orig");
-
     }
 
     public boolean saveStackAsTiff( String filePath )
@@ -343,14 +315,18 @@ public class FeatureImagesMultiResolution implements FeatureImages
         };
     }
 
+    public int getSizeLargestFeatureRegion()
+    {
+        return (int) Math.pow(3, maximumSigma - 1);
+    }
 
-    public void setFeatureSlice(int slice, int frame, double[][][] featureSlice)
+    public void setFeatureSlice(int z, int t, double[][][] featureSlice)
     {
         int nf = getNumFeatures();
 
         for ( int f = 0; f < nf; f++ )
         {
-            ImagePlus imp = multiResolutionFeatureImageArray[ frame - 1 ][ f ];
+            ImagePlus imp = multiResolutionFeatureImageArray[ t ][ f ];
             Calibration calibration = imp.getCalibration();
             double calX = calibration.pixelWidth;
             double calY = calibration.pixelHeight;
@@ -361,10 +337,10 @@ public class FeatureImagesMultiResolution implements FeatureImages
             // deal with the fact that the feature image might
             // not have all pixels
             // due to the binning
-            int nx = (int)(nxFeatureImage * calX);
-            int ny = (int)(nyFeatureImage * calY);
+            int nx = (int)( nxFeatureImage * calX );
+            int ny = (int)( nyFeatureImage * calY );
 
-            int sliceCal =  (int) ( (slice - 1) / calZ ) + 1;
+            int sliceCal =  (int) ( z / calZ ) + 1;
 
             if ( sliceCal == imp.getNSlices()+1 )
             {
@@ -372,70 +348,515 @@ public class FeatureImagesMultiResolution implements FeatureImages
                 sliceCal = imp.getNSlices();
             }
 
+
+            // get feature values as doubles
+            double[] pixels = null;
             if ( imp.getBitDepth() == 8 )
             {
-                byte[] pixels = (byte[]) imp.getStack().getProcessor(sliceCal).getPixels();
-
-                for ( int y = 0; y < ny; y++ )
+                byte[] bytePixels = (byte[]) imp.getStack().getProcessor(sliceCal).getPixels();
+                pixels = new double[bytePixels.length];
+                for (int i = 0; i < bytePixels.length; ++i)
                 {
-                    int offsetY = (int) ( (double)y/calY) * nxFeatureImage;
-                    for ( int x = 0; x < nx; x++ )
-                    {
-                        if ( offsetY + (int)((double)x/calX) >= pixels.length)
-                        {
-                            IJ.log("");
-                        }
-                        featureSlice[x][y][f] = (double) pixels[offsetY + (int)((double)x/calX)];
-                    }
+                    pixels[i] = (double) (bytePixels[i] & 0xFF);
                 }
             }
-
-            if ( imp.getBitDepth() == 16 )
+            else if ( imp.getBitDepth() == 16 )
             {
-                short[] pixels = (short[]) imp.getStack().getProcessor(sliceCal).getPixels();
-
-                for ( int y = 0; y < ny; y++ )
+                short[] shortPixels = (short[]) imp.getStack().getProcessor(sliceCal).getPixels();
+                pixels = new double[shortPixels.length];
+                for (int i = 0; i < shortPixels.length; ++i)
                 {
-                    int offsetY = (int) ( (double)y/calY) * nxFeatureImage;
-                    for ( int x = 0; x < nx; x++ )
-                    {
-                        featureSlice[x][y][f] = (double) pixels[offsetY + (int)((double)x/calX)];
-                    }
+                    pixels[i] = (double) (shortPixels[i] & 0xFFFF);
                 }
             }
-
-
-            if ( imp.getBitDepth() == 32 )
+            else if ( imp.getBitDepth() == 32 )
             {
-                float[] pixels = (float[]) imp.getStack().getProcessor(sliceCal).getPixels();
-                int widthFeatureImage = imp.getWidth();
-                for ( int y = 0; y < ny; y++ )
-                {
-                    int offsetY = (int) ( (double)y/calY) * widthFeatureImage;
-                    for ( int x = 0; x < nx; x++ )
-                    {
-                        featureSlice[x][y][f] = pixels[offsetY + (int)((double)x/calX)];
-                    }
-                }
+                pixels = (double[]) imp.getStack().getProcessor(sliceCal).getPixels();
             }
 
+
+            // set feature values
+            int widthFeatureImage = imp.getWidth();
+            for ( int y = 0; y < ny; y++ )
+            {
+                int offsetY = (int) ( (double)y/calY) * widthFeatureImage;
+                for ( int x = 0; x < nx; x++ )
+                {
+                    featureSlice[x][y][f] = pixels[offsetY + (int)((double)x/calX)];
+                }
+            }
 
         }
+    }
 
 
-        // set last value to class value
-        /*
-        int nx = getWidth();
-        int ny = getHeight();
-        for ( int y = 0; y < ny; y++ )
+    public void setInterpolatedFeatureSlice(int z, int t, double[][][] featureSlice)
+    {
+        int nf = getNumFeatures();
+
+        for ( int f = 0; f < nf; f++ )
         {
-            for ( int x = 0; x < nx; x++ )
+
+            ImagePlus imp = multiResolutionFeatureImageArray[ t ][ f ];
+            Calibration calibration = imp.getCalibration();
+            double xCal = calibration.pixelWidth;
+            double yCal = calibration.pixelHeight;
+            double zCal = calibration.pixelDepth;
+            double xHalfWidth = (xCal - 1) / 2 ;
+            double yHalfWidth = (yCal - 1) / 2 ;
+            double zHalfWidth = (zCal - 1) / 2 ;
+            int nxFeatureImage = imp.getWidth();
+            int nyFeatureImage = imp.getHeight();
+
+            // deal with the fact that the feature image might
+            // not have all pixels due to the binning
+            int nx = (int)( nxFeatureImage * xCal );
+            int ny = (int)( nyFeatureImage * yCal );
+
+            double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
+            double vAA0,vAA1,vAAA;
+            double xTmp, xBaseDist, xBaseDist2;
+            int xBase, yBase, yBaseOffset, yAboveOffset, xAbove;
+            int ys, ye, xs, xe, zs, ze;
+
+            // get feature values as doubles
+            float[] pixelsBase = null;
+            float[] pixelsAbove = null;
+
+            double zTmp = ( (z - zHalfWidth) / zCal );
+            int zBase = (int) zTmp;
+            double zBaseDist = ( zTmp - zBase ) ;
+            double zBaseDist2 = 1 - zBaseDist ;
+
+            if (imp.getBitDepth() == 8)
             {
-                featureSlice[x][y][nf] = classNum;
+                pixelsBase = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsAbove = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
             }
-        }*/
+            else if (imp.getBitDepth() == 16)
+            {
+                pixelsBase = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsAbove = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+            }
+            else if (imp.getBitDepth() == 32)
+            {
+                pixelsBase = (float[]) (imp.getStack().getProcessor(zBase + 1).getPixels());
+                pixelsAbove = (float[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels());
+            }
+
+            ys = (int) Math.ceil(yCal * 0.5);
+            ye = ny - ys;
+            for (int y = ys; y < ye; ++y)
+            {
+                double yTmp = (y - yHalfWidth )/ yCal;
+                yBase = (int) yTmp;
+                double yBaseDist = ( yTmp - yBase );
+                double yBaseDist2 = 1 - yBaseDist;
+
+                yBaseOffset = yBase * nxFeatureImage;
+                yAboveOffset = yBaseOffset + nxFeatureImage;
+
+                xs = (int) Math.ceil(xCal * 0.5);
+                xe = nx - xs;
+                for (int x = xs; x < xe; ++x)
+                {
+                    xTmp = (x - xHalfWidth ) / xCal ;
+                    xBase = (int) xTmp;
+                    xBaseDist = ( xTmp - xBase );
+                    xBaseDist2 = ( 1 - xBaseDist );
+
+                    xAbove = xBase + 1;
+
+                    v000 = pixelsBase[yBaseOffset + xBase];
+                    v100 = pixelsBase[yBaseOffset + xAbove];
+                    vA00 = xBaseDist2 * v000 + xBaseDist * v100;
+
+                    v010 = pixelsBase[yAboveOffset + xBase];
+                    v110 = pixelsBase[yAboveOffset + xAbove];
+                    vA10 = xBaseDist2 * v010 + xBaseDist * v110;
+
+                    v001 = pixelsAbove[yBaseOffset + xBase];
+                    v101 = pixelsAbove[yBaseOffset + xAbove];
+                    vA01 = xBaseDist2 * v001 + xBaseDist * v101;
+
+                    v011 = pixelsAbove[yAboveOffset + xBase];
+                    v111 = pixelsAbove[yAboveOffset + xAbove];
+                    vA11 = xBaseDist2 * v011 + xBaseDist * v111;
+
+                    vAA0 = yBaseDist2 * vA00 + yBaseDist * vA10;
+                    vAA1 = yBaseDist2 * vA01 + yBaseDist * vA11;
+
+                    vAAA = zBaseDist2 * vAA0 + zBaseDist * vAA1;
+
+                    featureSlice[x][y][f] = vAAA;
+
+                }
+            }
+        }
+    }
+
+
+    public void setInterpolatedFeatureSliceRegion(int z, int t, int xs, int xe, int ys, int ye, double[][][] featureSlice)
+    {
+        int nf = getNumFeatures();
+
+        for ( int f = 0; f < nf; f++ )
+        {
+
+            ImagePlus imp = multiResolutionFeatureImageArray[ t ][ f ];
+            Calibration calibration = imp.getCalibration();
+            double xCal = calibration.pixelWidth;
+            double yCal = calibration.pixelHeight;
+            double zCal = calibration.pixelDepth;
+            double xHalfWidth = (xCal - 1) / 2 ;
+            double yHalfWidth = (yCal - 1) / 2 ;
+            double zHalfWidth = (zCal - 1) / 2 ;
+            int nxFeatureImage = imp.getWidth();
+            int nyFeatureImage = imp.getHeight();
+
+            // deal with the fact that the feature image might
+            // not have all pixels due to the binning
+            //int nx = (int)( nxFeatureImage * xCal );
+            //int ny = (int)( nyFeatureImage * yCal );
+
+            double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
+            double vAA0,vAA1,vAAA;
+            double xTmp, xBaseDist, xBaseDist2;
+            int xBase, yBase, yBaseOffset, yAboveOffset, xAbove;
+
+            // get feature values as doubles
+            float[] pixelsBase = null;
+            float[] pixelsAbove = null;
+
+            double zTmp = ( (z - zHalfWidth) / zCal );
+            int zBase = (int) zTmp;
+            double zBaseDist = ( zTmp - zBase ) ;
+            double zBaseDist2 = 1 - zBaseDist ;
+
+            if (imp.getBitDepth() == 8)
+            {
+                pixelsBase = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsAbove = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+            }
+            else if (imp.getBitDepth() == 16)
+            {
+                pixelsBase = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsAbove = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+            }
+            else if (imp.getBitDepth() == 32)
+            {
+                pixelsBase = (float[]) (imp.getStack().getProcessor(zBase + 1).getPixels());
+                pixelsAbove = (float[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels());
+            }
+
+            for (int y = ys; y <= ye; ++y)
+            {
+                double yTmp = (y - yHalfWidth )/ yCal;
+                yBase = (int) yTmp;
+                double yBaseDist = ( yTmp - yBase );
+                double yBaseDist2 = 1 - yBaseDist;
+
+                yBaseOffset = yBase * nxFeatureImage;
+                yAboveOffset = yBaseOffset + nxFeatureImage;
+
+                for (int x = xs; x < xe; ++x)
+                {
+                    xTmp = (x - xHalfWidth ) / xCal ;
+                    xBase = (int) xTmp;
+                    xBaseDist = ( xTmp - xBase );
+                    xBaseDist2 = ( 1 - xBaseDist );
+
+                    xAbove = xBase + 1;
+
+                    v000 = pixelsBase[yBaseOffset + xBase];
+                    v100 = pixelsBase[yBaseOffset + xAbove];
+                    vA00 = xBaseDist2 * v000 + xBaseDist * v100;
+
+                    v010 = pixelsBase[yAboveOffset + xBase];
+                    v110 = pixelsBase[yAboveOffset + xAbove];
+                    vA10 = xBaseDist2 * v010 + xBaseDist * v110;
+
+                    v001 = pixelsAbove[yBaseOffset + xBase];
+                    v101 = pixelsAbove[yBaseOffset + xAbove];
+                    vA01 = xBaseDist2 * v001 + xBaseDist * v101;
+
+                    v011 = pixelsAbove[yAboveOffset + xBase];
+                    v111 = pixelsAbove[yAboveOffset + xAbove];
+                    vA11 = xBaseDist2 * v011 + xBaseDist * v111;
+
+                    vAA0 = yBaseDist2 * vA00 + yBaseDist * vA10;
+                    vAA1 = yBaseDist2 * vA01 + yBaseDist * vA11;
+
+                    vAAA = zBaseDist2 * vAA0 + zBaseDist * vAA1;
+
+                    featureSlice[x-xs][y-ys][f] = vAAA;
+
+                }
+            }
+        }
+    }
+
+
+
+    public void interpolateFast(ImagePlus imp)
+    {
+
+        Calibration calibration = imp.getCalibration();
+        double xCal = calibration.pixelWidth;
+        double yCal = calibration.pixelHeight;
+        double zCal = calibration.pixelDepth;
+        double xHalfWidth = (xCal - 1) / 2 ;
+        double yHalfWidth = (yCal - 1) / 2 ;
+        double zHalfWidth = (zCal - 1) / 2 ;
+
+        int nxFeatureImage = imp.getWidth();
+        int nyFeatureImage = imp.getHeight();
+        int nzFeatureImage = imp.getNSlices();
+
+        int nx = (int) (nxFeatureImage * xCal);
+        int ny = (int) (nyFeatureImage * yCal);
+        int nz = (int) (nzFeatureImage * zCal);
+
+        double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
+        double vAA0,vAA1,vAAA;
+
+        double xTmp, xBaseDist, xBaseDist2, zBaseDist, zBaseDist2, zTmp, yTmp;
+
+        int zBase, xBase, yBase, yBaseOffset, yAboveOffset, xAbove;
+        int ys, ye, xs, xe, zs, ze;
+
+        // get feature values as doubles
+        float[] pixelsBase = null;
+        float[] pixelsAbove = null;
+
+
+        ImageStack stack = ImageStack.create(nx, ny, nz, 32);
+
+        long start = System.currentTimeMillis();
+
+        zs = (int) Math.ceil(zCal * 0.5);
+        ze = nz - (int) Math.ceil(zCal * 0.5);
+        for (int z = zs; z < ze; z++)
+        {
+            zTmp = ( (z - zHalfWidth ) / zCal );
+            zBase = (int) zTmp ;
+            zBaseDist = zTmp - zBase ;
+            zBaseDist2 = 1 - zBaseDist ;
+
+            if (imp.getBitDepth() == 8)
+            {
+                pixelsBase = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsAbove = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+            }
+            else if (imp.getBitDepth() == 16)
+            {
+                pixelsBase = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsAbove = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+            }
+            else if (imp.getBitDepth() == 32)
+            {
+                pixelsBase = (float[]) (imp.getStack().getProcessor(zBase + 1).getPixels());
+                pixelsAbove = (float[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels());
+            }
+
+            ys = (int) Math.ceil(yCal * 0.5);
+            ye = ny - ys;
+            for (int y = ys; y < ye; ++y)
+            {
+                yTmp = (y - yHalfWidth ) / yCal ;
+                yBase = (int) yTmp;
+                double yBaseDist = ( yTmp - yBase );
+                double yBaseDist2 = 1 - yBaseDist;
+
+                yBaseOffset = yBase * nxFeatureImage;
+                yAboveOffset = yBaseOffset + nxFeatureImage;
+
+                xs = (int) Math.ceil(xCal * 0.5);
+                xe = nx - xs;
+                for (int x = xs; x < xe; ++x)
+                {
+                    xTmp = ( x - xHalfWidth ) / xCal;
+                    xBase = (int) xTmp;
+                    xBaseDist = ( xTmp - xBase );
+                    xBaseDist2 = ( 1 - xBaseDist );
+
+                    xAbove = xBase + 1;
+
+                    v000 = pixelsBase[yBaseOffset + xBase];
+                    v100 = pixelsBase[yBaseOffset + xAbove];
+                    vA00 = xBaseDist2 * v000 + xBaseDist * v100;
+
+                    v010 = pixelsBase[yAboveOffset + xBase];
+                    v110 = pixelsBase[yAboveOffset + xAbove];
+                    vA10 = xBaseDist2 * v010 + xBaseDist * v110;
+
+                    v001 = pixelsAbove[yBaseOffset + xBase];
+                    v101 = pixelsAbove[yBaseOffset + xAbove];
+                    vA01 = xBaseDist2 * v001 + xBaseDist * v101;
+
+                    v011 = pixelsAbove[yAboveOffset + xBase];
+                    v111 = pixelsAbove[yAboveOffset + xAbove];
+                    vA11 = xBaseDist2 * v011 + xBaseDist * v111;
+
+                    vAA0 = yBaseDist2 * vA00 + yBaseDist * vA10;
+                    vAA1 = yBaseDist2 * vA01 + yBaseDist * vA11;
+
+                    vAAA = zBaseDist2 * vAA0 + zBaseDist * vAA1;
+
+                    stack.setVoxel(x, y, z, vAAA);
+                    /*
+                    if ( vAAA < 0 )
+                    {
+                        int g = 1;
+                    }*/
+                }
+            }
+        }
+
+        //IJ.log("Interpolation took " + (System.currentTimeMillis()-start) + "ms");
+
+        String title = imp.getTitle()
+                + " " + xCal
+                + " " + yCal
+                + " " + zCal;
+
+        ImagePlus impOut = new ImagePlus(title, stack);
+        impOut.show();
 
     }
+
+
+    public void interpolate(ImagePlus imp)
+    {
+        Calibration calibration = imp.getCalibration();
+
+        double xCal = calibration.pixelWidth;
+        double yCal = calibration.pixelHeight;
+        double zCal = calibration.pixelDepth;
+
+        double xHalfWidth = (xCal - 1) / 2 ;
+        double yHalfWidth = (yCal - 1) / 2 ;
+        double zHalfWidth = (zCal - 1) / 2 ;
+
+        int nxFeatureImage = imp.getWidth();
+        int nyFeatureImage = imp.getHeight();
+        int nzFeatureImage = imp.getNSlices();
+
+        int nx = (int) (nxFeatureImage * xCal);
+        int ny = (int) (nyFeatureImage * yCal);
+        int nz = (int) (nzFeatureImage * zCal);
+
+        ImageStack stack = ImageStack.create(nx, ny, nz, 32);
+
+        long start = System.currentTimeMillis();
+
+        int zs = (int) Math.ceil(zCal * 0.5);
+        int ze = nz - (int) Math.ceil(zCal * 0.5);
+        for (int z = zs; z < ze; z++)
+        {
+            int zBase = (int) ( (z - zHalfWidth ) / zCal );
+            double zBaseDist = z - ( zBase * zCal + zHalfWidth );
+            int xBase, yBase, yBaseOffset, yAboveOffset, xAbove;
+            int ys, ye, xs, xe;
+
+            // get feature values as doubles
+            float[] pixelsBase = null;
+            float[] pixelsAbove = null;
+
+            if (imp.getBitDepth() == 8)
+            {
+                pixelsBase = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsAbove = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+            }
+            else if (imp.getBitDepth() == 16)
+            {
+                pixelsBase = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsAbove = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+            }
+            else if (imp.getBitDepth() == 32)
+            {
+                pixelsBase = (float[]) (imp.getStack().getProcessor(zBase + 1).getPixels());
+                pixelsAbove = (float[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels());
+            }
+
+
+            ys = (int) Math.ceil(yCal * 0.5);
+            ye = ny - (int) Math.ceil(yCal * 0.5);
+            for (int y = ys; y < ye; ++y)
+            {
+                yBase = (int) ( (y - yHalfWidth ) / yCal );
+                double yBaseDist = y - ( yBase * yCal + yHalfWidth );
+
+                yBaseOffset = yBase * nxFeatureImage;
+                yAboveOffset = yBaseOffset + nxFeatureImage;
+
+                xs = (int) Math.ceil(xCal * 0.5);
+                xe = nx - (int) Math.ceil(xCal * 0.5);
+                for (int x = xs; x < xe; ++x)
+                {
+                    xBase = (int) ( (x - xHalfWidth ) / xCal );
+                    double xBaseDist = x - ( xBase * xCal + xHalfWidth );
+
+                    xAbove = xBase + 1;
+
+                    double v000 = pixelsBase[yBaseOffset + xBase];
+                    double v100 = pixelsBase[yBaseOffset + xAbove];
+                    double vA00 = (xCal - xBaseDist) / xCal * v000 + xBaseDist / xCal * v100;
+
+                    double v010 = pixelsBase[yAboveOffset + xBase];
+                    double v110 = pixelsBase[yAboveOffset + xAbove];
+                    double vA10 = (xCal - xBaseDist) / xCal * v010 + xBaseDist / xCal * v110;
+
+                    double v001 = pixelsAbove[yBaseOffset + xBase];
+                    double v101 = pixelsAbove[yBaseOffset + xAbove];
+                    double vA01 = (xCal - xBaseDist) / xCal * v001 + xBaseDist / xCal * v101;
+
+                    double v011 = pixelsAbove[yAboveOffset + xBase];
+                    double v111 = pixelsAbove[yAboveOffset + xAbove];
+                    double vA11 = (xCal - xBaseDist) / xCal * v011 + xBaseDist / xCal * v111;
+
+                    double vAA0 = (yCal - yBaseDist) / yCal * vA00 + yBaseDist / yCal * vA10;
+                    double vAA1 = (yCal - yBaseDist) / yCal * vA01 + yBaseDist / yCal * vA11;
+
+                    double vAAA = (zCal - zBaseDist) / zCal * vAA0 + zBaseDist / zCal * vAA1;
+
+                    stack.setVoxel(x, y, z, vAAA);
+                    /*
+                    if ( vAAA < 0 )
+                    {
+                        int g = 1;
+                    }*/
+                }
+            }
+        }
+
+        IJ.log("Interpolation took " + (System.currentTimeMillis()-start) + "ms");
+        ImagePlus impOut = new ImagePlus("interpolate", stack);
+        impOut.show();
+
+    }
+
+
+    private float[] getBytesAsFloats(byte[] array)
+    {
+        float[] pixels = new float[array.length];
+        for (int i = 0; i < array.length; ++i)
+        {
+            pixels[i] = (float) (array[i] & 0xFF);
+        }
+        return pixels;
+    }
+
+    private float[] getShortsAsFloats(short[] array)
+    {
+        float[] pixels = new float[array.length];
+        for (int i = 0; i < array.length; ++i)
+        {
+            pixels[i] = (float) (array[i] & 0xFFFF);
+        }
+        return pixels;
+    }
+
 
     /**
      * Get structure tensor features (to be submitted in an ExecutorService).
@@ -530,6 +951,27 @@ public class FeatureImagesMultiResolution implements FeatureImages
     }
 
 
+    public double[] getInstanceValues(
+            int x,
+            int y,
+            int z,
+            int t,
+            int classValue)
+    {
+        final double[] values = new double[ getNumFeatures() + 1 ];
+
+        // get the feature values at the x, y, z location
+        for ( int i = 0; i < getNumFeatures(); i++ )
+        {
+            values[ i ] = getFeatureValue(x, y, z, t, i);
+        }
+
+        // Assign class
+        values[values.length-1] = (double) classValue;
+
+        return values;
+    }
+
     /**
      * Set values to an instance (feature vector) of a specific coordinate.
      * The input instance needs to have a data set assigned.
@@ -623,70 +1065,31 @@ public class FeatureImagesMultiResolution implements FeatureImages
      *
      * @param x x- axis coordinate
      * @param y y- axis coordinate
-     * @param z z- slice number, one-based
-     * @param t t- frame number, one-based
+     * @param z z- axis coordinate (zero-based)
+     * @param t t- axis coordinate (zero-based)
      * @param i Feature number
      * @return value of the feature
      */
     public double getFeatureValue( int x, int y, int z, int t, int iFeature )
     {
-        long tStart;
-        ArrayList<Long> tTotal = new ArrayList<Long>();
+        ImagePlus imp = multiResolutionFeatureImageArray[ t ][ iFeature ];
 
-        tStart = System.nanoTime();
-        ImagePlus imp = multiResolutionFeatureImageArray[ t - 1 ][ iFeature ];
         Calibration calibration = imp.getCalibration();
-        tTotal.add( System.nanoTime() - tStart );
 
-        tStart = System.nanoTime();
-        int zSlice =  (int) ( (z - 1) / calibration.pixelDepth) + 1;
-        tTotal.add( System.nanoTime() - tStart );
+        int zSlice =  (int) ( z / calibration.pixelDepth ) + 1;
 
-        /*
-        if ( (zSlice < 1) || zSlice > (imp.getNSlices()+1) )
-        {
-            IJ.log("accessing wrong image plane");
-        }*/
-
-
-        tStart = System.nanoTime();
         if ( zSlice == imp.getNSlices()+1 )
         {
             // this can happen due to the binning
             zSlice = imp.getNSlices();
         }
-        tTotal.add( System.nanoTime() - tStart );
 
-
-        tStart = System.nanoTime();
         ImageProcessor ip = imp.getStack().getProcessor(zSlice);
-        tTotal.add( System.nanoTime() - tStart );
 
-        /*
-        int xCal = (int) (x / calibration.pixelWidth);
-        int yCal = (int) (y / calibration.pixelHeight);
-
-        if ( ( xCal > ip.getWidth() ) || ( yCal > ip.getHeight() ) )
-        {
-            IJ.log("accessing wrong image pixles");
-        }
-        */
-
-        tStart = System.nanoTime();
         double value = ip.getPixelValue( (int) (x / calibration.pixelWidth) , (int) (y / calibration.pixelHeight) );
-        tTotal.add( System.nanoTime() - tStart );
-
-        //double value = ip.getInterpolatedValue(
-        //        (double)x / calibration.pixelWidth ,
-        //        (double)y / calibration.pixelHeight);
-
 
         return value;
     }
-
-
-
-
 
 
     /**
@@ -700,14 +1103,12 @@ public class FeatureImagesMultiResolution implements FeatureImages
     }
 
 
-
-
     /**
      * Update features with current list in a multi-thread fashion
      *
      * @return true if the features are correctly updated
      */
-    public boolean updateFeaturesMT()
+    public boolean updateFeaturesMT( boolean showFeatureImages )
     {
         int t = 0;
 
@@ -716,24 +1117,7 @@ public class FeatureImagesMultiResolution implements FeatureImages
 
         long start = System.currentTimeMillis();
 
-        exe = Executors.newFixedThreadPool( Prefs.getThreads() );
-
-        // don't duplicate and don't convert the input image to float
-        // in order to save memory
-        /*
-        ImageStack is = new ImageStack ( width, height );
-
-        if( colorFeatures )
-        {
-            for(int i=1; i<=originalImage.getImageStackSize(); i++)
-                is.addSlice("original-slice-" + i, originalImage.getImageStack().getProcessor(i) );
-        }
-        else
-        {
-            for(int i=1; i<=originalImage.getImageStackSize(); i++)
-                is.addSlice("original-slice-" + i, originalImage.getImageStack().getProcessor(i).convertToFloat() );
-        }*/
-
+        ExecutorService executorService = Executors.newFixedThreadPool(Prefs.getThreads());
 
         multiResolutionFeatureImages = new ArrayList<>();
 
@@ -741,7 +1125,6 @@ public class FeatureImagesMultiResolution implements FeatureImages
         {
             multiResolutionFeatureImages.add(new ArrayList<>());
         }
-
 
         // Set a calibration that can be changed during the binning
         Calibration calibration = new Calibration();
@@ -751,26 +1134,23 @@ public class FeatureImagesMultiResolution implements FeatureImages
         calibration.setUnit("um");
         originalImage.setCalibration(calibration);
 
-
-        IJ.showStatus("Updating features...");
+        String scalesInfo = " ";
 
         try{
 
             int scalingFactor = 3;
 
-            int numScales = (int) Math.ceil( Math.log( maximumSigma ) / Math.log(scalingFactor) );
+            int numScales = (int) maximumSigma;
 
             int[] binning = new int[3];
 
-            // loop through resolutions
             for ( int iScale = 0; iScale < numScales; iScale++ )
             {
-                IJ.log("# Resolution level "+iScale);
+
+                scalesInfo += Math.pow(3, iScale) + " ";
 
                 final ArrayList<ImagePlus> featureImagesThisResolution = new ArrayList<>();
                 final ArrayList<ImagePlus> featureImagesPreviousResolution;
-
-                int nOriginalImages = 0;
 
                 if ( iScale == 0)
                 {
@@ -778,140 +1158,159 @@ public class FeatureImagesMultiResolution implements FeatureImages
 
                     // add original image
                     featureImagesThisResolution.add( originalImage );
-                    nOriginalImages++;
-
                 }
                 else
                 {
 
-                    featureImagesPreviousResolution = multiResolutionFeatureImages.get( t ).get( iScale - 1 );
+                    // bin images of previous resolution
 
-                    setBinning( featureImagesPreviousResolution.get(0), scalingFactor, binning );
+                    featureImagesPreviousResolution = multiResolutionFeatureImages.get(t).get(iScale - 1);
 
-                    for ( ImagePlus featureImage : featureImagesPreviousResolution )
+                    setBinning(featureImagesPreviousResolution.get(0), scalingFactor, binning);
+
+                    ArrayList<Future> futures = new ArrayList<>();
+
+                    for (ImagePlus featureImage : featureImagesPreviousResolution)
                     {
 
                         String title = featureImage.getTitle();
 
-                        // (further) bin only original (could be also features)
-
-                        if ( ! title.contains("Hess") )
+                        if (enabledFeatures[AVERAGE])
                         {
-                            if ( ! ( title.contains("Max") || title.contains("Min") ) )
+                            if (!(title.contains("Max") || title.contains("Min")))
                             {
-                                // ... and add this as the first feature image
-                                featureImagesThisResolution.add(
-                                        bin( featureImage, binning, new Binner().AVERAGE) );
-                                nOriginalImages++;
+                                if (!(title.contains("HessM") ||
+                                        title.contains("StrucM") || title.contains("StrucS")))
+                                {
+                                    futures.add(
+                                            executorService.submit(
+                                                    bin(featureImage, binning, new Binner().AVERAGE)
+                                            )
+                                    );
+                                }
                             }
-
-                            if ( ! ( title.contains("Avg") || title.contains("Min") ) )
-                            {
-                                // ... and add this as the first feature image
-                                featureImagesThisResolution.add(
-                                        bin( featureImage, binning, new Binner().MAX) );
-                                nOriginalImages++;
-                            }
-
-                            if ( ! ( title.contains("Avg") || title.contains("Max")) )
-                            {
-                                // ... and add this as the first feature image
-                                featureImagesThisResolution.add(
-                                        bin( featureImage, binning, new Binner().MIN) );
-                                nOriginalImages++;
-                            }
-
                         }
 
+                        if (enabledFeatures[MAXIMUM])
+                        {
+                            if (!(title.contains("Avg") || title.contains("Min")))
+                            {
+                                if (!(title.contains("Hess") || title.contains("Struc")))
+                                {
+                                    futures.add(
+                                            executorService.submit(
+                                                    bin(featureImage, binning, new Binner().MAX)
+                                            )
+                                    );
+                                }
+                            }
+                        }
+
+                        if (enabledFeatures[MINIMUM])
+                        {
+                            if (!(title.contains("Avg") || title.contains("Max")))
+                            {
+                                if (!(title.contains("Hess") || title.contains("Struc")))
+                                {
+                                    futures.add(
+                                            executorService.submit(
+                                                    bin(featureImage, binning, new Binner().MIN)
+                                            )
+                                    );
+                                }
+                            }
+                        }
+                    }
+
+                    for (Future<ImagePlus> future : futures)
+                    {
+                        featureImagesThisResolution.add( future.get() );
                     }
 
                 }
 
                 Calibration calibrationThisResolution = featureImagesThisResolution.get( 0 ).getCalibration().copy();
 
+                /*
+                logger.progress("## Computing features at binning",
+                        calibrationThisResolution.pixelWidth
+                        +" "+calibrationThisResolution.pixelHeight
+                        +" "+calibrationThisResolution.pixelDepth);
+                        */
 
                 // compute new features
                 //
                 final ArrayList<Future<ArrayList<ImagePlus>>> futures = new ArrayList<Future<ArrayList<ImagePlus>>>();
 
-                for ( int iOriginalImage = 0 ; iOriginalImage < nOriginalImages ; iOriginalImage++ )
+                for ( ImagePlus featureImage : featureImagesThisResolution )
                 {
-
                     if (Thread.currentThread().isInterrupted())
                         return false;
 
-                    // get the binned images from previous resolution layer to compute new features on
-                    ImagePlus originalImageThisResolution = featureImagesThisResolution.get( iOriginalImage );
-
                     // temporarily remove calibration while computing features
-                    removeCalibration( originalImageThisResolution );
+                    removeCalibration( featureImage );
 
-                    // hessian
-                    boolean absoluteValues = false;
-                    futures.add( exe.submit( getHessian( originalImageThisResolution, 1, absoluteValues ) ) );
+                    if ( ! ( featureImage.getTitle().contains("Hess") || featureImage.getTitle().contains("Struc") ) )
+                    {
+                        // hessian
+                        if ( enabledFeatures[HESSIAN] )
+                        {
+                            boolean absoluteValues = false;
+                            futures.add( executorService.submit( getHessian(featureImage, 1, absoluteValues) ));
 
+                            //getHessianImgLib2( featureImage, 1);
+                        }
 
-                    // Structure tensor
-                    //
-                    // https://en.wikipedia.org/wiki/Structure_tensor
-                    // https://imagescience.org/meijering/software/featurej/structure/
-                    //float integrationScale = 1; // TODO: is that correct?
-                    //futures.add(exe.submit(getStructure(originalImageThisResolution, 1, integrationScale)));
-
+                        // structure
+                        if ( enabledFeatures[STRUCTURE] )
+                        {
+                            float integrationScale = 1;
+                            futures.add( executorService.submit( getStructure(featureImage, 1, integrationScale) ));
+                        }
+                    }
 
                 }
 
-                // Wait for new features to be computed
+                // wait for new features to be computed
                 for (Future<ArrayList<ImagePlus>> f : futures)
                 {
                     final ArrayList<ImagePlus> newFeatureImages = f.get();
 
                     for (final ImagePlus newFeatureImage : newFeatureImages)
                     {
-
                         // add new feature image to this resolution layer
                         featureImagesThisResolution.add( newFeatureImage );
                     }
                 }
 
-                // set calibrations of all images
+                // set correct calibrations of all images
                 for ( ImagePlus featureImage : featureImagesThisResolution)
                 {
                     featureImage.setCalibration( calibrationThisResolution.copy() );
                 }
-
 
                 // add everything to the multi-resolution array
                 multiResolutionFeatureImages.get(t).add( featureImagesThisResolution );
 
             }
 
-            // Put the feature images into an array for simpler access via indexing
-
+            // put feature images into array for simpler access via indexing
             int numFeatures = 0;
             for ( ArrayList<ImagePlus> singleResolutionFeatureImages2 : multiResolutionFeatureImages.get(t) )
-            {
                 numFeatures += singleResolutionFeatureImages2.size();
-            }
-
-            IJ.log( "Number of features: " + numFeatures );
 
             multiResolutionFeatureImageArray =
                     new ImagePlus[ originalImage.getNFrames() ][ numFeatures ];
 
             int iFeature = 0;
-            int iScale = 0;
-            for ( ArrayList<ImagePlus> featureStacks : multiResolutionFeatureImages.get(t))
+            for ( ArrayList<ImagePlus> featureImages : multiResolutionFeatureImages.get(t))
             {
-                IJ.log("# Resolution level " + (iScale++) );
-                for ( ImagePlus featureImage : featureStacks )
+                for ( ImagePlus featureImage : featureImages )
                 {
-                    featureImage.show();
-                    IJ.log(featureImage.getTitle()+": "
-                            +featureImage.getWidth()+" "
-                            +featureImage.getHeight()+" "
-                            +featureImage.getNSlices()+" "
-                            +featureImage.getCalibration().pixelDepth);
+                    if ( showFeatureImages )
+                    {
+                        interpolateFast( featureImage );
+                    }
                     multiResolutionFeatureImageArray[ t ][ iFeature++ ] = featureImage;
                 }
             }
@@ -928,20 +1327,35 @@ public class FeatureImagesMultiResolution implements FeatureImages
             ex.printStackTrace();
             return false;
         }
-        finally{
-            exe.shutdownNow();
-        }
 
         long end = System.currentTimeMillis();
 
-        IJ.log("Updating the feature images took: " +
-                (end - start) + "ms.");
-        IJ.showProgress(1.0);
-        IJ.showStatus("Features stack is updated now!");
-        reportMemoryStatus();
+        logger.info("Computed " + getNumFeatures() + " features at binnings " + scalesInfo +
+                "for "+ originalImage.getWidth()+"x"+originalImage.getHeight()+"x"+originalImage.getNSlices()
+                +" pixels in " + (end - start) + " ms");
+        //reportMemoryStatus();
         return true;
     }
 
+
+
+    public void getHessianImgLib2( ImagePlus imp, int numThreads )
+    {
+        HessianImgLib2 hessianImgLib2 = new HessianImgLib2();
+        try
+        {
+            hessianImgLib2.run( imp, 1);
+        } catch (IncompatibleTypeException e)
+        {
+            e.printStackTrace();
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        } catch (ExecutionException e)
+        {
+            e.printStackTrace();
+        }
+    }
 
     public boolean is3D()
     {
@@ -951,14 +1365,14 @@ public class FeatureImagesMultiResolution implements FeatureImages
             return false;
     }
 
-
-
     private void setBinning( ImagePlus imp, int scalingFactor, int[] binning )
     {
         // determine binning for this resolution layer
         binning[0] = scalingFactor; // x-binning
         binning[1] = scalingFactor; // y-binning
+        binning[2] = scalingFactor; // z-binning
 
+        /*
         if ( is3D() )
         {
             // don't bin in z if there are much less slices
@@ -976,11 +1390,13 @@ public class FeatureImagesMultiResolution implements FeatureImages
         else
         {
             binning[2] = 1; // no z-binning
-        }
+        }*/
     }
 
     public void reportMemoryStatus()
     {
+
+        // TODO: show IJ overall memory status as well!
 
         double memory = 0;
         double memoryInputImage = 0;
@@ -1016,7 +1432,7 @@ public class FeatureImagesMultiResolution implements FeatureImages
 
         IJ.log("Size of input image [GB]: " + memoryInputImage);
         IJ.log("Size of feature images [GB]: " + memory);
-        IJ.log("Size ratio: Feature images / input image = " + memory/memoryInputImage );
+        IJ.log("Size ratio: Feature images / input image = " + memory / memoryInputImage);
 
     }
 
@@ -1027,33 +1443,37 @@ public class FeatureImagesMultiResolution implements FeatureImages
         calibration.pixelWidth = 1;
         calibration.pixelHeight = 1;
         calibration.setUnit("pixel");
-        imp.setCalibration( calibration );
+        imp.setCalibration(calibration);
     }
 
-    public ImagePlus bin(ImagePlus imp, int[] binning, int method)
+    public Callable<ImagePlus> bin(ImagePlus imp, int[] binning, int method)
     {
-        String title = new String(imp.getTitle());
-        Binner binner = new Binner();
+        return () -> {
 
-        Calibration saveCalibration = imp.getCalibration().copy(); // this is due to a bug in the binner
+            String title = new String(imp.getTitle());
+            Binner binner = new Binner();
 
-        ImagePlus impBinned = binner.shrink( imp, binning[0], binning[1], binning[2], method );
-        imp.setCalibration(saveCalibration);
+            Calibration saveCalibration = imp.getCalibration().copy(); // this is due to a bug in the binner
 
-        if ( method == binner.MAX )
-        {
-            impBinned.setTitle("Max_" + title);
-        }
-        else if ( method == binner.AVERAGE )
-        {
-            impBinned.setTitle("Avg_" + title);
-        }
-        else if ( method == binner.MIN )
-        {
-            impBinned.setTitle("Min_" + title);
-        }
+            ImagePlus impBinned = binner.shrink(imp, binning[0], binning[1], binning[2], method);
+            imp.setCalibration(saveCalibration);
 
-        return ( impBinned );
+            if (method == binner.MAX)
+            {
+                impBinned.setTitle("Max_" + title);
+            }
+            else if (method == binner.AVERAGE)
+            {
+                impBinned.setTitle("Avg_" + title);
+            }
+            else if (method == binner.MIN)
+            {
+                impBinned.setTitle("Min_" + title);
+            }
+
+            return (impBinned);
+
+        };
     }
 
     public ArrayList<Attribute> getFeatureNamesAsAttributes()
@@ -1109,7 +1529,6 @@ public class FeatureImagesMultiResolution implements FeatureImages
         return true;
     }
 
-
     /**
      * Get a specific label of the reference stack
      * @param index slice index (&gt;=1)
@@ -1117,10 +1536,10 @@ public class FeatureImagesMultiResolution implements FeatureImages
      */
     public String getLabel(int index)
     {
-        if(referenceStackIndex == -1)
-            return null;
+        //if(referenceStackIndex == -1)
+        //   return null;
 
-        String featureName = "Feature " + index;
+        String featureName = "feat" + index;
 
         return featureName;
     }
@@ -1131,20 +1550,16 @@ public class FeatureImagesMultiResolution implements FeatureImages
      */
     public boolean[] getEnabledFeatures()
     {
-        return new boolean[] {true, true};
+        return enabledFeatures;
     }
 
     /**
      * Set the features enabled for the reference stack
      * @param newFeatures boolean flags for the features to use
      */
-    public void setEnabledFeatures(boolean[] newFeatures)
+    public void setEnabledFeatures(boolean[] enabledFeatures)
     {
-        /*
-        this.enabledFeatures = newFeatures;
-        if(referenceStackIndex != -1)
-            featureStackArray[referenceStackIndex].setEnabledFeatures(newFeatures);
-            */
+        this.enabledFeatures = enabledFeatures;
     }
 
     public int getReferenceSliceIndex()

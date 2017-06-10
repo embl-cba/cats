@@ -20,6 +20,7 @@ import org.junit.Test;
 
 public class BasicTest
 {
+	/*
 	@Test
 	public void test1()
 	{
@@ -153,4 +154,5 @@ public class BasicTest
 		IJ.save( bridgeExpected, resources + "bridge-expected.png" );
 	}
 
+	*/
 }
