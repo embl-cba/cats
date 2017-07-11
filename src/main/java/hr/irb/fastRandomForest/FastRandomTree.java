@@ -26,6 +26,7 @@ package hr.irb.fastRandomForest;
 import java.util.Arrays;
 import java.util.Random;
 
+import ij.IJ;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Capabilities;
 import weka.core.Capabilities.Capability;
@@ -217,7 +218,7 @@ class FastRandomTree
     data.whatGoesWhere = new int[ data.inBag.length ];
     data.createInBagSortedIndices();
 
-    buildTree(data.sortedIndices, 0, data.sortedIndices[0].length-1,
+    buildTree(data.sortedIndices, 0, data.sortedIndices[0].length - 1,
             classProbs, m_Debug, attIndicesWindow, 0);
 
     this.data = null;

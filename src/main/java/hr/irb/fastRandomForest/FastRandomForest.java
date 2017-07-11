@@ -407,17 +407,17 @@ public class FastRandomForest
     Vector newVector = new Vector();
 
     newVector.addElement(new Option(
-      "\tNumber of trees to build.",
-      "I", 1, "-I <number of trees>"));
+            "\tNumber of trees to build.",
+            "I", 1, "-I <number of trees>"));
 
     newVector.addElement(new Option(
-      "\tNumber of features to consider (<1=int(logM+1)).",
-      "K", 1, "-K <number of features>"));
+            "\tNumber of features to consider (<1=int(logM+1)).",
+            "K", 1, "-K <number of features>"));
 
     newVector.addElement(new Option(
-      "\tSeed for random number generator.\n"
-        + "\t(default 1)",
-      "S", 1, "-S"));
+            "\tSeed for random number generator.\n"
+                    + "\t(default 1)",
+            "S", 1, "-S"));
 
     newVector.addElement(new Option(
       "\tThe maximum depth of the trees, 0 for unlimited.\n"
@@ -621,8 +621,8 @@ public class FastRandomForest
     m_bagger.setSeed(m_randomSeed);
     m_bagger.setNumIterations(m_numTrees);
     m_bagger.setCalcOutOfBag(true);
-    m_bagger.setComputeImportances( this.getComputeImportances() );
-
+    m_bagger.setComputeImportances(this.getComputeImportances());
+    m_bagger.setBagSizePercent( Integer.parseInt(m_BatchSize) );
     m_bagger.buildClassifier(data, m_NumThreads, this);
     
   }
@@ -662,16 +662,25 @@ public class FastRandomForest
       sb.append("FastRandomForest of " + m_numTrees
         + " trees, each constructed while considering "
         + m_KValue + " random feature" + (m_KValue == 1 ? "" : "s") + ".\n"
-        + "Out of bag error: " + Utils.doubleToString(m_bagger.measureOutOfBagError()*100.0, 3) + "%\n"
-        + (getMaxDepth() > 0 ? ("Max. depth of trees: " + getMaxDepth() + "\n") : (""))
-        + "\n");
+        + "Out of bag error: " + Utils.doubleToString(m_bagger.measureOutOfBagError()*100.0, 5) + "%\n"  // TISCHI
+        + (getMaxDepth() > 0 ? ("Max. depth of trees: " + getMaxDepth() + "\n") : (""))); // TISCHI
       if ( getComputeImportances() ) {
-        sb.append("Feature importances - increase in out-of-bag error (as % misclassified instances) after feature permuted:\n");
+        sb.append("Feature importances: increase out-of-bag error more than 0.5% after feature permuted:\n");
         double[] importances = m_bagger.getFeatureImportances();
+        boolean noImportantFeature = true;
         for ( int i = 0; i < importances.length; i++ ) {
-          sb.append( String.format( "%d\t%s\t%6.4f%%\n", i+1, this.m_Info.attribute(i).name(),
-                  i==m_Info.classIndex() ? Double.NaN : importances[i]*100.0 ) ); //bagger.getFeatureNames()[i] );
+          if ( importances[i]*100.0 > 0.5 ) // TISCHI
+          {
+            sb.append(String.format("%d\t%s\t%6.4f%%\n", i + 1, this.m_Info.attribute(i).name(),
+                    i == m_Info.classIndex() ? Double.NaN : importances[i] * 100.0)); //bagger.getFeatureNames()[i] );
+            noImportantFeature = false;
+          }
         }
+        if ( noImportantFeature )
+        {
+          sb.append("None");
+        }
+        sb.append("\n");
       }
     }
     

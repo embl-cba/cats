@@ -33,6 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import ij.IJ;
 import weka.classifiers.Classifier;
 import weka.classifiers.RandomizableIteratedSingleClassifierEnhancer;
 import weka.core.AdditionalMeasureProducer;
@@ -134,10 +135,11 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
     // this was SLOW.. takes approx 1/2 time as training the forest afterwards (!!!)
     // super.buildClassifier(data);
 
-    if (m_CalcOutOfBag && (m_BagSizePercent != 100)) {
-      throw new IllegalArgumentException("Bag size needs to be 100% if " +
-        "out-of-bag error is to be calculated!");
-    }
+
+    //if (m_CalcOutOfBag && (m_BagSizePercent != 100)) {
+    //  throw new IllegalArgumentException("Bag size needs to be 100% if " +
+    //    "out-of-bag error is to be calculated!");
+    //}
 
 
     // sorting is performed inside this constructor
@@ -182,15 +184,18 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       }
 
       // make sure all trees have been trained before proceeding
+      int avgTreeSize = 0; // TISCHI
       for (int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++) {
         futures.get(treeIdx).get();
-
+        avgTreeSize += ((FastRandomTree) m_Classifiers[treeIdx]).numNodes(); // TISCHI
       }
+      avgTreeSize /= m_Classifiers.length; // TISCHI
+      IJ.log("Average tree size " + avgTreeSize); // TISCHI
 
       // calc OOB error?
       if (getCalcOutOfBag() || getComputeImportances()) {
         //m_OutOfBagError = computeOOBError(data, inBag, threadPool);
-        m_OutOfBagError = computeOOBError( myData, inBag, threadPool);
+        m_OutOfBagError = computeOOBError( myData, inBag, threadPool );
       } else {
         m_OutOfBagError = 0;
       }
@@ -299,10 +304,15 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
     for (int i = 0; i < data.numInstances; i++) {
 
       double vote = votes.get(i).get();
-      // error for instance
-      outOfBagCount += data.instWeights[i];
-      if ( (int) vote != data.instClassValues[i] ) {
-        errorSum += data.instWeights[i];
+
+      if ( vote >= 0)
+      {
+        // error for instance
+        outOfBagCount += data.instWeights[i];
+        if ((int) vote != data.instClassValues[i])
+        {
+          errorSum += data.instWeights[i];
+        }
       }
 
     }

@@ -94,7 +94,15 @@ public class VotesCollectorDataCache implements Callable<Double>{
     //if(regression)
     //  vote = regrValue / numVotes;         // average - for regression
     //else
-    vote = Utils.maxIndex(classProbs);   // consensus - for classification
+    if ( numVotes > 0)
+    {
+      vote = Utils.maxIndex(classProbs);   // consensus - for classification
+    }
+    else
+    {
+      vote = -1.0;
+    }
+
 
     return vote;
   }
