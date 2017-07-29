@@ -184,13 +184,13 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       }
 
       // make sure all trees have been trained before proceeding
-      int avgTreeSize = 0; // TISCHI
+      double avgTreeSize = 0; // TISCHI
       for (int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++) {
         futures.get(treeIdx).get();
         avgTreeSize += ((FastRandomTree) m_Classifiers[treeIdx]).numNodes(); // TISCHI
       }
       avgTreeSize /= m_Classifiers.length; // TISCHI
-      IJ.log("Average tree size " + avgTreeSize); // TISCHI
+      IJ.log("Average number of nodes per tree " + avgTreeSize); // TISCHI
 
       // calc OOB error?
       if (getCalcOutOfBag() || getComputeImportances()) {

@@ -25,6 +25,7 @@ public class TestGUI {
 		new ImageJ();
 
 		// EM
+		/*
 		DataStreamingTools dst = new DataStreamingTools();
 		String namingPattern = "classified--C<C00-00>--T<T00000-00000>--Z<Z00001-01162>.tif";
 		bigDataTools.utils.ImageDataInfo imageDataInfo = new ImageDataInfo();
@@ -52,18 +53,44 @@ public class TestGUI {
 				null,
 				nIOthreads,
 				true);
+		*/
 
 
 		/*
+		DataStreamingTools dst = new DataStreamingTools();
+
+		dst.openFromDirectory(
+				"/Volumes/almf/tischer/Nils/bothChannels/ch0/",
+				"None",
+				".*.tif",
+				"data",
+				null,
+				3,
+				true,
+				false);
+				*/
+
 		// FLY EYE
+		/*
 		IJ.open("/Users/tischi/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
 		ImagePlus imp = IJ.getImage();
 		ImagePlus impClass = IJ.createImage("classification_result",imp.getWidth(),imp.getHeight(),1,8);
 		impClass.show();
 		imp.hide(); imp.show();
-		*/
 
 		IJ.wait(100);
+		Weka_Deep_Segmentation weka_segmentation = new Weka_Deep_Segmentation();
+		weka_segmentation.run("");
+		*/
+
+
+
+		// MITOSIS
+
+		//IJ.open("/Users/tischi/Desktop/mitosis.tif");
+		IJ.open("/Users/tischi/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
+		IJ.wait(100);
+
 		Weka_Deep_Segmentation weka_segmentation = new Weka_Deep_Segmentation();
 		weka_segmentation.run("");
 

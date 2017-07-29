@@ -28,14 +28,12 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.measure.Calibration;
 import ij.plugin.Binner;
+import ij.plugin.Duplicator;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
-import ij.process.ImageProcessor;
+import ij.process.StackProcessor;
 import net.imglib2.exception.IncompatibleTypeException;
 import trainableDeepSegmentation.filters.HessianImgLib2;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.Instances;
 
 import java.util.ArrayList;
 import java.util.concurrent.*;
@@ -54,21 +52,18 @@ public class FeatureImagesMultiResolution
     private ImagePlus originalImage = null;
 
     /** the feature images */
-    private ArrayList<ArrayList<ArrayList<ImagePlus>>> multiResolutionFeatureImages;
+    private ArrayList<ArrayList<ImagePlus>> multiResolutionFeatureImages;
 
-    private ImagePlus[][] multiResolutionFeatureImageArray = null;
+    private ImagePlus[] multiResolutionFeatureImageArray = null;
 
     private ArrayList<String> featureNames;
-
-    /** flag to specify the use of color features */
-    private final boolean colorFeatures = false;
 
     /** image width */
     private int width = 0;
     /** image height */
     private int height = 0;
 
-    private int numFeatureScales = 8;
+    private int maxFeatureScale = 3;
 
     /** Hessian filter flag index */
     public static final int HESSIAN 				=  0;
@@ -79,12 +74,12 @@ public class FeatureImagesMultiResolution
     /** Maximum flag index */
     public static final int MAXIMUM					=  3;
     /** Mean flag index */
-    public static final int AVERAGE =  4;
+    public static final int AVERAGE                 =  4;
     /** Median flag index */
 
     public WekaSegmentation wekaSegmentation = null;
 
-    public ImagePlus[][] getMultiResolutionFeatureImageArray()
+    public ImagePlus[] getMultiResolutionFeatureImageArray()
     {
         return multiResolutionFeatureImageArray;
     }
@@ -137,11 +132,6 @@ public class FeatureImagesMultiResolution
         originalImage.setTitle("Orig");
     }
 
-    public boolean saveStackAsTiff( String filePath )
-    {
-        IJ.showMessage("not implemented");
-        return true;
-    }
 
     /**
      * Merge input channels if they are more than 1
@@ -224,7 +214,6 @@ public class FeatureImagesMultiResolution
                 final byte[] redPixels = (byte[]) redBp.getPixels();
                 final byte[] greenPixels = (byte[]) greenBp.getPixels();
                 final byte[] bluePixels = (byte[]) blueBp.getPixels();
-
 
                 ((ColorProcessor)(originalImage.getImageStack().getProcessor( n ).duplicate())).getRGB(redPixels, greenPixels, bluePixels);
 
@@ -320,9 +309,9 @@ public class FeatureImagesMultiResolution
         };
     }
 
-    public int getSizeLargestFeatureRegion()
+    public int getLargestFeatureVoxelSize()
     {
-        return (int) Math.pow(3, numFeatureScales - 1);
+        return (int) Math.pow(3, maxFeatureScale);
     }
 
     public void setFeatureSlice(int z, int t, double[][][] featureSlice)
@@ -331,7 +320,7 @@ public class FeatureImagesMultiResolution
 
         for ( int f = 0; f < nf; f++ )
         {
-            ImagePlus imp = multiResolutionFeatureImageArray[ t ][ f ];
+            ImagePlus imp = multiResolutionFeatureImageArray[ f ];
             Calibration calibration = imp.getCalibration();
             double calX = calibration.pixelWidth;
             double calY = calibration.pixelHeight;
@@ -394,22 +383,19 @@ public class FeatureImagesMultiResolution
         }
     }
 
-
-    public void setInterpolatedFeatureSlice(int z, int t, double[][][] featureSlice)
+    public void setInterpolatedFeatureSlice(int z, double[][][] featureSlice)
     {
-
-        final int border = (int) Math.ceil( getSizeLargestFeatureRegion() / 2 ) + 1;
-        int xs = border;
-        int xe = multiResolutionFeatureImageArray[ t ][ 0 ].getWidth() - border - 1;
-        int ys = border;
-        int ye = multiResolutionFeatureImageArray[ t ][ 0 ].getHeight() - border - 1;
+        final int[] borderSizes = wekaSegmentation.getFeatureBorderSizes();
+        int xs = borderSizes[0];
+        int xe = multiResolutionFeatureImageArray[ 0 ].getWidth() - borderSizes[0] - 1;
+        int ys = borderSizes[1];
+        int ye = multiResolutionFeatureImageArray[ 0 ].getHeight() - borderSizes[1] - 1;
 
         int nf = getNumFeatures();
 
         for ( int f = 0; f < nf; f++ )
         {
-
-            ImagePlus imp = multiResolutionFeatureImageArray[ t ][ f ];
+            ImagePlus imp = multiResolutionFeatureImageArray[ f ];
             Calibration calibration = imp.getCalibration();
             double xCal = calibration.pixelWidth;
             double yCal = calibration.pixelHeight;
@@ -512,7 +498,6 @@ public class FeatureImagesMultiResolution
         }
     }
 
-
     public void setInterpolatedFeatureSliceRegion(int z,
                                                   int t,
                                                   int xs,
@@ -526,7 +511,7 @@ public class FeatureImagesMultiResolution
         for ( int f = 0; f < nf; f++ )
         {
 
-            ImagePlus imp = multiResolutionFeatureImageArray[ t ][ f ];
+            ImagePlus imp = multiResolutionFeatureImageArray[ f ];
             Calibration calibration = imp.getCalibration();
             double xCal = calibration.pixelWidth;
             double yCal = calibration.pixelHeight;
@@ -758,7 +743,6 @@ public class FeatureImagesMultiResolution
 
     }
 
-
     public void interpolate(ImagePlus imp)
     {
         Calibration calibration = imp.getCalibration();
@@ -869,7 +853,6 @@ public class FeatureImagesMultiResolution
 
     }
 
-
     private float[] getBytesAsFloats(byte[] array)
     {
         float[] pixels = new float[array.length];
@@ -909,61 +892,51 @@ public class FeatureImagesMultiResolution
         if (Thread.currentThread().isInterrupted())
             return null;
 
-        return new Callable<ArrayList< ImagePlus >>()
-        {
-            public ArrayList< ImagePlus > call()
+        return new Callable<ArrayList<ImagePlus>>() {
+            public ArrayList<ImagePlus> call()
             {
+                ArrayList<ImagePlus> results = new ArrayList<>();
 
-                // Get channel(s) to process
-                ImagePlus[] channels = extractChannels(originalImage);
+                ImagePlus tmp = originalImage.duplicate();
 
-                ArrayList<ImagePlus>[] results = new ArrayList[ channels.length ];
-
-                for(int ch = 0; ch < channels.length; ch++)
+                if (tmp.getNSlices() > 1) // 3-D
                 {
-                    results[ ch ] = new ArrayList<ImagePlus>();
-
-                    final ImagePlus channel = channels [ ch ].duplicate();
-
-                    if ( channel.getNSlices() > 1 ) // 3-D
-                    {
-                        // pad 3-D image on the back and the front
-                        channel.getImageStack().addSlice("pad-back", channels[ch].getImageStack().getProcessor(channels[ch].getImageStackSize()));
-                        channel.getImageStack().addSlice("pad-front", channels[ch].getImageStack().getProcessor(1), 1);
-                    }
-
-                    final ArrayList<ImagePlus> result = ImageScience.computeEigenimages(sigma, integrationScale, channel);
-                    final ImageStack largest    = result.get(0).getImageStack();
-                    final ImageStack middle     = result.get(1).getImageStack();
-
-                    // remove pad
-                    if ( channel.getNSlices() > 1 ) // 3-D
-                    {
-                        largest.deleteLastSlice();
-                        largest.deleteSlice(1);
-                        middle.deleteLastSlice();
-                        middle.deleteSlice(1);
-                    }
-                    results[ ch ].add( new ImagePlus("StrucL_" + originalImage.getTitle(), largest ) );
-                    results[ ch ].add( new ImagePlus("StrucM_" + originalImage.getTitle(), middle ) );
-
-                    if ( result.size() == 3 ) // 3D
-                    {
-                        final ImageStack smallest = result.get(2).getImageStack();
-                        smallest.deleteLastSlice();
-                        smallest.deleteSlice(1);
-                        results[ ch ].add(new ImagePlus("StrucS_" + originalImage.getTitle(), smallest));
-                    }
-
-                    // remove the square as it over-pronounces strong edges and might
-                    // (or might not?) confuse the classifier
-                    for ( ImagePlus imp : results[ch] )
-                    {
-                        sqrt(imp);
-                    }
+                    // pad 3-D image on the back and the front
+                    tmp.getImageStack().addSlice("pad-back", tmp.getImageStack().getProcessor(tmp.getImageStackSize()));
+                    tmp.getImageStack().addSlice("pad-front", tmp.getImageStack().getProcessor(1), 1);
                 }
 
-                return mergeResultChannels(results);
+                final ArrayList<ImagePlus> result = ImageScience.computeEigenimages(sigma, integrationScale, tmp);
+                final ImageStack largest = result.get(0).getImageStack();
+                final ImageStack middle = result.get(1).getImageStack();
+
+                // remove pad
+                if (tmp.getNSlices() > 1) // 3-D
+                {
+                    largest.deleteLastSlice();
+                    largest.deleteSlice(1);
+                    middle.deleteLastSlice();
+                    middle.deleteSlice(1);
+                }
+                results.add(new ImagePlus("StrucL_" + originalImage.getTitle(), largest));
+                results.add(new ImagePlus("StrucM_" + originalImage.getTitle(), middle));
+
+                if (result.size() == 3) // 3D
+                {
+                    final ImageStack smallest = result.get(2).getImageStack();
+                    smallest.deleteLastSlice();
+                    smallest.deleteSlice(1);
+                    results.add(new ImagePlus("StrucS_" + originalImage.getTitle(), smallest));
+                }
+
+                // remove the square as it over-pronounces strong edges and might
+                // (or might not?) confuse the classifier
+                for (ImagePlus imp : results)
+                {
+                    sqrt(imp);
+                }
+
+                return (results);
             }
         };
     }
@@ -985,128 +958,9 @@ public class FeatureImagesMultiResolution
     }
 
 
-
-    /**
-     * Create instance (feature vector) of a specific coordinate
-     *
-     * @param x x- axis coordinate
-     * @param y y- axis coordinate
-     * @param classValue class value to be assigned
-     * @return corresponding instance
-     */
-    public DenseInstance createInstance(
-            int x,
-            int y,
-            int z,
-            int t,
-            int classValue )
+    public void setMaxFeatureScale(double sigma)
     {
-
-        final double[] values = new double[ getNumFeatures() + 1 ];
-
-        // get the feature values at the x, y, z location
-        for ( int i = 0; i < getNumFeatures(); i++ )
-        {
-            values[ i ] = getFeatureValue(x, y, z, t, i);
-        }
-
-        // Assign class
-        values[values.length-1] = (double) classValue;
-
-        return new DenseInstance(1.0, values);
-    }
-
-
-    public double[] getInstanceValues(
-            int x,
-            int y,
-            int z,
-            int t,
-            int classValue)
-    {
-        final double[] values = new double[ getNumFeatures() + 1 ];
-
-        // get the feature values at the x, y, z location
-        for ( int i = 0; i < getNumFeatures(); i++ )
-        {
-            values[ i ] = getFeatureValue(x, y, z, t, i);
-        }
-
-        // Assign class
-        values[values.length-1] = (double) classValue;
-
-        return values;
-    }
-
-    /**
-     * Set values to an instance (feature vector) of a specific coordinate.
-     * The input instance needs to have a data set assigned.
-     *
-     * @param x x- axis coordinate
-     * @param y y- axis coordinate
-     * @param sliceNum z- axis coordinate
-     * @param classValue class value to be assigned
-     * @param ins instance to be filled
-     * @param auxArray auxiliary array to store feature values
-     */
-    public void setInstance(
-            int x,
-            int y,
-            int z,
-            int t,
-            int classValue,
-            final ReusableDenseInstance ins,
-            final double[] auxArray )
-    {
-        // get the feature values at the x, y, z location
-        for ( int i = 0; i < getNumFeatures(); i++ )
-        {
-            auxArray[ i ] = getFeatureValue(x, y, z, t, i);
-        }
-
-        // Assign class
-        auxArray[ auxArray.length - 1 ] = (double) classValue;
-
-        // Set attribute values to input instance
-        ins.setValues(1.0, auxArray);
-        return;
-    }
-
-    public void setNumFeatureScales( double sigma )
-    {
-        numFeatureScales = (int) sigma;
-    }
-
-
-    /**
-     * Get value of the feature
-     *
-     * @param x x- axis coordinate
-     * @param y y- axis coordinate
-     * @param z z- axis coordinate (zero-based)
-     * @param t t- axis coordinate (zero-based)
-     * @param i Feature number
-     * @return value of the feature
-     */
-    public double getFeatureValue( int x, int y, int z, int t, int iFeature )
-    {
-        ImagePlus imp = multiResolutionFeatureImageArray[ t ][ iFeature ];
-
-        Calibration calibration = imp.getCalibration();
-
-        int zSlice =  (int) ( z / calibration.pixelDepth ) + 1;
-
-        if ( zSlice == imp.getNSlices()+1 )
-        {
-            // this can happen due to the binning
-            zSlice = imp.getNSlices();
-        }
-
-        ImageProcessor ip = imp.getStack().getProcessor(zSlice);
-
-        double value = ip.getPixelValue( (int) (x / calibration.pixelWidth) , (int) (y / calibration.pixelHeight) );
-
-        return value;
+        maxFeatureScale = (int) sigma;
     }
 
 
@@ -1117,9 +971,8 @@ public class FeatureImagesMultiResolution
      */
     public int getNumFeatures()
     {
-        return multiResolutionFeatureImageArray[0].length;
+        return multiResolutionFeatureImageArray.length;
     }
-
 
     /**
      * Update features with current list in a multi-thread fashion
@@ -1129,24 +982,17 @@ public class FeatureImagesMultiResolution
     public boolean updateFeaturesMT(
             boolean showFeatureImages,
             ArrayList<String> featuresToShow,
+            int anisotropy,
             int numThreads)
     {
-        int t = 0;
+        int scalingFactor = 3;
 
         if (Thread.currentThread().isInterrupted() )
             return false;
 
-        long start = System.currentTimeMillis();
-
-
         featureNames = new ArrayList<>();
 
         multiResolutionFeatureImages = new ArrayList<>();
-
-        for ( int frame = 1 ; frame <= originalImage.getNFrames() ; frame++ )
-        {
-            multiResolutionFeatureImages.add( new ArrayList<>() );
-        }
 
         // Set a calibration that can be changed during the binning
         Calibration calibration = new Calibration();
@@ -1156,79 +1002,53 @@ public class FeatureImagesMultiResolution
         calibration.setUnit("um");
         originalImage.setCalibration(calibration);
 
-        String scalesInfo = "";
-
-        try{
-
-            int scalingFactor = 3;
-
+        try
+        {
             int[] binning = new int[3];
 
-            for ( int iScale = 0; iScale < numFeatureScales; iScale++ )
+            for (int iScale = 0; iScale <= maxFeatureScale; iScale++)
             {
-
-                scalesInfo += (int) Math.pow(3, iScale) + " ";
 
                 final ArrayList<ImagePlus> featureImagesThisResolution = new ArrayList<>();
                 final ArrayList<ImagePlus> featureImagesPreviousResolution;
 
-                if ( iScale == 0)
+                if (iScale == 0)
                 {
-                    featureImagesThisResolution.add(originalImage);
+                    featureImagesThisResolution.add( originalImage );
                 }
                 else
                 {
                     // bin images of previous resolution
                     // ...no MT because it is very fast anyway
 
-                    featureImagesPreviousResolution = multiResolutionFeatureImages.get(t).get(iScale - 1);
+                    featureImagesPreviousResolution = multiResolutionFeatureImages.get(iScale - 1);
 
-                    setBinning(featureImagesPreviousResolution.get(0), scalingFactor, binning);
+                    setBinning( featureImagesPreviousResolution.get(0), anisotropy, scalingFactor, binning );
+
+                    // only bin differently once
+                    anisotropy = 1;
 
                     for (ImagePlus featureImage : featureImagesPreviousResolution)
                     {
 
-                        String title = featureImage.getTitle();
-
-                        if (enabledFeatures[AVERAGE])
+                        if ( iScale == maxFeatureScale ) // simply smooth last scale to keep spatial information better
                         {
-                            if (    !title.contains("Open") &&
-                                    !title.contains("Close") )//&&
-                                    //!title.contains("Avg_Hess") &&
-                                    //!title.contains("Avg_Struc") )
-                            {
-                                featureImagesThisResolution.add( bin(featureImage, binning, "AVERAGE").call() );
-                            }
+                            // a radius of 3 is the largest that will not cause boundary effects,
+                            // because the ignored border during classification is
+                            // 3 pixel at maxFeatureScale-1, i.e. 1 pixel at maxFeatureScale
+                            int filterRadius = 3;
+                            featureImagesThisResolution.add( filter3d(featureImage, filterRadius) );
+                        }
+                        else
+                        {
+                            featureImagesThisResolution.add( bin(featureImage, binning, "AVERAGE").call());
                         }
 
-                        if ( enabledFeatures[MAXIMUM] )
-                        {
-                            // closing with binning
-                            if ( !title.contains("Avg") && !title.contains("Open")  )
-                            {
-                                if ( !title.contains("Hess") && !title.contains("Struc")  )
-                                {
-                                    featureImagesThisResolution.add(bin(featureImage, binning, "CLOSE").call() );
-                                }
-                            }
-                        }
-
-                        if ( enabledFeatures[MINIMUM] )
-                        {
-                            // opening with binning
-                            if ( !title.contains("Avg") && !title.contains("Close") )
-                            {
-                                if (  !title.contains("Hess") && !title.contains("Struc") )
-                                {
-                                    featureImagesThisResolution.add(bin(featureImage, binning, "OPEN").call() );
-                                }
-                            }
-                        }
                     }
 
                 }
 
-                Calibration calibrationThisResolution = featureImagesThisResolution.get( 0 ).getCalibration().copy();
+                Calibration calibrationThisResolution = featureImagesThisResolution.get(0).getCalibration().copy();
 
                 //
                 // compute new features
@@ -1238,7 +1058,7 @@ public class FeatureImagesMultiResolution
                 double integrationScale = (iScale == 0) ? 1.0 : 0.66;
                 boolean hessianAbsoluteValues = false;
 
-                if ( (iScale == 0) || (iScale == 1) )
+                if ((iScale == 0) || (iScale == 1))
                 {
                     // work multi-threaded as feature computation at low resolution might take some time
 
@@ -1248,11 +1068,14 @@ public class FeatureImagesMultiResolution
                     for (ImagePlus featureImage : featureImagesThisResolution)
                     {
 
-                        if ( (iScale == 0) || (iScale < (numFeatureScales - 1)) )
+                        if ( (iScale == 0) || (iScale < maxFeatureScale) )
                         // last scale has too few pixels for feature computation and will cause image boundary artifacts
                         {
                             // temporarily remove calibration while computing features
                             removeCalibration(featureImage);
+
+                            // TODO:
+                            // - compute anisotropic features for scale 0 ?
 
                             if (enabledFeatures[HESSIAN])
                             {
@@ -1260,7 +1083,6 @@ public class FeatureImagesMultiResolution
                                 //{
                                 futures.add(exe.submit(getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
                                 //}
-
                             }
 
                             if (enabledFeatures[STRUCTURE])
@@ -1284,7 +1106,7 @@ public class FeatureImagesMultiResolution
                         for (ImagePlus newFeatureImage : newFeatureImages)
                         {
                             // add new feature image to this resolution layer
-                            featureImagesThisResolution.add( newFeatureImage );
+                            featureImagesThisResolution.add(newFeatureImage);
                         }
                     }
                     futures = null;
@@ -1294,17 +1116,15 @@ public class FeatureImagesMultiResolution
                 else
                 {
                     // do it without threads, because each task is very small and there are many
-                    // causing overhead and crashes when using threads
+                    // this causes overhead and can lead to crashes
 
                     ArrayList<ImagePlus> newFeatureImages = new ArrayList<>();
 
-                    for ( ImagePlus featureImage : featureImagesThisResolution )
+                    for (ImagePlus featureImage : featureImagesThisResolution)
                     {
-
-                        if ( iScale < (numFeatureScales - 1) )
+                        if (iScale < maxFeatureScale )
                         // last scale typically has too few pixels for feature computation and will cause image boundary artifacts
                         {
-
                             // temporarily remove calibration while computing features
                             removeCalibration(featureImage);
 
@@ -1313,7 +1133,7 @@ public class FeatureImagesMultiResolution
                                 ArrayList<ImagePlus> hessians = getHessian(featureImage, smoothingScale, hessianAbsoluteValues).call();
                                 for (ImagePlus hessian : hessians)
                                 {
-                                    newFeatureImages.add( hessian );
+                                    newFeatureImages.add(hessian);
                                 }
 
                             }
@@ -1323,7 +1143,7 @@ public class FeatureImagesMultiResolution
                                 ArrayList<ImagePlus> structures = getStructure(featureImage, smoothingScale, integrationScale).call();
                                 for (ImagePlus structure : structures)
                                 {
-                                    newFeatureImages.add( structure );
+                                    newFeatureImages.add(structure);
                                 }
                             }
 
@@ -1333,33 +1153,32 @@ public class FeatureImagesMultiResolution
                     for (ImagePlus newFeatureImage : newFeatureImages)
                     {
                         // add new feature images to this resolution layer
-                        featureImagesThisResolution.add( newFeatureImage );
+                        featureImagesThisResolution.add(newFeatureImage);
                     }
 
                 }
 
                 // set correct calibrations of all images at this resolution
-                for ( ImagePlus featureImage : featureImagesThisResolution)
+                for (ImagePlus featureImage : featureImagesThisResolution)
                 {
                     featureImage.setCalibration( calibrationThisResolution.copy() );
                 }
 
                 // and add everything to the multi-resolution array
-                multiResolutionFeatureImages.get(t).add( featureImagesThisResolution );
+                multiResolutionFeatureImages.add(featureImagesThisResolution);
 
             }
 
             // put feature images into simple array for easier access
             int numFeatures = 0;
-            for ( ArrayList<ImagePlus> singleResolutionFeatureImages2 : multiResolutionFeatureImages.get(t) )
+            for ( ArrayList<ImagePlus> singleResolutionFeatureImages2 : multiResolutionFeatureImages )
                 numFeatures += singleResolutionFeatureImages2.size();
 
-            multiResolutionFeatureImageArray =
-                    new ImagePlus[ originalImage.getNFrames() ][ numFeatures ];
+            multiResolutionFeatureImageArray = new ImagePlus[ numFeatures ];
 
-            int iFeature = 0;
+            int iFeature = 0, iLevel = 0;
             ArrayList < Integer > numFeaturesPerResolution = new ArrayList<>();
-            for ( ArrayList<ImagePlus> featureImages : multiResolutionFeatureImages.get(t))
+            for ( ArrayList<ImagePlus> featureImages : multiResolutionFeatureImages )
             {
                 int numFeaturesThisResolution = 0;
                 for ( ImagePlus featureImage : featureImages )
@@ -1368,26 +1187,23 @@ public class FeatureImagesMultiResolution
                     {
                         if ( featuresToShow.contains( featureImage.getTitle() ) )
                         {
-                            ImagePlus imp = interpolateFast(featureImage);
-                            imp.show();
+                            //ImagePlus imp = interpolateFast(featureImage);
+                            //imp.show();
+                            featureImage.show();
                         }
                     }
 
                     // logger.info(""+(Math.pow(3,i))+": " + featureImage.getTitle());
-                    multiResolutionFeatureImageArray[ t ][ iFeature++ ] = featureImage;
-                    featureNames.add( featureImage.getTitle() );
+                    multiResolutionFeatureImageArray[ iFeature++ ] = featureImage;
+                    featureImage.setTitle( "L" + iLevel + "--" + featureImage.getTitle() );
+                    featureNames.add(featureImage.getTitle());
                     numFeaturesThisResolution++;
                 }
                 numFeaturesPerResolution.add( numFeaturesThisResolution );
-
+                iLevel++;
             }
 
-            //logger.info("Features per resolution:");
-            //i = 0;
-            //for ( int n : numFeaturesPerResolution )
-            //{
-            //   logger.info(""+(Math.pow(3,i++))+": "+n);
-            //}
+            wekaSegmentation.setNumFeaturesPerResolution(numFeaturesPerResolution);
 
         }
         catch(InterruptedException ie)
@@ -1402,13 +1218,27 @@ public class FeatureImagesMultiResolution
             return false;
         }
 
-        long end = System.currentTimeMillis();
-
-        //logger.info("Computed " + getNumFeatures() + " features at binning " + scalesInfo +
-        //        "for "+ originalImage.getWidth()+"x"+originalImage.getHeight()+"x"+originalImage.getNSlices()
-        //        +" pixels in " + (end - start) + " ms");
-        //reportMemoryStatus();
         return true;
+    }
+
+
+    public ImagePlus filter3d(ImagePlus imp, int r)
+    {
+        ImageStack result = ImageStack.create(imp.getWidth(), imp.getHeight(), imp.getNSlices(), 32);
+        StackProcessor stackProcessor = new StackProcessor( imp.getStack() );
+        int rz = r;
+        stackProcessor.filter3D( result, (float) r, (float) r, (float) rz, 0, result.size(), StackProcessor.FILTER_MEAN );
+        String title = imp.getTitle();
+        ImagePlus impResult = new ImagePlus("Mean_" + title, result);
+        impResult.setCalibration( imp.getCalibration().copy() );
+        return ( impResult );
+    }
+
+    public ImagePlus getStackCT (ImagePlus imp, int c, int t)
+    {
+        Duplicator duplicator = new Duplicator();
+        ImagePlus impCT = duplicator.run(imp, c+1, c+1, 1, imp.getNSlices(), t+1, t+1);
+        return ( impCT );
     }
 
     public void getHessianImgLib2( ImagePlus imp, int numThreads )
@@ -1437,7 +1267,7 @@ public class FeatureImagesMultiResolution
             return false;
     }
 
-    private void setBinning( ImagePlus imp, int scalingFactor, int[] binning )
+    private void setBinning( ImagePlus imp, int anisotropy, int scalingFactor, int[] binning )
     {
         // determine binning for this resolution layer
         binning[0] = scalingFactor; // x-binning
@@ -1449,8 +1279,11 @@ public class FeatureImagesMultiResolution
         }
         else
         {
-            binning[2] = scalingFactor; // z-binning
+            // potentially bin less in z]
+            binning[2] = (int) (((double) scalingFactor) / ((double) anisotropy)); // z-binning
+            if( binning[2]==0 ) binning[2] = 1;
         }
+
 
         /*
         if ( is3D() )
@@ -1536,16 +1369,6 @@ public class FeatureImagesMultiResolution
         };
     }
 
-    public ArrayList<Attribute> getFeatureNamesAsAttributes()
-    {
-        ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-        for (int i = 0; i < getNumFeatures(); i++)
-        {
-            String attString = featureNames.get(i);
-            attributes.add(new Attribute(attString));
-        }
-        return attributes;
-    }
 
     public ArrayList<String> getFeatureNames()
     {
@@ -1586,10 +1409,10 @@ public class FeatureImagesMultiResolution
      */
     public boolean isEmpty()
     {
-        if ( multiResolutionFeatureImageArray[0] == null )
+        if ( multiResolutionFeatureImageArray == null )
             return true;
 
-        if ( multiResolutionFeatureImageArray[0].length > 1 )
+        if ( multiResolutionFeatureImageArray.length > 1 )
             return false;
 
         return true;

@@ -4708,3 +4708,415 @@
         		};
 
         	}
+
+
+
+    /**
+     * Create instance (feature vector) of a specific coordinate
+     *
+     * @param x x- axis coordinate
+     * @param y y- axis coordinate
+     * @param classValue class value to be assigned
+     * @return corresponding instance
+     */
+    public DenseInstance createInstance(
+            int x,
+            int y,
+            int z,
+            int t,
+            int classValue )
+    {
+
+        final double[] values = new double[ getNumFeatures() + 1 ];
+
+        // get the feature values at the x, y, z location
+        for ( int i = 0; i < getNumFeatures(); i++ )
+        {
+            values[ i ] = getFeatureValue(x, y, z, t, i);
+        }
+
+        // Assign class
+        values[values.length-1] = (double) classValue;
+
+        return new DenseInstance(1.0, values);
+    }
+
+
+    public double[] getInstanceValues(
+            int x,
+            int y,
+            int z,
+            int t,
+            int classValue)
+    {
+        final double[] values = new double[ getNumFeatures() + 1 ];
+
+        // get the feature values at the x, y, z location
+        for ( int i = 0; i < getNumFeatures(); i++ )
+        {
+            values[ i ] = getFeatureValue(x, y, z, t, i);
+        }
+
+        // Assign class
+        values[values.length-1] = (double) classValue;
+
+        return values;
+    }
+
+    /**
+     * Set values to an instance (feature vector) of a specific coordinate.
+     * The input instance needs to have a data set assigned.
+     *
+     * @param x x- axis coordinate
+     * @param y y- axis coordinate
+     * @param sliceNum z- axis coordinate
+     * @param classValue class value to be assigned
+     * @param ins instance to be filled
+     * @param auxArray auxiliary array to store feature values
+     */
+    public void setInstance(
+            int x,
+            int y,
+            int z,
+            int t,
+            int classValue,
+            final ReusableDenseInstance ins,
+            final double[] auxArray )
+    {
+        // get the feature values at the x, y, z location
+        for ( int i = 0; i < getNumFeatures(); i++ )
+        {
+            auxArray[ i ] = getFeatureValue(x, y, z, t, i);
+        }
+
+        // Assign class
+        auxArray[ auxArray.length - 1 ] = (double) classValue;
+
+        // Set attribute values to input instance
+        ins.setValues(1.0, auxArray);
+        return;
+    }
+
+        /**
+         * Get value of the feature
+         *
+         * @param x x- axis coordinate
+         * @param y y- axis coordinate
+         * @param z z- axis coordinate (zero-based)
+         * @param t t- axis coordinate (zero-based)
+         * @param i Feature number
+         * @return value of the feature
+         */
+        public double getFeatureValue( int x, int y, int z, int t, int iFeature )
+        {
+            ImagePlus imp = multiResolutionFeatureImageArray[ t ][ iFeature ];
+
+            Calibration calibration = imp.getCalibration();
+
+            int zSlice =  (int) ( z / calibration.pixelDepth ) + 1;
+
+            if ( zSlice == imp.getNSlices()+1 )
+            {
+                // this can happen due to the binning
+                zSlice = imp.getNSlices();
+            }
+
+            ImageProcessor ip = imp.getStack().getProcessor(zSlice);
+
+            double value = ip.getPixelValue( (int) (x / calibration.pixelWidth) , (int) (y / calibration.pixelHeight) );
+
+            return value;
+        }
+
+            public boolean saveStackAsTiff( String filePath )
+            {
+                IJ.showMessage("not implemented");
+                return true;
+            }
+
+
+            	/**
+            	 * Adjust current segmentation state (attributes and classes) to
+            	 * loaded data
+            	 * @param data loaded instances
+            	 * @return false if error
+            	 */
+            	public boolean adjustSegmentationStateToData(Instances data)
+            	{
+            		// Check the features that were used in the loaded data
+            		boolean featuresChanged = false;
+            		Enumeration<Attribute> attributes = data.enumerateAttributes();
+            		final String[] availableFeatures =
+            					new FeatureImagesMultiResolution().availableFeatures;
+            		final int numFeatures = availableFeatures.length;
+            		boolean[] usedFeatures = new boolean[numFeatures];
+
+            		// Initialize list of names for the features to use
+            		this.featureNames = new ArrayList<String>();
+
+            		float minSigma = Float.MAX_VALUE;
+            		float maxSigma = Float.MIN_VALUE;
+
+            		while(attributes.hasMoreElements())
+            		{
+            			final Attribute a = attributes.nextElement();
+            			this.featureNames.add(a.name());
+            			for(int i = 0 ; i < numFeatures; i++)
+            			{
+            				if(a.name().startsWith( availableFeatures[i] ))
+            				{
+            					usedFeatures[i] = true;
+            					String[] tokens;
+            					float sigma;
+
+            					tokens = a.name().split("_");
+            					for(int j=0; j<tokens.length; j++)
+            						if(tokens[j].indexOf(".") != -1)
+            						{
+            							sigma = Float.parseFloat(tokens[j]);
+            							if(sigma < minSigma)
+            								minSigma = sigma;
+            							if(sigma > maxSigma)
+            								maxSigma = sigma;
+            						}
+            				}
+            			}
+            		}
+
+            		// Check if classes match
+            		Attribute classAttribute = data.classAttribute();
+            		Enumeration<Object> classValues  = classAttribute.enumerateValues();
+
+            		// Update list of names of loaded classes
+            		loadedClassNames = new ArrayList<String>();
+
+            		int j = 0;
+            		setNumOfClasses(0);
+
+            		while(classValues.hasMoreElements())
+            		{
+            			final String className = ( (String) classValues.nextElement() ).trim();
+            			loadedClassNames.add(className);
+            		}
+
+            		for(String className : loadedClassNames)
+            		{
+            			IJ.log("Read class name: " + className);
+            			setClassLabel(j, className);
+            			addClass();
+            			j++;
+            		}
+
+            		if( null != featureImages)
+            		{
+            			final boolean[] oldEnableFeatures =
+            						featureImages.getEnabledFeatures();
+            			// Read checked features and check if any of them changed
+            			for(int i = 0; i < numFeatures; i++)
+            			{
+            				if (usedFeatures[i] != oldEnableFeatures[i])
+            					featuresChanged = true;
+            			}
+            		}
+            		else
+            			featuresChanged = true;
+
+            		// Update feature stack if necessary
+            		if(featuresChanged)
+            		{
+            			//this.setButtonsEnabled(false);
+            			this.setEnabledFeatures( usedFeatures );
+            			// Force features to be updated
+            			updateFeatures = true;
+            		}
+
+            		return true;
+            	}
+
+    /**
+     * Set current training header, and attempt to adjust segmentation state to it.
+     * @param newHeader the header to set
+     * @return true if adjustment was successful
+     */
+    public boolean setTrainHeader(final Instances newHeader)
+    {
+     	/*
+        if (adjustSegmentationStateToData(newHeader))
+        {
+            this.trainHeader = newHeader;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+        */
+    }
+
+
+    	/**
+    	 * Train the current classifier
+    	 */
+    	public static void trainClassifier()
+    	{
+    		final ImageWindow iw = WindowManager.getCurrentImage().getWindow();
+    		if( iw instanceof CustomWindow )
+    		{
+    			final CustomWindow win = (CustomWindow) iw;
+    			final WekaSegmentation wekaSegmentation = win.getWekaSegmentation();
+    			// Disable buttons until the training has finished
+    			win.setButtonsEnabled(false);
+
+    			win.setTrainingComplete(false);
+
+    			if( wekaSegmentation.trainClassifier() )
+    			{
+    				win.setTrainingComplete(true);
+    				/*
+    				wekaSegmentation.applyClassifier(false, null);
+    				win.setClassfiedImage( wekaSegmentation.getClassifiedImage() );
+    				if(win.isToogleEnabled())
+    					win.toggleOverlay();
+    				win.toggleOverlay();
+    				*/
+    			}
+    			win.updateButtonsEnabling();
+    		}
+    	}
+
+    	/**
+    	 * Get the current result (labeled image)
+    	 */
+    	public static void getResult()
+    	{
+    		/*
+    		final ImageWindow iw = WindowManager.getCurrentImage().getWindow();
+    		if( iw instanceof CustomWindow )
+    		{
+    			final CustomWindow win = (CustomWindow) iw;
+    			final WekaSegmentation wekaSegmentation = win.getWekaSegmentation();
+
+    			ImagePlus classifiedImage =  wekaSegmentation.getClassifiedImage();
+    			if( null == classifiedImage )
+    			{
+    				// check if the training is complete
+    				if( win.trainingComplete )
+    				{
+    					// if not result image is there yet, calculate it
+    					win.setButtonsEnabled( false );
+    					wekaSegmentation.applyClassifier( false );
+    					classifiedImage = wekaSegmentation.getClassifiedImage();
+    					win.updateButtonsEnabling();
+    				}
+    				else
+    				{
+    					IJ.log( "Result image could not be created: "
+    							+ " you need to train or load a classifier first." );
+    					return;
+    				}
+    			}
+    			final ImagePlus resultImage = classifiedImage.duplicate();
+
+    			resultImage.setTitle("Classified image");
+
+    			convertTo8bitNoScaling( resultImage );
+
+    			resultImage.getProcessor().setColorModel( win.getOverlayLUT() );
+    			resultImage.getImageStack().setColorModel( win.getOverlayLUT() );
+    			resultImage.updateAndDraw();
+
+    			resultImage.show();
+    		}
+    		*/
+    	}
+
+    	/**
+    	 * Display the current probability maps
+    	 */
+    	public static void getProbability()
+    	{
+    		IJ.log("not implemented");
+    		/*
+    		final ImageWindow iw = WindowManager.getCurrentImage().getWindow();
+    		if( iw instanceof CustomWindow )
+    		{
+    			final CustomWindow win = (CustomWindow) iw;
+    			final WekaSegmentation wekaSegmentation = win.getWekaSegmentation();
+
+    			IJ.showStatus("Calculating probability maps...");
+    			IJ.log("Calculating probability maps...");
+    			win.setButtonsEnabled(false);
+    			wekaSegmentation.applyClassifier(true);
+    			final ImagePlus probImage = wekaSegmentation.getClassifiedImage();
+    			if(null != probImage)
+    			{
+    				probImage.setOpenAsHyperStack( true );
+    				probImage.show();
+    			}
+    			win.updateButtonsEnabling();
+    			IJ.showStatus("Done.");
+    			IJ.log("Done");
+    		}*/
+    	}
+	/**
+	 * Display the whole image after classification
+	 */
+	void showClassificationImage()
+	{
+		// TODO: implement
+		/*
+		if( null == classifiedImage )
+		{
+			// if not result image is there yet, calculate it
+			win.setButtonsEnabled( false );
+			wekaSegmentation.applyClassifier( false );
+			classifiedImage = wekaSegmentation.getClassifiedImage();
+			win.updateButtonsEnabling();
+		}
+
+		final ImagePlus resultImage = classifiedImage.duplicate();
+
+		resultImage.setTitle( "Classified image" );
+
+		convertTo8bitNoScaling( resultImage );
+
+		resultImage.getProcessor().setColorModel( overlayLUT );
+		resultImage.getImageStack().setColorModel( overlayLUT );
+		resultImage.updateAndDraw();
+
+		resultImage.show();
+		*/
+	}
+
+		/**
+    	 * Display the current probability maps
+    	 */
+    	void showProbabilityImage()
+    	{
+    		// TODO: implement
+    		/*
+    		IJ.showStatus("Calculating probability maps...");
+    		IJ.log("Calculating probability maps...");
+    		win.setButtonsEnabled(false);
+    		try{
+    			wekaSegmentation.applyClassifier(true);
+    		}catch(Exception ex){
+    			IJ.log("Error while applying classifier! (please send bug report)");
+    			ex.printStackTrace();
+    			win.updateButtonsEnabling();
+    			return;
+    		}
+    		final ImagePlus probImage = wekaSegmentation.getClassifiedImage();
+    		if(null != probImage)
+    		{
+    			probImage.setDimensions( numOfClasses, displayImage.getNSlices(),
+    					displayImage.getNFrames());
+    			if ( displayImage.getNSlices() * displayImage.getNFrames() > 1 )
+    				probImage.setOpenAsHyperStack( true );
+    			probImage.show();
+    		}
+    		win.updateButtonsEnabling();
+    		IJ.showStatus("Done.");
+    		IJ.log("Done");
+    		*/
+    	}
