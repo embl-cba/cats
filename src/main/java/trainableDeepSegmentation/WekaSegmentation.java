@@ -116,9 +116,9 @@ public class WekaSegmentation {
 
 	// Random Forest parameters
 	/** current number of trees in the fast random forest classifier */
-	private int numOfTrees = 300;
+	private int numOfTrees = 400;
 	/** number of random features per node in the fast random forest classifier */
-	private int numRandomFeatures = 30;
+	private int numRandomFeatures = 50;
 	/** maximum depth per tree in the fast random forest classifier */
 	public int maxDepth = 0;
 	/** maximum depth per tree in the fast random forest classifier */
@@ -126,21 +126,21 @@ public class WekaSegmentation {
 	/** list of class names on the loaded data */
 	private ArrayList<String> loadedClassNames = null;
 
-	public int minTileSize = 81;
+	public int[] minTileSizes = new int[]{162,162,81};
 
-	public int anisotropy = 1;
+	public double anisotropy = 1.0;
 
 	private int maximumFeatureScale = 3;
 
 	private boolean computeFeatureImportance = false;
 
-	public int numRegionThreads = (int) Math.sqrt(Prefs.getThreads()) + 1;
+	public int numRegionThreads = (int) Math.sqrt( Prefs.getThreads() ) + 1;
 
-	public int numThreadsPerRegion = (int) Math.sqrt(Prefs.getThreads()) + 1;
+	public int numThreadsPerRegion = (int) Math.sqrt( Prefs.getThreads() ) + 1;
 
 	public int numRfTrainingThreads = Prefs.getThreads();
 
-	public int tilingDelay = 200; // milli-seconds
+	public int tilingDelay = 500; // milli-seconds
 
 	public int backgroundThreshold = 0; // gray-values
 
@@ -589,6 +589,32 @@ public class WekaSegmentation {
 		}
 
 		return ( balancedFeatureValues );
+
+	}
+
+	private double[] getMultiColorFeatureValues(
+			double[][][][] featureSlice,
+			int x,
+			int y,
+			int classNum)
+	{
+		int nFeaturesPerChannel = featureSlice[0][0][0].length;
+		int nFeatures =  nFeaturesPerChannel * 2;
+		nFeatures = classNum > -1 ? nFeatures + 1 : nFeatures;
+		double[] featureValues = new double[ nFeatures ];
+
+		for ( int c = 0; c < channelsToConsider.size(); c++ )
+		{
+			System.arraycopy( featureSlice[c][x][y], 0, featureValues, c * nFeaturesPerChannel, nFeaturesPerChannel );
+		}
+
+		if( classNum > -1 )
+		{
+			// set class value
+			featureValues[ featureValues.length ] = classNum;
+		}
+
+		return ( featureValues );
 
 	}
 
@@ -1513,26 +1539,16 @@ public class WekaSegmentation {
 
 			// determine which dataCube of the image that we need
 			int[][] bounds = getExamples3DBounds( examples );
-			int maxFeatureVoxelSize = getFeatureVoxelSizeAtMaximumScale();
+			int[] borders = getFeatureBorderSizes();
 			int[] sizes = new int[3];
 
-			// x and y
-			for ( int i = 0; i < 2; ++i )
+			for ( int i = 0; i < 3; ++i )
 			{
 				// add one to width and height, as, e.g., a horizontal line has zero height.
 				int exampleWidth = (bounds[i][1] - bounds[i][0] + 1);
-				sizes[i] = maxFeatureVoxelSize * (2 + (int) Math.ceil( 1.0 * exampleWidth / maxFeatureVoxelSize));
-				sizes[i] = sizes[i] < minTileSize ? minTileSize : sizes[i];
-			}
-
-			// z
-			if ( trainingImage.getNSlices() == 1 ) // 2-D
-			{
-				sizes[2] = 1;
-			}
-			else
-			{
-				sizes[2] = sizes[2] < minTileSize ? minTileSize : sizes[2];
+				sizes[i] = borders[i] * (2 + (int) Math.ceil( 1.0 * exampleWidth / borders[i]));
+				sizes[i] = sizes[i] < minTileSizes[i] ? minTileSizes[i] : sizes[i];
+				sizes[i] = sizes[i] > imgDims[i] ? imgDims[i] : sizes[i];
 			}
 
 			Point3D center = new Point3D(
@@ -1566,28 +1582,38 @@ public class WekaSegmentation {
 			int numFeaturesAllChannels = channelsToConsider.size()
 					* featureImagesChannels.get(0).getNumFeatures();
 
+			final int[] borderSizes = getFeatureBorderSizes();
+
 			double[][][][] featureSlices = new double
 					[channelsToConsider.size()]
-					[featureImagesChannels.get(0).getWidth()]
-					[featureImagesChannels.get(0).getHeight()]
+					[featureImagesChannels.get(0).getWidth() - 2 * borderSizes[0] ]
+					[featureImagesChannels.get(0).getHeight() - 2 * borderSizes[1] ]
 					[featureImagesChannels.get(0).getNumFeatures() + 1]; // one extra for class label
 
 			// extract feature values at z-position of each example
 			for ( Example example : examples )
 			{
 				// obtain feature values at example's z-position
+				long start = System.currentTimeMillis();
+
 				int z = (int) (example.z - region5D.offset.getZ());
+				int xs = borderSizes[0];
+				int xe = featureImagesChannels.get(0).getWidth() - borderSizes[0] - 1;
+				int ys = borderSizes[1];
+				int ye = featureImagesChannels.get(0).getHeight() - borderSizes[1] - 1;
+
 				for ( int c = 0; c < channelsToConsider.size(); c++ )
 				{
-					featureImagesChannels.get( c ).setInterpolatedFeatureSlice( z, featureSlices[ c ]);
+					//featureImagesChannels.get( c ).setInterpolatedFeatureSlice( z, featureSlices[ c ]);
+					featureImagesChannels.get( c ).setInterpolatedFeatureSliceRegion(
+							z, xs, xe, ys, ye, featureSlices[c]);
+
 				}
+				long duration = System.currentTimeMillis() - start;
 
 				// get and set feature values at the x,y positions of the example
 				//Point[] points = example.points;
-
 				// int randomNum = ThreadLocalRandom.current().nextInt(1, 100 + 1);
-
-				//IJ.log("");
 				//IJ.log("NEW EXAMPLE " + randomNum);
 
 				example.instanceValuesArray = new ArrayList<>();
@@ -1595,8 +1621,8 @@ public class WekaSegmentation {
 				{
 					// set feature values at  x, y location
 					double[] instanceValues = new double[ numFeaturesAllChannels + 1 ];
-					int x = (int) (point.getX() - region5D.offset.getX());
-					int y = (int) (point.getY() - region5D.offset.getY());
+					int x = (int) (point.getX() - region5D.offset.getX() - xs);
+					int y = (int) (point.getY() - region5D.offset.getY() - ys);
 					instanceValues = getBalancedFeatureValues(featureSlices, x, y, example.classNum);
 
 					//IJ.log(" x,y: " + x + ", " + y + "; max = " + featureSlice.length + ", " + featureSlice[0].length );
@@ -1793,7 +1819,8 @@ public class WekaSegmentation {
 		// - check whether this is too conservative
 		int[] borderSize = new int[3];
 		borderSize[0] = borderSize[1] = getFeatureVoxelSizeAtMaximumScale();
-		borderSize[2] = ( imgDims[2] == 1 ) ? 0 : (int) (1.0 * getFeatureVoxelSizeAtMaximumScale() / anisotropy);;
+		borderSize[2] = ( imgDims[2] == 1 ) ? 0 : (int) (1.0 * getFeatureVoxelSizeAtMaximumScale() / anisotropy);
+		borderSize[2] = borderSize[2] == 0 ? 1 : borderSize[2];
 		return( borderSize );
 	}
 
@@ -2039,9 +2066,7 @@ public class WekaSegmentation {
 	 */
 	public Runnable applyClassifierRunnable(
 				final Region5D region5DToClassify,
-				final boolean updateFeatureImages,
 				final int numThreads,
-				final boolean probabilityMaps,
 				final int counter,
 				final int counterMax)
 	{
@@ -2106,6 +2131,11 @@ public class WekaSegmentation {
 				featureImagesChannels.add( featureImages );
 			}
 
+			if ( counterMax == 1 )
+			{
+				logger.info("Features computed in [ms]: " + (System.currentTimeMillis() - start));
+			}
+
 			start = System.currentTimeMillis();
 
 			// border pixels cannot be classified,
@@ -2116,24 +2146,33 @@ public class WekaSegmentation {
 			int nx = imageToClassify.getWidth() - 2 * borderSizes[0];
 			int ny = imageToClassify.getHeight() - 2 * borderSizes[1];
 			int nz = imageToClassify.getNSlices() > 1 ? imageToClassify.getNSlices() - 2 * borderSizes[2] : 1;
-
-			int nzPerThread  = nz / numThreads;
-			int nzLastThread = nz - (numThreads - 1) * nzPerThread;
+			int zs = imageToClassify.getNSlices() > 1 ? borderSizes[2] : 0;
 
 			// create instances information (each instance needs a pointer to this)
 			Instances dataInfo = new Instances("segment", getAttributes(), 1);
 			dataInfo.setClassIndex( dataInfo.numAttributes() - 1 );
 
-			// distribute classification across
-			// different threads
-			int zs = imageToClassify.getNSlices() > 1 ? borderSizes[2] : 0;
-			int n = nz > numThreads ? numThreads : nz;
-			ExecutorService exe = Executors.newFixedThreadPool( n );
-			ArrayList<Future<byte[][]>> futures = new ArrayList<>();
-			for ( int i = 0; i < n; i++ )
+			// distribute classification across different threads
+			int slicesPerChunk, numChunks;
+			if ( nz < numThreads )
 			{
-				if (Thread.currentThread().isInterrupted())
-					return;
+				slicesPerChunk = 1;
+			}
+			else
+			{
+				slicesPerChunk = (int) Math.ceil ( 1.0 * nz / numThreads );
+			}
+
+			ExecutorService exe = Executors.newFixedThreadPool( numThreads );
+			ArrayList<Future<byte[][]>> classificationFutures = new ArrayList<>();
+
+			for ( int slicesClassified = 0; slicesClassified < nz; slicesClassified += slicesPerChunk )
+			{
+				if ( slicesClassified + slicesPerChunk >= nz )
+				{
+					// adapt the last chunk
+					slicesPerChunk = nz - slicesClassified;
+				}
 
 				AbstractClassifier classifierCopy = null;
 				try
@@ -2151,28 +2190,24 @@ public class WekaSegmentation {
 					e.printStackTrace();
 				}
 
-				int nzThread = (i == (n - 1)) ? nzLastThread : nzPerThread;
-
 				Region5D region5DThread = new Region5D();
-				region5DThread.size = new Point3D(nx, ny, nzThread);
-				region5DThread.offset = new Point3D(borderSizes[0], borderSizes[1], zs);
+				region5DThread.size = new Point3D(nx, ny, slicesPerChunk);
+				region5DThread.offset = new Point3D(borderSizes[0], borderSizes[1], slicesClassified + zs);
 				region5DThread.t = 0;
 				region5DThread.c = 0;
 				region5DThread.subSampling = new Point3D(1, 1, 1);
 
-				futures.add(
+				classificationFutures.add(
 						exe.submit(
-							classifyRegion(
-									featureImagesChannels,
-									region5DThread,
-									region5DToClassify,
-									dataInfo,
-									classifierCopy
-							)
+								classifyRegion(
+										featureImagesChannels,
+										region5DThread,
+										region5DToClassify,
+										dataInfo,
+										classifierCopy
+								)
 						)
 				); this.totalThreadsExecuted.addAndGet(1);
-
-				zs += nzThread;
 
 			}
 
@@ -2181,13 +2216,16 @@ public class WekaSegmentation {
 			// Join classifications
 			try
 			{
-				for (Future<byte[][]> future : futures)
+				for (Future<byte[][]> future : classificationFutures)
 				{
 					byte[][] data = future.get();
 
+					if (Thread.currentThread().isInterrupted())
+						return;
+
 					for (byte[] classifiedSlice : data )
 					{
-						classificationResults.add(classifiedSlice);
+						classificationResults.add( classifiedSlice );
 					}
 				}
 			} catch (InterruptedException e)
@@ -2206,17 +2244,23 @@ public class WekaSegmentation {
 				return;
 			}
 			// clean up
-			futures = null;
+			classificationFutures = null;
 			exe.shutdown();
-			final long end = System.currentTimeMillis();
+
+			if ( counterMax == 1 )
+			{
+				logger.info("Classification computed in [ms]: " + (System.currentTimeMillis() - start)
+						+ ", using " + numThreads + " threads");
+			}
+
+			start = System.currentTimeMillis();
 
 			//
 			// put (local) classification results into (big) results image
 			//
 			// TODO: make a version for having everything in RAM
-			start = System.currentTimeMillis();
-			exe = Executors.newFixedThreadPool(numThreads);
-			ArrayList<Future> futures2 = new ArrayList<>();
+			exe = Executors.newFixedThreadPool( numThreads );
+			ArrayList<Future> savingFutures = new ArrayList<>();
 			int iSlice = 0;
 			for (byte[] classifiedSlice : classificationResults)
 			{
@@ -2227,7 +2271,6 @@ public class WekaSegmentation {
 				{
 					int regionOffset = (int) region5DToClassify.offset.getZ();
 					offsetZ = regionOffset + borderSizes[2] + iSlice;
-					int a = 1;
 				}
 				else
 				{
@@ -2241,7 +2284,7 @@ public class WekaSegmentation {
 				region5DThisSlice.c = 0;
 				region5DThisSlice.subSampling = new Point3D(1, 1, 1);
 
-				futures2.add(
+				savingFutures.add(
 						exe.submit(
 								setClassificationResult(
 										classifiedImage,
@@ -2249,15 +2292,18 @@ public class WekaSegmentation {
 										classifiedSlice
 								)
 						)
-				); this.totalThreadsExecuted.addAndGet(1);
+				); this.totalThreadsExecuted.addAndGet( 1 );
 				iSlice++;
 
 			}
 
-			trainableDeepSegmentation.utils.Utils.joinThreads( futures2 );
+			trainableDeepSegmentation.utils.Utils.joinThreads( savingFutures );
 			exe.shutdown();
 
-			//logger.info("Saved classification results in " + (System.currentTimeMillis() - start) + " ms");
+			if ( counterMax == 1 )
+			{
+				logger.info("Saved classification results in " + (System.currentTimeMillis() - start) + " ms");
+			}
 		};
 
 	}
@@ -2442,7 +2488,6 @@ public class WekaSegmentation {
 
 				try
 				{
-
 					double[] distribution;
 					int[] maxInds;
 
@@ -2461,8 +2506,7 @@ public class WekaSegmentation {
 							{
 								featureImagesChannels.
 										get(c).
-										setInterpolatedFeatureSliceRegion(zs + z,
-												t, xs, xe, ys, ye, featureSlices[c]);
+										setInterpolatedFeatureSliceRegion(zs + z, xs, xe, ys, ye, featureSlices[c]);
 							}
 
 							iInstanceThisSlice = 0;
@@ -2483,7 +2527,8 @@ public class WekaSegmentation {
 							for (int x = 0; x < nx; x++)
 							{
 								// set reusable instance
-								double[] balancedInstanceValues = getBalancedFeatureValues( featureSlices, x , y, -1 );
+								double[] balancedInstanceValues = getBalancedFeatureValues(featureSlices, x, y, -1);
+								//double[] balancedInstanceValues = getMultiColorFeatureValues( featureSlices, x , y, -1 );
 								ins.setValues(1.0, balancedInstanceValues);
 
 								//start = System.nanoTime();
@@ -2761,6 +2806,19 @@ public class WekaSegmentation {
 		return ss;
 	}
 
+	public String getMinTileSizesAsString()
+	{
+		String ss = "";
+		for ( int s : minTileSizes)
+		{
+			if ( !ss.equals("") )
+				ss += ("," + (s));
+			else
+				ss += ""+(s);
+		}
+		return ss;
+	}
+
 	public String getChannelsToConsiderAsString()
 	{
 		String ss = "";
@@ -2769,7 +2827,7 @@ public class WekaSegmentation {
 			if ( !ss.equals("") )
 				ss += ("," + (s+1)); // one-based
 			else
-				ss += s;
+				ss += ""+(s+1);
 		}
 		return ss;
 	}
@@ -2802,6 +2860,17 @@ public class WekaSegmentation {
 		}
 
 	}
+
+	public void setMinTileSizesFromString( String sizes )
+	{
+		int i = 0;
+		for ( String s : sizes.split(",") )
+		{
+			this.minTileSizes[i++] = Integer.parseInt( s );
+		}
+
+	}
+
 
 	/**
 	 * Get maximum depth of the random forest

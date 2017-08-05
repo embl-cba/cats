@@ -83,12 +83,20 @@ public class TestGUI {
 		weka_segmentation.run("");
 		*/
 
-
-
-		// MITOSIS
-
+		/*
+		DataStreamingTools dst = new DataStreamingTools();
+		dst.openFromDirectory(
+				"/Volumes/almfspim/tischi/tobias-primordium/stack8-right/",
+				".*--C<c>--T<t>.tif",
+				".*.tif",
+				"data",
+				null,
+				3,
+				true,
+				false);*/
 		//IJ.open("/Users/tischi/Desktop/mitosis.tif");
-		IJ.open("/Users/tischi/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
+		IJ.open("/Users/tischi/Desktop/mri-stack-big.tif");
+		//IJ.open("/Users/tischi/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
 		IJ.wait(100);
 
 		Weka_Deep_Segmentation weka_segmentation = new Weka_Deep_Segmentation();

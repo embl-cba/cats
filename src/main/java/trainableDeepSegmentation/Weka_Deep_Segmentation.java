@@ -7,16 +7,14 @@ import bigDataTools.logging.Logger;
 import bigDataTools.utils.ImageDataInfo;
 import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
-import ij.IJ;
-import ij.ImagePlus;
-import ij.ImageStack;
-import ij.WindowManager;
+import ij.*;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
 import ij.gui.StackWindow;
 import ij.io.FileSaver;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
+import ij.measure.Calibration;
 import ij.plugin.MacroInstaller;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.Recorder;
@@ -167,15 +165,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 	
 	/** available colors for available classes */
 	private Color[] colors = new Color[]{
-			Color.black,
+			Color.blue,
 			Color.green,
 			Color.magenta,
 			Color.red,
-			Color.blue,
 			Color.cyan,
 			Color.yellow,
 			Color.orange,
-			Color.white
+			Color.black
 	};
 
 	/** Lookup table for the result overlay image */
@@ -260,7 +257,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 */
 	public Weka_Deep_Segmentation()
 	{
-
 		// check for image science
 		if ( ! ImageScience.isAvailable() )
 		{
@@ -1546,6 +1542,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// START
 		// instantiate segmentation backend
 		wekaSegmentation = new WekaSegmentation();
+
 		for(int i = 0; i < wekaSegmentation.getNumClasses() ; i++)
 		{
 			exampleList[i] = new java.awt.List(5);
@@ -1556,8 +1553,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// TODO:
 		// - what makes sense here??
 		ArrayList< Integer > resolutionWeights = new ArrayList<>();
-		resolutionWeights.add(1); //9
-		resolutionWeights.add(1); //3
+		resolutionWeights.add(1); // 9
+		resolutionWeights.add(1); // 3
 		resolutionWeights.add(1);
 		resolutionWeights.add(1);
 		resolutionWeights.add(1);
@@ -1576,12 +1573,21 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingImage.setSlice( WindowManager.getCurrentImage().getSlice() );
 		}
 
-		wekaSegmentation.setTrainingImage(trainingImage);
+		wekaSegmentation.setTrainingImage( trainingImage );
+
+		Calibration calibration = trainingImage.getCalibration();
+		wekaSegmentation.anisotropy = calibration.pixelDepth / calibration.pixelWidth;
+
+		if( calibration.pixelWidth != calibration.pixelHeight )
+		{
+			logger.error("Image calibration in x and y is not the same; currently cannot take this into " +
+					"account; but you can still use this plugin, may work anyway...");
+		}
 
 		ArrayList< Integer > channelsToConsider = new ArrayList<>();
 		for ( int c = 0; c < trainingImage.getNChannels(); c++ )
 		{
-			channelsToConsider.add(c + 1);
+			channelsToConsider.add(c); // zero-based
 		}
 		wekaSegmentation.channelsToConsider = channelsToConsider;
 		
@@ -1614,7 +1620,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 		overlayButton.setEnabled(true);
 		classifiedImage.hide();
-		wekaSegmentation.setClassifiedImage(classifiedImage);
+		wekaSegmentation.setClassifiedImage( classifiedImage );
 	}
 
 	private void createClassifiedImage(
@@ -1683,7 +1689,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				//classifiedImage.show();
 				this.classifiedImage = classifiedImage;
 				overlayButton.setEnabled(true);
-				wekaSegmentation.setClassifiedImage(classifiedImage);
+				wekaSegmentation.setClassifiedImage( classifiedImage );
 				logger.info("Created memory-resident classification result image.");
 			}
 
@@ -1736,8 +1742,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 		else
 		{
-			logger.error("The new label was too close to the image boundary, given the current maximal " +
-					"feature size and was thus not added.");
+			logger.error("Label is too close to image boundary.\n" +
+					"Please:\n" +
+					"- Put label more central.\n" +
+					"- Go to [Settings] and reduce maximal feature scale.");
 		}
 
 	}
@@ -1759,7 +1767,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public void updateResultOverlay()
 	{
 		int n = classifiedImage.getStackIndex( 0, displayImage.getZ(), displayImage.getFrame() );
-		ImageProcessor overlay = classifiedImage.getImageStack().getProcessor(n);
+		ImageProcessor overlay = classifiedImage.getImageStack().getProcessor( n );
 
 		overlay = overlay.convertToByte( false );
 		overlay.setColorModel(overlayLUT);
@@ -1909,7 +1917,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 						String[] arg = new String[] {};
 						record(TRAIN_CLASSIFIER, arg);
 
-						if( wekaSegmentation.trainClassifier(trainingRecomputeFeaturesCheckBox.isSelected()) )
+						if( wekaSegmentation.trainClassifier( trainingRecomputeFeaturesCheckBox.isSelected() ) )
 						{
 							if( this.isInterrupted() )
 							{
@@ -1918,13 +1926,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 								win.trainingComplete = false;
 								return;
 							}
-							/*
-							wekaSegmentation.applyClassifier(false);
-							classifiedImage = wekaSegmentation.getClassifiedImage();
-							if(showColorOverlay)
-								win.toggleOverlay();
-							win.toggleOverlay();
-							*/
+
 							win.trainingComplete = true;
 						}
 						else
@@ -2033,27 +2035,26 @@ public class Weka_Deep_Segmentation implements PlugIn
 			wekaSegmentation.setTrainingImage(displayImage);
 			wekaSegmentation.setClassifiedImage(classifiedImage);
 
+
 			Thread thread = new Thread() {
 				public void run()
 				{
 					wekaSegmentation.totalThreadsExecuted.addAndGet(1);
-					ExecutorService exe = Executors.newFixedThreadPool(wekaSegmentation.numRegionThreads);
+					ExecutorService exe = Executors.newFixedThreadPool( wekaSegmentation.numRegionThreads );
 					ArrayList<Future> futures = new ArrayList<>();
 					long startTime = System.currentTimeMillis();
 					Rectangle rectangle = roi.getBounds();
 
 					int[] sizes = new int[3];
-					sizes[0] = sizes[1] = sizes[2]
-							= 5 * wekaSegmentation.getFeatureVoxelSizeAtMaximumScale();
-
+					int[] borders = wekaSegmentation.getFeatureBorderSizes();
 					int[] imgDims = wekaSegmentation.getImgDims();
+
 					for ( int i = 0; i < 3; ++i )
 					{
-						sizes[i] = sizes[i] < wekaSegmentation.minTileSize ? wekaSegmentation.minTileSize : sizes[i];
+						sizes[i] = 3 * borders[i];
+						sizes[i] = sizes[i] < wekaSegmentation.minTileSizes[i] ? wekaSegmentation.minTileSizes[i] : sizes[i];
 						sizes[i] = sizes[i] > imgDims[i] ? imgDims[i] : sizes[i];
 					}
-
-					int[] borders = wekaSegmentation.getFeatureBorderSizes();
 
 					int[] distances = new int[3];
 					for ( int i = 0; i < 3; ++i )
@@ -2110,6 +2111,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 					int nt = te - ts + 1;
 					int nTotal = nx * ny * nz * nt;
 					int iTotal = 0;
+					int pixelsClassifiedPerRegion = 1;
+					for ( int i = 0; i < 3; ++i )
+					{
+						pixelsClassifiedPerRegion *= (sizes[i]-2*borders[i]);
+					}
+					int numThreadsPerRegion = ( nTotal == 1 ) ? Prefs.getThreads() : wekaSegmentation.numThreadsPerRegion;
 
 					ArrayList<int[]> positions = new ArrayList<>();
 					for (int t = ts; t <= te; t += 1)
@@ -2147,9 +2154,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 													exe.submit(
 															wekaSegmentation.applyClassifierRunnable(
 																	region5D,
-																	updateFeatureImages,
-																	wekaSegmentation.numThreadsPerRegion,
-																	computeProbabilityMaps,
+																	numThreadsPerRegion,
 																	++iTotal,
 																	nTotal)
 													)
@@ -2180,12 +2185,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 								future.get();
 								wekaSegmentation.totalThreadsExecuted.addAndGet(1);
 								System.gc();
-
+								regionsClassified++;
 								long nThreadsNew = wekaSegmentation.totalThreadsExecuted.get() - nThreadsLast;
-								long pixels = 1L * sizes[0] * sizes[1] * sizes[2] * regionsClassified;
+								long pixels = 1L * regionsClassified * pixelsClassifiedPerRegion;
 								long milliSeconds = (System.currentTimeMillis() - startTime);
 								double rate = 1.0 * pixels / (1.0 * milliSeconds);
-								logger.progress("Classified region", "" + (++regionsClassified) + "/" + nTotal + " at "
+								logger.progress("Classified region", "" + (regionsClassified) + "/" + nTotal + " at "
 												+ Arrays.toString( positions.get(regionsClassified-1) ) + "; "
 												+ (pixels / 1000) + " kv in " + (int) (milliSeconds / 1000) + " s; " +
 												"rate [kv/s] = " + (int) (rate) +
@@ -2680,7 +2685,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 		*/
 
-		gd.addNumericField("Maximum feature size = 3^N",
+		gd.addNumericField("Maximum feature size [3^N pixels]",
 				wekaSegmentation.getMaximumFeatureScale()
 				, 0);
 
@@ -2695,22 +2700,22 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 		*/
 
-		gd.addNumericField("Number of trees", wekaSegmentation.getNumTrees(), 0);
-		gd.addNumericField("Number of random features per node", wekaSegmentation.getNumRandomFeatures(), 0);
-		gd.addNumericField("Batch size per tree in percent", wekaSegmentation.getBatchSizePercent(), 0);
-		gd.addNumericField("Maximum tree depth", wekaSegmentation.maxDepth, 0);
+		gd.addNumericField("RF: Number of trees", wekaSegmentation.getNumTrees(), 0);
+		gd.addNumericField("RF: Number of random features per node", wekaSegmentation.getNumRandomFeatures(), 0);
+		gd.addNumericField("RF: Batch size per tree in percent", wekaSegmentation.getBatchSizePercent(), 0);
+		gd.addNumericField("RF: Maximum tree depth [0 = None]", wekaSegmentation.maxDepth, 0);
 
 		gd.addStringField("Channels to consider [one-based]", wekaSegmentation.getChannelsToConsiderAsString() );
 
 		if ( wekaSegmentation.getFeaturesToShow() != null )
-			gd.addStringField("Show feature", wekaSegmentation.getFeaturesToShowAsOneString());
+			gd.addStringField("Show features", wekaSegmentation.getFeaturesToShowAsOneString());
 		else
-			gd.addStringField("Show feature", "None");
-		gd.addNumericField("Minimum tile size [pixels]", wekaSegmentation.minTileSize, 0);
+			gd.addStringField("Show features", "None");
+		gd.addStringField("Minimum tile size [pixels]", wekaSegmentation.getMinTileSizesAsString(), 0);
 		//gd.addNumericField("Number of region threads", wekaSegmentation.numRegionThreads, 0);
 		//gd.addNumericField("Number of threads inside a region", wekaSegmentation.numThreadsPerRegion, 0);
 		//gd.addNumericField("Number of RF training threads", wekaSegmentation.numRfTrainingThreads, 0);
-		gd.addNumericField("Tiling delay [ms]", wekaSegmentation.tilingDelay, 0);
+		//gd.addNumericField("Tiling delay [ms]", wekaSegmentation.tilingDelay, 0);
 		gd.addNumericField("Background threshold [gray values]", wekaSegmentation.backgroundThreshold, 0);
 		//gd.addStringField("Resolution level weights", wekaSegmentation.getResolutionWeightsAsString());
 		gd.addNumericField("Uncertainty LUT decay", wekaSegmentation.uncertaintyLUTdecay, 1);
@@ -2802,16 +2807,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.setBatchSizePercent((int) gd.getNextNumber());
 		wekaSegmentation.maxDepth = (int) gd.getNextNumber();
 
-		wekaSegmentation.setChannelsToConsider(gd.getNextString());
+		wekaSegmentation.setChannelsToConsider( gd.getNextString() );
 
 		wekaSegmentation.setFeaturesToShow(gd.getNextString());
 		//wekaSegmentation.numRegionThreads = (int) gd.getNextNumber();
 		//wekaSegmentation.numThreadsPerRegion = (int) gd.getNextNumber();
 		//wekaSegmentation.numRfTrainingThreads = (int) gd.getNextNumber();
-		wekaSegmentation.minTileSize = (int) gd.getNextNumber();
-		wekaSegmentation.tilingDelay = (int) gd.getNextNumber();
+
+		wekaSegmentation.setMinTileSizesFromString( gd.getNextString() );
+		//wekaSegmentation.tilingDelay = (int) gd.getNextNumber();
 		wekaSegmentation.backgroundThreshold = (int) gd.getNextNumber();
-		//wekaSegmentation.setResolutionWeightsFromString( gd.getNextString() );
+		wekaSegmentation.setResolutionWeightsFromString( gd.getNextString() );
 		wekaSegmentation.uncertaintyLUTdecay = (double) gd.getNextNumber();
 
 		/*
