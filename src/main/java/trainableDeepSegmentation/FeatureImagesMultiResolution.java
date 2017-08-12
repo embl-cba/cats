@@ -1077,7 +1077,6 @@ public class FeatureImagesMultiResolution
 
                 boolean hessianAbsoluteValues = false;
 
-
                 // Multi-threaded
                 ExecutorService exe = Executors.newFixedThreadPool(numThreads);
                 ArrayList<Future<ArrayList<ImagePlus>>> futures = new ArrayList<>();
@@ -1088,6 +1087,7 @@ public class FeatureImagesMultiResolution
                 for (ImagePlus featureImage : featureImagesThisResolution)
                 {
                     // temporarily remove calibration while computing features
+                    // TODO: don't do this?!
                     removeCalibration(featureImage);
 
                     // TODO:

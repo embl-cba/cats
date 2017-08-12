@@ -126,7 +126,7 @@ public class WekaSegmentation {
 	/** list of class names on the loaded data */
 	private ArrayList<String> loadedClassNames = null;
 
-	public int[] minTileSizes = new int[]{162,162,81};
+	public int[] minTileSizes = new int[]{81,81,81};
 
 	public double anisotropy = 1.0;
 
@@ -276,7 +276,6 @@ public class WekaSegmentation {
 	{
 		this.trainingImage = imp;
 		setImgDims();
-
 	}
 
 	/**

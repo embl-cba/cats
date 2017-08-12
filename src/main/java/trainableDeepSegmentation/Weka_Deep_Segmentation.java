@@ -87,7 +87,7 @@ import weka.core.PluginManager;
 public class Weka_Deep_Segmentation implements PlugIn
 {
 	/** plugin's name */
-	public static final String PLUGIN_NAME = "Trainable Weka Segmentation";
+	public static final String PLUGIN_NAME = "Trainable Deep Weka Segmentation";
 	/** plugin's current version */
 	public static final String PLUGIN_VERSION = "v" +
 		Weka_Deep_Segmentation.class.getPackage().getImplementationVersion();
@@ -691,7 +691,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			// Remove the canvas from the window, to add it later
 			removeAll();
 
-			setTitle( Weka_Deep_Segmentation.PLUGIN_NAME + " " + Weka_Deep_Segmentation.PLUGIN_VERSION );
+			setTitle( Weka_Deep_Segmentation.PLUGIN_NAME + ": " + trainingImage.getTitle() );
 
 			// Annotations panel
 			annotationsConstraints.anchor = GridBagConstraints.NORTHWEST;
@@ -1591,9 +1591,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 		wekaSegmentation.channelsToConsider = channelsToConsider;
 		
-		displayImage = trainingImage; //.duplicate();
-		displayImage.setSlice(trainingImage.getSlice());
-		displayImage.setTitle(Weka_Deep_Segmentation.PLUGIN_NAME + " " + Weka_Deep_Segmentation.PLUGIN_VERSION);
+		displayImage = trainingImage;
 
 		wekaSegmentation.setMaximumFeatureScale( defaultMaximumScale );
 
@@ -1604,7 +1602,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				new Runnable() {
 					public void run()
 					{
-						win = new CustomWindow(displayImage);
+						win = new CustomWindow( displayImage );
 						win.pack();
 					}
 				});
@@ -2718,7 +2716,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		//gd.addNumericField("Tiling delay [ms]", wekaSegmentation.tilingDelay, 0);
 		gd.addNumericField("Background threshold [gray values]", wekaSegmentation.backgroundThreshold, 0);
 		//gd.addStringField("Resolution level weights", wekaSegmentation.getResolutionWeightsAsString());
-		gd.addNumericField("Uncertainty LUT decay", wekaSegmentation.uncertaintyLUTdecay, 1);
+		//gd.addNumericField("Uncertainty LUT decay", wekaSegmentation.uncertaintyLUTdecay, 1);
 
 
 
@@ -2817,8 +2815,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.setMinTileSizesFromString( gd.getNextString() );
 		//wekaSegmentation.tilingDelay = (int) gd.getNextNumber();
 		wekaSegmentation.backgroundThreshold = (int) gd.getNextNumber();
-		wekaSegmentation.setResolutionWeightsFromString( gd.getNextString() );
-		wekaSegmentation.uncertaintyLUTdecay = (double) gd.getNextNumber();
+		//wekaSegmentation.setResolutionWeightsFromString( gd.getNextString() );
+		//wekaSegmentation.uncertaintyLUTdecay = (double) gd.getNextNumber();
 
 		/*
 		c = (Object)m_ClassifierEditor.getValue();
