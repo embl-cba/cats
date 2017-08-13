@@ -6,6 +6,7 @@ package trainableDeepSegmentation;
 public class UncertaintyRegion implements Comparable<UncertaintyRegion>  {
     public Double maxUncertainty = 0.0;
     public Double avgUncertainty = 0.0;
+    public Double sumUncertainty = 0.0;
     public int[] xyzt = new int[4];
 
     @Override

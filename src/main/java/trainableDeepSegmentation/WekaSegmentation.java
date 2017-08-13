@@ -2168,6 +2168,7 @@ public class WekaSegmentation {
 
 			ExecutorService exe = Executors.newFixedThreadPool( numThreads );
 			ArrayList<Future<byte[][]>> classificationFutures = new ArrayList<>();
+			ArrayList<UncertaintyRegion> uncertaintyRegions = new ArrayList<>();
 
 			for ( int slicesClassified = 0; slicesClassified < nz; slicesClassified += slicesPerChunk )
 			{
@@ -2200,12 +2201,16 @@ public class WekaSegmentation {
 				region5DThread.c = 0;
 				region5DThread.subSampling = new Point3D(1, 1, 1);
 
+				UncertaintyRegion uncertaintyRegion = new UncertaintyRegion();
+				uncertaintyRegions.add( uncertaintyRegion );
+
 				classificationFutures.add(
 						exe.submit(
 								classifyRegion(
 										featureImagesChannels,
 										region5DThread,
 										region5DToClassify,
+										uncertaintyRegion,
 										dataInfo,
 										classifierCopy
 								)
@@ -2250,6 +2255,34 @@ public class WekaSegmentation {
 			classificationFutures = null;
 			exe.shutdown();
 
+			// unite uncertainty measurements from different threads
+			//
+			UncertaintyRegion unitedUncertaintyRegion = new UncertaintyRegion();
+			unitedUncertaintyRegion.xyzt[3] = region5DToClassify.t;
+
+			for ( UncertaintyRegion uncertaintyRegion : uncertaintyRegions )
+			{
+				unitedUncertaintyRegion.sumUncertainty += uncertaintyRegion.sumUncertainty;
+
+				unitedUncertaintyRegion.maxUncertainty =
+						uncertaintyRegion.maxUncertainty > unitedUncertaintyRegion.maxUncertainty ?
+								uncertaintyRegion.maxUncertainty : unitedUncertaintyRegion.maxUncertainty;
+
+				for ( int i = 0; i < 3; i++ )
+				{
+					unitedUncertaintyRegion.xyzt[i] += uncertaintyRegion.xyzt[i];
+				}
+			}
+
+			for ( int i = 0; i < 3; i++ )
+			{
+				unitedUncertaintyRegion.xyzt[i] /= unitedUncertaintyRegion.sumUncertainty;
+			}
+
+			unitedUncertaintyRegion.avgUncertainty = unitedUncertaintyRegion.sumUncertainty / ( nx * ny * nz );
+
+			this.uncertaintyRegions.add( unitedUncertaintyRegion );
+
 			if ( counterMax == 1 )
 			{
 				logger.info("Classification computed in [ms]: " + (System.currentTimeMillis() - start)
@@ -2261,7 +2294,6 @@ public class WekaSegmentation {
 			//
 			// put (local) classification results into (big) results image
 			//
-			// TODO: make a version for having everything in RAM
 			exe = Executors.newFixedThreadPool( numThreads );
 			ArrayList<Future> savingFutures = new ArrayList<>();
 			int iSlice = 0;
@@ -2446,7 +2478,8 @@ public class WekaSegmentation {
 	private Callable<byte[][]> classifyRegion(
 			final ArrayList < FeatureImagesMultiResolution >  featureImagesChannels,
 			final Region5D region5D, // region within the featureImages
-			final Region5D region5Dglobal, // for debugging only
+			final Region5D region5Dglobal, // region within the whole image
+			UncertaintyRegion uncertaintyRegion,
 			final Instances dataInfo,
 			final AbstractClassifier classifier)
 	{
@@ -2472,6 +2505,11 @@ public class WekaSegmentation {
 				int ye = ys + ny - 1;
 				int ze = zs + nz - 1;
 
+				int ogx = xs + (int) region5Dglobal.offset.getX();
+				int ogy = ys + (int) region5Dglobal.offset.getY();
+				int ogz = zs + (int) region5Dglobal.offset.getZ();
+
+
 				final byte[][] classificationResult = new byte[nz][nx*ny];
 
 				// reusable array to be filled for each instance
@@ -2496,9 +2534,6 @@ public class WekaSegmentation {
 
 					int iInstanceThisSlice = 0;
 					int zPrevious = -1;
-
-					UncertaintyRegion uncertaintyRegion = new UncertaintyRegion();
-					uncertaintyRegion.xyzt = new int[]{0,0,0,t};
 
 					for ( int z = 0; z < nz; z++ )
 					{
@@ -2551,13 +2586,14 @@ public class WekaSegmentation {
 								int classOffset = maxInds[0] * CLASS_LUT_WIDTH;
 								classificationResult[z][iInstanceThisSlice++] = (byte) (classOffset + certainty);
 
-								uncertaintyRegion.avgUncertainty += uncertainty;
+								uncertaintyRegion.sumUncertainty += uncertainty;
+								uncertaintyRegion.xyzt[0] += ( x + ogx ) * uncertainty;
+								uncertaintyRegion.xyzt[1] += ( y + ogy ) * uncertainty;
+								uncertaintyRegion.xyzt[2] += ( z + ogz ) * uncertainty;
+
 								if ( uncertainty > uncertaintyRegion.maxUncertainty )
 								{
 									uncertaintyRegion.maxUncertainty = uncertainty;
-									uncertaintyRegion.xyzt[0] = x;
-									uncertaintyRegion.xyzt[1] = y;
-									uncertaintyRegion.xyzt[2] = z;
 								}
 
 								/*
@@ -2598,11 +2634,6 @@ public class WekaSegmentation {
 
 					}
 
-					uncertaintyRegion.avgUncertainty /= ( nx * ny * nz );
-					uncertaintyRegion.xyzt[0] += region5Dglobal.offset.getX();
-					uncertaintyRegion.xyzt[1] += region5Dglobal.offset.getY();
-					uncertaintyRegion.xyzt[2] += region5Dglobal.offset.getZ();
-					uncertaintyRegions.add( uncertaintyRegion );
 
 				}
 				catch(Exception e)
@@ -2625,8 +2656,13 @@ public class WekaSegmentation {
 			return (null);
 		}
 
-		Collections.sort( uncertaintyRegions );
+		Collections.sort( uncertaintyRegions, Collections.reverseOrder() );
 		return(uncertaintyRegions.get(i) );
+	}
+
+	public void resetUncertaintyRegions()
+	{
+		uncertaintyRegions = new ArrayList<>();
 	}
 
 	public void deleteUncertaintyRegion( int i )

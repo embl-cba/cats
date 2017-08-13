@@ -277,6 +277,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				+ "macro 'shortcut u [u]' {};"
 				+ "macro 'shortcut g [g]' {};"
 				+ "macro 'shortcut n [n]' {};"
+				+ "macro 'shortcut b [b]' {};"
 				+ "macro 'shortcut d [d]' {};"
 				;
 		new MacroInstaller().install(macros);
@@ -893,6 +894,22 @@ public class Weka_Deep_Segmentation implements PlugIn
 								uncertaintyNavigation("go-to", i );
 							}
 
+							if ( e.getKeyChar() == 'b' )
+							{
+								int i = Integer.parseInt( uncertaintyTextField.getText().trim() );
+								i--;
+
+								if ( i < 0 )
+								{
+									return;
+								}
+
+								uncertaintyTextField.setText( ""+i );
+								uncertaintyNavigation("go-to", i );
+							}
+
+
+
 							if ( e.getKeyChar() == 'd' )
 							{
 								int i = Integer.parseInt( uncertaintyTextField.getText() );
@@ -988,10 +1005,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			JPanel uncertaintyPanel = new JPanel();
 			JLabel uncertaintyLabel = new JLabel(
-					"Uncertainty navigation: [g][n][d]"
+					"Uncertainty navigation: [g][n][b][d]"
 			);
 			uncertaintyPanel.add(uncertaintyLabel);
-			uncertaintyTextField.setText( "    0" );
+			uncertaintyTextField.setText("    0");
 			uncertaintyPanel.add(uncertaintyTextField);
 			trainingJPanel.add(uncertaintyPanel, trainingConstraints);
 			trainingConstraints.gridy++;
@@ -2105,7 +2122,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			wekaSegmentation.stopCurrentThreads = false;
 			wekaSegmentation.setTrainingImage(displayImage);
 			wekaSegmentation.setClassifiedImage(classifiedImage);
-
+			wekaSegmentation.resetUncertaintyRegions();
 
 			Thread thread = new Thread() {
 				public void run()
