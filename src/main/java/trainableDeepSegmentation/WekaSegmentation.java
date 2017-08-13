@@ -144,9 +144,11 @@ public class WekaSegmentation {
 
 	public int backgroundThreshold = 0; // gray-values
 
-	public double uncertaintyLUTdecay = 1.0;
+	public double uncertaintyLUTdecay = 0.5;
 
 	private static Logger logger = new IJLazySwingLogger();
+
+	private ArrayList< UncertaintyRegion > uncertaintyRegions = new ArrayList<>();
 
 	/** flags of filters */
 	public boolean[] enabledFeatures = new boolean[]{
@@ -196,6 +198,8 @@ public class WekaSegmentation {
 	private ExecutorService exe = Executors.newFixedThreadPool(numThreadsPerRegion);
 
 	public boolean stopCurrentThreads = false;
+
+	private int currentUncertaintyRegion = 0;
 
 	/**
 	 * Default constructor.
@@ -2492,6 +2496,10 @@ public class WekaSegmentation {
 
 					int iInstanceThisSlice = 0;
 					int zPrevious = -1;
+
+					UncertaintyRegion uncertaintyRegion = new UncertaintyRegion();
+					uncertaintyRegion.xyzt = new int[]{0,0,0,t};
+
 					for ( int z = 0; z < nz; z++ )
 					{
 						if (z != zPrevious)
@@ -2536,12 +2544,21 @@ public class WekaSegmentation {
 
 								distribution = classifier.distributionForInstance(ins);
 								maxInds = maxIndicies(distribution);
-
+								// TODO
+								// - what is the best measure for the uncertainty?
+								double uncertainty = 1.0 - (distribution[maxInds[0]] - distribution[maxInds[1]]);
+								int certainty = (int) ((1.0 - uncertainty) * (double)(CLASS_LUT_WIDTH-1));
 								int classOffset = maxInds[0] * CLASS_LUT_WIDTH;
-								int certainty = (int) ((distribution[maxInds[0]] - distribution[maxInds[1]]) * (double)(CLASS_LUT_WIDTH-1));
-
 								classificationResult[z][iInstanceThisSlice++] = (byte) (classOffset + certainty);
 
+								uncertaintyRegion.avgUncertainty += uncertainty;
+								if ( uncertainty > uncertaintyRegion.maxUncertainty )
+								{
+									uncertaintyRegion.maxUncertainty = uncertainty;
+									uncertaintyRegion.xyzt[0] = x;
+									uncertaintyRegion.xyzt[1] = y;
+									uncertaintyRegion.xyzt[2] = z;
+								}
 
 								/*
 								int xGlobal = x + (int)region5D.offset.getX() + (int)region5Dglobal.offset.getX();
@@ -2581,6 +2598,12 @@ public class WekaSegmentation {
 
 					}
 
+					uncertaintyRegion.avgUncertainty /= ( nx * ny * nz );
+					uncertaintyRegion.xyzt[0] += region5Dglobal.offset.getX();
+					uncertaintyRegion.xyzt[1] += region5Dglobal.offset.getY();
+					uncertaintyRegion.xyzt[2] += region5Dglobal.offset.getZ();
+					uncertaintyRegions.add( uncertaintyRegion );
+
 				}
 				catch(Exception e)
 				{
@@ -2594,6 +2617,27 @@ public class WekaSegmentation {
 		};
 	}
 
+	public UncertaintyRegion getUncertaintyRegion( int i )
+	{
+		if ( i >= uncertaintyRegions.size() )
+		{
+			logger.error("Selected uncertainty region does not exist.");
+			return (null);
+		}
+
+		Collections.sort( uncertaintyRegions );
+		return(uncertaintyRegions.get(i) );
+	}
+
+	public void deleteUncertaintyRegion( int i )
+	{
+		uncertaintyRegions.remove( i );
+	}
+
+	public int getNumUncertaintyRegions()
+	{
+		return ( uncertaintyRegions.size() );
+	}
 
 	public static int[] maxIndicies(double[] doubles) {
 		double maximum = 0.0D;

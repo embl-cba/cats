@@ -155,6 +155,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private JButton testThreadsButton = null;
 
+	private JTextField uncertaintyTextField = new JTextField();
+
 	/** Weka button */
 	private JButton wekaButton = null;
 	/** create new class button */
@@ -272,7 +274,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 				+ "macro 'shortcut 5 [5]' {};"
 				+ "macro 'shortcut r [r]' {};"
 				+ "macro 'shortcut p [p]' {};"
-				+ "macro 'shortcut u [u]' {};";
+				+ "macro 'shortcut u [u]' {};"
+				+ "macro 'shortcut g [g]' {};"
+				+ "macro 'shortcut n [n]' {};"
+				+ "macro 'shortcut d [d]' {};"
+				;
 		new MacroInstaller().install(macros);
 
 		// create overlay LUT
@@ -867,6 +873,32 @@ public class Weka_Deep_Segmentation implements PlugIn
 								toggleOverlay("uncertainty");
 							}
 
+							if ( e.getKeyChar() == 'g' )
+							{
+								int i = Integer.parseInt( uncertaintyTextField.getText().trim() );
+								uncertaintyNavigation("go-to", i);
+							}
+
+							if ( e.getKeyChar() == 'n' )
+							{
+								int i = Integer.parseInt( uncertaintyTextField.getText().trim() );
+								i++;
+
+								if ( i >= wekaSegmentation.getNumUncertaintyRegions() )
+								{
+									return;
+								}
+
+								uncertaintyTextField.setText( ""+i );
+								uncertaintyNavigation("go-to", i );
+							}
+
+							if ( e.getKeyChar() == 'd' )
+							{
+								int i = Integer.parseInt( uncertaintyTextField.getText() );
+								uncertaintyNavigation("delete", i );
+							}
+
 							try
 							{
 								int iClass = Integer.parseInt("" + e.getKeyChar());
@@ -952,6 +984,16 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingConstraints.gridy++;
 
 			trainingJPanel.add(overlayButton, trainingConstraints);
+			trainingConstraints.gridy++;
+
+			JPanel uncertaintyPanel = new JPanel();
+			JLabel uncertaintyLabel = new JLabel(
+					"Uncertainty navigation: [g][n][d]"
+			);
+			uncertaintyPanel.add(uncertaintyLabel);
+			uncertaintyTextField.setText( "    0" );
+			uncertaintyPanel.add(uncertaintyTextField);
+			trainingJPanel.add(uncertaintyPanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
 			//trainingJPanel.add(setResultButton, trainingConstraints);
@@ -1157,6 +1199,38 @@ public class Weka_Deep_Segmentation implements PlugIn
 				}
 			});			
 			
+		}
+
+
+		private void uncertaintyNavigation( String cmd, int iRegion )
+		{
+			if ( cmd.equals("go-to") )
+			{
+				UncertaintyRegion uncertaintyRegion = wekaSegmentation.getUncertaintyRegion( iRegion );
+				if ( uncertaintyRegion != null )
+				{
+					displayImage.setT(uncertaintyRegion.xyzt[3] + 1);
+					displayImage.setZ(uncertaintyRegion.xyzt[2] + 1);
+					int x = uncertaintyRegion.xyzt[0] - wekaSegmentation.minTileSizes[0] / 2;
+					int y = uncertaintyRegion.xyzt[1] - wekaSegmentation.minTileSizes[1] / 2;
+					displayImage.setRoi(
+							x, y,
+							wekaSegmentation.minTileSizes[0],
+							wekaSegmentation.minTileSizes[1]
+					);
+					displayImage.updateAndDraw();
+				}
+				else
+				{
+					logger.error(" There are currently no known uncertainty regions; " +
+							"please classify some regions to compute new uncertainties.");
+				}
+			}
+
+			if ( cmd.equals("delete") )
+			{
+				wekaSegmentation.deleteUncertaintyRegion(iRegion);
+			}
 		}
 
 		/**
@@ -1469,10 +1543,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 					{
 						// TODO:
 						// - check whether this is correct
-						// - make non-linear?
-						red[offset + i] = (byte) (255.0 * Math.exp( - wekaSegmentation.uncertaintyLUTdecay * i  ));
-						green[offset + i] = (byte) (0.0 );
-						blue[offset + i] = (byte) (255.0 * Math.exp( - wekaSegmentation.uncertaintyLUTdecay * i  ));
+						red[offset + i] = (byte) ( 255.0 * Math.exp( - wekaSegmentation.uncertaintyLUTdecay * i  ));
+						green[offset + i] = (byte) ( 0 );
+						blue[offset + i] = (byte) ( 255.0 * Math.exp( - wekaSegmentation.uncertaintyLUTdecay * i  ));
 					}
 				}
 				overlayLUT = new LUT(red, green, blue);
