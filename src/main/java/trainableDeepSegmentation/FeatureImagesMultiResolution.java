@@ -539,6 +539,50 @@ public class FeatureImagesMultiResolution
 
             nxFeatureImage = imp.getWidth();
 
+            /*
+            Example: binning 3, value 3
+            orig: 0,1,2,3,4,5,6,7,8
+            bin:  .,0,.|.,1,.|.,2,.
+            value at orig 3 should be computed from bin 0 and 1
+            halfwidth = (3-1)/2 = 1
+            tmp = (3 - halfwidth) / 3 = 2 / 3
+            base = (int) tmp = 0
+            baseDist = tmp - base = 2 / 3 - 0 = 2 / 3
+            baseDist2 = 1 - 2 / 3 = 1 / 3
+            ..this makes sense, because
+            3 is 2 away from 1, which is the center of bin 0
+            3 is 1 away from 4, which is the center of bin 1
+
+            Example: binning 3, value 4
+            orig: 0,1,2,3,4,5,6,7,8
+            bin:  .,0,.|.,1,.|.,2,.
+            value at orig 4 should be computed from bin 1, because it is its center
+            halfwidth = (3-1)/2 = 1
+            tmp = (4 - halfwidth) / 3 = 3 / 3 = 1
+            base = (int) tmp = 1
+            baseDist = tmp - base = 1 - 1 = 0
+            baseDist2 = 1 - 0 = 1
+            ..this means that bin 2 will get a weight of 0 (i.e., baseDist)
+            ..and bin 1 will get a weight of 1
+
+            Example: binning cal 2, value 3
+            orig: 0,1,2,3,4,5,6,7,8
+            bin:  .0.|.1.|.2.|.3.|
+            value at orig 3 should be computed from bin 1 and bin 2
+            halfwidth = (cal-1)/2 = (2-1)/2 = 0.5
+            tmp = (3 - halfwidth) / cal = (3-0.5)/2 = 2.5/2 = 1.25
+            base = (int) tmp = 1  (=> above will be 2)
+            baseDist = tmp - base = 1.25 - 1 = 0.25
+            baseDist2 = 1 - 0.25 = 0.75
+            ..center of bin 1 is 2.5 in orig
+            ..center of bin 2 is 4.5 in orig
+            ..distance of 3 from 2.5 is 0.5
+            ..distance of 3 from 4.5 is 1.5
+            ..dividing 0.5 and 1.5 by the calibration (=binning) 2 yields the scaled distances 0.25 and 0.75
+            ..=> makes sense
+            */
+
+
             zTmp = ( (z - zHalfWidth) / zCal );
             zBase = (int) zTmp;
             zBaseDist = ( zTmp - zBase ) ;
@@ -1022,6 +1066,7 @@ public class FeatureImagesMultiResolution
              */
 
             int[] binning = new int[3];
+
             for (int iScale = 0; iScale <= maxFeatureScale; iScale++)
             {
 
@@ -1034,21 +1079,26 @@ public class FeatureImagesMultiResolution
                 }
                 else
                 {
+
                     // bin images of previous resolution
-                    // ...no MT because it is very fast anyway
+                    // (no multi-threading because this is very fast)
 
                     featureImagesPreviousResolution = multiResolutionFeatureImages.get(iScale - 1);
 
+                    // compute how much should be binned;
+                    // if the data is anisotropic
+                    // we bin anisotropic as well
                     setBinning( featureImagesPreviousResolution.get(0), anisotropy, scalingFactor, binning );
 
-                    // take into account how much of the anisotropy we already dealt with
+                    // adapt the anisotropy, which could have changed during
+                    // the (anisotropic) binning
                     anisotropy /= 1.0 * binning[0] / binning[2];
-                    anisotropy = anisotropy < 1.0 ? 1.0 : anisotropy;
 
                     for (ImagePlus featureImage : featureImagesPreviousResolution)
                     {
-                        if ( iScale == maxFeatureScale ) // don't bin but smooth last scale to keep spatial information better
+                        if ( iScale == maxFeatureScale )
                         {
+                            // don't bin but smooth last scale to keep spatial information better
                             // radius of 3 is the largest that will not cause boundary effects,
                             // because the ignored border during classification is
                             // 3 pixel at maxFeatureScale - 1 (i.e. 1 pixel at maxFeatureScale)
@@ -1070,10 +1120,16 @@ public class FeatureImagesMultiResolution
                 FEATURES
                  */
 
-                double smoothingScale = (iScale == 0) ? 1.0 : 0.66;
-                double integrationScale = (iScale == 0) ? 1.0 : 0.66;
-                //smoothingScale = (iScale == maxFeatureScale) ? 2.0 : smoothingScale;
-                integrationScale = (iScale == maxFeatureScale) ? 2.0 : integrationScale;
+                double smoothingScale = 1.0;
+                double integrationScale = smoothingScale;
+
+                if ( iScale == maxFeatureScale )
+                {
+                    // for the last scale we do not bin but only smooth (s.a.),
+                    // thus we need to look for features over a wider range
+                    integrationScale *= 2.0;
+                    // smoothingScale does not need to be increased, because the images are smoothed already
+                }
 
                 boolean hessianAbsoluteValues = false;
 
@@ -1084,15 +1140,20 @@ public class FeatureImagesMultiResolution
                 // Single threaded
                 ArrayList<ArrayList<ImagePlus>> featureImagesList = new ArrayList<>();
 
+                // Generate a calibration for feature computation
+                // to account for anisotropy
+                Calibration calibrationFeatureComp = new Calibration();
+                calibrationFeatureComp.pixelWidth = 1.0;
+                calibrationFeatureComp.pixelHeight = 1.0;
+                calibrationFeatureComp.pixelDepth = 1.0 * anisotropy;
+                calibrationFeatureComp.setUnit("um");
+
                 for (ImagePlus featureImage : featureImagesThisResolution)
                 {
-                    // temporarily remove calibration while computing features
-                    // TODO: don't do this?!
-                    removeCalibration(featureImage);
-
-                    // TODO:
-                    // - compute anisotropic features for scale 0 ?
-                    // - for last level change smoothing and integration scales
+                    // temporarily change calibration while computing
+                    // the hessian and the structure
+                    // in order to account for the anisotropy in xz vs z
+                    featureImage.setCalibration( calibrationFeatureComp );
 
                     // do not DCF too deep because it becomes too many features
                     if ( ! featureImage.getTitle().contains("D3") )
@@ -1133,14 +1194,14 @@ public class FeatureImagesMultiResolution
                     }
                 }
 
-                // set correct calibrations of all images at this resolution
+                // (re-)set calibrations of all images at this resolution
                 for (ImagePlus featureImage : featureImagesThisResolution)
                 {
                     featureImage.setCalibration( calibrationThisResolution.copy() );
                 }
 
                 // and add everything to the multi-resolution array
-                multiResolutionFeatureImages.add( featureImagesThisResolution );
+                multiResolutionFeatureImages.add(featureImagesThisResolution );
 
             }
 
@@ -1267,7 +1328,7 @@ public class FeatureImagesMultiResolution
         }
         else
         {
-            // potentially bin less in z]
+            // potentially bin less in z
             binning[2] = (int) (scalingFactor / anisotropy); // z-binning
             if( binning[2]==0 ) binning[2] = 1;
         }
