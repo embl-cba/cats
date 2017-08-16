@@ -1,23 +1,50 @@
-[![](https://travis-ci.org/fiji/Trainable_Segmentation.svg?branch=master)](https://travis-ci.org/fiji/Trainable_Segmentation)
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.59290.svg)](http://dx.doi.org/10.5281/zenodo.59290)
 
-Trainable Weka Segmentation
+Trainable Deep Weka Segmentation
 ======================
-The **Trainable Weka Segmentation** is a Fiji plugin and library that combines a collection of machine learning algorithms with a set of selected image features to produce pixel-based segmentations. [Weka (Waikato Environment for Knowledge Analysis)](http://www.cs.waikato.ac.nz/ml/weka/) can itself be called from the plugin. It contains a collection of visualization tools and algorithms for data analysis and predictive modeling, together with graphical user interfaces for easy access to this functionality. As described on their wikipedia site, the advantages of Weka include:
+The **Trainable Deep Weka Segmentation** is a Fiji plugin for trainable segmentation using deep convolution. It is heavily based on the original **Trainable Weka Segmentation** plugin.
 
-- freely availability under the GNU General Public License
-- portability, since it is fully implemented in the Java programming language and thus runs on almost any modern computing platform
-- a comprehensive collection of data preprocessing and modeling techniques
-- ease of use due to its graphical user interfaces
-- Weka supports several standard data mining tasks, more specifically, data preprocessing, clustering, classification, regression, visualization, and feature selection.
+## Software requirements
 
-The main goal of this library is to work as a **bridge between the Machine Learning and the Image Processing fields**. It provides the framework to use and, more important, compare any available classifier to perform image segmentation based on pixel classification.
+You need Fiji running Java 1.8; older version will run Java 1.6, which does not work for this plugin. The easiest way to have Fiji running Java 1.8 is to reinstall Fiji from scratch.
 
-For further details, please visit the [documentation site](http://imagej.net/Trainable_Weka_Segmentation).
+## Hardware requirements
 
-![Trainable Weka Segmentation pipeline overview](http://imagej.net/_images/d/db/TWS-pipeline.png)
+The plugin should work on any computer however the computations are quite heavy and can thus be slow. The code is multi-threaded such that the execution speed scales basically linearly with the number of cores. 
 
-Citation
---------
-Please note that Trainable Weka Segmentation is based on a publication. If you use it successfully for your research please be so kind to cite our work:
-* Arganda-Carreras, I., Kaynig, V., Rueden, C., Eliceiri, K. W., Schindelin, J., Cardona, A., & Seung, H. S. (2017). [Trainable Weka Segmentation: a machine learning tool for microscopy pixel classification](https://academic.oup.com/bioinformatics/article-abstract/doi/10.1093/bioinformatics/btx180/3092362/Trainable-Weka-Segmentation-a-machine-learning). Bioinformatics (Oxford Univ Press) Bioinformatics btx180, [doi:10.1093/bioinformatics/btx180](http://dx.doi.org/10.1093%2Fbioinformatics%2Fbtx180) ([on Google Scholar](http://scholar.google.com/scholar?cluster=12995971888361615836)).
+Examples:
+- For a convolution depth of 3 we observed a pixel classification speed of ~100 kiloVoxel / second using a 32 core Linux CentOS 7 machine.
+- For a convolution depth of 3 we observed a pixel classification speed of ~10 kiloVoxel / second using a 4 core MacBook Air.
+
+## Installation
+
+Download below files and place them in your Fiji plugins folder:
+- https://git.embl.de/grp-almf/fiji-plugin-deep-segmentation/raw/master/out/artifacts/fiji_plugin_trainable_deep_segmentation.jar
+- https://github.com/tischi/fiji-plugin-bigDataTools/raw/master/out/artifacts/fiji--bigDataTools_.jar
+
+The latter plugin enables streaming large data sets from disk.
+
+## Usage
+
+### Open a data set
+
+You can either simply load a data set into Fiji or you can use [Plugins > BigDataTools > DataStreamingTools] in order to stream a data set from disk; this is useful for data sets that come close to or exceed the RAM of your computer. 
+
+Once you opened the data set you launch the segmentation via [Plugins > Segmentation > Trainable Deep Segmentation]; the graphical user interface will appear around your data set.
+
+Supported data types:
+
+- The streaming currenlty only works for Tiff or Hdf5 based data.
+- The trainable segmentation supports:
+    - 2D+c+t, 3D+c+t
+    - spatially anisotropic data 
+
+### Settings
+
+...
+
+### Tips and tricks
+
+#### How to put your training labels 
+
+As this tool is able to learn long range context you have to really tell it what you want. I recommend always putting a background label just next to the actual label.
+
