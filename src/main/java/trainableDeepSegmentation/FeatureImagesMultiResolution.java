@@ -540,7 +540,9 @@ public class FeatureImagesMultiResolution
             nxFeatureImage = imp.getWidth();
 
             /*
-            Example: binning 3, value 3
+
+            # Example: binning 3, value 3
+
             orig: 0,1,2,3,4,5,6,7,8
             bin:  .,0,.|.,1,.|.,2,.
             value at orig 3 should be computed from bin 0 and 1
@@ -553,7 +555,8 @@ public class FeatureImagesMultiResolution
             3 is 2 away from 1, which is the center of bin 0
             3 is 1 away from 4, which is the center of bin 1
 
-            Example: binning 3, value 4
+            # Example: binning 3, value 4
+
             orig: 0,1,2,3,4,5,6,7,8
             bin:  .,0,.|.,1,.|.,2,.
             value at orig 4 should be computed from bin 1, because it is its center
@@ -565,7 +568,8 @@ public class FeatureImagesMultiResolution
             ..this means that bin 2 will get a weight of 0 (i.e., baseDist)
             ..and bin 1 will get a weight of 1
 
-            Example: binning cal 2, value 3
+            # Example: binning=cal=2, value 3
+
             orig: 0,1,2,3,4,5,6,7,8
             bin:  .0.|.1.|.2.|.3.|
             value at orig 3 should be computed from bin 1 and bin 2

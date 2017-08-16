@@ -221,8 +221,8 @@
       <file leaf-file-name="FeatureImagesMultiResolution.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="1.1115538">
-              <caret line="547" column="43" selection-start-line="547" selection-start-column="43" selection-end-line="547" selection-end-column="43" />
+            <state vertical-scroll-proportion="0.5378486">
+              <caret line="565" column="44" selection-start-line="565" selection-start-column="44" selection-end-line="565" selection-end-column="44" />
               <folding>
                 <element signature="e#3996#3997#0" expanded="true" />
                 <element signature="e#4033#4034#0" expanded="true" />
@@ -233,12 +233,12 @@
                 <element signature="method#getBytesAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#getShortsAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#getStructure#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-                <element signature="method#call#0;class#36188:38276" expanded="true" />
+                <element signature="method#call#0;class#36198:38286" expanded="true" />
                 <element signature="method#sqrt#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-                <element signature="e#38723#38724#0" expanded="true" />
-                <element signature="e#38768#38769#0" expanded="true" />
-                <element signature="e#38899#38900#0" expanded="true" />
-                <element signature="e#38961#38962#0" expanded="true" />
+                <element signature="e#38733#38734#0" expanded="true" />
+                <element signature="e#38778#38779#0" expanded="true" />
+                <element signature="e#38909#38910#0" expanded="true" />
+                <element signature="e#38971#38972#0" expanded="true" />
                 <element signature="method#updateFeaturesMT#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#putDeepConvFeatLevelIntoTitle#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#filter3d#0;class#FeatureImagesMultiResolution#0" expanded="true" />
@@ -248,29 +248,29 @@
                 <element signature="method#setBinning#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#removeCalibration#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#bin#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-                <element signature="e#54090#54091#0" expanded="true" />
-                <element signature="e#54125#54126#0" expanded="true" />
-                <element signature="e#54265#54266#0" expanded="true" />
-                <element signature="e#54310#54311#0" expanded="true" />
-                <element signature="e#54457#54458#0" expanded="true" />
-                <element signature="e#54505#54506#0" expanded="true" />
+                <element signature="e#54100#54101#0" expanded="true" />
+                <element signature="e#54135#54136#0" expanded="true" />
+                <element signature="e#54275#54276#0" expanded="true" />
+                <element signature="e#54320#54321#0" expanded="true" />
+                <element signature="e#54467#54468#0" expanded="true" />
+                <element signature="e#54515#54516#0" expanded="true" />
                 <element signature="method#shutDownNow#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#isEmpty#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#getLabel#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-                <element signature="e#55495#55496#0" expanded="true" />
-                <element signature="e#55533#55534#0" expanded="true" />
-                <element signature="e#55738#55739#0" expanded="true" />
-                <element signature="e#55792#55793#0" expanded="true" />
-                <element signature="e#55839#55840#0" expanded="true" />
-                <element signature="e#55881#55882#0" expanded="true" />
-                <element signature="e#55914#55915#0" expanded="true" />
-                <element signature="e#55961#55962#0" expanded="true" />
-                <element signature="e#55995#55996#0" expanded="true" />
-                <element signature="e#56043#56044#0" expanded="true" />
-                <element signature="e#56076#56077#0" expanded="true" />
-                <element signature="e#56125#56126#0" expanded="true" />
-                <element signature="e#56153#56154#0" expanded="true" />
-                <element signature="e#56192#56193#0" expanded="true" />
+                <element signature="e#55505#55506#0" expanded="true" />
+                <element signature="e#55543#55544#0" expanded="true" />
+                <element signature="e#55748#55749#0" expanded="true" />
+                <element signature="e#55802#55803#0" expanded="true" />
+                <element signature="e#55849#55850#0" expanded="true" />
+                <element signature="e#55891#55892#0" expanded="true" />
+                <element signature="e#55924#55925#0" expanded="true" />
+                <element signature="e#55971#55972#0" expanded="true" />
+                <element signature="e#56005#56006#0" expanded="true" />
+                <element signature="e#56053#56054#0" expanded="true" />
+                <element signature="e#56086#56087#0" expanded="true" />
+                <element signature="e#56135#56136#0" expanded="true" />
+                <element signature="e#56163#56164#0" expanded="true" />
+                <element signature="e#56202#56203#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -404,86 +404,6 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fiji-plugin-deep-segmentation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fiji-plugin-deep-segmentation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fiji-plugin-deep-segmentation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fiji-plugin-deep-segmentation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fiji-plugin-deep-segmentation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fiji-plugin-deep-segmentation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="trainableDeepSegmentation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fiji-plugin-deep-segmentation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fiji-plugin-deep-segmentation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
         </subPane>
       </pane>
       <pane id="PackagesPane" />
@@ -495,7 +415,7 @@
     <property name="project.structure.last.edited" value="Libraries" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/lib/mcib3d-core3.9.jar!/" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../fiji-plugin-registrationTools" />
     <property name="recentsLimit" value="5" />
     <property name="restartRequiresConfirmation" value="true" />
     <property name="dynamic.classpath" value="false" />
@@ -684,7 +604,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
@@ -696,12 +616,12 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32891566" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32891566" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.23390558" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.23390558" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.40361446" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -732,7 +652,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java</url>
-          <line>1241</line>
+          <line>1245</line>
           <properties />
           <option name="timeStamp" value="21" />
         </line-breakpoint>
@@ -912,8 +832,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="1.1115538">
-          <caret line="547" column="43" selection-start-line="547" selection-start-column="43" selection-end-line="547" selection-end-column="43" />
+        <state vertical-scroll-proportion="0.5378486">
+          <caret line="565" column="44" selection-start-line="565" selection-start-column="44" selection-end-line="565" selection-end-column="44" />
           <folding>
             <element signature="e#3996#3997#0" expanded="true" />
             <element signature="e#4033#4034#0" expanded="true" />
@@ -924,12 +844,12 @@
             <element signature="method#getBytesAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#getShortsAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#getStructure#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#call#0;class#36188:38276" expanded="true" />
+            <element signature="method#call#0;class#36198:38286" expanded="true" />
             <element signature="method#sqrt#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="e#38723#38724#0" expanded="true" />
-            <element signature="e#38768#38769#0" expanded="true" />
-            <element signature="e#38899#38900#0" expanded="true" />
-            <element signature="e#38961#38962#0" expanded="true" />
+            <element signature="e#38733#38734#0" expanded="true" />
+            <element signature="e#38778#38779#0" expanded="true" />
+            <element signature="e#38909#38910#0" expanded="true" />
+            <element signature="e#38971#38972#0" expanded="true" />
             <element signature="method#updateFeaturesMT#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#putDeepConvFeatLevelIntoTitle#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#filter3d#0;class#FeatureImagesMultiResolution#0" expanded="true" />
@@ -939,29 +859,29 @@
             <element signature="method#setBinning#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#removeCalibration#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#bin#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="e#54090#54091#0" expanded="true" />
-            <element signature="e#54125#54126#0" expanded="true" />
-            <element signature="e#54265#54266#0" expanded="true" />
-            <element signature="e#54310#54311#0" expanded="true" />
-            <element signature="e#54457#54458#0" expanded="true" />
-            <element signature="e#54505#54506#0" expanded="true" />
+            <element signature="e#54100#54101#0" expanded="true" />
+            <element signature="e#54135#54136#0" expanded="true" />
+            <element signature="e#54275#54276#0" expanded="true" />
+            <element signature="e#54320#54321#0" expanded="true" />
+            <element signature="e#54467#54468#0" expanded="true" />
+            <element signature="e#54515#54516#0" expanded="true" />
             <element signature="method#shutDownNow#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#isEmpty#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#getLabel#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="e#55495#55496#0" expanded="true" />
-            <element signature="e#55533#55534#0" expanded="true" />
-            <element signature="e#55738#55739#0" expanded="true" />
-            <element signature="e#55792#55793#0" expanded="true" />
-            <element signature="e#55839#55840#0" expanded="true" />
-            <element signature="e#55881#55882#0" expanded="true" />
-            <element signature="e#55914#55915#0" expanded="true" />
-            <element signature="e#55961#55962#0" expanded="true" />
-            <element signature="e#55995#55996#0" expanded="true" />
-            <element signature="e#56043#56044#0" expanded="true" />
-            <element signature="e#56076#56077#0" expanded="true" />
-            <element signature="e#56125#56126#0" expanded="true" />
-            <element signature="e#56153#56154#0" expanded="true" />
-            <element signature="e#56192#56193#0" expanded="true" />
+            <element signature="e#55505#55506#0" expanded="true" />
+            <element signature="e#55543#55544#0" expanded="true" />
+            <element signature="e#55748#55749#0" expanded="true" />
+            <element signature="e#55802#55803#0" expanded="true" />
+            <element signature="e#55849#55850#0" expanded="true" />
+            <element signature="e#55891#55892#0" expanded="true" />
+            <element signature="e#55924#55925#0" expanded="true" />
+            <element signature="e#55971#55972#0" expanded="true" />
+            <element signature="e#56005#56006#0" expanded="true" />
+            <element signature="e#56053#56054#0" expanded="true" />
+            <element signature="e#56086#56087#0" expanded="true" />
+            <element signature="e#56135#56136#0" expanded="true" />
+            <element signature="e#56163#56164#0" expanded="true" />
+            <element signature="e#56202#56203#0" expanded="true" />
           </folding>
         </state>
       </provider>
