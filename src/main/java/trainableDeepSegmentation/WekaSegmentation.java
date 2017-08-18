@@ -2916,7 +2916,7 @@ public class WekaSegmentation {
 		String[] ss = featuresToShow.split(",");
 		this.featuresToShow = new ArrayList<>();
 		for ( String s : ss)
-			this.featuresToShow.add(s);
+			this.featuresToShow.add( s.trim() );
 	}
 
 	public void setChannelsToConsider( String channelsToConsider )
@@ -2925,7 +2925,7 @@ public class WekaSegmentation {
 		this.channelsToConsider = new ArrayList<>();
 		for ( String s : ss)
 		{
-			this.channelsToConsider.add( Integer.parseInt(s) - 1 ); // zero-based
+			this.channelsToConsider.add( Integer.parseInt( s.trim() ) - 1 ); // zero-based
 		}
 	}
 
@@ -2935,7 +2935,7 @@ public class WekaSegmentation {
 		this.resolutionWeights = new ArrayList<>();
 		for ( String s : ss)
 		{
-			this.resolutionWeights.add( Integer.parseInt(s) );
+			this.resolutionWeights.add( Integer.parseInt( s.trim() ) );
 		}
 
 	}
@@ -2945,7 +2945,7 @@ public class WekaSegmentation {
 		int i = 0;
 		for ( String s : sizes.split(",") )
 		{
-			this.minTileSizes[i++] = Integer.parseInt( s );
+			this.minTileSizes[i++] = Integer.parseInt( s.trim() );
 		}
 
 	}

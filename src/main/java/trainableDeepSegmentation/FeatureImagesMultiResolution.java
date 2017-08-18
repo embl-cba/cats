@@ -265,7 +265,7 @@ public class FeatureImagesMultiResolution
                 // Get channel(s) to process
                 ImagePlus[] channels = extractChannels(originalImage);
 
-                String filterBaseName = "He"+(int)(sigma);
+                String filterBaseName = "He"; //+(int)(sigma);
 
                 ArrayList<ImagePlus>[] results = new ArrayList[ channels.length ];
 
@@ -955,7 +955,7 @@ public class FeatureImagesMultiResolution
             {
                 ArrayList<ImagePlus> results = new ArrayList<>();
 
-                String filterBaseName = "St"+(int)(sigma);
+                String filterBaseName = "St";//+(int)(sigma);
 
                 ImagePlus tmp = originalImage.duplicate();
 
@@ -1235,7 +1235,7 @@ public class FeatureImagesMultiResolution
 
                     // logger.info(""+(Math.pow(3,i))+": " + featureImage.getTitle());
                     multiResolutionFeatureImageArray[ iFeature++ ] = featureImage;
-                    featureImage.setTitle( "L" + iLevel + "--" + featureImage.getTitle() );
+                    featureImage.setTitle( "S" + (int)Math.pow(scalingFactor,iLevel) + "__" + featureImage.getTitle() );
                     featureNames.add(featureImage.getTitle());
                     numFeaturesThisResolution++;
                 }
@@ -1399,7 +1399,7 @@ public class FeatureImagesMultiResolution
                     break;
                 case "AVERAGE":
                     impBinned = binner.shrink(imp, binning[0], binning[1], binning[2], binner.AVERAGE);
-                    impBinned.setTitle("BAv_" + title);
+                    impBinned.setTitle("Avg_" + title);
                     break;
                 case "MIN":
                     impBinned = binner.shrink(imp, binning[0], binning[1], binning[2], binner.MIN);
