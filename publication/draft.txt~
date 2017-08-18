@@ -1,0 +1,34 @@
+# Deep convolutional feature based random forest classification for image segmentation
+
+## Author list
+
+- Christian Tischer
+- Ignacio Arganda-Carreras
+- Anna Steyer
+- Yannick Schwab
+- Rainer Pepperkok
+
+## Introduction
+
+## Feature computation
+
+Feature images are computed by computing hessian matrix and structure tensor eigenvalues, as well as down-sampling by average binning. Figure FigDeepConvExample shows an example of how feature images are comuted that, in this case, help to segment a line of dots. The names of the respective features indicate whether either the hessian matrix (He) or the structure tensor (St) was computed and which eigenvalue was computed, the largest (L), the middle (M), or the smallest (S). In addition the name contains information about the current binning relativ to the original image. For example, 9x9x3_StM_3x3x1_StS_Orig means that first the smallest eigenvalue of the structure tensor (StS)  was computed followed by a 3x3x1 average binning, followed by computing the middle eigenvalue of the structure tensor (StM), followed by a 3x3x3 binnning yielding a 9x9x3 binned image with respect to the original image.
+
+### Dealing with anisotropic data
+
+The algorithm does not always bin isotropically in order to account for a potential anisotropy of the input data. For example, if the resolution of the input data is 200 nm in x/y and 600 nm in z, and the cose down-sampling factor is 3, the first binning would be 3x3x1, yielding isotropic data with a (600 nm)^3 voxel size. The next binnings would be isotropic. This has the advantage that the data becomes very quickly isotropic, such that features computed in lower resolution levels are really 3-D. In addition the implementation of the Hessian matrix and Structure tensor also properly handles anisotropic image calibration (Ref: ImageScience).
+
+### Motivation for this feature choice
+
+The advantage of a neural network implementation of deep convolution is that one does not have to manually choose which convolutions are computed, but this is learned during the training. Here we had to make a choice. We chose the Hessian matrix and the Structure tensor eigenvalues because they are rotationally invariant (a disadvantage of NN, which are in principle not rotationally invariant) and because they are good descriptors of most biologically relevant structures such as membranes, tubes, and vesicles.
+
+
+## User adjustable parameters
+
+### Down-sample factor
+
+...
+
+###
+
+ 
