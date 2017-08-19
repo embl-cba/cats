@@ -10,7 +10,38 @@
 
 ## Introduction
 
-## Feature computation
+
+
+
+## Main differences to Fiji's Trainable Weka Segmentation plugin
+
+(NOTE: maybe we should have a table comparing DCFRF with TWS and ilastik?!)
+
+### Storage of labels
+
+While in the TWS only the training data associated with each label was stored, now also the actual ROI is stored. This enables the user to come back to the same data set and add more labels, seeing which labels have been put previously.
+
+### Feature computation
+
+Computing features at higher resolution levels is not done by increasing the kernel width but by down-sampling the input image. This has the advantage of an increased speed during feature computation, as well as reduced memory requirements for storing the feature images. For N-D data with a binning factor of B, the reduction in computation time and memory is a factor of B^N for each resolution layer. For classification, the down-sampled feature images are up-sampled again (just as in the 3-D U-Net), this takes time such that some of the gain in speed is lost; we would like to explore in the future whether this up-sampling could be computed on a GPU in order to save time. As the up-sampling is only needed locally at the location of the current instance voxel, the additional memory requirements at this step are relatively small.
+
+In addition, features at lower resolution layers are not only computed on the down-sampled original image but also on down-sampled feature images of the previous resolution layer (see section on deep convolutional feature computation). 
+
+### N-D support
+
+The DCFRF plugin now supports multi-channel and multi-time-point data. In terms of multi-channel support the user can choose which channels should be taken into account for the feature computation. Fatures are computed in all channels independenly; we currently do not support features taking into account the gray values in multiple channels simultaneously.
+
+### Big image data handling
+
+The DCFRF plugin processes the image data in blocks and can thus handle arbitrarily large images. For both the input as well as the classification image the user has the choice to have either of them fully in RAM or stream the data from and to disk. The streaming is currently handled  In addition the user can specify subregions of the image to be classified such that not always the whole data set needs to be processed.
+
+### Uncertainty display and navigation
+
+...
+
+## Deep convolutional deature computation
+
+The advantage of a neural network implementation of deep convolution is that one does not have to manually choose which convolutions are computed, because this is learned during the training. However this results in many parameters to be learned and thus long training times (typically hours). Here we chose to use fixed features, namely the eigenvalues of the hessian matrix and the structure tensor. These features have the advantage of being rotationally invariant and being good descriptors of most biologically relevant structures such as membranes, tubes, and vesicles.
 
 Feature images are computed by computing hessian matrix and structure tensor eigenvalues, as well as down-sampling by average binning. Figure FigDeepConvExample shows an example of how feature images are comuted that, in this case, help to segment a line of dots. The names of the respective features indicate whether either the hessian matrix (He) or the structure tensor (St) was computed and which eigenvalue was computed, the largest (L), the middle (M), or the smallest (S). In addition the name contains information about the current binning relativ to the original image. For example, 9x9x3_StM_3x3x1_StS_Orig means that first the smallest eigenvalue of the structure tensor (StS)  was computed followed by a 3x3x1 average binning, followed by computing the middle eigenvalue of the structure tensor (StM), followed by a 3x3x3 binnning yielding a 9x9x3 binned image with respect to the original image.
 
@@ -18,16 +49,36 @@ Feature images are computed by computing hessian matrix and structure tensor eig
 
 The algorithm does not always bin isotropically in order to account for a potential anisotropy of the input data. For example, if the resolution of the input data is 200 nm in x/y and 600 nm in z, and the cose down-sampling factor is 3, the first binning would be 3x3x1, yielding isotropic data with a (600 nm)^3 voxel size. The next binnings would be isotropic. This has the advantage that the data becomes very quickly isotropic, such that features computed in lower resolution levels are really 3-D. In addition the implementation of the Hessian matrix and Structure tensor also properly handles anisotropic image calibration (Ref: ImageScience).
 
-### Motivation for this feature choice
+## Random forest settings
 
-The advantage of a neural network implementation of deep convolution is that one does not have to manually choose which convolutions are computed, but this is learned during the training. Here we had to make a choice. We chose the Hessian matrix and the Structure tensor eigenvalues because they are rotationally invariant (a disadvantage of NN, which are in principle not rotationally invariant) and because they are good descriptors of most biologically relevant structures such as membranes, tubes, and vesicles.
+A random forest has the following settings:
+- N.. number of trees
+- F.. number of random features per node
+- ...
 
+We chose F to be on tenth of the number of input features. Our intuition was that 1/10 is high enough to fetch the best features at each node with a decent probability, leading to a good classification strength of each tree, and low enough to have reasonably uncorrelated trees (the probability to have two sucessive nodes in two different trees using the same feature combination only is (1/10)^2 = 1/100). Both high strength and low correlation or important for a random forest classifier to work well [Ref Breiman].  
+
+### Random forest future ideas
+
+#### Evaluate trees based on confidence
+
+Sucessivley evaluate the next tree and stop if the confidence for a certain class reached a certain threshold. 
 
 ## User adjustable parameters
 
 ### Down-sample factor
 
-...
+The down-sample factor (DSF) determines how much the images are down-sampled from one resolution level (L) to the next. The optimal choice depends on the spatial structure of the input data. In general, a smaller value captures more details while a lager value faster approaches larger spatial scales. For example choosing a downsample factor of 2 yields binnings 2^(L) (1,2,4,8,...) while 3 yields binnings of 3^(L) (1,3,9,27,...); for the data shown in this article we used a down-sample factor of 3. 
+
+### Maximal feature depth
+  
+In our current architecture we have 6 features (4 for 2-D images), namely 3 (2) eigenvalues of the hessian matrix and 3 (2) eigenvalues of the structure tensor. In addition, we allow also simply keep the downsampled version of each image without an additional feature computed. Thus, at each resolution level there are 7 (5) images that could be derived from all images in the preceeding resolution layer, yielding for the 3-D case 7^(L+1) features (L0:7, L1:49, L2:343, L3:2401, L4:16807, ...) at downsampling level L. Obviously this is a fast growing number, which for instance slows down the RF training that has to test all those features for their usefulness given the current classification task. To keep the numbers of features at bay we thus introduced a maximal feature depth (MFD) which determines how many levels of "features of features" are allowed. For example, given a downsample factor of 3 a feature image at level 2 could be 9x9x9_HeL_3x3x3_StS_1x1x1_Orig. Given a MCD of 2, this feature image could not be subjected to any further filters, but could only be further downsampled. However the image 9x9x9_3x3x3_StS_1x1x1_Orig would be subjected to additional filters, because it was so far only subjected to one filter, namely the smallest eigenvalue of the structure tensor (StS) at resolution level 0.
+  
+
+
+## Discussion
+
+In neural network implementations of deep convolutions all convolutions are learned during the training. This has the advantage that the NN has the chance to learn the optimal convolutional filters for the given segmentation task. However this comes at a cost of many parameters and long training times. For instance, the 3-D U-Net has about 11 million parameters and took 3 days to train [Ref Ronneberger 3-D UNet]. In addition, deep convolutions encoded by NNs are intrinsically not rotationally invariant such that all rotations need to be explicitely learned and encoded by the NN. Especially in 3D this means that a lot of angles to be learned. As most biological data is rotationally invariant we feel that this is a disadvantage of NNs as compared with our approach where we only use rotationally invariant features. 
 
 ###
 

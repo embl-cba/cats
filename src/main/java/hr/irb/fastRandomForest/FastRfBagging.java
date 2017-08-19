@@ -111,6 +111,8 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       throw new IllegalArgumentException("The FastRfBagging class accepts " +
         "only FastRandomTree as its base classifier.");
 
+    motherForest.treeSizes = new int[m_NumIterations]; // Tischi
+
     /* We fill the m_Classifiers array by creating lots of trees with new()
      * because this is much faster than using serialization to deep-copy the
      * one tree in m_Classifier - this is what the super.buildClassifier(data)
@@ -184,13 +186,10 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       }
 
       // make sure all trees have been trained before proceeding
-      double avgTreeSize = 0; // TISCHI
       for (int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++) {
         futures.get(treeIdx).get();
-        avgTreeSize += ((FastRandomTree) m_Classifiers[treeIdx]).numNodes(); // TISCHI
+        motherForest.treeSizes[treeIdx] = ((FastRandomTree) m_Classifiers[treeIdx]).numNodes(); // Tischi
       }
-      avgTreeSize /= m_Classifiers.length; // TISCHI
-      IJ.log("Average number of nodes per tree " + avgTreeSize); // TISCHI
 
       // calc OOB error?
       if (getCalcOutOfBag() || getComputeImportances()) {

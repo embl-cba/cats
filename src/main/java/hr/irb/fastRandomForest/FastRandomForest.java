@@ -139,6 +139,11 @@ public class FastRandomForest
   /** a ZeroR model in case no model can be built from the data */
   protected AbstractClassifier m_ZeroR;
 
+  protected int[] attributeUsages = null; // Tischi
+
+  protected int[] treeSizes = null; // Tischi
+
+
   /**
    * Returns a string describing classifier
    *
@@ -194,6 +199,30 @@ public class FastRandomForest
 
     return m_numTrees;
   }
+
+  /**
+   * Get how often each attribute
+   * has been used in the forest.
+   *
+   * @return Array of attribute usages.
+   */
+  public int[] getAttributeUsages(){
+
+    return attributeUsages; // Tischi
+  }
+
+
+  /**
+   * Get how many nodes each tree
+   * has in the forest.
+   *
+   * @return Array of tree sizes usages.
+   */
+  public int[] getTreeSizes(){
+
+    return treeSizes;
+  }
+
 
   /**
    * Set the value of numTrees.
@@ -611,6 +640,9 @@ public class FastRandomForest
     if(m_KValue > data.numAttributes() - 1) m_KValue = data.numAttributes() - 1;
     if(m_KValue < 1) m_KValue = (int)Utils.log2(data.numAttributes()) + 1;
 
+    // TISCHI
+    attributeUsages = new int[ data.numAttributes() ];
+
     FastRandomTree rTree = new FastRandomTree();
     rTree.m_MotherForest = this; // allows to retrieve KValue and MaxDepth
     // some temporary arrays which need to be separate for every tree, so
@@ -622,9 +654,9 @@ public class FastRandomForest
     m_bagger.setNumIterations(m_numTrees);
     m_bagger.setCalcOutOfBag(true);
     m_bagger.setComputeImportances(this.getComputeImportances());
-    m_bagger.setBagSizePercent( Integer.parseInt(m_BatchSize) );
+    m_bagger.setBagSizePercent(Integer.parseInt(m_BatchSize));
     m_bagger.buildClassifier(data, m_NumThreads, this);
-    
+
   }
 
 

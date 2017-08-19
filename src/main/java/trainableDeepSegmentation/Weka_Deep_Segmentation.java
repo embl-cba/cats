@@ -7,6 +7,7 @@ import bigDataTools.logging.Logger;
 import bigDataTools.utils.ImageDataInfo;
 import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
+import hr.irb.fastRandomForest.FastRandomForest;
 import ij.*;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
@@ -39,10 +40,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -230,7 +228,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** name of the macro method to set the minimum kernel radius */
 	public static final String SET_MINIMUM_SIGMA = "setMinimumSigma";
 	/** name of the macro method to set the maximum kernel radius */
-	public static final String SET_MAXIMUM_SIGMA = "setMaximumFeatureScale";
+	public static final String SET_MAXIMUM_SIGMA = "setMaxResolutionLevel";
 	/**
 	 * name of the macro method to enable/disable the class homogenization
 	 * @deprecated use SET_BALANCE instead
@@ -441,22 +439,25 @@ public class Weka_Deep_Segmentation implements PlugIn
 					}
 					else if(e.getSource() == printFeatureNamesButton)
 					{
-						logger.info("Feature names:");
+						logger.info("Feature list, sorted according to usage in random forest:");
 
-						if ( wekaSegmentation.featureNames != null )
+						if ( wekaSegmentation.featureList != null )
 						{
-							int i = 0;
-							for (String s : wekaSegmentation.featureNames)
-								logger.info("  " + (i++) + ": " + s);
 
-							i = 0;
+							ArrayList<Feature> sortedFeatureList = new ArrayList<>(wekaSegmentation.featureList);
+							sortedFeatureList.sort(Comparator.comparing(Feature::getUsageInRF).reversed());
+
+							for (Feature feature : sortedFeatureList)
+								logger.info("" + feature.usageInRF + ", " + feature.featureName);
+
+							int i = 0;
 							for (int n : wekaSegmentation.numFeaturesPerResolution)
 								logger.info("  Number of features in level " + (i++) + ": " + n);
 
 						}
 						else
 						{
-							logger.info("  Not yet known; please run a training first");
+							logger.info("  Feature list not yet known; please run a training first");
 						}
 					}
 					else if(e.getSource() == applyButton)
@@ -1660,7 +1661,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		else
 		{
 			trainingImage = WindowManager.getCurrentImage(); //.duplicate();
-			trainingImage.setSlice( WindowManager.getCurrentImage().getSlice() );
+			trainingImage.setSlice(WindowManager.getCurrentImage().getSlice());
 		}
 
 		wekaSegmentation.setTrainingImage( trainingImage );
@@ -1682,8 +1683,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.channelsToConsider = channelsToConsider;
 		
 		displayImage = trainingImage;
-
-		wekaSegmentation.setMaximumFeatureScale( defaultMaximumScale );
 
 		ij.gui.Toolbar.getInstance().setTool(ij.gui.Toolbar.FREELINE);
 
@@ -1926,7 +1925,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				if ( index == -1 )
 					return; // has been deleted already
 
-				List<Roi> exampleRois = wekaSegmentation.getExampleRois(
+				ArrayList<Roi> exampleRois = wekaSegmentation.getExampleRois(
 						iClass,
 						displayImage.getZ()-1,
 						displayImage.getT()-1);
@@ -2009,17 +2008,33 @@ public class Weka_Deep_Segmentation implements PlugIn
 						{
 							if( this.isInterrupted() )
 							{
-								//IJ.log("Training was interrupted by the user.");
-								//wekaSegmentation.shutDownNow();
 								win.trainingComplete = false;
 								return;
 							}
+
+							if ( wekaSegmentation.minFeatureUsage > 0 )
+							{
+								logger.info("Training classifier again with features that have been selected more than " +
+										+ wekaSegmentation.minFeatureUsage + " times during the first training.");
+
+								int[] attributeUsages = ((FastRandomForest) wekaSegmentation.classifier).getAttributeUsages();
+
+								for ( int i = 0; i <  wekaSegmentation.featureList.size(); i++ )
+								{
+									wekaSegmentation.featureList.get(i).usageInRF = attributeUsages[i];
+								}
+
+								wekaSegmentation.deactivateRarelyUsedFeatures();
+
+								wekaSegmentation.trainClassifier( false );
+							}
+
 
 							win.trainingComplete = true;
 						}
 						else
 						{
-							IJ.log("The traning did not finish.");
+							IJ.log("The training did not finish.");
 							win.trainingComplete = false;
 						}
 						
@@ -2773,9 +2788,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 		*/
 
-		gd.addNumericField("Maximum feature size [3^N pixels]",
-				wekaSegmentation.getMaximumFeatureScale()
-				, 0);
+		gd.addNumericField("Downsampling factor", wekaSegmentation.downSamplingFactor, 0);
+		gd.addNumericField("Maximum downsampling level", wekaSegmentation.maxResolutionLevel, 0);
+		gd.addNumericField("Maximal convolution depth", wekaSegmentation.maxDeepConvolutionLevel, 0);
 
 		gd.addNumericField("z/xy anisotropy ", wekaSegmentation.anisotropy, 0);
 
@@ -2789,9 +2804,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 		*/
 
 		gd.addNumericField("RF: Number of trees", wekaSegmentation.getNumTrees(), 0);
-		gd.addNumericField("RF: Number of random features per node", wekaSegmentation.getNumRandomFeatures(), 0);
-		gd.addNumericField("RF: Batch size per tree in percent", wekaSegmentation.getBatchSizePercent(), 0);
-		gd.addNumericField("RF: Maximum tree depth [0 = None]", wekaSegmentation.maxDepth, 0);
+		gd.addNumericField("RF: Fraction of random features per node", wekaSegmentation.fractionRandomFeatures, 2);
+		gd.addNumericField("RF: Minimum feature usage", wekaSegmentation.minFeatureUsage, 0);
+
+		//gd.addNumericField("RF: Batch size per tree in percent", wekaSegmentation.getBatchSizePercent(), 0);
+		//gd.addNumericField("RF: Maximum tree depth [0 = None]", wekaSegmentation.maxDepth, 0);
 
 		gd.addStringField("Channels to consider [one-based]", wekaSegmentation.getChannelsToConsiderAsString() );
 
@@ -2878,22 +2895,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 		*/
 
-		final int newMaxSigma = (int) gd.getNextNumber();
-		if( newMaxSigma != wekaSegmentation.getMaximumFeatureScale() && newMaxSigma >= wekaSegmentation.getMinimumSigma())
-		{
-			//featuresChanged = true;
-			// Macro recording
-			record(SET_MAXIMUM_SIGMA, new String[] { Float.toString( newMaxSigma )});
-			wekaSegmentation.setMaximumFeatureScale( newMaxSigma );
-		}
+		wekaSegmentation.downSamplingFactor = (int) gd.getNextNumber();
+		wekaSegmentation.maxResolutionLevel = (int) gd.getNextNumber();
+		wekaSegmentation.maxDeepConvolutionLevel = (int) gd.getNextNumber();
 
 		wekaSegmentation.anisotropy = (int) gd.getNextNumber();
 
 		// Set classifier and options
 		wekaSegmentation.setNumTrees((int) gd.getNextNumber());
-		wekaSegmentation.setNumRandomFeatures((int) gd.getNextNumber());
-		wekaSegmentation.setBatchSizePercent((int) gd.getNextNumber());
-		wekaSegmentation.maxDepth = (int) gd.getNextNumber();
+		wekaSegmentation.fractionRandomFeatures = (double) gd.getNextNumber();
+		wekaSegmentation.minFeatureUsage = (int) gd.getNextNumber();
+
+		//wekaSegmentation.setBatchSizePercent((int) gd.getNextNumber());
+		//wekaSegmentation.maxDepth = (int) gd.getNextNumber();
 
 		wekaSegmentation.setChannelsToConsider( gd.getNextString() );
 
@@ -3228,60 +3242,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 	}
 
-	/**
-	 * Set a new minimum radius for the feature filters
-	 * 
-	 * @param newMinSigmaStr new minimum radius (in float pixel units)
-	 */
-	public static void setMinimumSigma(String newMinSigmaStr)
-	{
-		final ImageWindow iw = WindowManager.getCurrentImage().getWindow();
-		if( iw instanceof CustomWindow )
-		{
-			final CustomWindow win = (CustomWindow) iw;
-			final WekaSegmentation wekaSegmentation = win.getWekaSegmentation();
-
-			float newMinSigma = Float.parseFloat(newMinSigmaStr);
-			if(newMinSigma  != wekaSegmentation.getMinimumSigma() && newMinSigma > 0)
-			{
-				wekaSegmentation.setFeaturesDirty();
-				wekaSegmentation.setMinimumSigma(newMinSigma);
-			}
-			if(wekaSegmentation.getMinimumSigma() >= wekaSegmentation.getMaximumFeatureScale())
-			{
-				IJ.error("Error in the field of view parameters: they will be reset to default values");
-				wekaSegmentation.setMinimumSigma(0f);
-				wekaSegmentation.setMaximumFeatureScale(3);
-			}
-		}
-	}
-	
-	/**
-	 * Set a new maximum radius for the feature filters
-	 * 
-	 * @param newMaxSigmaStr new maximum radius (in float pixel units)
-	 */
-	public static void setMaximumSigma(String newMaxSigmaStr)
-	{
-		final ImageWindow iw = WindowManager.getCurrentImage().getWindow();
-		if( iw instanceof CustomWindow )
-		{
-			final CustomWindow win = (CustomWindow) iw;
-			final WekaSegmentation wekaSegmentation = win.getWekaSegmentation();
-			int newMaxSigma = Integer.parseInt(newMaxSigmaStr);
-			if(newMaxSigma != wekaSegmentation.getMaximumFeatureScale() && newMaxSigma > wekaSegmentation.getMinimumSigma())
-			{
-				wekaSegmentation.setFeaturesDirty();
-				wekaSegmentation.setMaximumFeatureScale(newMaxSigma);
-			}
-			if(wekaSegmentation.getMinimumSigma() >= wekaSegmentation.getMaximumFeatureScale())
-			{
-				IJ.error("Error in the field of view parameters: they will be reset to default values");
-				wekaSegmentation.setMinimumSigma(0f);
-				wekaSegmentation.setMaximumFeatureScale(3);
-			}
-		}
-	}
 
 	/**
 	 * Set the class homogenization flag for training
@@ -3466,7 +3426,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					labelImage.setZ(z);
 					for( int j=0; j<numClasses; j++ )
 					{
-						 List<Roi> rois = wekaSegmentation.getExampleRois(j,z-1,t-1);
+						 ArrayList<Roi> rois = wekaSegmentation.getExampleRois(j,z-1,t-1);
 						 for( final Roi r : rois )
 						 {
 							 final ImageProcessor ip = labelImage.getProcessor();
