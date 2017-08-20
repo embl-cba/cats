@@ -58,11 +58,15 @@ A random forest has the following settings:
 
 We chose F to be on tenth of the number of input features. Our intuition was that 1/10 is high enough to fetch the best features at each node with a decent probability, leading to a good classification strength of each tree, and low enough to have reasonably uncorrelated trees (the probability to have two sucessive nodes in two different trees using the same feature combination only is (1/10)^2 = 1/100). Both high strength and low correlation or important for a random forest classifier to work well [Ref Breiman].  
 
-### Random forest future ideas
+## Future ideas
 
-#### Evaluate trees based on confidence
+### Evaluate trees based on confidence
 
 Sucessivley evaluate the next tree and stop if the confidence for a certain class reached a certain threshold. 
+
+### Only compute and up-sample used features
+
+During training, check which features are actually used in the RF and how often. If a feature is used 0 times, we do not need to compute it and upsample it; this could save time, especially during the upsampling. And anyway, it is very interesting to know how often a feature was used in the RF.
 
 ## User adjustable parameters
 
