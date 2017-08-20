@@ -12,13 +12,14 @@
 
 ## Abstract
 
+##
 ## Introduction
+##
 
-- Segmentation of (EM) images is a challenge
-- Existing user friendly solutions are
-	- ilastik
-	- Trainable Weka Segmenation (TWS)
-	- MIB (-> Anna: shall we actually add MIB?)
+- The quantification and visualization of the content of images often involves the segmentation of certain structures of interest. In fluorescence microscopy images such segmentation can sometimes be achieved using a simple image processing workflow such as local background subtraction followed by global thresholding. In many cases however, especially in electron microscopy images, such simple workflows do not suffice and more complex processing protocols are required. The development of such adavanced processing protocols can easily take many days, without the guarantee of success, such that electron microscopy are currently often still segmented fully manually. While guaranteed to succeed, manual segmentation is very cumbersome and can require hours to days. For example, segmentation of the endoplasmic reticulum covering the DNA in anaphase cells took ?? hours (@Anna: how long?). Thus, machine learning approaches that automatically learn segmentation rules from sparse annotations are of great interest, because a human needs to segment only a subset of the data set (the annotations) while the remainder is automatically segmented by the machine.  
+
+- Current user friendly machine learning solutions comprise the segmentation toolkit ilastik [Ref_ilastik] and the Trainable Weka Segmentation (TWS) Fiji plugin [Ref_TWS] (@Anna: Shall we mentioned something else here?). Both tools compute for each pixel a feature vector, comprising the values of several image features such as, e.g., Gaussian blurring or Hessian matrix eigenvalues. Subsequently, a random forest algorithm [Ref_Breiman] is trained to segment image pixels based on their feature vectors into different structures (classes). While this approach is very powerful and has proven useful in several occasions (@All: Examples?) recent devlopments in machine learning seem even more promising in terms of image segmentation capabilities. 
+
 - Deep convolutional neural networks are very promising, but currently their training is slow (hours - days) such that interactive labelling is not possible.
 	- 3-D U-Net [Ref Ronneberger]
 	- what else?
@@ -29,20 +30,11 @@
 	- fast
 	- big data compatible
 
-## Results
+##
+## Implementation
+##
 
-### C.elegans
-
-- We have manual ground truth => we can give accuracies
-
-### ISBI data set
-
-- I guess there is a ground truth?!
-
-
-## Main differences to Fiji's Trainable Weka Segmentation (TWS) plugin
-
-(NOTE: maybe we should have a table comparing DCFRF with TWS and ilastik?!)
+The DCFRF segmentation tool is implemented as a Fiji plugin and can be installed via Fiji's update manager. The DCFRF plugin is based on the Trainable Weka Segmentation (TWS) plugin [Ref_TWS]. In the following we will outline the main differences between the DCFRF and the TWS plugin.
 
 ### Storage of labels
 
@@ -90,12 +82,6 @@ A random forest has the following settings:
 
 We chose F to be on tenth of the number of input features. Our intuition was that 1/10 is high enough to fetch the best features at each node with a decent probability, leading to a good classification strength of each tree, and low enough to have reasonably uncorrelated trees (the probability to have two sucessive nodes in two different trees using the same feature combination only is (1/10)^2 = 1/100). Both high strength and low correlation or important for a random forest classifier to work well [Ref Breiman].  
 
-## Future ideas
-
-### Evaluate trees based on confidence
-
-Sucessivley evaluate the next tree and stop if the confidence for a certain class reached a certain threshold. 
-
 ## User adjustable parameters
 
 ### Down-sample factor
@@ -105,8 +91,30 @@ The down-sample factor (DSF) determines how much the images are down-sampled fro
 ### Maximal feature depth
   
 In our current architecture we have 6 features (4 for 2-D images), namely 3 (2) eigenvalues of the hessian matrix and 3 (2) eigenvalues of the structure tensor. In addition, we allow also simply keep the downsampled version of each image without an additional feature computed. Thus, at each resolution level there are 7 (5) images that could be derived from all images in the preceeding resolution layer, yielding for the 3-D case 7^(L+1) features (L0:7, L1:49, L2:343, L3:2401, L4:16807, ...) at downsampling level L. Obviously this is a fast growing number, which for instance slows down the RF training that has to test all those features for their usefulness given the current classification task. To keep the numbers of features at bay we thus introduced a maximal feature depth (MFD) which determines how many levels of "features of features" are allowed. For example, given a downsample factor of 3 a feature image at level 2 could be 9x9x9_HeL_3x3x3_StS_1x1x1_Orig. Given a MCD of 2, this feature image could not be subjected to any further filters, but could only be further downsampled. However the image 9x9x9_3x3x3_StS_1x1x1_Orig would be subjected to additional filters, because it was so far only subjected to one filter, namely the smallest eigenvalue of the structure tensor (StS) at resolution level 0.
-  
+
+### Future ideas
+
+#### Evaluate trees based on confidence
+
+Sucessivley evaluate the next tree and stop if the confidence for a certain class reached a certain threshold. 
+
+##
+## Results
+##
+
+### C.elegans
+
+- We have manual ground truth => we can give accuracies
+
+### ISBI data set
+
+- I guess there is a ground truth?!
+
+
+##  
 ## Discussion
+##
+
 
 In neural network implementations of deep convolutions all convolutions are learned during the training. This has the advantage that the NN has the chance to learn the optimal convolutional filters for the given segmentation task. However this comes at a cost of many parameters and long training times. For instance, the 3-D U-Net has about 11 million parameters and took 3 days to train [Ref Ronneberger 3-D UNet]. In addition, deep convolutions encoded by NNs are intrinsically not rotationally invariant such that all rotations need to be explicitely learned and encoded by the NN. Especially in 3D this means that a lot of angles to be learned. As most biological data is rotationally invariant we feel that this is a disadvantage of NNs as compared with our approach where we only use rotationally invariant features. 
 

@@ -1,6 +1,6 @@
-# Deep convolutional feature based random forest classification for image segmentation
+# Deep convolutional feature random forest (DCFRF) classification for image segmentation
 
-## Author list
+## Authors
 
 - Christian Tischer
 - Ignacio Arganda-Carreras
@@ -8,14 +8,34 @@
 - Yannick Schwab
 - Rainer Pepperkok
 
+## Figures
+
+## Abstract
+
+##
 ## Introduction
+##
 
+- Segmentation of (EM) images is a challenge
+- Existing user friendly solutions are
+	- ilastik
+	- Trainable Weka Segmenation (TWS)
+	- MIB (-> Anna: shall we actually add MIB?)
+- Deep convolutional neural networks are very promising, but currently their training is slow (hours - days) such that interactive labelling is not possible.
+	- 3-D U-Net [Ref Ronneberger]
+	- what else?
+- We combine the power of deep convolution with the speed of a random forest classifier
+- We present the segmentation of several challenging EM data sets, showing that our approach is
+	- interactive
+	- accurate
+	- fast
+	- big data compatible
 
+##
+## Implementation
+##
 
-
-## Main differences to Fiji's Trainable Weka Segmentation plugin
-
-(NOTE: maybe we should have a table comparing DCFRF with TWS and ilastik?!)
+The DCFRF segmentation tool is implemented as a Fiji plugin and can be installed via Fiji's update manager. The DCFRF plugin is based on the Trainable Weka Segmentation (TWS) plugin [Ref_TWS]. In the following we will outline the main differences between the DCFRF and the TWS plugin.
 
 ### Storage of labels
 
@@ -29,7 +49,7 @@ In addition, features at lower resolution layers are not only computed on the do
 
 ### N-D support
 
-The DCFRF plugin now supports multi-channel and multi-time-point data. In terms of multi-channel support the user can choose which channels should be taken into account for the feature computation. Fatures are computed in all channels independenly; we currently do not support features taking into account the gray values in multiple channels simultaneously.
+The DCFRF plugin now supports multi-channel and multi-time-point data. In terms of multi-channel support the user can choose which channels should be taken into account for the feature computation. Fatures are computed in all channels independenly; we currently do not compute features, which combine gray values from multiple channels.
 
 ### Big image data handling
 
@@ -37,9 +57,14 @@ The DCFRF plugin processes the image data in blocks and can thus handle arbitrar
 
 ### Uncertainty display and navigation
 
-...
+As is possible in ilastik one can activate an uncertainty overlay, showing the classification margin, i.e. the difference between the most and second likely class probabilities. This helps the user to see where more labelling is needed. However, while this is very useful, we found that in a large (4-D) data set it takes too much time to manually navigate through the data set searching for such regions. We thus implemented an "uncertainty navigation". During classification we keep track of the average uncertainty in each classified image block and store this information in a sorted list. Using keyboard shortcuts the user can navigate through this list while the region is highlighted on the input image. Like this, informative additional labels can be added very efficiently. 
 
-## Deep convolutional deature computation
+### Feature importance and subsetting
+
+The classical way to compute feature importances in RFs is to run an out-of-bag sample of the training data through the RF, and compare the classification results when one feature is exchanged by a random other feature [Ref Breiman]. As we typically have aroun2000 features and 400 trees, executing above recipe for all features takes a considerable amount of time and would thus perturb the interactivity of our tool. We thus opted for a different option: During the training we simply count how often each feature was used in the whole forest. The idea being that features which have been selected only at few nodes (in few trees) are probably not very important for the overall classification outcome. Such rarely used features can be deactived. In our current implementation this mainly speeds up the feature upsampling as this now needs to be done for less features. Currently we still compute all features (also deactivated) because features in later resolution levels are derived from features in earlier resolution levels such that it becomes somewhat involved to figure out which features can be left out during the feature computation stage. Moreover, after deactivating rarely used features we run the RF training once more, only taking into account the active features. Here our intuition is that the RF can learn more informative relations between actually useful features (TODO: test this somehow).
+
+   
+## Deep convolutional feature computation
 
 The advantage of a neural network implementation of deep convolution is that one does not have to manually choose which convolutions are computed, because this is learned during the training. However this results in many parameters to be learned and thus long training times (typically hours). Here we chose to use fixed features, namely the eigenvalues of the hessian matrix and the structure tensor. These features have the advantage of being rotationally invariant and being good descriptors of most biologically relevant structures such as membranes, tubes, and vesicles.
 
@@ -58,16 +83,6 @@ A random forest has the following settings:
 
 We chose F to be on tenth of the number of input features. Our intuition was that 1/10 is high enough to fetch the best features at each node with a decent probability, leading to a good classification strength of each tree, and low enough to have reasonably uncorrelated trees (the probability to have two sucessive nodes in two different trees using the same feature combination only is (1/10)^2 = 1/100). Both high strength and low correlation or important for a random forest classifier to work well [Ref Breiman].  
 
-## Future ideas
-
-### Evaluate trees based on confidence
-
-Sucessivley evaluate the next tree and stop if the confidence for a certain class reached a certain threshold. 
-
-### Only compute and up-sample used features
-
-During training, check which features are actually used in the RF and how often. If a feature is used 0 times, we do not need to compute it and upsample it; this could save time, especially during the upsampling. And anyway, it is very interesting to know how often a feature was used in the RF.
-
 ## User adjustable parameters
 
 ### Down-sample factor
@@ -77,10 +92,30 @@ The down-sample factor (DSF) determines how much the images are down-sampled fro
 ### Maximal feature depth
   
 In our current architecture we have 6 features (4 for 2-D images), namely 3 (2) eigenvalues of the hessian matrix and 3 (2) eigenvalues of the structure tensor. In addition, we allow also simply keep the downsampled version of each image without an additional feature computed. Thus, at each resolution level there are 7 (5) images that could be derived from all images in the preceeding resolution layer, yielding for the 3-D case 7^(L+1) features (L0:7, L1:49, L2:343, L3:2401, L4:16807, ...) at downsampling level L. Obviously this is a fast growing number, which for instance slows down the RF training that has to test all those features for their usefulness given the current classification task. To keep the numbers of features at bay we thus introduced a maximal feature depth (MFD) which determines how many levels of "features of features" are allowed. For example, given a downsample factor of 3 a feature image at level 2 could be 9x9x9_HeL_3x3x3_StS_1x1x1_Orig. Given a MCD of 2, this feature image could not be subjected to any further filters, but could only be further downsampled. However the image 9x9x9_3x3x3_StS_1x1x1_Orig would be subjected to additional filters, because it was so far only subjected to one filter, namely the smallest eigenvalue of the structure tensor (StS) at resolution level 0.
-  
+
+### Future ideas
+
+#### Evaluate trees based on confidence
+
+Sucessivley evaluate the next tree and stop if the confidence for a certain class reached a certain threshold. 
+
+##
+## Results
+##
+
+### C.elegans
+
+- We have manual ground truth => we can give accuracies
+
+### ISBI data set
+
+- I guess there is a ground truth?!
 
 
+##  
 ## Discussion
+##
+
 
 In neural network implementations of deep convolutions all convolutions are learned during the training. This has the advantage that the NN has the chance to learn the optimal convolutional filters for the given segmentation task. However this comes at a cost of many parameters and long training times. For instance, the 3-D U-Net has about 11 million parameters and took 3 days to train [Ref Ronneberger 3-D UNet]. In addition, deep convolutions encoded by NNs are intrinsically not rotationally invariant such that all rotations need to be explicitely learned and encoded by the NN. Especially in 3D this means that a lot of angles to be learned. As most biological data is rotationally invariant we feel that this is a disadvantage of NNs as compared with our approach where we only use rotationally invariant features. 
 
