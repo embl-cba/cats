@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="11fbcd29-9375-459b-85c8-2a59ead8fa06" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/publication/.draft.txt.swp" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/publication/.draft.txt.swp" afterPath="$PROJECT_DIR$/publication/.draft.txt.swp" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/publication/draft.txt" afterPath="$PROJECT_DIR$/publication/draft.txt" />
     </list>
     <ignored path="fiji-plugin-deep-segmentation.iws" />

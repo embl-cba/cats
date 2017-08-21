@@ -16,14 +16,10 @@
 ## Introduction
 ##
 
-- Segmentation of (EM) images is a challenge
-- Existing user friendly solutions are
-	- ilastik
-	- Trainable Weka Segmenation (TWS)
-	- MIB (-> Anna: shall we actually add MIB?)
-- Deep convolutional neural networks are very promising, but currently their training is slow (hours - days) such that interactive labelling is not possible.
-	- 3-D U-Net [Ref Ronneberger]
-	- what else?
+- The quantification and visualization of the content of images often involves the segmentation of certain structures of interest. In fluorescence microscopy images such segmentation can sometimes be achieved using a simple image processing workflow such as local background subtraction followed by global thresholding. In many cases however, especially in electron microscopy images, such simple workflows do not suffice and more complex processing protocols are required. The development of such adavanced processing protocols can easily take many days, without the guarantee of success, such that electron microscopy are currently often still segmented fully manually. While guaranteed to succeed, manual segmentation is very cumbersome and can require hours to days. For example, segmentation of the endoplasmic reticulum covering the DNA in anaphase cells took ?? hours (@Anna: how long?). Thus, machine learning approaches that automatically learn segmentation rules from sparse annotations are of great interest, because a human needs to segment only a subset of the data set (the annotations) while the remainder is automatically segmented by the machine.  
+
+- Current user friendly machine learning solutions comprise the segmentation toolkit ilastik [Ref_ilastik] and the Trainable Weka Segmentation (TWS) Fiji plugin [Ref_TWS] (@Anna: Shall we mentioned something else here?). Both tools compute for each pixel a feature vector, comprising the values of several image features such as, e.g., Gaussian blurring or Hessian matrix eigenvalues. Subsequently, a random forest algorithm [Ref_Breiman] is trained to segment image pixels based on their feature vectors into different structures (classes). While this approach is very powerful and has proven useful in several occasions (@All: Examples?) deep convolutional neural networks (DCNN) seem even more promising in terms of image segmentation capabilities. DCNNs have achieved high ranking results in segmentation challenges and, in fact, seem conceptually more powerful because of the deep convolution capabilities which are currently lacking in ilastik and TWS. However, as far as we know there currently is no user friendly DCNN implementation that could be used by scientist without programming experience. In addition, given perfectly annotated data, the training of a typical DCNN currently takes hours to days [Ref_3DUNet], making it hard to use 
+  
 - We combine the power of deep convolution with the speed of a random forest classifier
 - We present the segmentation of several challenging EM data sets, showing that our approach is
 	- interactive
