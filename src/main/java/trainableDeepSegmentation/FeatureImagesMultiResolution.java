@@ -1038,7 +1038,7 @@ public class FeatureImagesMultiResolution
      */
     public boolean updateFeaturesMT(
             boolean showFeatureImages,
-            ArrayList<String> featuresToShow,
+            ArrayList<Integer> featuresToShow,
             double anisotropy,
             int numThreads)
     {
@@ -1100,7 +1100,7 @@ public class FeatureImagesMultiResolution
                     binnings.add( combinedBinning ); // remember for feature name construction
 
                     // add binning information to image title
-                    String binningTitle = "" +
+                    String binningTitle = "Bin" +
                             binnings.get(level)[0] + "x" +
                             binnings.get(level)[1] + "x" +
                             binnings.get(level)[2];
@@ -1236,9 +1236,9 @@ public class FeatureImagesMultiResolution
 
                 for ( ImagePlus featureImage : featureImages )
                 {
-                    if (  showFeatureImages && (featuresToShow != null) && ( !featuresToShow.get(0).equals("None") ))
+                    if (  showFeatureImages && ( featuresToShow != null ) )
                     {
-                        if ( featuresToShow.contains( featureImage.getTitle() ) )
+                        if ( featuresToShow.contains( iFeature ) )
                         {
                             //ImagePlus imp = interpolateFast(featureImage);
                             //imp.show();
@@ -1248,7 +1248,7 @@ public class FeatureImagesMultiResolution
 
                     // logger.info(""+(Math.pow(3,i))+": " + featureImage.getTitle());
                     multiResolutionFeatureImageArray[ iFeature++ ] = featureImage;
-                    featureNames.add(featureImage.getTitle());
+                    featureNames.add( featureImage.getTitle() );
                     numFeaturesThisResolution++;
                 }
                 numFeaturesPerResolution.add( numFeaturesThisResolution );

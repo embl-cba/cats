@@ -439,20 +439,30 @@ public class Weka_Deep_Segmentation implements PlugIn
 					}
 					else if(e.getSource() == printFeatureNamesButton)
 					{
-						logger.info("Feature list, sorted according to usage in random forest:");
+						logger.info("Active feature list, sorted according to usage in random forest:");
 
 						if ( wekaSegmentation.featureList != null )
 						{
 
-							ArrayList<Feature> sortedFeatureList = new ArrayList<>(wekaSegmentation.featureList);
-							sortedFeatureList.sort(Comparator.comparing(Feature::getUsageInRF).reversed());
+							ArrayList<Feature> sortedFeatureList = new ArrayList<>( wekaSegmentation.featureList );
+							sortedFeatureList.sort( Comparator.comparing( Feature::getUsageInRF).reversed() );
 
-							for (Feature feature : sortedFeatureList)
-								logger.info("" + feature.usageInRF + ", " + feature.featureName);
+							for ( Feature feature : sortedFeatureList )
+							{
+								if ( feature.isActive )
+								{
+									int featureID = wekaSegmentation.featureList.indexOf( feature );
+
+									logger.info("ID: " + featureID +
+											"; Name: " + feature.featureName +
+											"; Usage: " + feature.usageInRF +
+											"; Active: " + feature.isActive);
+								}
+							}
 
 							int i = 0;
 							for (int n : wekaSegmentation.numFeaturesPerResolution)
-								logger.info("  Number of features in level " + (i++) + ": " + n);
+								logger.info("Number of features at resolution level " + (i++) + ": " + n);
 
 						}
 						else
@@ -1006,7 +1016,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			JPanel uncertaintyPanel = new JPanel();
 			JLabel uncertaintyLabel = new JLabel(
-					"Uncertainty navigation: [g][n][b][d]"
+					"Uncertainties: [g][n][b][d]"
 			);
 			uncertaintyPanel.add(uncertaintyLabel);
 			uncertaintyTextField.setText("    0");
@@ -1680,7 +1690,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		{
 			channelsToConsider.add(c); // zero-based
 		}
-		wekaSegmentation.channelsToConsider = channelsToConsider;
+		wekaSegmentation.activeChannels = channelsToConsider;
 		
 		displayImage = trainingImage;
 
@@ -2004,7 +2014,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 						String[] arg = new String[] {};
 						record(TRAIN_CLASSIFIER, arg);
 
-						if( wekaSegmentation.trainClassifier( trainingRecomputeFeaturesCheckBox.isSelected() ) )
+						logger.info("# Training classifier using all features ");
+						wekaSegmentation.setAllFeaturesActive();
+						boolean trainingFinished = wekaSegmentation.trainClassifier( trainingRecomputeFeaturesCheckBox.isSelected() );
+
+						if( trainingFinished )
 						{
 							if( this.isInterrupted() )
 							{
@@ -2014,17 +2028,22 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 							if ( wekaSegmentation.minFeatureUsage > 0 )
 							{
-								logger.info("Training classifier again with features that have been selected more than " +
-										+ wekaSegmentation.minFeatureUsage + " times during the first training.");
 
+								// determine how often each feature was used
+								// during previous training
 								int[] attributeUsages = ((FastRandomForest) wekaSegmentation.classifier).getAttributeUsages();
-
-								for ( int i = 0; i <  wekaSegmentation.featureList.size(); i++ )
+								for ( int i = 0; i < wekaSegmentation.featureList.size(); i++ )
 								{
 									wekaSegmentation.featureList.get(i).usageInRF = attributeUsages[i];
 								}
 
 								wekaSegmentation.deactivateRarelyUsedFeatures();
+
+								logger.info("# Training classifier again, now only with useful features ");
+								logger.info("Feature usefulness threshold: " + wekaSegmentation.minFeatureUsage);
+								logger.info("Resulting active features: "
+										+ wekaSegmentation.getNumActiveFeatures()
+										+ "/" + wekaSegmentation.getNumFeatures());
 
 								wekaSegmentation.trainClassifier( false );
 							}
@@ -2626,10 +2645,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			FileInputStream fin = new FileInputStream( directory + fileName );
 			ObjectInputStream ois = new ObjectInputStream(fin);
 			ArrayList < Example > examples = (ArrayList < Example >) ois.readObject();
-			wekaSegmentation.setExamples( examples );
+			wekaSegmentation.setExamples(examples);
 			wekaSegmentation.setNumOfClasses(0);
-			wekaSegmentation.featureNames = examples.get(0).featureNames;
-			wekaSegmentation.setNumFeaturesPerResolution(examples.get(0));
 
 			int numClassesInExamples = wekaSegmentation.getNumClassesInExamples();
 			for ( int c = 0; c < numClassesInExamples; c++ )
@@ -2810,12 +2827,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 		//gd.addNumericField("RF: Batch size per tree in percent", wekaSegmentation.getBatchSizePercent(), 0);
 		//gd.addNumericField("RF: Maximum tree depth [0 = None]", wekaSegmentation.maxDepth, 0);
 
-		gd.addStringField("Channels to consider [one-based]", wekaSegmentation.getChannelsToConsiderAsString() );
+		gd.addStringField("Channels to consider [ID,ID,..(one-based)]", wekaSegmentation.getActiveChannelsAsString() );
 
+		String featuresToShow = "None";
 		if ( wekaSegmentation.getFeaturesToShow() != null )
-			gd.addStringField("Show features", wekaSegmentation.getFeaturesToShowAsOneString());
-		else
-			gd.addStringField("Show features", "None");
+			featuresToShow = wekaSegmentation.getFeaturesToShowAsString();
+
+		gd.addStringField("Show features [ID,ID,..]", featuresToShow );
 		gd.addStringField("Minimum tile size [pixels]", wekaSegmentation.getMinTileSizesAsString(), 0);
 		//gd.addNumericField("Number of region threads", wekaSegmentation.numRegionThreads, 0);
 		//gd.addNumericField("Number of threads inside a region", wekaSegmentation.numThreadsPerRegion, 0);
@@ -2909,9 +2927,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 		//wekaSegmentation.setBatchSizePercent((int) gd.getNextNumber());
 		//wekaSegmentation.maxDepth = (int) gd.getNextNumber();
 
-		wekaSegmentation.setChannelsToConsider( gd.getNextString() );
+		wekaSegmentation.setActiveChannelsFromString(gd.getNextString());
 
-		wekaSegmentation.setFeaturesToShow(gd.getNextString());
+		wekaSegmentation.setFeaturesToShowFromString(gd.getNextString());
 		//wekaSegmentation.numRegionThreads = (int) gd.getNextNumber();
 		//wekaSegmentation.numThreadsPerRegion = (int) gd.getNextNumber();
 		//wekaSegmentation.numRfTrainingThreads = (int) gd.getNextNumber();

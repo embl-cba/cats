@@ -28,9 +28,7 @@ A) Line of dots.
 
 ## Abstract
 
-##
 ## Introduction
-##
 
 - The quantification and visualization of the content of images often involves the segmentation of certain structures of interest. In fluorescence microscopy images such segmentation can sometimes be achieved using a simple image processing workflow such as local background subtraction followed by global thresholding. In many cases however, especially in electron microscopy images, such simple workflows do not suffice and more complex processing protocols are required. The development of such adavanced processing protocols can easily take many days, without the guarantee of success, such that electron microscopy are currently often still segmented fully manually. While guaranteed to succeed, manual segmentation is very cumbersome and can require hours to days. For example, segmentation of the endoplasmic reticulum covering the DNA in anaphase cells took ?? hours (@Anna: how long?). Thus, machine learning approaches that automatically learn segmentation rules from sparse annotations are of great interest, because a human needs to segment only a subset of the data set (the annotations) while the remainder is automatically segmented by the machine.  
 
@@ -39,11 +37,9 @@ A) Line of dots.
 - We therefore felt that it is useful to develop a novel user-friendly tool that combines the power of deep convolution with the speed of a random forest classifier. Here, we present the implementation of such a tool as well as some example applications.
 
 
-##
 ## Implementation
-##
 
-The DFRF segmentation tool is implemented as a Fiji plugin and can be installed via Fiji's update manager. The DCFRF plugin is based on the Trainable Weka Segmentation (TWS) plugin [Ref_TWS]. Just like the TWS our novel tool shares many features with ilastik (@Ignacio: something else?!). To guide potential users and future developers it is very important to outline similarities and differences of these tools, however, for the sake of readabilty we decided to omit those comparisons in the main text, but opted for a tabular form (see Table_CompareImplementations). 
+The DFRF segmentation tool is implemented as a Fiji plugin and can be installed via Fiji's update manager. The DFRF plugin is based on the Trainable Weka Segmentation (TWS) plugin [Ref_TWS]. Just like the TWS our novel tool shares many features with ilastik (@Ignacio: something else?!). To guide potential users and future developers it is very important to outline similarities and differences of these tools, however, for the sake of readabilty we decided to omit those comparisons in the main text, but opted for a tabular form (see Table_CompareImplementations). 
 
 ## Deep feature computation
 
@@ -88,9 +84,7 @@ The DCFRF plugin processes the image data in blocks and can thus handle arbitrar
 
 While in the TWS only the training data associated with each label was stored, now also the actual ROI is stored. This enables the user to come back to the same data set and add more labels, seeing which labels have been put previously.
 
-##
 ## User guide 
-##
 
 ### Feature naming scheme
 
@@ -131,11 +125,7 @@ Before tacking on actual data we demonstrate the concept of our strategy on a si
 - I guess there is a ground truth?!
 
 
- 
-
-##  
 ## Discussion
-##
 
 - To go from one resolution layer to the next we opted for an average binning. Binning has the advantage that the image size decreases such that both computation times and memory requirements decrease as well. For example, for a 3-D input image and a downsampling factor of 3 the number of pixels is reduced by 3x3x3=27 at each resolution. This more than compensates the 7-fold increase in the number of images at each resolution such that computation times and memory requirements are in fact decreasing at deeper resolution layers. This is in stark contrast to the current implementations in ilastik and TWS where larger features are computed by increased kernel width, which does not decrease the memory requirements and, depending on implementation details, even increases the computation times. 
 - In neural network implementations of deep convolutions all convolutions are learned during the training. This has the advantage that the NN has the chance to learn the optimal convolutional filters for the given segmentation task. However this comes at a cost of many parameters and long training times. For instance, the 3-D U-Net has about 11 million parameters and took 3 days to train [Ref Ronneberger 3-D UNet]. In addition, deep convolutions encoded by NNs are intrinsically not rotationally invariant such that all rotations need to be explicitely learned and encoded by the NN. Especially in 3D this means that a lot of angles to be learned. As most biological data is rotationally invariant we feel that this is a disadvantage of NNs as compared with our approach where we only use rotationally invariant features. 
@@ -147,28 +137,3 @@ Before tacking on actual data we demonstrate the concept of our strategy on a si
 Computing features at higher resolution levels is not done by increasing the kernel width but by down-sampling the input image. This has the advantage of an increased speed during feature computation, as well as reduced memory requirements for storing the feature images. For N-D data with a binning factor of B, the reduction in computation time and memory is a factor of B^N for each resolution layer. For classification, the down-sampled feature images are up-sampled again (just as in the 3-D U-Net), this takes time such that some of the gain in speed is lost; we would like to explore in the future whether this up-sampling could be computed on a GPU in order to save time. As the up-sampling is only needed locally at the location of the current instance voxel, the additional memory requirements at this step are relatively small.
 )
 
-
-
- 
-##
-## Future ideas
-##
-
-Not for publication, but for our own future developments
-
-### Evaluate trees based on confidence
-
-Sucessivley evaluate the next tree and stop if the confidence for a certain class reached a certain threshold. 
-=> increased classification speed
-
-### Speed up up-sampling
-
-The upsampling currently is one of the slowest steps. Can we increase the speed? 
-- Change code?!
-- Compute on GPU?
-
-### 3rd derivative
-
-input image, structure tensor, and hessian matrix are kind of 0th, 1st and 2nd derivative. If one thinks in terms of a taylor expansion, a 3rd derivative could further increase the classification power.
-- https://math.stackexchange.com/questions/1551928/is-there-a-nabla3-fx
- 

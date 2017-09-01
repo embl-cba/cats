@@ -10,27 +10,32 @@
 
 ## Tables
 
+### Table_TS_comparison
+ 
 | Software | TWS | DCFRF | Ilastik |
+| ... | ... | ... | ... |
 | Language | Java | Java | Python |
-| OS | All
+| OS | All | All | All |
 
 
-## Figures
 
-### Figure 1
+## Figure legends
+
+### Figure_Scheme
 
 Schematic depiction of our deep convolutional feature random forest image segmentation algorithm. To go one resolution layer deeper, images are down-sampled by NxN average binning. At each resolution layer hessian matrix and structure tensor eigenvalue images are computed (HS) of all images coming from the previous resolution. For training and classification, binned images are upsampled using bilinear interpolation before they are fed into the random forest classifier. Widths of boxes indicate number of images, numbers inside boxes are the actual number of images for the example scenario of one 3-D input image. Heights of boxes indicate number of pixels per image.  
 
-### Figure 2
+### Figure_LineOfDots
 
 Examples of how deep convolution using hessian matrix and structure tensor combined with decision trees segments images.
 A) Line of dots.
 
+
+
+
 ## Abstract
 
-##
 ## Introduction
-##
 
 - The quantification and visualization of the content of images often involves the segmentation of certain structures of interest. In fluorescence microscopy images such segmentation can sometimes be achieved using a simple image processing workflow such as local background subtraction followed by global thresholding. In many cases however, especially in electron microscopy images, such simple workflows do not suffice and more complex processing protocols are required. The development of such adavanced processing protocols can easily take many days, without the guarantee of success, such that electron microscopy are currently often still segmented fully manually. While guaranteed to succeed, manual segmentation is very cumbersome and can require hours to days. For example, segmentation of the endoplasmic reticulum covering the DNA in anaphase cells took ?? hours (@Anna: how long?). Thus, machine learning approaches that automatically learn segmentation rules from sparse annotations are of great interest, because a human needs to segment only a subset of the data set (the annotations) while the remainder is automatically segmented by the machine.  
 
@@ -39,11 +44,9 @@ A) Line of dots.
 - We therefore felt that it is useful to develop a novel user-friendly tool that combines the power of deep convolution with the speed of a random forest classifier. Here, we present the implementation of such a tool as well as some example applications.
 
 
-##
 ## Implementation
-##
 
-The DFRF segmentation tool is implemented as a Fiji plugin and can be installed via Fiji's update manager. The DCFRF plugin is based on the Trainable Weka Segmentation (TWS) plugin [Ref_TWS]. Just like the TWS our novel tool shares many features with ilastik (@Ignacio: something else?!). To guide potential users and future developers it is very important to outline similarities and differences of these tools, however, for the sake of readabilty we decided to omit those comparisons in the main text, but opted for a tabular form (see Table_CompareImplementations). 
+The DFRF segmentation tool is implemented as a Fiji plugin and can be installed via Fiji's update manager. The DFRF plugin is based on the Trainable Weka Segmentation (TWS) plugin [Ref_TWS]. Just like the TWS our novel tool shares many features with ilastik (@Ignacio: something else?!). To guide potential users and future developers it is very important to outline similarities and differences of these tools, however, for the sake of readabilty we decided to omit those comparisons in the main text, but opted for a tabular form (see Table_CompareImplementations). 
 
 ## Deep feature computation
 
@@ -54,11 +57,10 @@ Following our scheme for a 3-D input image the number of images at depth N is 7^
 ### Feature importance and subsetting
 
 The classical way to compute feature importances in RFs is to run an out-of-bag sample of the training data through the RF, and compare the classification results when one feature is exchanged by a random other feature [Ref Breiman]. As we typically have aroun2000 features and 400 trees, executing above recipe for all features takes a considerable amount of time and would thus perturb the interactivity of our tool. We thus opted for a different option: During the training we simply count how often each feature was used in the whole forest. The idea being that features which have been selected only at few nodes (in few trees) are probably not very important for the overall classification outcome. Such rarely used features can be deactived. In our current implementation this mainly speeds up the feature upsampling as this now needs to be done for less features. Currently we still compute all features (also deactivated) because features in later resolution levels are derived from features in earlier resolution levels such that it becomes somewhat involved to figure out which features can be left out during the feature computation stage. Moreover, after deactivating rarely used features we run the RF training once more, only taking into account the active features. Here our intuition is that the RF can learn more informative relations between actually useful features (TODO: test this somehow).
-
    
 ### Dealing with anisotropic data
 
-The algorithm does not always bin isotropically in order to account for a potential anisotropy of the input data. For example, if the resolution of the input data is 200 nm in x/y and 600 nm in z, and the cose down-sampling factor is 3, the first binning would be 3x3x1, yielding isotropic data with a (600 nm)^3 voxel size. The next binnings would be isotropic. This has the advantage that the data becomes very quickly isotropic, such that features computed in lower resolution levels are really 3-D. In addition the implementation of the Hessian matrix and Structure tensor also properly handles anisotropic image calibration (Ref: ImageScience).
+The HM and ST feature computation algorithms are intrinsically dealing with anisotropic data [Ref_ImageScience]. In addition, we deal with a potential anisotropy during the downsampling steps of our algorithm. For example, if the resolution of the input data is 200 nm in x/y and 600 nm in z, the first would downsampling - assuming a downsampling factor of 3 -  would be 3x3x1 (instead of 3x3x3), yielding isotropic data with a (600 nm)^3 voxel size in the next resolution layer. The following binnings would be isotropic in this example. 
 
 ### Random forest settings
 
@@ -71,26 +73,21 @@ We chose F to be on tenth of the number of input features. Our intuition was tha
 
 ### Uncertainty display and navigation
 
-As is possible in ilastik one can activate an uncertainty overlay, showing the classification margin, i.e. the difference between the most and second likely class probabilities. This helps the user to see where more labelling is needed. However, while this is very useful, we found that in a large (4-D) data set it takes too much time to manually navigate through the data set searching for such regions. We thus implemented an "uncertainty navigation". During classification we keep track of the average uncertainty in each classified image block and store this information in a sorted list. Using keyboard shortcuts the user can navigate through this list while the region is highlighted on the input image. Like this, informative additional labels can be added very efficiently. 
-
-
+As it for instance is possible in ilastik [Ref_Ilastik] one can activate an uncertainty overlay, showing the classification margin, i.e. the difference between the most and second most likely class probabilities. This helps the user to see where more labelling is needed. However, while this is very useful, we found that is is inefficient to manually find and visit regions of high uncertainty in large data sets. We thus implemented an "uncertainty navigation". During classification we keep track of the average uncertainty in each classified image block and store this information in a sorted list. Using keyboard shortcuts the user can navigate through this list and the corresponding region is highlighted on the input image, enabling the user to efficietnly add more class labels in regions of high uncertainty.
+ 
 ### N-D support
 
-The DCFRF plugin now supports multi-channel and multi-time-point data. In terms of multi-channel support the user can choose which channels should be taken into account for the feature computation. Fatures are computed in all channels independenly; we currently do not compute features, which combine gray values from multiple channels.
-
-
+The DFRF plugin supports multi-channel and multi-time-point data. In terms of multi-channel support the user can choose which channels should be taken into account for the feature computation. Fatures are computed in all channels independenly; we currently do not compute features combining gray values from multiple channels.
 
 ### Big image data handling
 
-The DCFRF plugin processes the image data in blocks and can thus handle arbitrarily large images. For both the input as well as the classification image the user has the choice to have either of them fully in RAM or stream the data from and to disk. The streaming is currently handled  In addition the user can specify subregions of the image to be classified such that not always the whole data set needs to be processed.
+The DFRF plugin processes the image data in blocks and can thus handle arbitrarily large images. For both the input as well as the classification image the user has the choice to have either of them fully in RAM or stream the data from/to disk. This streaming functionality requires the Fiji 'bigDataTools' plugin [Download_BigDataTools].
 
-### Storage of labels
+### Storage of training data
 
-While in the TWS only the training data associated with each label was stored, now also the actual ROI is stored. This enables the user to come back to the same data set and add more labels, seeing which labels have been put previously.
+The user annotations (labels) for each image can be stored and reloaded. The stored file contains the label ROIs, the respective class label and also, if they were computed already, the feature values. 
 
-##
 ## User guide 
-##
 
 ### Feature naming scheme
 
@@ -104,13 +101,7 @@ The down-sample factor (DSF) determines how much the images are down-sampled fro
   
 In our current architecture we have 6 features (4 for 2-D images), namely 3 (2) eigenvalues of the hessian matrix and 3 (2) eigenvalues of the structure tensor. In addition, we allow also simply keep the downsampled version of each image without an additional feature computed. Thus, at each resolution level there are 7 (5) images that could be derived from all images in the preceeding resolution layer, yielding for the 3-D case 7^(L+1) features (L0:7, L1:49, L2:343, L3:2401, L4:16807, ...) at downsampling level L. Obviously this is a fast growing number, which for instance slows down the RF training that has to test all those features for their usefulness given the current classification task. To keep the numbers of features at bay we thus introduced a maximal feature depth (MFD) which determines how many levels of "features of features" are allowed. For example, given a downsample factor of 3 a feature image at level 2 could be 9x9x9_HeL_3x3x3_StS_1x1x1_Orig. Given a MCD of 2, this feature image could not be subjected to any further filters, but could only be further downsampled. However the image 9x9x9_3x3x3_StS_1x1x1_Orig would be subjected to additional filters, because it was so far only subjected to one filter, namely the smallest eigenvalue of the structure tensor (StS) at resolution level 0.
 
-##
 ## Applications 
-##
-
-(=> Future: something else than average binning?)
-
-(=> examples: Figure FigDeepConvExample shows an example of how feature images are comuted that, in this case, help to segment a line of dots. 
 
 - We present the segmentation of several challenging EM data sets, showing that our approach is
 	- interactive
@@ -118,60 +109,40 @@ In our current architecture we have 6 features (4 for 2-D images), namely 3 (2) 
 	- fast
 	- big data compatible
 
-### Conceptual line of dots example
+### Conceptual example application: line of dots
 
 Before tacking on actual data we demonstrate the concept of our strategy on a simple manufactured example, namely a 2-D image comprising several structures including a line of dots (Figure_LineOfDots). Probably there are several ways of segmenting the line of dots using our frame-work, we simply show one that felt intuitive to us. The smallest eigenvalue of the structure tensor highlights dots, corners, and ends of lines (Orig_StS), thereby already eliminating a number of bright pixels that are not part of the line of dots. Two times 3x3 binning connects the dots (Orig_StS_3x3_3x3). To distinguish pixels on the line from the remaining dots, we compute the largest eigenvalue of the hessian matrix (Orig_StS_3x3_3x3_HeL), which has low absolute values along the line. Finally, we upsample the images and mimic a branch of a simple decision tree, namely Orig_StS_3x3_3x3_UpSample > 60 => Orig_StS_3x3_3x3_HeL > -100. As one can see, this simple recipe sucessfully solves this non-trivial segmentation problem.
  
-##e C.elegans
+### C.elegans FIB-SEM
 
 - We have manual ground truth => we can give accuracies
 
+### HeLa interphase cell FIB-SEM
+
+
+### HeLa mitoic cells FIB-SEM
+
+- measurement: fraction of DNA covered with ER
+
 ### ISBI data set
 
-- I guess there is a ground truth?!
+- Ignacio
 
-
- 
-
-##  
 ## Discussion
-##
 
 - To go from one resolution layer to the next we opted for an average binning. Binning has the advantage that the image size decreases such that both computation times and memory requirements decrease as well. For example, for a 3-D input image and a downsampling factor of 3 the number of pixels is reduced by 3x3x3=27 at each resolution. This more than compensates the 7-fold increase in the number of images at each resolution such that computation times and memory requirements are in fact decreasing at deeper resolution layers. This is in stark contrast to the current implementations in ilastik and TWS where larger features are computed by increased kernel width, which does not decrease the memory requirements and, depending on implementation details, even increases the computation times. 
 - In neural network implementations of deep convolutions all convolutions are learned during the training. This has the advantage that the NN has the chance to learn the optimal convolutional filters for the given segmentation task. However this comes at a cost of many parameters and long training times. For instance, the 3-D U-Net has about 11 million parameters and took 3 days to train [Ref Ronneberger 3-D UNet]. In addition, deep convolutions encoded by NNs are intrinsically not rotationally invariant such that all rotations need to be explicitely learned and encoded by the NN. Especially in 3D this means that a lot of angles to be learned. As most biological data is rotationally invariant we feel that this is a disadvantage of NNs as compared with our approach where we only use rotationally invariant features. 
 - Here we chose to use fixed features, namely the eigenvalues of the hessian matrix and the structure tensor. These features have the advantage of being rotationally invariant and being good descriptors of most biologically relevant structures such as membranes, tubes, and vesicles.
 - In neural network implementations of deep convolution the convolution kernels are learned by the NN during the training). However this results in many parameters to be learned and thus long training times (typically hours)). 
+- Computing features at higher resolution levels is not done by increasing the kernel width but by down-sampling the input image. This has the advantage of an increased speed during feature computation, as well as reduced memory requirements for storing the feature images. For N-D data with a binning factor of B, the reduction in computation time and memory is a factor of B^N for each resolution layer. For classification, the down-sampled feature images are up-sampled again (just as in the 3-D U-Net), this takes time such that some of the gain in speed is lost; we would like to explore in the future whether this up-sampling could be computed on a GPU in order to save time. As the up-sampling is only needed locally at the location of the current instance voxel, the additional memory requirements at this step are relatively small.
 
+## Acknowledgements
 
-(=> Discussion: 
-Computing features at higher resolution levels is not done by increasing the kernel width but by down-sampling the input image. This has the advantage of an increased speed during feature computation, as well as reduced memory requirements for storing the feature images. For N-D data with a binning factor of B, the reduction in computation time and memory is a factor of B^N for each resolution layer. For classification, the down-sampled feature images are up-sampled again (just as in the 3-D U-Net), this takes time such that some of the gain in speed is lost; we would like to explore in the future whether this up-sampling could be computed on a GPU in order to save time. As the up-sampling is only needed locally at the location of the current instance voxel, the additional memory requirements at this step are relatively small.
-)
+We thank ...
 
+## References
 
+- ilastik
+- fiji-tws
+- imagescience.org
 
- 
-##
-## Future ideas
-##
-
-Not for publication, but for our own future developments
-
-### Evaluate trees based on confidence
-
-Sucessivley evaluate the next tree and stop if the confidence for a certain class reached a certain threshold. 
-=> increased classification speed
-
-### Speed up up-sampling
-
-The upsampling currently is one of the slowest steps. Can we increase the speed? 
-- Change code?!
-- Compute on GPU?
-
-### 3rd derivative
-
-input image, structure tensor, and hessian matrix are kind of 0th, 1st and 2nd derivative. If one thinks in terms of a taylor expansion, a 3rd derivative could further increase the classification power.
-- https://math.stackexchange.com/questions/1551928/is-there-a-nabla3-fx
-
-### RF with gating
-
-- did someone evaluate whether a gating instead of a simple split would enhance a random forest in some way? 
