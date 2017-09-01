@@ -5144,3 +5144,64 @@
 			}
 		}
 	}
+
+
+
+	/**
+	 * Select attributes of current data by BestFirst search.
+	 * The data is reduced to the selected attributes (features).
+	 *
+	 * @return false if the current dataset is empty
+	 */
+	public boolean selectAttributes()
+	{
+		if(null == loadedTrainingData)
+		{
+			IJ.error("There is no data so select attributes from.");
+			return false;
+		}
+		// Select attributes by BestFirst
+		loadedTrainingData = selectAttributes(loadedTrainingData);
+		// Update list of features to use
+		this.featureNames = new ArrayList<String>();
+		IJ.log("Selected attributes:");
+		for(int i = 0; i < loadedTrainingData.numAttributes(); i++)
+		{
+			this.featureNames.add(loadedTrainingData.attribute(i).name());
+			IJ.log((i+1) + ": " + this.featureNames.get(i));
+		}
+
+		return true;
+	}
+
+	/**
+	 * Select attributes using BestFirst search to reduce
+	 * the number of parameters per instance of a dataset
+	 *
+	 * @param data input set of instances
+	 * @return resampled set of instances
+	 */
+	public static Instances selectAttributes(Instances data)
+	{
+		final AttributeSelection filter = new AttributeSelection();
+		Instances filteredIns = null;
+		// Evaluator
+		final CfsSubsetEval evaluator = new CfsSubsetEval();
+		evaluator.setMissingSeparate(true);
+		// Assign evaluator to filter
+		filter.setEvaluator(evaluator);
+		// Search strategy: best first (default values)
+		final BestFirst search = new BestFirst();
+		filter.setSearch(search);
+		// Apply filter
+		try {
+			filter.setInputFormat(data);
+
+			filteredIns = Filter.useFilter(data, filter);
+		} catch (Exception e) {
+			IJ.log("Error when resampling input data with selected attributes!");
+			e.printStackTrace();
+		}
+		return filteredIns;
+
+	}

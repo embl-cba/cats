@@ -2130,8 +2130,15 @@ public class Weka_Deep_Segmentation implements PlugIn
 	{
 		if ( classifiedImage == null )
 		{
-			logger.error("classification_result image not set!");
+			logger.error("classification_result image not set.\n" +
+					"Please [Create result image].");
 			return;
+		}
+
+		if ( classifiedImage.isVisible() )
+		{
+			classifiedImage.hide();
+			wekaSegmentation.setClassifiedImage( classifiedImage );
 		}
 
 		if ( command.equals("STOP") )
@@ -2644,9 +2651,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 		{
 			FileInputStream fin = new FileInputStream( directory + fileName );
 			ObjectInputStream ois = new ObjectInputStream(fin);
-			ArrayList < Example > examples = (ArrayList < Example >) ois.readObject();
-			wekaSegmentation.setExamples(examples);
+			Examples examples = (Examples) ois.readObject();
+			wekaSegmentation.setExamples( examples.exampleList );
+			wekaSegmentation.featureList = examples.featureList;
 			wekaSegmentation.setNumOfClasses(0);
+			wekaSegmentation.maxResolutionLevel = examples.maxResolutionLevel;
+			wekaSegmentation.enabledFeatures = examples.enabledFeatures;
 
 			int numClassesInExamples = wekaSegmentation.getNumClassesInExamples();
 			for ( int c = 0; c < numClassesInExamples; c++ )
@@ -2654,7 +2664,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				if ( c == numOfClasses )
 					win.addClass();
 				wekaSegmentation.addClass();
-				changeClassName(c, examples.get(0).classNames[c]);
+				changeClassName(c, examples.classNames[c]);
 			}
 			repaintWindow();
 			win.updateExampleLists();
@@ -2678,7 +2688,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public void saveAnnotations()
 	{
 		SaveDialog sd = new SaveDialog("Choose save file", "annotations",".ser");
-		if (sd.getFileName()==null)
+		if ( sd.getFileName()==null )
 			return;
 
 		// Macro recording
@@ -2691,7 +2701,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 		{
 			FileOutputStream fout = new FileOutputStream(sd.getDirectory() + sd.getFileName());
 			ObjectOutputStream oos = new ObjectOutputStream(fout);
-			oos.writeObject( wekaSegmentation.getExamples() );
+			Examples examples = new Examples();
+			examples.exampleList = wekaSegmentation.getExamples();
+			examples.featureList = wekaSegmentation.featureList;
+			examples.classNames = wekaSegmentation.getClassNames();
+			examples.maxResolutionLevel = wekaSegmentation.maxResolutionLevel;
+			examples.enabledFeatures = wekaSegmentation.enabledFeatures;
+			oos.writeObject( examples );
 		}
 		catch (Exception e)
 		{

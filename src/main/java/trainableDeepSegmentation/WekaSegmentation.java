@@ -181,8 +181,6 @@ public class WekaSegmentation {
 	private boolean useNeighbors = false;
 
 	/** list of the names of features to use */
-	public ArrayList<String> featureNames = null;
-
 	public ArrayList<Feature> featureList = null;
 
 	public ArrayList<Integer> numFeaturesPerResolution = null;
@@ -307,8 +305,7 @@ public class WekaSegmentation {
 
 	public Example createExample(int classNum, Point[] points, int strokeWidth, int z, int t)
 	{
-		Example example = new Example(classNum, points, strokeWidth, z, t,
-				enabledFeatures, maxResolutionLevel, classNames);
+		Example example = new Example(classNum, points, strokeWidth, z, t);
 		return( example );
 	}
 
@@ -433,11 +430,6 @@ public class WekaSegmentation {
 
 	public ArrayList< Example > getExamples()
 	{
-		// update class names
-		for ( Example example : examples )
-		{
-			example.classNames = classNames;
-		}
 		return examples;
 	}
 
@@ -1107,65 +1099,6 @@ public class WekaSegmentation {
 	}
 
 	/**
-	 * Select attributes of current data by BestFirst search.
-	 * The data is reduced to the selected attributes (features).
-	 *
-	 * @return false if the current dataset is empty
-	 */
-	public boolean selectAttributes()
-	{
-		if(null == loadedTrainingData)
-		{
-			IJ.error("There is no data so select attributes from.");
-			return false;
-		}
-		// Select attributes by BestFirst
-		loadedTrainingData = selectAttributes(loadedTrainingData);
-		// Update list of features to use
-		this.featureNames = new ArrayList<String>();
-		IJ.log("Selected attributes:");
-		for(int i = 0; i < loadedTrainingData.numAttributes(); i++)
-		{
-			this.featureNames.add(loadedTrainingData.attribute(i).name());
-			IJ.log((i+1) + ": " + this.featureNames.get(i));
-		}
-
-		return true;
-	}
-
-	/**
-	 * Select attributes using BestFirst search to reduce
-	 * the number of parameters per instance of a dataset
-	 *
-	 * @param data input set of instances
-	 * @return resampled set of instances
-	 */
-	public static Instances selectAttributes(Instances data)
-	{
-		final AttributeSelection filter = new AttributeSelection();
-		Instances filteredIns = null;
-		// Evaluator
-		final CfsSubsetEval evaluator = new CfsSubsetEval();
-		evaluator.setMissingSeparate(true);
-		// Assign evaluator to filter
-		filter.setEvaluator(evaluator);
-		// Search strategy: best first (default values)
-		final BestFirst search = new BestFirst();
-		filter.setSearch(search);
-		// Apply filter
-		try {
-			filter.setInputFormat(data);
-
-			filteredIns = Filter.useFilter(data, filter);
-		} catch (Exception e) {
-			IJ.log("Error when resampling input data with selected attributes!");
-			e.printStackTrace();
-		}
-		return filteredIns;
-
-	}
-
-	/**
 	 * Get confusion matrix (binary images)
 	 * @param proposedLabels proposed binary labels
 	 * @param expectedLabels original binary labels
@@ -1185,7 +1118,6 @@ public class WekaSegmentation {
 		final int height = proposedLabels.getHeight();
 		final int width = proposedLabels.getWidth();
 		final int depth = proposedLabels.getStackSize();
-
 
 		for(int z=1; z <= depth; z++)
 			for(int y=0; y<height; y++)
@@ -1478,13 +1410,9 @@ public class WekaSegmentation {
 			}
 			else
 			{
-				// only add examples that need feature recomputation
-				if (example.instanceValuesArray == null ||
-						! Arrays.equals(enabledFeatures, example.enabledFeatures) ||
-						! (maxResolutionLevel == example.maxResolutionLevel) )
+				// add examples that need feature recomputation
+				if ( example.instanceValuesArray == null )
 				{
-					example.enabledFeatures = this.enabledFeatures;
-					example.maxResolutionLevel = this.maxResolutionLevel;
 					examplesWithoutFeatures.add( example );
 				}
 			}
@@ -2542,9 +2470,9 @@ public class WekaSegmentation {
 	{
 		ArrayList<Attribute> attributes = new ArrayList<>();
 
-		for (String featureName : featureNames)
+		for (Feature feature : featureList)
 		{
-			attributes.add( new Attribute(featureName) );
+			attributes.add( new Attribute( feature.featureName ) );
 		}
 
 		attributes.add( new Attribute("class", getClassNamesAsArrayList()) );
