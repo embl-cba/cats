@@ -1216,7 +1216,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					wekaButton.removeActionListener(listener);
 
 					// Set number of classes back to 2
-					wekaSegmentation.setNumOfClasses(2);
+					wekaSegmentation.setNumClasses(2);
 				}
 			});
 
@@ -2652,12 +2652,16 @@ public class Weka_Deep_Segmentation implements PlugIn
 			FileInputStream fin = new FileInputStream( directory + fileName );
 			ObjectInputStream ois = new ObjectInputStream(fin);
 			Examples examples = (Examples) ois.readObject();
+
 			wekaSegmentation.setExamples( examples.exampleList );
 			wekaSegmentation.featureList = examples.featureList;
-			wekaSegmentation.setNumOfClasses(0);
 			wekaSegmentation.maxResolutionLevel = examples.maxResolutionLevel;
 			wekaSegmentation.enabledFeatures = examples.enabledFeatures;
+			wekaSegmentation.anisotropy = examples.anisotropy;
+			wekaSegmentation.downSamplingFactor = examples.downSamplingFactor;
+			wekaSegmentation.maxDeepConvolutionLevel = examples.maxDeepConvolutionLevel;
 
+			wekaSegmentation.setNumClasses(0);
 			int numClassesInExamples = wekaSegmentation.getNumClassesInExamples();
 			for ( int c = 0; c < numClassesInExamples; c++ )
 			{
@@ -2707,6 +2711,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 			examples.classNames = wekaSegmentation.getClassNames();
 			examples.maxResolutionLevel = wekaSegmentation.maxResolutionLevel;
 			examples.enabledFeatures = wekaSegmentation.enabledFeatures;
+			examples.anisotropy = wekaSegmentation.anisotropy;
+			examples.downSamplingFactor = wekaSegmentation.downSamplingFactor;
+			examples.maxDeepConvolutionLevel = wekaSegmentation.maxDeepConvolutionLevel;
 			oos.writeObject( examples );
 		}
 		catch (Exception e)

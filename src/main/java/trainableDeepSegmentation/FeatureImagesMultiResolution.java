@@ -1039,9 +1039,12 @@ public class FeatureImagesMultiResolution
     public boolean updateFeaturesMT(
             boolean showFeatureImages,
             ArrayList<Integer> featuresToShow,
-            double anisotropy,
             int numThreads)
     {
+
+        // TODO:
+        // - bit of a mess which variables are passed on via wekaSegmentation object...
+        double anisotropy = wekaSegmentation.anisotropy;
 
         if (Thread.currentThread().isInterrupted() )
             return false;

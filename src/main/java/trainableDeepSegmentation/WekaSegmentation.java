@@ -511,7 +511,7 @@ public class WekaSegmentation {
 	 *
 	 * @param numOfClasses the new number of classes
 	 */
-	public void setNumOfClasses(int numOfClasses) {
+	public void setNumClasses(int numOfClasses) {
 		this.numOfClasses = numOfClasses;
 	}
 
@@ -1575,7 +1575,7 @@ public class WekaSegmentation {
 				featureImages.setOriginalImage( Utils.getDataCube( trainingImage, region5D, 0, 1 ) );
 				featureImages.setEnabledFeatures( enabledFeatures );
 				featureImages.wekaSegmentation = this;
-				featureImages.updateFeaturesMT( false, featuresToShow, anisotropy, numThreadsPerRegion );
+				featureImages.updateFeaturesMT( false, featuresToShow, numThreadsPerRegion );
 				featureImagesChannels.add(featureImages);
 			}
 
@@ -2148,7 +2148,7 @@ public class WekaSegmentation {
 				featureImages.setOriginalImage( imageToClassify );
 				featureImages.setEnabledFeatures( enabledFeatures );
 				featureImages.wekaSegmentation = this;
-				featureImages.updateFeaturesMT( true, featuresToShow, anisotropy, numThreads );
+				featureImages.updateFeaturesMT( true, featuresToShow, numThreads );
 				featureImagesChannels.add( featureImages );
 			}
 
