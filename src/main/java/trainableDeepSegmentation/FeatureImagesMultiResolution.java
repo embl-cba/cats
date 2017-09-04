@@ -499,7 +499,8 @@ public class FeatureImagesMultiResolution
                                                   int ys,
                                                   int ye,
                                                   double[][][] featureSlice,
-                                                  int c)
+                                                  int c,
+                                                  ArrayList < Feature > featureList)
     {
         int nf = getNumFeatures();
 
@@ -521,7 +522,7 @@ public class FeatureImagesMultiResolution
 
         for ( int f = 0; f < nf; f++ )
         {
-            if ( ! wekaSegmentation.featureList.get( f + c*nf ).isActive )
+            if ( ! featureList.get( f + c*nf ).isActive )
             {
                 continue; // don't upsample if not needed
             }

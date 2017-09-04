@@ -4,8 +4,8 @@
     <list default="true" id="11fbcd29-9375-459b-85c8-2a59ead8fa06" name="Default" comment="">
       <change type="DELETED" beforePath="$PROJECT_DIR$/publication/.draft.txt.swp" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/publication/draft.txt" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java" />
     </list>
     <ignored path="fiji-plugin-deep-segmentation.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -30,8 +30,8 @@
       <file leaf-file-name="WekaSegmentation.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.37336245">
-              <caret line="135" column="0" selection-start-line="135" selection-start-column="0" selection-end-line="135" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.48908296">
+              <caret line="1586" column="42" selection-start-line="1586" selection-start-column="42" selection-end-line="1586" selection-end-column="42" />
               <folding>
                 <element signature="docComment;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;field#MAX_NUM_CLASSES#0;class#WekaSegmentation#0" expanded="false" />
@@ -67,55 +67,81 @@
                 <element signature="e#7596#7597#0" expanded="true" />
                 <element signature="method#initialize#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#setTrainingImage#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="method#setTrainingImage#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#addExample#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="method#createExample#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#deleteExample#0;class#WekaSegmentation#0" expanded="true" />
+                <element signature="method#getExampleBounds#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#isValidExample#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="method#isValidExample#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#getExampleRois#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="method#getExampleRois#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="e#11908#11909#0" expanded="true" />
                 <element signature="e#11930#11931#0" expanded="true" />
                 <element signature="e#11992#11993#0" expanded="true" />
                 <element signature="e#12023#12024#0" expanded="true" />
+                <element signature="method#setAllFeaturesActive#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#deactivateRarelyUsedFeatures#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getNumClassesInExamples#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#setHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="e#12982#12983#0" expanded="true" />
+                <element signature="e#13028#13029#0" expanded="true" />
                 <element signature="docComment;method#setClassBalance#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="e#13220#13221#0" expanded="true" />
+                <element signature="e#13263#13264#0" expanded="true" />
                 <element signature="docComment;method#setNumClasses#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="e#13491#13492#0" expanded="true" />
                 <element signature="e#13530#13531#0" expanded="true" />
                 <element signature="docComment;method#getNumClasses#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="e#13657#13658#0" expanded="true" />
+                <element signature="e#13683#13684#0" expanded="true" />
                 <element signature="docComment;method#addClass#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="method#addClass#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#setClassLabel#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#getClassLabel#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="e#14158#14159#0" expanded="true" />
+                <element signature="e#14197#14198#0" expanded="true" />
                 <element signature="docComment;method#getClassifiedImage#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="e#14316#14317#0" expanded="true" />
+                <element signature="e#14345#14346#0" expanded="true" />
                 <element signature="e#14397#14398#0" expanded="true" />
                 <element signature="e#14425#14426#0" expanded="true" />
+                <element signature="method#getNumBalancedFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
+                <element signature="method#getBalancedFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
+                <element signature="method#getMultiColorFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#getTrainHeader#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="e#17531#17532#0" expanded="true" />
                 <element signature="e#17561#17562#0" expanded="true" />
                 <element signature="docComment;class#LoadedClassifier#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="class#LoadedClassifier#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#internalLoadClassifier#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="method#internalLoadClassifier#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#loadClassifier#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="method#loadClassifier#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#loadClassifier#1;class#WekaSegmentation#0" expanded="false" />
-                <element signature="method#loadClassifier#1;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#getClassifier#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="e#21494#21495#0" expanded="true" />
+                <element signature="e#21518#21519#0" expanded="true" />
                 <element signature="docComment;method#saveClassifier#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="method#saveClassifier#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#setClassifier#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="e#22616#22617#0" expanded="true" />
                 <element signature="e#22644#22645#0" expanded="true" />
                 <element signature="method#addBinaryData#0;class#WekaSegmentation#0" expanded="true" />
+                <element signature="method#addRandomBalancedBinaryData#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#setLoadedTrainingData#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="e#26409#26410#0" expanded="true" />
+                <element signature="e#26446#26447#0" expanded="true" />
                 <element signature="docComment;method#useAllFeatures#0;class#WekaSegmentation#0" expanded="false" />
-                <element signature="method#useAllFeatures#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#setProjectFolder#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="e#26905#26906#0" expanded="true" />
                 <element signature="e#26946#26947#0" expanded="true" />
                 <element signature="docComment;method#homogenizeTrainingData#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="e#27191#27192#0" expanded="true" />
+                <element signature="e#27249#27250#0" expanded="true" />
                 <element signature="docComment;method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="false" />
+                <element signature="method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#homogenizeTrainingData#1;class#WekaSegmentation#0" expanded="false" />
                 <element signature="e#28017#28018#0" expanded="true" />
                 <element signature="e#28045#28046#0" expanded="true" />
@@ -134,41 +160,45 @@
                 <element signature="docComment;method#writeDataToARFF#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#createTrainingInstances#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="method#createTrainingInstances#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="method#setExamplesInstanceValues#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#44015#44047#0" expanded="false" />
-                <element signature="e#44842#44863#0" expanded="false" />
-                <element signature="e#45466#45514#0" expanded="false" />
-                <element signature="e#45779#45814#0" expanded="false" />
-                <element signature="e#47851#47904#0" expanded="false" />
-                <element signature="e#50328#50336#0" expanded="false" />
+                <element signature="e#43993#44025#0" expanded="false" />
+                <element signature="e#44746#44767#0" expanded="false" />
+                <element signature="e#45370#45418#0" expanded="false" />
+                <element signature="e#45683#45718#0" expanded="false" />
+                <element signature="method#updateFeatureList#0;class#WekaSegmentation#0" expanded="true" />
+                <element signature="method#point3DToInt#0;class#WekaSegmentation#0" expanded="true" />
+                <element signature="method#getPointsFromExample#0;class#WekaSegmentation#0" expanded="true" />
+                <element signature="e#48177#48230#0" expanded="false" />
+                <element signature="e#50654#50662#0" expanded="false" />
                 <element signature="method#getNumActiveFeatures#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#trainClassifier#0;class#WekaSegmentation#0" expanded="false" />
-                <element signature="e#52508#52566#0" expanded="false" />
+                <element signature="e#52834#52892#0" expanded="false" />
                 <element signature="docComment;method#postProcess#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="method#postProcess#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#applyClassifierRunnable#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="method#applyClassifierRunnable#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#58066#58131#0" expanded="false" />
-                <element signature="e#58723#58731#0" expanded="false" />
-                <element signature="e#61106#61187#0" expanded="false" />
-                <element signature="e#63177#63233#0" expanded="false" />
-                <element signature="e#64361#64363#0" expanded="false" />
+                <element signature="e#58392#58457#0" expanded="false" />
+                <element signature="e#59049#59057#0" expanded="false" />
+                <element signature="e#61432#61513#0" expanded="false" />
+                <element signature="e#63503#63559#0" expanded="false" />
+                <element signature="e#64687#64689#0" expanded="false" />
                 <element signature="docComment;method#isBackgroundRegion#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="method#setClassificationResult#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getAttributes#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#classifyRegion#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="method#classifyRegion#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="method#call#0;class#69471:74326" expanded="true" />
-                <element signature="e#71386#71425#0" expanded="false" />
-                <element signature="e#71918#71925#0" expanded="false" />
+                <element signature="method#call#0;class#69797:74677" expanded="true" />
+                <element signature="e#71737#71776#0" expanded="false" />
+                <element signature="e#72269#72276#0" expanded="false" />
                 <element signature="method#getUncertaintyRegion#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#classifyInstances#0;class#WekaSegmentation#0" expanded="false" />
-                <element signature="class#76057:77119" expanded="false" />
+                <element signature="class#76408:77470" expanded="false" />
                 <element signature="docComment;method#setMinimumSigma#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#getMinimumSigma#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#setNumTrees#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#getNumTrees#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="method#getFeaturesToShowAsString#0;class#WekaSegmentation#0" expanded="true" />
+                <element signature="method#getActiveChannelsAsString#0;class#WekaSegmentation#0" expanded="true" />
+                <element signature="method#setActiveChannelsFromString#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#getMaxDepth#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#setDoHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#doHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
@@ -184,6 +214,16 @@
                 <element signature="docComment;method#setClassNames#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#getClassNames#0;class#WekaSegmentation#0" expanded="false" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="pom.xml" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pom.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="21" column="35" selection-start-line="21" selection-start-column="35" selection-end-line="21" selection-end-column="35" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -229,51 +269,6 @@
               <caret line="16" column="5" selection-start-line="16" selection-start-column="5" selection-end-line="16" selection-end-column="5" />
               <folding>
                 <element signature="method#Feature#0;class#Feature#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FastRfBagging.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRfBagging.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="189" column="0" selection-start-line="189" selection-start-column="0" selection-end-line="189" selection-end-column="0" />
-              <folding>
-                <element signature="e#0#21389#0" expanded="false" />
-                <element signature="imports" expanded="false" />
-                <element signature="e#6525#6536#0" expanded="false" />
-                <element signature="method#computeOOBError#0;class#FastRfBagging#0" expanded="false" />
-                <element signature="e#9828#9844#0" expanded="false" />
-                <element signature="method#computeOOBError#1;class#FastRfBagging#0" expanded="false" />
-                <element signature="e#11267#11283#0" expanded="false" />
-                <element signature="e#12349#12350#0" expanded="false" />
-                <element signature="e#12386#12387#0" expanded="false" />
-                <element signature="e#12525#12526#0" expanded="false" />
-                <element signature="e#12576#12577#0" expanded="false" />
-                <element signature="e#12679#12680#0" expanded="false" />
-                <element signature="e#12716#12717#0" expanded="false" />
-                <element signature="method#buildClassifier#1;class#FastRfBagging#0" expanded="false" />
-                <element signature="method#FastRfBagging#0;class#FastRfBagging#0" expanded="false" />
-                <element signature="method#globalInfo#0;class#FastRfBagging#0" expanded="false" />
-                <element signature="e#14224#14225#0" expanded="false" />
-                <element signature="e#14277#14278#0" expanded="false" />
-                <element signature="method#listOptions#0;class#FastRfBagging#0" expanded="false" />
-                <element signature="method#setOptions#0;class#FastRfBagging#0" expanded="false" />
-                <element signature="method#getOptions#0;class#FastRfBagging#0" expanded="false" />
-                <element signature="e#17106#17107#0" expanded="false" />
-                <element signature="e#17184#17185#0" expanded="false" />
-                <element signature="e#17858#17859#0" expanded="false" />
-                <element signature="e#17920#17921#0" expanded="false" />
-                <element signature="method#measureOutOfBagError#0;class#FastRfBagging#0" expanded="false" />
-                <element signature="method#enumerateMeasures#0;class#FastRfBagging#0" expanded="false" />
-                <element signature="method#getMeasure#0;class#FastRfBagging#0" expanded="false" />
-                <element signature="method#distributionForInstance#0;class#FastRfBagging#0" expanded="false" />
-                <element signature="method#toString#0;class#FastRfBagging#0" expanded="false" />
-                <element signature="e#21244#21245#0" expanded="false" />
-                <element signature="e#21294#21295#0" expanded="false" />
-                <element signature="e#21327#21328#0" expanded="false" />
-                <element signature="e#21385#21386#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -346,22 +341,22 @@
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="-10.0">
-              <caret line="1045" column="87" selection-start-line="1045" selection-start-column="87" selection-end-line="1045" selection-end-column="87" />
+              <caret line="523" column="9" selection-start-line="523" selection-start-column="9" selection-end-line="523" selection-end-column="9" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="method#mergeStacks#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#extractChannels#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#getHessian#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#call#0;class#9193:11528" expanded="true" />
-                <element signature="method#setInterpolatedFeatureSliceRegion#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#interpolateFast#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#interpolate#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#getBytesAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#getShortsAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#getStructure#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-                <element signature="method#call#0;class#36274:38365" expanded="true" />
+                <element signature="method#call#0;class#36342:38433" expanded="true" />
                 <element signature="method#sqrt#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#getNumFeatures#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+                <element signature="method#updateFeaturesMT#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#putDeepConvFeatLevelIntoTitle#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#filter3d#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#getStackCT#0;class#FeatureImagesMultiResolution#0" expanded="true" />
@@ -373,8 +368,8 @@
                 <element signature="method#shutDownNow#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#isEmpty#0;class#FeatureImagesMultiResolution#0" expanded="true" />
                 <element signature="method#getLabel#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-                <element signature="e#56490#56491#0" expanded="true" />
-                <element signature="e#56544#56545#0" expanded="true" />
+                <element signature="e#56558#56559#0" expanded="true" />
+                <element signature="e#56612#56613#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -422,8 +417,8 @@
         <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Example.java" />
         <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Feature.java" />
         <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Examples.java" />
-        <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java" />
         <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java" />
+        <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java" />
         <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" />
       </list>
     </option>
@@ -567,8 +562,30 @@
               <option name="myItemId" value="main" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
+          </PATH>
+          <PATH>
             <PATH_ELEMENT>
-              <option name="myItemId" value="resources" />
+              <option name="myItemId" value="fiji-plugin-deep-segmentation" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="fiji-plugin-deep-segmentation" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="main" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="trainableDeepSegmentation" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -587,6 +604,10 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="main" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -801,7 +822,7 @@
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32891566" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2819277" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.44819278" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -810,7 +831,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.25751072" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1881259" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.28674698" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -860,11 +881,11 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java</url>
-          <line>2921</line>
+          <line>2934</line>
           <properties />
         </line-breakpoint>
       </breakpoints>
-      <option name="time" value="55" />
+      <option name="time" value="62" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -912,55 +933,81 @@
             <element signature="e#7596#7597#0" expanded="true" />
             <element signature="method#initialize#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setTrainingImage#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#setTrainingImage#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#addExample#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#createExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#deleteExample#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#getExampleBounds#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#isValidExample#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#isValidExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#getExampleRois#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#getExampleRois#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="e#11908#11909#0" expanded="true" />
             <element signature="e#11930#11931#0" expanded="true" />
             <element signature="e#11992#11993#0" expanded="true" />
             <element signature="e#12023#12024#0" expanded="true" />
+            <element signature="method#setAllFeaturesActive#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#deactivateRarelyUsedFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumClassesInExamples#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#12982#12983#0" expanded="true" />
+            <element signature="e#13028#13029#0" expanded="true" />
             <element signature="docComment;method#setClassBalance#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#13220#13221#0" expanded="true" />
+            <element signature="e#13263#13264#0" expanded="true" />
             <element signature="docComment;method#setNumClasses#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="e#13491#13492#0" expanded="true" />
             <element signature="e#13530#13531#0" expanded="true" />
             <element signature="docComment;method#getNumClasses#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#13657#13658#0" expanded="true" />
+            <element signature="e#13683#13684#0" expanded="true" />
             <element signature="docComment;method#addClass#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#addClass#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setClassLabel#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#getClassLabel#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#14158#14159#0" expanded="true" />
+            <element signature="e#14197#14198#0" expanded="true" />
             <element signature="docComment;method#getClassifiedImage#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#14316#14317#0" expanded="true" />
+            <element signature="e#14345#14346#0" expanded="true" />
             <element signature="e#14397#14398#0" expanded="true" />
             <element signature="e#14425#14426#0" expanded="true" />
+            <element signature="method#getNumBalancedFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#getBalancedFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#getMultiColorFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#getTrainHeader#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="e#17531#17532#0" expanded="true" />
             <element signature="e#17561#17562#0" expanded="true" />
             <element signature="docComment;class#LoadedClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="class#LoadedClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#internalLoadClassifier#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#internalLoadClassifier#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#loadClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#loadClassifier#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#loadClassifier#1;class#WekaSegmentation#0" expanded="false" />
-            <element signature="method#loadClassifier#1;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#getClassifier#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#21494#21495#0" expanded="true" />
+            <element signature="e#21518#21519#0" expanded="true" />
             <element signature="docComment;method#saveClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#saveClassifier#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="e#22616#22617#0" expanded="true" />
             <element signature="e#22644#22645#0" expanded="true" />
             <element signature="method#addBinaryData#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#addRandomBalancedBinaryData#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setLoadedTrainingData#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#26409#26410#0" expanded="true" />
+            <element signature="e#26446#26447#0" expanded="true" />
             <element signature="docComment;method#useAllFeatures#0;class#WekaSegmentation#0" expanded="false" />
-            <element signature="method#useAllFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setProjectFolder#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="e#26905#26906#0" expanded="true" />
             <element signature="e#26946#26947#0" expanded="true" />
             <element signature="docComment;method#homogenizeTrainingData#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#27191#27192#0" expanded="true" />
+            <element signature="e#27249#27250#0" expanded="true" />
             <element signature="docComment;method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#homogenizeTrainingData#1;class#WekaSegmentation#0" expanded="false" />
             <element signature="e#28017#28018#0" expanded="true" />
             <element signature="e#28045#28046#0" expanded="true" />
@@ -979,41 +1026,45 @@
             <element signature="docComment;method#writeDataToARFF#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#createTrainingInstances#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#createTrainingInstances#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#setExamplesInstanceValues#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#44015#44047#0" expanded="false" />
-            <element signature="e#44842#44863#0" expanded="false" />
-            <element signature="e#45466#45514#0" expanded="false" />
-            <element signature="e#45779#45814#0" expanded="false" />
-            <element signature="e#47851#47904#0" expanded="false" />
-            <element signature="e#50328#50336#0" expanded="false" />
+            <element signature="e#43993#44025#0" expanded="false" />
+            <element signature="e#44746#44767#0" expanded="false" />
+            <element signature="e#45370#45418#0" expanded="false" />
+            <element signature="e#45683#45718#0" expanded="false" />
+            <element signature="method#updateFeatureList#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#point3DToInt#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#getPointsFromExample#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="e#48177#48230#0" expanded="false" />
+            <element signature="e#50654#50662#0" expanded="false" />
             <element signature="method#getNumActiveFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#trainClassifier#0;class#WekaSegmentation#0" expanded="false" />
-            <element signature="e#52508#52566#0" expanded="false" />
+            <element signature="e#52834#52892#0" expanded="false" />
             <element signature="docComment;method#postProcess#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#postProcess#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#applyClassifierRunnable#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#applyClassifierRunnable#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#58066#58131#0" expanded="false" />
-            <element signature="e#58723#58731#0" expanded="false" />
-            <element signature="e#61106#61187#0" expanded="false" />
-            <element signature="e#63177#63233#0" expanded="false" />
-            <element signature="e#64361#64363#0" expanded="false" />
+            <element signature="e#58392#58457#0" expanded="false" />
+            <element signature="e#59049#59057#0" expanded="false" />
+            <element signature="e#61432#61513#0" expanded="false" />
+            <element signature="e#63503#63559#0" expanded="false" />
+            <element signature="e#64687#64689#0" expanded="false" />
             <element signature="docComment;method#isBackgroundRegion#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#setClassificationResult#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getAttributes#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#classifyRegion#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#classifyRegion#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#call#0;class#69471:74326" expanded="true" />
-            <element signature="e#71386#71425#0" expanded="false" />
-            <element signature="e#71918#71925#0" expanded="false" />
+            <element signature="method#call#0;class#69797:74677" expanded="true" />
+            <element signature="e#71737#71776#0" expanded="false" />
+            <element signature="e#72269#72276#0" expanded="false" />
             <element signature="method#getUncertaintyRegion#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#classifyInstances#0;class#WekaSegmentation#0" expanded="false" />
-            <element signature="class#76057:77119" expanded="false" />
+            <element signature="class#76408:77470" expanded="false" />
             <element signature="docComment;method#setMinimumSigma#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#getMinimumSigma#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#setNumTrees#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#getNumTrees#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#getFeaturesToShowAsString#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#getActiveChannelsAsString#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#setActiveChannelsFromString#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#getMaxDepth#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#setDoHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#doHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
@@ -1223,15 +1274,15 @@
             <element signature="method#extractChannels#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#getHessian#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#call#0;class#9193:11528" expanded="true" />
-            <element signature="method#setInterpolatedFeatureSliceRegion#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#interpolateFast#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#interpolate#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#getBytesAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#getShortsAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#getStructure#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#call#0;class#36274:38365" expanded="true" />
+            <element signature="method#call#0;class#36342:38433" expanded="true" />
             <element signature="method#sqrt#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#getNumFeatures#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#updateFeaturesMT#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#putDeepConvFeatLevelIntoTitle#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#filter3d#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#getStackCT#0;class#FeatureImagesMultiResolution#0" expanded="true" />
@@ -1243,8 +1294,8 @@
             <element signature="method#shutDownNow#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#isEmpty#0;class#FeatureImagesMultiResolution#0" expanded="true" />
             <element signature="method#getLabel#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="e#56490#56491#0" expanded="true" />
-            <element signature="e#56544#56545#0" expanded="true" />
+            <element signature="e#56558#56559#0" expanded="true" />
+            <element signature="e#56612#56613#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1559,42 +1610,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-10.0">
-          <caret line="1045" column="87" selection-start-line="1045" selection-start-column="87" selection-end-line="1045" selection-end-column="87" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="method#mergeStacks#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#extractChannels#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#getHessian#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#call#0;class#9193:11528" expanded="true" />
-            <element signature="method#setInterpolatedFeatureSliceRegion#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#interpolateFast#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#interpolate#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#getBytesAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#getShortsAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#getStructure#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#call#0;class#36274:38365" expanded="true" />
-            <element signature="method#sqrt#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#getNumFeatures#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#putDeepConvFeatLevelIntoTitle#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#filter3d#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#getStackCT#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#getHessianImgLib2#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#is3D#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#getBinning#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#removeCalibration#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#bin#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#shutDownNow#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#isEmpty#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="method#getLabel#0;class#FeatureImagesMultiResolution#0" expanded="true" />
-            <element signature="e#56490#56491#0" expanded="true" />
-            <element signature="e#56544#56545#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-13.481482">
@@ -1656,10 +1671,54 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-10.0">
+          <caret line="523" column="9" selection-start-line="523" selection-start-column="9" selection-end-line="523" selection-end-column="9" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="method#mergeStacks#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#extractChannels#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#getHessian#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#call#0;class#9193:11528" expanded="true" />
+            <element signature="method#interpolateFast#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#interpolate#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#getBytesAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#getShortsAsFloats#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#getStructure#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#call#0;class#36342:38433" expanded="true" />
+            <element signature="method#sqrt#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#getNumFeatures#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#updateFeaturesMT#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#putDeepConvFeatLevelIntoTitle#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#filter3d#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#getStackCT#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#getHessianImgLib2#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#is3D#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#getBinning#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#removeCalibration#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#bin#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#shutDownNow#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#isEmpty#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="method#getLabel#0;class#FeatureImagesMultiResolution#0" expanded="true" />
+            <element signature="e#56558#56559#0" expanded="true" />
+            <element signature="e#56612#56613#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="21" column="35" selection-start-line="21" selection-start-column="35" selection-end-line="21" selection-end-column="35" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.37336245">
-          <caret line="135" column="0" selection-start-line="135" selection-start-column="0" selection-end-line="135" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.48908296">
+          <caret line="1586" column="42" selection-start-line="1586" selection-start-column="42" selection-end-line="1586" selection-end-column="42" />
           <folding>
             <element signature="docComment;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;field#MAX_NUM_CLASSES#0;class#WekaSegmentation#0" expanded="false" />
@@ -1695,55 +1754,81 @@
             <element signature="e#7596#7597#0" expanded="true" />
             <element signature="method#initialize#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setTrainingImage#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#setTrainingImage#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#addExample#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#createExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#deleteExample#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#getExampleBounds#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#isValidExample#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#isValidExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#getExampleRois#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#getExampleRois#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="e#11908#11909#0" expanded="true" />
             <element signature="e#11930#11931#0" expanded="true" />
             <element signature="e#11992#11993#0" expanded="true" />
             <element signature="e#12023#12024#0" expanded="true" />
+            <element signature="method#setAllFeaturesActive#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#deactivateRarelyUsedFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumClassesInExamples#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#12982#12983#0" expanded="true" />
+            <element signature="e#13028#13029#0" expanded="true" />
             <element signature="docComment;method#setClassBalance#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#13220#13221#0" expanded="true" />
+            <element signature="e#13263#13264#0" expanded="true" />
             <element signature="docComment;method#setNumClasses#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="e#13491#13492#0" expanded="true" />
             <element signature="e#13530#13531#0" expanded="true" />
             <element signature="docComment;method#getNumClasses#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#13657#13658#0" expanded="true" />
+            <element signature="e#13683#13684#0" expanded="true" />
             <element signature="docComment;method#addClass#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#addClass#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setClassLabel#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#getClassLabel#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#14158#14159#0" expanded="true" />
+            <element signature="e#14197#14198#0" expanded="true" />
             <element signature="docComment;method#getClassifiedImage#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#14316#14317#0" expanded="true" />
+            <element signature="e#14345#14346#0" expanded="true" />
             <element signature="e#14397#14398#0" expanded="true" />
             <element signature="e#14425#14426#0" expanded="true" />
+            <element signature="method#getNumBalancedFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#getBalancedFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#getMultiColorFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#getTrainHeader#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="e#17531#17532#0" expanded="true" />
             <element signature="e#17561#17562#0" expanded="true" />
             <element signature="docComment;class#LoadedClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="class#LoadedClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#internalLoadClassifier#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#internalLoadClassifier#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#loadClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#loadClassifier#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#loadClassifier#1;class#WekaSegmentation#0" expanded="false" />
-            <element signature="method#loadClassifier#1;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#getClassifier#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#21494#21495#0" expanded="true" />
+            <element signature="e#21518#21519#0" expanded="true" />
             <element signature="docComment;method#saveClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#saveClassifier#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="e#22616#22617#0" expanded="true" />
             <element signature="e#22644#22645#0" expanded="true" />
             <element signature="method#addBinaryData#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#addRandomBalancedBinaryData#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setLoadedTrainingData#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#26409#26410#0" expanded="true" />
+            <element signature="e#26446#26447#0" expanded="true" />
             <element signature="docComment;method#useAllFeatures#0;class#WekaSegmentation#0" expanded="false" />
-            <element signature="method#useAllFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#setProjectFolder#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="e#26905#26906#0" expanded="true" />
             <element signature="e#26946#26947#0" expanded="true" />
             <element signature="docComment;method#homogenizeTrainingData#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="e#27191#27192#0" expanded="true" />
+            <element signature="e#27249#27250#0" expanded="true" />
             <element signature="docComment;method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="false" />
+            <element signature="method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#homogenizeTrainingData#1;class#WekaSegmentation#0" expanded="false" />
             <element signature="e#28017#28018#0" expanded="true" />
             <element signature="e#28045#28046#0" expanded="true" />
@@ -1762,41 +1847,45 @@
             <element signature="docComment;method#writeDataToARFF#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#createTrainingInstances#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#createTrainingInstances#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#setExamplesInstanceValues#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#44015#44047#0" expanded="false" />
-            <element signature="e#44842#44863#0" expanded="false" />
-            <element signature="e#45466#45514#0" expanded="false" />
-            <element signature="e#45779#45814#0" expanded="false" />
-            <element signature="e#47851#47904#0" expanded="false" />
-            <element signature="e#50328#50336#0" expanded="false" />
+            <element signature="e#43993#44025#0" expanded="false" />
+            <element signature="e#44746#44767#0" expanded="false" />
+            <element signature="e#45370#45418#0" expanded="false" />
+            <element signature="e#45683#45718#0" expanded="false" />
+            <element signature="method#updateFeatureList#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#point3DToInt#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#getPointsFromExample#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="e#48177#48230#0" expanded="false" />
+            <element signature="e#50654#50662#0" expanded="false" />
             <element signature="method#getNumActiveFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#trainClassifier#0;class#WekaSegmentation#0" expanded="false" />
-            <element signature="e#52508#52566#0" expanded="false" />
+            <element signature="e#52834#52892#0" expanded="false" />
             <element signature="docComment;method#postProcess#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#postProcess#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#applyClassifierRunnable#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#applyClassifierRunnable#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#58066#58131#0" expanded="false" />
-            <element signature="e#58723#58731#0" expanded="false" />
-            <element signature="e#61106#61187#0" expanded="false" />
-            <element signature="e#63177#63233#0" expanded="false" />
-            <element signature="e#64361#64363#0" expanded="false" />
+            <element signature="e#58392#58457#0" expanded="false" />
+            <element signature="e#59049#59057#0" expanded="false" />
+            <element signature="e#61432#61513#0" expanded="false" />
+            <element signature="e#63503#63559#0" expanded="false" />
+            <element signature="e#64687#64689#0" expanded="false" />
             <element signature="docComment;method#isBackgroundRegion#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#setClassificationResult#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getAttributes#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#classifyRegion#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#classifyRegion#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#call#0;class#69471:74326" expanded="true" />
-            <element signature="e#71386#71425#0" expanded="false" />
-            <element signature="e#71918#71925#0" expanded="false" />
+            <element signature="method#call#0;class#69797:74677" expanded="true" />
+            <element signature="e#71737#71776#0" expanded="false" />
+            <element signature="e#72269#72276#0" expanded="false" />
             <element signature="method#getUncertaintyRegion#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#classifyInstances#0;class#WekaSegmentation#0" expanded="false" />
-            <element signature="class#76057:77119" expanded="false" />
+            <element signature="class#76408:77470" expanded="false" />
             <element signature="docComment;method#setMinimumSigma#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#getMinimumSigma#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#setNumTrees#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#getNumTrees#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#getFeaturesToShowAsString#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#getActiveChannelsAsString#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="method#setActiveChannelsFromString#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#getMaxDepth#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#setDoHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#doHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />

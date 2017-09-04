@@ -1529,7 +1529,7 @@ public class WekaSegmentation {
 		return trainingData;
 	}
 
-	private Runnable setExamplesInstanceValues( ArrayList<Example> examples )
+	private Runnable setExamplesInstanceValues( ArrayList< Example > examples )
 	{
 		if (Thread.currentThread().isInterrupted())
 			return null;
@@ -1580,16 +1580,13 @@ public class WekaSegmentation {
 			}
 
 			// update feature list
-			featureList = new ArrayList<>();
+			updateFeatureList( featureImagesChannels );
 
-			for (int c = 0; c < activeChannels.size(); ++c)
-			{
-				for (String featureName : featureImagesChannels.get(c).getFeatureNames())
-				{
-					String channelFeatureName = featureName + "_ch" + c;
-					featureList.add( new Feature( channelFeatureName, 0, true ) );
-				}
-			}
+			// make a local copy to avoid concurrency
+			// issues accessing this list further down
+			// while other threads update it
+			// TODO: better solution?
+			ArrayList < Feature > featureListCopy = (ArrayList<Feature>) featureList.clone();
 
 			int numFeaturesAllChannels = activeChannels.size()
 					* featureImagesChannels.get(0).getNumFeatures();
@@ -1602,6 +1599,7 @@ public class WekaSegmentation {
 					[featureImagesChannels.get(0).getWidth() - 2 * borderSizes[0] ]
 					[featureImagesChannels.get(0).getHeight() - 2 * borderSizes[1] ]
 					[featureImagesChannels.get(0).getNumFeatures() ];
+
 
 			// extract the feature values at
 			// the respective z-position of each example
@@ -1618,9 +1616,8 @@ public class WekaSegmentation {
 
 				for ( int c = 0; c < activeChannels.size(); c++ )
 				{
-					//featureImagesChannels.get( c ).setInterpolatedFeatureSlice( z, featureSlices[ c ]);
 					featureImagesChannels.get( c ).setInterpolatedFeatureSliceRegion(
-							z, xs, xe, ys, ye, featureSlices[c], c);
+							z, xs, xe, ys, ye, featureSlices[c], c, featureListCopy);
 
 				}
 				long duration = System.currentTimeMillis() - start;
@@ -1686,6 +1683,21 @@ public class WekaSegmentation {
 			}
 		};
 	}
+
+	private synchronized void updateFeatureList( ArrayList < FeatureImagesMultiResolution > featureImagesChannels )
+	{
+		featureList = new ArrayList<>();
+
+		for (int c = 0; c < activeChannels.size(); ++c)
+		{
+			for (String featureName : featureImagesChannels.get(c).getFeatureNames())
+			{
+				String channelFeatureName = featureName + "_ch" + c;
+				featureList.add(new Feature(channelFeatureName, 0, true));
+			}
+		}
+	}
+
 
 	private int[] point3DToInt( Point3D point3D )
 	{
@@ -2565,7 +2577,8 @@ public class WekaSegmentation {
 							{
 								featureImagesChannels.
 										get(c).
-										setInterpolatedFeatureSliceRegion(zs + z, xs, xe, ys, ye, featureSlices[c], c);
+										setInterpolatedFeatureSliceRegion(zs + z, xs, xe, ys, ye,
+												featureSlices[c], c, featureList);
 							}
 
 							iInstanceThisSlice = 0;
