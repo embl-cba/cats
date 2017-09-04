@@ -9,6 +9,7 @@ import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
 import hr.irb.fastRandomForest.FastRandomForest;
 import ij.*;
+import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
 import ij.gui.StackWindow;
@@ -170,10 +171,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 			Color.magenta,
 			Color.red,
 			Color.cyan,
-			Color.yellow,
-			Color.orange,
-			Color.black,
 			Color.pink,
+			Color.yellow,
+			Color.black,
+			Color.orange,
 			Color.white
 	};
 
@@ -1248,6 +1249,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							wekaSegmentation.minTileSizes[0],
 							wekaSegmentation.minTileSizes[1]
 					);
+					zoomToSelection( displayImage, 3.0 );
 					displayImage.updateAndDraw();
 				}
 				else
@@ -1260,6 +1262,30 @@ public class Weka_Deep_Segmentation implements PlugIn
 			if ( cmd.equals("delete") )
 			{
 				wekaSegmentation.deleteUncertaintyRegion(iRegion);
+			}
+		}
+
+
+		void zoomToSelection(ImagePlus imp, double marginFactor) {
+
+			ImageCanvas ic = imp.getCanvas();
+			Roi roi = imp.getRoi();
+			ic.unzoom();
+			if (roi==null) return;
+			Rectangle w = imp.getWindow().getBounds();
+			Rectangle r = roi.getBounds();
+			double mag = ic.getMagnification();
+			int marginw = (int)(marginFactor * (w.width - mag * imp.getWidth()));
+			int marginh = (int)(marginFactor * (w.height - mag * imp.getHeight()));
+			int x = r.x+r.width/2;
+			int y = r.y+r.height/2;
+			mag = ic.getHigherZoomLevel(mag);
+			while(r.width*mag < w.width-marginw && r.height*mag<w.height-marginh) {
+				ic.zoomIn(ic.screenX(x), ic.screenY(y));
+				double cmag = ic.getMagnification();
+				if (cmag==32.0) break;
+				mag = ic.getHigherZoomLevel(cmag);
+				w = imp.getWindow().getBounds();
 			}
 		}
 

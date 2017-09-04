@@ -116,7 +116,7 @@ public class WekaSegmentation {
 
 	// Random Forest parameters
 	/** current number of trees in the fast random forest classifier */
-	private int numOfTrees = 10;
+	private int numOfTrees = 100;
 	/** number of random features per node in the fast random forest classifier */
 	private int numRandomFeatures = 50;
 	/** fraction of random features per node in the fast random forest classifier */
