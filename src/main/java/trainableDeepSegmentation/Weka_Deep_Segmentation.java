@@ -172,7 +172,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 			Color.cyan,
 			Color.yellow,
 			Color.orange,
-			Color.black
+			Color.black,
+			Color.pink,
+			Color.white
 	};
 
 	/** Lookup table for the result overlay image */

@@ -82,7 +82,7 @@ import weka.gui.explorer.ClassifierPanel;
 public class WekaSegmentation {
 
 	/** maximum number of classes (labels) allowed */
-	public static final int MAX_NUM_CLASSES = 5;
+	public static final int MAX_NUM_CLASSES = 10;
 
 	public static final int CLASS_LUT_WIDTH = 20;
 
@@ -132,11 +132,11 @@ public class WekaSegmentation {
 
 	public double anisotropy = 1.0;
 
-	public int maxResolutionLevel = 2; // 3
+	public int maxResolutionLevel = 3; // 3
 
-	public int downSamplingFactor = 2; // 3
+	public int downSamplingFactor = 3; // 3
 
-	public int maxDeepConvolutionLevel = 2; // 3
+	public int maxDeepConvolutionLevel = 3; // 3
 
 	public int minFeatureUsage = 1;
 
