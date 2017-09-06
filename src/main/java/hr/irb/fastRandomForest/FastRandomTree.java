@@ -508,6 +508,7 @@ class FastRandomTree
 
       m_Attribute = bestAttIdx;   // find best attribute
       m_MotherForest.attributeUsages[bestAttIdx]++; // TISCHI
+      m_MotherForest.decisionNodes++;
       m_SplitPoint = split; 
       m_Prop = prop; 
       prop = null; // can be GC'ed 

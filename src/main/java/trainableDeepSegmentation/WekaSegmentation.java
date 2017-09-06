@@ -38,8 +38,6 @@ import ij.ImageStack;
 import ij.Prefs;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
-import weka.attributeSelection.BestFirst;
-import weka.attributeSelection.CfsSubsetEval;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.pmml.consumer.PMMLClassifier;
 import weka.classifiers.trees.RandomForest;
@@ -49,7 +47,6 @@ import weka.core.Instances;
 import weka.core.pmml.PMMLFactory;
 import weka.core.pmml.PMMLModel;
 import weka.filters.Filter;
-import weka.filters.supervised.attribute.AttributeSelection;
 import weka.filters.supervised.instance.Resample;
 import weka.gui.explorer.ClassifierPanel;
 
@@ -153,6 +150,8 @@ public class WekaSegmentation {
 	public int backgroundThreshold = 0; // gray-values
 
 	public double uncertaintyLUTdecay = 0.5;
+
+	private double avgRfTreeSize = 0.0;
 
 	private static Logger logger = new IJLazySwingLogger();
 
@@ -1981,7 +1980,7 @@ public class WekaSegmentation {
 		final long start = System.currentTimeMillis();
 		try
 		{
-			classifier.buildClassifier(data);
+			classifier.buildClassifier( data );
 			this.totalThreadsExecuted.addAndGet( numRfTrainingThreads );
 		}
 		catch (InterruptedException ie)
@@ -2001,17 +2000,45 @@ public class WekaSegmentation {
 		// Print classifier information
 		logger.info( classifier.toString() );
 
-		// Print tree sizes
-		int[] treeSizes = ((FastRandomForest) classifier).getTreeSizes();
-		double avgTreeSize = 0;
-		for ( int treeSize : treeSizes )
-		{
-			avgTreeSize += treeSize;
-		}
-		avgTreeSize /= treeSizes.length;
-		logger.info("Average number of nodes per tree: " + avgTreeSize );
+		// Compute characteristics about the RF
 
-		logger.info("Trained classifier with " + getNumActiveFeatures() + " features in " + (end - start) + " ms.");
+		int numDecisionNodes = ((FastRandomForest) classifier).getDecisionNodes();
+
+		int[] attributeUsages = ((FastRandomForest) classifier).getAttributeUsages();
+		int iUsedFeature = 0;
+		int totalFeatureUsage = 0;
+		for ( Feature feature : featureList )
+		{
+			if ( feature.isActive )
+			{
+				feature.usageInRF = attributeUsages[iUsedFeature++];
+				totalFeatureUsage += feature.usageInRF;
+			}
+		}
+
+		avgRfTreeSize = numDecisionNodes / getNumTrees();
+		double avgTreeDepth = Math.log(avgRfTreeSize) / Math.log(2.0) ;
+		double randomFeatureUsage = 1.0 * numDecisionNodes / getNumActiveFeatures();
+
+		ArrayList<Feature> sortedFeatureList = new ArrayList<>( featureList );
+		sortedFeatureList.sort(Comparator.comparing(Feature::getUsageInRF).reversed());
+
+		logger.info("# Most used features: ");
+		for ( int f = 0; f < 10; f++)
+		{
+			Feature feature = sortedFeatureList.get( f );
+			int featureID = featureList.indexOf( feature );
+			logger.info("Usage: " + feature.usageInRF + "; ID: " + featureID +
+						"; Name: " + feature.featureName);
+		}
+
+		logger.info("Total usage of all features: " + totalFeatureUsage );
+		logger.info("Total number of decision nodes: " + numDecisionNodes );
+		logger.info("Number of active features: " + getNumActiveFeatures() );
+		logger.info("Feature usage if selected completely at random: " + randomFeatureUsage );
+		logger.info("Average number of nodes per tree: " + avgRfTreeSize );
+		logger.info("Average tree depth: " + avgTreeDepth );
+		logger.info("Trained classifier in " + (end - start) + " ms.");
 		return true;
 	}
 

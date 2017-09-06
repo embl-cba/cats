@@ -141,7 +141,7 @@ public class FastRandomForest
 
   protected int[] attributeUsages = null; // Tischi
 
-  protected int[] treeSizes = null; // Tischi
+  protected int decisionNodes = 0; // Tischi
 
 
   /**
@@ -213,14 +213,14 @@ public class FastRandomForest
 
 
   /**
-   * Get how many nodes each tree
+   * Get how many decision nodes
    * has in the forest.
    *
-   * @return Array of tree sizes usages.
+   * @return Number of decision nodes.
    */
-  public int[] getTreeSizes(){
+  public int getDecisionNodes(){
 
-    return treeSizes;
+    return decisionNodes;
   }
 
 

@@ -336,7 +336,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		plotButton.setToolTipText("Plot result based on different metrics");
 		plotButton.setEnabled(false);
 
-		printFeatureNamesButton = new JButton("Print feature names");
+		printFeatureNamesButton = new JButton("Feature information");
 		printFeatureNamesButton.setToolTipText("Prints feature names to Log window");
 		printFeatureNamesButton.setEnabled(true);
 
@@ -434,24 +434,29 @@ public class Weka_Deep_Segmentation implements PlugIn
 						createClassifiedImage(createResultButton, resultOnDiskCheckBox);
 						//postProcessButton.setEnabled(true);
 					}
-					else if(e.getSource() == probabilityButton){
+					else if( e.getSource() == probabilityButton )
+					{
 						// Macro recording
 						String[] arg = new String[] {};
 						record(GET_PROBABILITY, arg);
 						//showProbabilityImage();
 					}
-					else if(e.getSource() == printFeatureNamesButton)
+					else if( e.getSource() == printFeatureNamesButton )
 					{
-						logger.info("Active feature list, sorted according to usage in random forest:");
+						logger.info("Feature list, sorted according to usage in random forest:");
 
 						if ( wekaSegmentation.featureList != null )
 						{
 
 							ArrayList<Feature> sortedFeatureList = new ArrayList<>( wekaSegmentation.featureList );
-							sortedFeatureList.sort( Comparator.comparing( Feature::getUsageInRF).reversed() );
+							sortedFeatureList.sort( Comparator.comparing( Feature::getUsageInRF ) );
+
+							int sumFeatureUsage = 0;
 
 							for ( Feature feature : sortedFeatureList )
 							{
+								sumFeatureUsage += feature.usageInRF;
+
 								if ( feature.isActive )
 								{
 									int featureID = wekaSegmentation.featureList.indexOf( feature );
@@ -461,7 +466,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 											"; Usage: " + feature.usageInRF +
 											"; Active: " + feature.isActive);
 								}
+
 							}
+
+							logger.info( "Sum feature usage: " + sumFeatureUsage );
 
 							int i = 0;
 							for (int n : wekaSegmentation.numFeaturesPerResolution)
@@ -2054,6 +2062,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 								return;
 							}
 
+							/*
 							if ( wekaSegmentation.minFeatureUsage > 0 )
 							{
 
@@ -2074,7 +2083,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 										+ "/" + wekaSegmentation.getNumFeatures());
 
 								wekaSegmentation.trainClassifier( false );
-							}
+							}*/
 
 
 							win.trainingComplete = true;
