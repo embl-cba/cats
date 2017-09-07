@@ -507,8 +507,8 @@ class FastRandomTree
     if ( sensibleSplitFound ) { 
 
       m_Attribute = bestAttIdx;   // find best attribute
-      m_MotherForest.attributeUsages[bestAttIdx]++; // TISCHI
-      m_MotherForest.decisionNodes++;
+      m_MotherForest.incrementAttributeUsage(bestAttIdx);  // Tischi
+      m_MotherForest.incrementDecisionNodes();  // Tischi
       m_SplitPoint = split; 
       m_Prop = prop; 
       prop = null; // can be GC'ed 

@@ -143,6 +143,17 @@ public class FastRandomForest
 
   protected int decisionNodes = 0; // Tischi
 
+  public synchronized void incrementAttributeUsage( int iAttribute )
+  {
+    attributeUsages[iAttribute]++;
+  }
+
+  public synchronized void incrementDecisionNodes()
+  {
+    decisionNodes++;
+  }
+
+
 
   /**
    * Returns a string describing classifier

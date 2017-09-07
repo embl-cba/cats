@@ -2007,14 +2007,25 @@ public class WekaSegmentation {
 		int[] attributeUsages = ((FastRandomForest) classifier).getAttributeUsages();
 		int iUsedFeature = 0;
 		int totalFeatureUsage = 0;
+
+		for ( int usage : attributeUsages )
+		{
+			totalFeatureUsage += usage;
+		}
+
+		int numActiveFeatures = 0;
 		for ( Feature feature : featureList )
 		{
 			if ( feature.isActive )
 			{
 				feature.usageInRF = attributeUsages[iUsedFeature++];
-				totalFeatureUsage += feature.usageInRF;
+				numActiveFeatures++;
 			}
 		}
+
+		logger.info("[DEBUG]: attributeUsages.length: " + attributeUsages.length);
+		logger.info("[DEBUG]: numActiveFeatures: " + numActiveFeatures);
+
 
 		avgRfTreeSize = numDecisionNodes / getNumTrees();
 		double avgTreeDepth = Math.log(avgRfTreeSize) / Math.log(2.0) ;
