@@ -4,10 +4,7 @@
     <list default="true" id="11fbcd29-9375-459b-85c8-2a59ead8fa06" name="Default" comment="">
       <change type="DELETED" beforePath="$PROJECT_DIR$/publication/.draft.txt.swp" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/publication/draft.txt" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/example-data/annotations.ser" afterPath="$PROJECT_DIR$/example-data/annotations.ser" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomForest.java" afterPath="$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomForest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomTree.java" afterPath="$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomTree.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" />
     </list>
     <ignored path="fiji-plugin-deep-segmentation.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -32,8 +29,8 @@
       <file leaf-file-name="WekaSegmentation.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-5.037037">
-              <caret line="2006" column="67" selection-start-line="2006" selection-start-column="67" selection-end-line="2006" selection-end-column="67" />
+            <state vertical-scroll-proportion="-1.8703704">
+              <caret line="2006" column="70" selection-start-line="2006" selection-start-column="70" selection-end-line="2006" selection-end-column="70" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="docComment;class#WekaSegmentation#0" expanded="false" />
@@ -236,8 +233,8 @@
       <file leaf-file-name="FastRandomForest.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomForest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.6856618">
-              <caret line="149" column="0" selection-start-line="149" selection-start-column="0" selection-end-line="149" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.41360295">
+              <caret line="655" column="22" selection-start-line="655" selection-start-column="22" selection-end-line="655" selection-end-column="22" />
               <folding>
                 <element signature="e#4597#4598#0" expanded="true" />
                 <element signature="e#4636#4637#0" expanded="true" />
@@ -253,8 +250,10 @@
         <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRfBagging.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="106" column="34" selection-start-line="106" selection-start-column="34" selection-end-line="106" selection-end-column="34" />
-              <folding />
+              <caret line="98" column="14" selection-start-line="98" selection-start-column="14" selection-end-line="98" selection-end-column="14" />
+              <folding>
+                <element signature="method#buildClassifier#0;class#FastRfBagging#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -274,8 +273,8 @@
       <file leaf-file-name="FastRandomTree.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomTree.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-6.3333335">
-              <caret line="525" column="43" selection-start-line="525" selection-start-column="43" selection-end-line="525" selection-end-column="43" />
+            <state vertical-scroll-proportion="-3.5555556">
+              <caret line="515" column="6" selection-start-line="515" selection-start-column="6" selection-end-line="515" selection-end-column="6" />
               <folding>
                 <element signature="method#numNodes#0;class#FastRandomTree#0" expanded="true" />
               </folding>
@@ -446,8 +445,8 @@
         <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java" />
         <option value="$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRfBagging.java" />
         <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomForest.java" />
         <option value="$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomTree.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomForest.java" />
       </list>
     </option>
   </component>
@@ -1129,7 +1128,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="218" column="39" selection-start-line="218" selection-start-column="32" selection-end-line="218" selection-end-column="39" />
           <folding>
-            <element signature="e#0#20339#0" expanded="false" />
+            <element signature="e#0#20394#0" expanded="false" />
             <element signature="imports" expanded="false" />
             <element signature="method#numFeaturesTipText#0;class#FastRandomForest#0" expanded="false" />
             <element signature="e#7717#7718#0" expanded="false" />
@@ -1159,12 +1158,12 @@
             <element signature="e#15687#15688#0" expanded="false" />
             <element signature="method#distributionForInstance#0;class#FastRandomForest#0" expanded="false" />
             <element signature="method#toString#0;class#FastRandomForest#0" expanded="false" />
-            <element signature="e#19804#19805#0" expanded="false" />
-            <element signature="e#19857#19858#0" expanded="false" />
-            <element signature="e#19889#19890#0" expanded="false" />
-            <element signature="e#19947#19948#0" expanded="false" />
-            <element signature="e#20188#20189#0" expanded="false" />
-            <element signature="e#20237#20238#0" expanded="false" />
+            <element signature="e#19859#19860#0" expanded="false" />
+            <element signature="e#19912#19913#0" expanded="false" />
+            <element signature="e#19944#19945#0" expanded="false" />
+            <element signature="e#20002#20003#0" expanded="false" />
+            <element signature="e#20243#20244#0" expanded="false" />
+            <element signature="e#20292#20293#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1574,14 +1573,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="21" column="35" selection-start-line="21" selection-start-column="35" selection-end-line="21" selection-end-column="35" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$MAVEN_REPOSITORY$/net/imagej/ij/1.51h/ij-1.51h-sources.jar!/ij/gui/ImageCanvas.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1615,14 +1606,6 @@
           <folding>
             <element signature="method#Feature#0;class#Feature#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRfBagging.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="106" column="34" selection-start-line="106" selection-start-column="34" selection-end-line="106" selection-end-column="34" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1696,8 +1679,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-5.037037">
-          <caret line="2006" column="67" selection-start-line="2006" selection-start-column="67" selection-end-line="2006" selection-end-column="67" />
+        <state vertical-scroll-proportion="-1.8703704">
+          <caret line="2006" column="70" selection-start-line="2006" selection-start-column="70" selection-end-line="2006" selection-end-column="70" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="docComment;class#WekaSegmentation#0" expanded="false" />
@@ -1886,10 +1869,28 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRfBagging.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="98" column="14" selection-start-line="98" selection-start-column="14" selection-end-line="98" selection-end-column="14" />
+          <folding>
+            <element signature="method#buildClassifier#0;class#FastRfBagging#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="21" column="35" selection-start-line="21" selection-start-column="35" selection-end-line="21" selection-end-column="35" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomTree.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-6.3333335">
-          <caret line="525" column="43" selection-start-line="525" selection-start-column="43" selection-end-line="525" selection-end-column="43" />
+        <state vertical-scroll-proportion="-3.5555556">
+          <caret line="515" column="6" selection-start-line="515" selection-start-column="6" selection-end-line="515" selection-end-column="6" />
           <folding>
             <element signature="method#numNodes#0;class#FastRandomTree#0" expanded="true" />
           </folding>
@@ -1898,8 +1899,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomForest.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6856618">
-          <caret line="149" column="0" selection-start-line="149" selection-start-column="0" selection-end-line="149" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.41360295">
+          <caret line="655" column="22" selection-start-line="655" selection-start-column="22" selection-end-line="655" selection-end-column="22" />
           <folding>
             <element signature="e#4597#4598#0" expanded="true" />
             <element signature="e#4636#4637#0" expanded="true" />

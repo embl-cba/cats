@@ -651,8 +651,9 @@ public class FastRandomForest
     if(m_KValue > data.numAttributes() - 1) m_KValue = data.numAttributes() - 1;
     if(m_KValue < 1) m_KValue = (int)Utils.log2(data.numAttributes()) + 1;
 
-    // TISCHI
-    attributeUsages = new int[ data.numAttributes() ];
+    // Tischi
+    attributeUsages = new int[ data.numAttributes() - 1 ]; // last one is the class ID
+    decisionNodes = 0;
 
     FastRandomTree rTree = new FastRandomTree();
     rTree.m_MotherForest = this; // allows to retrieve KValue and MaxDepth
