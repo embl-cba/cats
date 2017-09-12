@@ -1105,9 +1105,9 @@ public class FeatureImagesMultiResolution
 
                     // add binning information to image title
                     String binningTitle = "Bin" +
-                            binnings.get(level)[0] + "x" +
-                            binnings.get(level)[1] + "x" +
-                            binnings.get(level)[2];
+                            binning[0] + "x" +
+                            binning[1] + "x" +
+                            binning[2];
 
                     // adapt the anisotropy, which could have changed during
                     // the (anisotropic) binning

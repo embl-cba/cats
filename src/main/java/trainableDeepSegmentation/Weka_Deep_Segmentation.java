@@ -326,7 +326,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		createResultButton.setToolTipText("Create result image");
 		createResultButton.setEnabled(true);
 
-		resultOnDiskCheckBox = new JCheckBox("Disk", false);
+		resultOnDiskCheckBox = new JCheckBox("Disk", true);
 
 		probabilityButton = new JButton("Get probability");
 		probabilityButton.setToolTipText("Generate current probability maps");
@@ -1713,7 +1713,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.setTrainingImage( trainingImage );
 
 		Calibration calibration = trainingImage.getCalibration();
-		wekaSegmentation.anisotropy = calibration.pixelDepth / calibration.pixelWidth;
+		wekaSegmentation.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
 
 		if( calibration.pixelWidth != calibration.pixelHeight )
 		{

@@ -1827,7 +1827,8 @@ public class WekaSegmentation {
 	 */
 	public int getFeatureVoxelSizeAtMaximumScale()
 	{
-		 return (int) Math.pow( 3, maxResolutionLevel);
+		int maxFeatureVoxelSize = (int) Math.pow( downSamplingFactor, maxResolutionLevel);
+		return maxFeatureVoxelSize;
 	}
 
 	public int[] getFeatureBorderSizes()
@@ -2023,19 +2024,15 @@ public class WekaSegmentation {
 			}
 		}
 
-		logger.info("[DEBUG]: attributeUsages.length: " + attributeUsages.length);
-		logger.info("[DEBUG]: numActiveFeatures: " + numActiveFeatures);
-
-
 		avgRfTreeSize = numDecisionNodes / getNumTrees();
-		double avgTreeDepth = Math.log(avgRfTreeSize) / Math.log(2.0) ;
+		double avgTreeDepth = 1.0 + Math.log(avgRfTreeSize) / Math.log(2.0) ;
 		double randomFeatureUsage = 1.0 * numDecisionNodes / getNumActiveFeatures();
 
 		ArrayList<Feature> sortedFeatureList = new ArrayList<>( featureList );
 		sortedFeatureList.sort(Comparator.comparing(Feature::getUsageInRF).reversed());
 
-		logger.info("# Most used features: ");
-		for ( int f = 0; f < 10; f++)
+		logger.info("# 20 most used features: ");
+		for ( int f = 19; f >= 0; f--)
 		{
 			Feature feature = sortedFeatureList.get( f );
 			int featureID = featureList.indexOf( feature );
@@ -2043,13 +2040,17 @@ public class WekaSegmentation {
 						"; Name: " + feature.featureName);
 		}
 
-		logger.info("Total usage of all features: " + totalFeatureUsage );
-		logger.info("Total number of decision nodes: " + numDecisionNodes );
-		logger.info("Number of active features: " + getNumActiveFeatures() );
-		logger.info("Feature usage if selected completely at random: " + randomFeatureUsage );
-		logger.info("Average number of nodes per tree: " + avgRfTreeSize );
-		logger.info("Average tree depth: " + avgTreeDepth );
+		logger.info("Usage of all features: " + totalFeatureUsage );
+		logger.info("Decision nodes: " + numDecisionNodes );
+		logger.info("Active features: " + getNumActiveFeatures() );
+		logger.info("Random feature usage = numDecisionNodes / numFeatures: " + randomFeatureUsage );
+		logger.info("Average number of decision nodes per tree: " + avgRfTreeSize );
+		logger.info("Average tree depth = log2(numDecisionNodes)+1: " + avgTreeDepth );
+		logger.info("[DEBUG]: attributeUsages.length: " + attributeUsages.length);
+		logger.info("[DEBUG]: numActiveFeatures: " + numActiveFeatures);
 		logger.info("Trained classifier in " + (end - start) + " ms.");
+
+
 		return true;
 	}
 
