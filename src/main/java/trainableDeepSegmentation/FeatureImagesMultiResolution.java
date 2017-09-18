@@ -1127,7 +1127,7 @@ public class FeatureImagesMultiResolution
                         }
                         else
                         {
-                            featureImagesThisResolution.add( bin(featureImage, binning, binningTitle, "AVERAGE").call());
+                            featureImagesThisResolution.add( bin(featureImage, binning, binningTitle, "AVERAGE").call() );
                         }
                     }
 

@@ -43,13 +43,137 @@ Supported data types:
     - 2D+c+t, 3D+c+t
     - spatially anisotropic data 
 
-### Settings
+### Starting a new project
+
+#### Define your classes
+
+- The first class must always be the background class
+	- e.g., to mark everything that is outside your sample
+- Create a class: [Create new class]
+- Rename a class: [Settings]
+	- The class names will be there and you can change them
+
+#### Set up your results image
+
+- [Create result image]
+- For creating a disk-resident results image: `[X] Disk`
+	- This is recommended, because you'll have your results even if something crashes
+- If you do not check `Disk` the results image will be created in RAM
+
+#### Tip
+
+The following folder structure works well:
+Assuming the name of your image is 'cell'
+
+- `cell-segmentation-project`
+	- `cell-raw`
+		- here is your data
+	- `cell-classified`
+		- here the tool will store the classification results (see below)
+	- `cell-labels`
+		- here you can store your labels
+	- `cell-for-imaris`
+
+#### Feature computation settings
 
 ...
 
+#### Put labels
+
+- in Fiji select the "Freehand line tool" 
+	- adapt line width to your sample: 'double click'
+
+- for each class you have to minimally out one label
+	- draw a line on you image
+	- add label to class by clicking on the class names or by the keyboard shortcuts [1],[2],...
+
+##### Tips
+
+- don't draw the lables to long, because it will take a lot of memory and time to compute the features for this label
+
+#### Train classifier
+
+- [Train classifier]
+
+#### Apply classifier
+
+- Make sure the classifier is up to date, if in doubt again: [Train classifier]
+- Using Fiji's rectangle ROI select a x-y region to be classified
+- [Apply classifier]
+- This will select a minimal z-range
+- You can specify a larger z-region by typing into the "Range" field, e.g.
+	- '300,500' will classify all z-slices between these numbers
+
+#### Save labels
+
+- [Save labels]
+	- This stores all your labels and also the computed image features for each label
+- 
+
+
+### Reloading an existing project
+
+- Open your image
+- Start the Trainable Deep Segmentation
+- [Load labels]
+- [Create result image]
+	- If your result image was disk-resident, selecting the existing folder will reload your previous results
+
+
+#### Keyboard shortcuts
+
+- Arrow key up and down: zoom in and out
+
+ 
 ### Tips and tricks
 
 #### How to put your training labels 
 
 As this tool is able to learn long range context you have to really tell it what you want. I recommend always putting a background label just next to the actual label.
+
+
+### Open your project in Imaris
+
+The first aim is to have a folder with files named like below:
+
+- folder-for-imaris
+	- class0--C00--T00000.tif
+		- this is your raw data
+	- class1--C00--T00000.tif
+		- this is the classification result for class1
+	- class2--C00--T00000.tif
+		- ...
+	- ...
+
+1. Create a folder, e.g. cell-for-imaris
+2. Copy your raw data into this folder and rename it to class0--C00--T00000.tif
+3. Use the DataStreaming tools to generate one tif file per class
+4. Open the whole folder in Imaris
+
+#### Using the DataStreamingTools to generate one Tiff file per class
+
+- Open classification results folder in DataStreamingTools
+	- `Streaming`
+		- `File naming scheme`: select the one with "classified..."
+			- adapt the amount of z-slices to match you raw data: you may have to look this up
+	- `Saving`
+		- [X] Gate
+			- Select the gray values that belong to one (or more) class, e.g.
+				- class 2: Min = 20, Max = 39
+				- class 2 and 3 together: Min = 20, Max = 59
+		- [Save as stacks]
+
+#### Open Imaris
+
+
+Tips and tricks:
+
+
+- If you are working in a file server enviroment, it might be faster to first save locally, and then later copy everything in one go from your local computer to the server
+- You do not need to save the background class
+
+ 
+
+
+
 

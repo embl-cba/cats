@@ -113,7 +113,7 @@ public class WekaSegmentation {
 
 	// Random Forest parameters
 	/** current number of trees in the fast random forest classifier */
-	private int numOfTrees = 100;
+	private int numOfTrees = 250;
 	/** number of random features per node in the fast random forest classifier */
 	private int numRandomFeatures = 50;
 	/** fraction of random features per node in the fast random forest classifier */
@@ -125,7 +125,7 @@ public class WekaSegmentation {
 	/** list of class names on the loaded data */
 	private ArrayList<String> loadedClassNames = null;
 
-	public int[] minTileSizes = new int[]{81,81,81};
+	public int[] minTileSizes = new int[]{162,162,162};
 
 	public double anisotropy = 1.0;
 
@@ -1571,7 +1571,7 @@ public class WekaSegmentation {
 			{
 				region5D.c = c;
 				FeatureImagesMultiResolution featureImages = new FeatureImagesMultiResolution();
-				featureImages.setOriginalImage( Utils.getDataCube( trainingImage, region5D, 0, 1 ) );
+				featureImages.setOriginalImage( Utils.getDataCube( trainingImage, region5D, new int[]{-1,-1}, 1 ) );
 				featureImages.setEnabledFeatures( enabledFeatures );
 				featureImages.wekaSegmentation = this;
 				featureImages.updateFeaturesMT( false, featuresToShow, numThreadsPerRegion );
@@ -2085,7 +2085,7 @@ public class WekaSegmentation {
 
 			if (region5D != null)
 			{
-				imp = Utils.getDataCube(trainingImage, region5D, 0, 1);
+				imp = Utils.getDataCube(trainingImage, region5D, new int[]{-1,-1}, 1);
 			}
 			else
 			{
@@ -2181,7 +2181,7 @@ public class WekaSegmentation {
 			for ( int c : activeChannels)
 			{
 				region5DToClassify.c = c;
-				imageToClassify = Utils.getDataCube( trainingImage, region5DToClassify, 0, 1 );
+				imageToClassify = Utils.getDataCube( trainingImage, region5DToClassify, new int[]{-1,-1}, 1 );
 
 				// TODO:
 				// - implement better multi-channel treatment for background threshold
