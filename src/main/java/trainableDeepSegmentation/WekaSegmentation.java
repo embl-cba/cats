@@ -166,6 +166,28 @@ public class WekaSegmentation {
 			true,	/* Mean */
 	};
 
+	public Logger getLogger()
+	{
+		return logger;
+	}
+
+	/**
+	 *
+	 * @param logFileName
+	 * @param logFileDirectory
+	 * @return returns true if the log file could be sucessfully created
+	 */
+
+	public boolean setLogFileNameAndDirectory( String logFileName, String logFileDirectory )
+	{
+
+		((IJLazySwingLogger)logger).setLogFileNameAndDirectory( logFileName ,
+				logFileDirectory );
+		((IJLazySwingLogger)logger).isFileLogging = true;
+
+		return ( true );
+	}
+
 	public void setComputeFeatureImportance(boolean b)
 	{
 		computeFeatureImportance = b;
