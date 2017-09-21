@@ -2225,7 +2225,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				return;
 			}
 
-			logger.info("Classifying selected region...");
+			logger.info("# Classifying selected region...");
 			applyButton.setText("STOP");
 			wekaSegmentation.stopCurrentThreads = false;
 			wekaSegmentation.setTrainingImage(displayImage);
@@ -2258,7 +2258,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					xyztStart[1] = (int) rectangle.getY() - borders[1];
 					xyztEnd[1] = xyztStart[1] + (int) rectangle.getHeight() - 1;
 
-					xyztStart[2] = ( displayImage.getZ() - 1 ) - (int) ( 1.0 * sizes[2] / 2 );
+					xyztStart[2] = (displayImage.getZ() - 1 ) - borders[2];
 					xyztStart[2] = xyztStart[2] < 0 ? 0 : xyztStart[2];
 					xyztEnd[2] = xyztStart[2];
 
@@ -2303,7 +2303,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 					// - function that test whether current feature settings
 					// are compatible with image dimensions!
 
-
 					// tile sizes
 					// TODO: put into extra function
 					for ( int i = 0; i < 3; ++i )
@@ -2325,27 +2324,41 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 
 					int[] distances = new int[3];
-					int iTotal = 0, nTotal = 0;
+					int iTotal = 0, nTotal = 1;
 					int pixelsClassifiedPerRegion = 1;
+					String xyztSizes = "";
+
 					for ( int i = 0; i < 3; ++i )
 					{
 						distances[i] = sizes[i] - 2 * borders[i];
 						distances[i] = distances[i] < 1 ? 1 : distances[i];
 						xyztNum[i] = (xyztEnd[i] - xyztStart[i]) / distances[i] + 1;
-						nTotal += xyztNum[i];
+						xyztSizes += "" + (xyztEnd[i] - xyztStart[i] + 1) +" ";
+						nTotal *= xyztNum[i];
 						pixelsClassifiedPerRegion *= (sizes[i]-2*borders[i]);
 					}
 
 					xyztNum[3] = (xyztEnd[3] - xyztStart[3]) + 1;
-					nTotal += xyztNum[3];
+					xyztSizes += "" + xyztNum[3] +" ";
+					nTotal *= xyztNum[3];
 
-					int numThreadsPerRegion = ( nTotal == 1 ) ? Prefs.getThreads() : wekaSegmentation.numThreadsPerRegion;
+					int numThreadsPerRegion = ( nTotal == 1 ) ?
+							Prefs.getThreads() : wekaSegmentation.numThreadsPerRegion;
 
-					logger.info("Selected region will be classified in " + nTotal + " tiles.");
-					logger.info("Tile sizes are [x,y,z]: " + sizes[0]
+
+					logger.info("Selected region size [x,y,z,t]: "  + xyztSizes );
+
+					logger.info("Tile size [x,y,z]: "
+									+ sizes[0]
 									+ ", " + sizes[1]
 									+ ", " + sizes[2]
 					);
+
+					logger.info("Number of tiles: " + nTotal );
+
+					logger.info("Region threads: " + wekaSegmentation.numRegionThreads );
+					logger.info("Threads per region: " + wekaSegmentation.numThreadsPerRegion );
+
 
 					ArrayList<int[]> positions = new ArrayList<>();
 
@@ -2363,6 +2376,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 									region5D.c = displayImage.getC() - 1;
 									region5D.offset = new Point3D(x, y, z);
 									region5D.size = new Point3D(sizes[0], sizes[1], sizes[2]);
+									// TODO: maybe rely on getDataCube to fill with black pixels instead?
 									region5D.offset = wekaSegmentation.shiftOffsetToStayInBounds( region5D.offset, region5D.size );
 									region5D.subSampling = new Point3D(1, 1, 1);
 
@@ -2430,21 +2444,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 									maximumMemoryUsage = currentMemoryUsage;
 
 
-								String memoryUsage = "; memory (curr/max/tot) [MB]: "
+								String memoryUsage = "; memory (curr,max,tot) [MB]: "
 										+ currentMemoryUsage / 1000000L
-										+ "/" + maximumMemoryUsage / 1000000L
-										+ "/" + totalMemory / 1000000L;
+										+ ", " + maximumMemoryUsage / 1000000L
+										+ ", " + totalMemory / 1000000L;
 
-								logger.progress("Classified ", "" + (regionsClassified)
-												+ "/" + nTotal + " at "
-												+ Arrays.toString( positions.get(regionsClassified-1) )
-												+ "; " + (pixels / 1000) + " kv in "
-												+ (int) (milliSeconds / 1000) + " s; " +
-												"rate [kv/s]: " + (int) (rate) +
-												memoryUsage +
-												"; threads: " + nThreadsNew +
-												", " + wekaSegmentation.numRegionThreads +
-												", " + wekaSegmentation.numThreadsPerRegion
+								logger.progress("Region",
+										Arrays.toString( positions.get(regionsClassified-1) )
+										+ "; " + (regionsClassified) + "/" + nTotal
+										+ "; " + (pixels / 1000) + " kv in "
+										+ (int) (milliSeconds / 1000) + " s; " +
+										"rate [kv/s]: " + (int) (rate) +
+										memoryUsage +
+										"; threads: " + nThreadsNew
 								);
 
 								nThreadsLast = wekaSegmentation.totalThreadsExecuted.get();
@@ -3085,7 +3097,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		//wekaSegmentation.numThreadsPerRegion = (int) gd.getNextNumber();
 		//wekaSegmentation.numRfTrainingThreads = (int) gd.getNextNumber();
 
-		wekaSegmentation.setMinTileSizesFromString( gd.getNextString() );
+		wekaSegmentation.setTileSizeSetting( gd.getNextString() );
 		//wekaSegmentation.tilingDelay = (int) gd.getNextNumber();
 		wekaSegmentation.backgroundThreshold = (int) gd.getNextNumber();
 		//wekaSegmentation.setResolutionWeightsFromString( gd.getNextString() );

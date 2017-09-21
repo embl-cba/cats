@@ -74,10 +74,6 @@ Assuming the name of your image is 'cell'
 		- here you can store your labels
 	- `cell-for-imaris`
 
-#### Feature computation settings
-
-...
-
 #### Put labels
 
 - in Fiji select the "Freehand line tool" 
@@ -120,7 +116,7 @@ Assuming the name of your image is 'cell'
 	- If your result image was disk-resident, selecting the existing folder will reload your previous results
 
 
-#### Keyboard shortcuts
+### Keyboard shortcuts
 
 - Arrow key up and down: zoom in and out
 
@@ -130,6 +126,17 @@ Assuming the name of your image is 'cell'
 #### How to put your training labels 
 
 As this tool is able to learn long range context you have to really tell it what you want. I recommend always putting a background label just next to the actual label.
+
+
+### Settings
+
+- Minimum tile size
+	- The minimal volume that will be classified, kind of the classification 'chunk-size'
+	- Considerations:
+		- The larger you go the more you risk running out of memory
+		- Smaller sizes will give you quicker feedback for classifying really small regions during the training
+		- Larger sizes will speed up the classification of a really large volume, such as you whole data set. The reason is that the boundary voxels of each tile cannot be used for classification; as the size of the boundary region is fixed (given by the maximal downsampling), the fraction of boundary voxels compared to the full tile volume decreases with the tile size.
+
 
 
 ### Open your project in Imaris

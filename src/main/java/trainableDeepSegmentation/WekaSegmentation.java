@@ -3043,6 +3043,7 @@ public class WekaSegmentation {
 		return ss;
 	}
 
+	/*
 	public String getMinTileSizesAsString()
 	{
 		String ss = "";
@@ -3054,7 +3055,7 @@ public class WekaSegmentation {
 				ss += ""+(s);
 		}
 		return ss;
-	}
+	}*/
 
 	public String getTileSizeSetting()
 	{
@@ -3146,6 +3147,7 @@ public class WekaSegmentation {
 
 	}
 
+	/*
 	public void setMinTileSizesFromString( String sizes )
 	{
 		int i = 0;
@@ -3154,7 +3156,7 @@ public class WekaSegmentation {
 			this.minTileSizes[i++] = Integer.parseInt( s.trim() );
 		}
 
-	}
+	}*/
 
 	/**
 	 * Get maximum depth of the random forest
