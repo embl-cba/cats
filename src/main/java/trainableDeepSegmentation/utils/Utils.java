@@ -44,6 +44,7 @@ import trainableDeepSegmentation.metrics.ClassificationStatistics;
 import util.FindConnectedRegions;
 import util.FindConnectedRegions.Results;
 
+import bigDataTools.logging.Logger;
 
 /**
  * This class implements useful methods for the Weka Segmentation library.
@@ -90,7 +91,7 @@ public final class Utils {
 
 	}
 
-	public static void joinThreads(ArrayList<Future> futures)
+	public static void joinThreads( ArrayList<Future> futures, Logger logger )
 	{
 
 		if ( futures.size() > 0)
@@ -112,8 +113,9 @@ public final class Utils {
 			}
 			catch (OutOfMemoryError err)
 			{
-				IJ.log("ERROR: trainClassifier run out of memory. Please, "
-						+ "provide more memory and/or use less threads [ImageJ > Edit > Options > Memory & Threads].");
+				logger.error("TrainClassifier run out of memory. Please, "
+						+ "provide more memory and/or use less threads " +
+						"[ImageJ > Edit > Options > Memory & Threads].");
 				err.printStackTrace();
 				return;
 			}

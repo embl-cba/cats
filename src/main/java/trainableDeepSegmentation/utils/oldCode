@@ -5205,3 +5205,119 @@
 		return filteredIns;
 
 	}
+
+
+    public void setInterpolatedFeatureSlice(int z, double[][][] featureSlice)
+    {
+        final int[] borderSizes = wekaSegmentation.getFeatureBorderSizes();
+        int xs = borderSizes[0];
+        int xe = multiResolutionFeatureImageArray.get(0).getWidth() - borderSizes[0] - 1;
+        int ys = borderSizes[1];
+        int ye = multiResolutionFeatureImageArray.get(0).getHeight() - borderSizes[1] - 1;
+
+        int nf = getNumFeatures();
+
+        for ( int f = 0; f < nf; f++ )
+        {
+            ImagePlus imp = multiResolutionFeatureImageArray[ f ];
+            Calibration calibration = imp.getCalibration();
+            double xCal = calibration.pixelWidth;
+            double yCal = calibration.pixelHeight;
+            double zCal = calibration.pixelDepth;
+            double xHalfWidth = (xCal - 1) / 2 ;
+            double yHalfWidth = (yCal - 1) / 2 ;
+            double zHalfWidth = (zCal - 1) / 2 ;
+
+            double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
+            double vAA0,vAA1,vAAA;
+            double xTmp, xBaseDist, xBaseDist2;
+            int xBase, yBase, yBaseOffset, yAboveOffset, xAbove;
+
+            int nxFeatureImage = imp.getWidth();
+
+            // get feature values as doubles
+            float[] pixelsBase = null;
+            float[] pixelsAbove = null;
+
+            double zTmp = ( (z - zHalfWidth) / zCal );
+            int zBase = (int) zTmp;
+            double zBaseDist = ( zTmp - zBase ) ;
+            double zBaseDist2 = 1 - zBaseDist ;
+
+            if (imp.getBitDepth() == 8)
+            {
+                pixelsBase = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                if ( zBaseDist > 0 )
+                    pixelsAbove = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+            }
+            else if (imp.getBitDepth() == 16)
+            {
+                pixelsBase = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                if ( zBaseDist > 0 )
+                    pixelsAbove = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+            }
+            else if (imp.getBitDepth() == 32)
+            {
+                pixelsBase = (float[]) (imp.getStack().getProcessor(zBase + 1).getPixels());
+                if ( zBaseDist > 0 )
+                    pixelsAbove = (float[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels());
+            }
+
+            for (int y = ys; y <= ye; ++y)
+            {
+
+                double yTmp = (y - yHalfWidth ) / yCal;
+                yBase = (int) yTmp;
+                double yBaseDist = ( yTmp - yBase );
+                double yBaseDist2 = 1 - yBaseDist;
+
+                yBaseOffset = yBase * nxFeatureImage;
+                yAboveOffset = yBaseOffset + nxFeatureImage;
+
+                for (int x = xs; x <= xe; ++x)
+                {
+                    xTmp = (x - xHalfWidth ) / xCal ;
+                    xBase = (int) xTmp;
+                    xBaseDist = ( xTmp - xBase );
+                    xBaseDist2 = ( 1 - xBaseDist );
+                    xAbove = xBase + 1;
+
+                    // x,y average plane 0
+                    v000 = pixelsBase[yBaseOffset + xBase];
+                    v100 = pixelsBase[yBaseOffset + xAbove];
+                    vA00 = xBaseDist2 * v000 + xBaseDist * v100;
+
+                    v010 = pixelsBase[yAboveOffset + xBase];
+                    v110 = pixelsBase[yAboveOffset + xAbove];
+                    vA10 = xBaseDist2 * v010 + xBaseDist * v110;
+
+                    vAA0 = yBaseDist2 * vA00 + yBaseDist * vA10;
+
+                    if ( zBaseDist > 0 )
+                    {
+                        // x,y average plane 1
+
+                        v001 = pixelsAbove[yBaseOffset + xBase];
+                        v101 = pixelsAbove[yBaseOffset + xAbove];
+                        vA01 = xBaseDist2 * v001 + xBaseDist * v101;
+
+                        v011 = pixelsAbove[yAboveOffset + xBase];
+                        v111 = pixelsAbove[yAboveOffset + xAbove];
+                        vA11 = xBaseDist2 * v011 + xBaseDist * v111;
+
+                        vAA1 = yBaseDist2 * vA01 + yBaseDist * vA11;
+                    }
+                    else
+                    {
+                        vAA1 = 0;
+                    }
+
+                    // average plane 0 and 1
+                    vAAA = zBaseDist2 * vAA0 + zBaseDist * vAA1;
+
+                    featureSlice[x][y][f] = vAAA;
+
+                }
+            }
+        }
+    }
