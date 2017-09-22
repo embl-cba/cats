@@ -516,7 +516,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
     }
 
     System.arraycopy(superOptions, 0, options, current,
-      superOptions.length);
+            superOptions.length);
 
     current += superOptions.length;
     while (current < options.length) {
@@ -639,7 +639,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
    * @throws Exception if distribution can't be computed successfully
    */
   @Override
-  public double[] distributionForInstance(Instance instance) throws Exception {
+  public double[] distributionForInstance( Instance instance ) throws Exception {
 
     double[] sums = new double[instance.numClasses()], newProbs;
 
@@ -664,6 +664,111 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
     }
 
   }
+
+
+  // Tischi
+  public double[] distributionForInstanceUntilSignificant( Instance instance,
+                                                           double requiredSignificance ) throws Exception {
+
+    int numClasses = instance.numClasses();
+
+    double[] sums = new double[numClasses], newProbs;
+
+    double[] sums01 = new double[numClasses];
+    double[] currentProbs = new double[numClasses];
+
+
+    for (int i = 0; i < m_NumIterations; i++) {
+
+      if (instance.classAttribute().isNumeric()) {
+        sums[0] += m_Classifiers[i].classifyInstance(instance);
+      } else {
+        newProbs = m_Classifiers[i].distributionForInstance(instance);
+        for (int j = 0; j < newProbs.length; j++)
+        {
+          sums[j] += newProbs[j];
+          sums01[j] += newProbs[j] > 0 ? 1.0 : 0.0;
+        }
+      }
+
+      // Evaluate statistical significance of difference
+      // between most and second-most likely class
+      int numEvaluatedTrees = i + 1;
+
+      if ( numEvaluatedTrees > 10 )
+      {
+        for (int c = 0; c < numClasses; c++)
+        {
+          currentProbs[c] = sums01[c] / numEvaluatedTrees;
+        }
+
+        double[] p = maxProbs(currentProbs);
+        double diff = (p[0] - p[1]);
+        double sem = Math.sqrt(p[0] * (1 - p[0]) / numEvaluatedTrees);
+
+        if ( sem == 0.0 )
+        {
+          return ( currentProbs );
+        }
+
+        double significance = diff / sem;
+
+        if ( significance > requiredSignificance )
+        {
+          return ( currentProbs );
+        }
+
+      }
+
+    }
+
+    return ( currentProbs );
+
+    /*
+    if (instance.classAttribute().isNumeric()) {
+      sums[0] /= (double) m_NumIterations;
+      return sums;
+    } else if (Utils.eq(Utils.sum(sums), 0)) {
+      return sums;
+    } else {
+      Utils.normalize(sums);
+      return sums;
+    }
+    */
+
+  }
+
+  // Tischi
+  // TODO: Can this be faster?
+  public static double[] maxProbs(double[] doubles) {
+    double maximum;
+    int[] maxIndicies = new int[2];
+
+    // 1st maximum
+    maximum = -1.0;
+    for(int i = 0; i < doubles.length; ++i) {
+      if( doubles[i] >= maximum ) {
+        maxIndicies[0] = i;  // 1st max
+        maximum = doubles[i];
+      }
+    }
+
+    // 2nd maximum
+    maximum = -1.0;
+    for(int i = 0; i < doubles.length; ++i) {
+      if( doubles[i] >= maximum && i != maxIndicies[0]) {
+          maxIndicies[1] = i;  // 2nd max
+          maximum = doubles[i];
+      }
+    }
+
+    double[] maxProbs = new double[]
+            { doubles[maxIndicies[0]],
+              doubles[maxIndicies[1]]};
+
+    return maxProbs;
+  }
+
 
   /**
    * Returns description of the bagged classifier.

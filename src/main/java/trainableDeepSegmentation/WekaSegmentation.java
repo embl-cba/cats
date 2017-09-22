@@ -157,6 +157,8 @@ public class WekaSegmentation {
 
 	private double avgRfTreeSize = 0.0;
 
+	public double accuracy = 3.0;
+
 	private static Logger logger = new IJLazySwingLogger();
 
 	private ArrayList< UncertaintyRegion > uncertaintyRegions = new ArrayList<>();
@@ -2754,10 +2756,16 @@ public class WekaSegmentation {
 								double[] activeValues = getFeatureValues(
 										featureSlices, x, y, -1 );
 
-								ins.setValues(1.0, activeValues);
+								ins.setValues( 1.0, activeValues );
 
-								distribution = classifier.distributionForInstance(ins);
-								maxInds = maxIndicies(distribution);
+								boolean evalUntilSignificant = true;
+
+								distribution = ((FastRandomForest)classifier).
+										distributionForInstance( ins ,
+												evalUntilSignificant,
+												accuracy );
+
+								maxInds = maxIndicies( distribution );
 
 								// TODO
 								// - what is the best measure for the uncertainty?
@@ -2777,6 +2785,8 @@ public class WekaSegmentation {
 								}
 
 								/*
+								CODE FOR DEBUGGING
+
 								int xGlobal = x + (int)region5D.offset.getX() + (int)region5Dglobal.offset.getX();
 								int yGlobal = y + (int)region5D.offset.getY() + (int)region5Dglobal.offset.getY();
 								int zGlobal = z + (int)region5D.offset.getZ() + (int)region5Dglobal.offset.getZ();
@@ -2879,77 +2889,7 @@ public class WekaSegmentation {
 			}
 		}
 
-
 		return maxIndicies;
-	}
-
-
-	/**
-	 * Classify instances concurrently
-	 *
-	 * @param data set of instances to classify
-	 * @param classifier current classifier
-	 * @param counter auxiliary counter to be able to update the progress bar
-	 * @param probabilityMaps return a probability map for each class instead of a
-	 * classified image
-	 * @return classification result
-	 */
-	private static Callable<double[][]> classifyInstances(
-			final Instances data,
-			final AbstractClassifier classifier,
-			final AtomicInteger counter,
-			final boolean probabilityMaps)
-	{
-		if (Thread.currentThread().isInterrupted())
-			return null;
-
-		return new Callable<double[][]>(){
-
-			@Override
-			public double[][] call(){
-
-				final int numInstances = data.numInstances();
-				final int numClasses   = data.numClasses();
-
-				final double[][] classificationResult;
-
-				if (probabilityMaps)
-					classificationResult = new double[numClasses][numInstances];
-				else
-					classificationResult = new double[1][numInstances];
-
-				for (int i=0; i<numInstances; i++)
-				{
-					try{
-
-						if (0 == i % 4000)
-						{
-							if (Thread.currentThread().isInterrupted())
-								return null;
-							counter.addAndGet(4000);
-						}
-
-						if (probabilityMaps)
-						{
-							double[] prob = classifier.distributionForInstance(data.get(i));
-							for(int k = 0 ; k < numClasses; k++)
-								classificationResult[k][i] = prob[k];
-						}
-						else
-						{
-							classificationResult[0][i] = classifier.classifyInstance(data.get(i));
-						}
-
-					}catch(Exception e){
-
-						IJ.showMessage("Could not apply Classifier!");
-						e.printStackTrace();
-						return null;
-					}
-				}
-				return classificationResult;
-			}
-		};
 	}
 
 

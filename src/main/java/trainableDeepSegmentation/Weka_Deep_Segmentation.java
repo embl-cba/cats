@@ -374,7 +374,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		testThreadsButton = new JButton ("Thread test");
 		testThreadsButton.setToolTipText("Tests how many threads this PC will concurrently handle.");
 
-
 		/** The Weka icon image */
 		ImageIcon icon = new ImageIcon( Weka_Deep_Segmentation.class.getResource("/trainableDeepSegmentation/images/weka.png"));
 		wekaButton = new JButton( icon );
@@ -2981,6 +2980,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		gd.addNumericField("RF: Number of trees",
 				wekaSegmentation.getNumTrees(), 0);
+		gd.addNumericField("RF: Accuracy",
+				wekaSegmentation.accuracy, 1);
 		gd.addNumericField("RF: Fraction of random features per node",
 				wekaSegmentation.fractionRandomFeatures, 2);
 		gd.addNumericField("RF: Minimum feature usage factor",
@@ -3084,6 +3085,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		// Set classifier and options
 		wekaSegmentation.setNumTrees((int) gd.getNextNumber());
+		wekaSegmentation.accuracy = (double) gd.getNextNumber();
 		wekaSegmentation.fractionRandomFeatures = (double) gd.getNextNumber();
 		wekaSegmentation.minFeatureUsageFactor = (double) gd.getNextNumber();
 

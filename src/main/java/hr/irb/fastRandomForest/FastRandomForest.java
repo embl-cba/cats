@@ -681,13 +681,27 @@ public class FastRandomForest
    *
    * @throws Exception if computation fails
    */
-  public double[] distributionForInstance(Instance instance) throws Exception{
+  // TISCHI: Modified
+  public double[] distributionForInstance(Instance instance,
+                                          boolean evalUntilSignificant,
+                                          double requiredSignificance ) throws Exception{
 
     if(m_ZeroR != null){  // default model?
       return m_ZeroR.distributionForInstance(instance);
     }
 
-    return m_bagger.distributionForInstance(instance);
+    if ( evalUntilSignificant )
+    {
+      // Tischi: added
+      return m_bagger.distributionForInstanceUntilSignificant( instance,
+              requiredSignificance );
+
+    }
+    else
+    {
+      // This was the old code
+      return m_bagger.distributionForInstance(instance);
+    }
 
   }
 
