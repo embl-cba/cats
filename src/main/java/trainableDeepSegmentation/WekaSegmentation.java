@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -219,6 +220,10 @@ public class WekaSegmentation {
 	public ArrayList<Integer> activeChannels = null;
 
 	public AtomicInteger totalThreadsExecuted = new AtomicInteger(0);
+
+	public AtomicLong pixelsClassified = new AtomicLong(0);
+
+	public AtomicLong treesEvaluated = new AtomicLong(0);
 
 	/**
 	 * flag to set the resampling of the training data in order to guarantee
@@ -2710,8 +2715,7 @@ public class WekaSegmentation {
 
 				try
 				{
-					double[] distribution;
-					int[] maxInds;
+					double[] result;
 
 					int iInstanceThisSlice = 0;
 					int zPrevious = -1;
@@ -2760,18 +2764,25 @@ public class WekaSegmentation {
 
 								boolean evalUntilSignificant = true;
 
-								distribution = ((FastRandomForest)classifier).
+								result = ((FastRandomForest)classifier).
 										distributionForInstance( ins ,
 												evalUntilSignificant,
 												accuracy );
 
-								maxInds = maxIndicies( distribution );
+								pixelsClassified.incrementAndGet();
+								treesEvaluated.addAndGet( (int) result[4] );
 
-								// TODO
-								// - what is the best measure for the uncertainty?
-								double uncertainty = 1.0 - (distribution[maxInds[0]] - distribution[maxInds[1]]);
-								int certainty = (int) ((1.0 - uncertainty) * (double)(CLASS_LUT_WIDTH-1));
-								int classOffset = maxInds[0] * CLASS_LUT_WIDTH;
+
+								// result[0] = most class ID
+								// result[1] = 2nd most likely class ID
+								// result[2] = most likely class probability
+								// result[3] = 2nd most likely class probability
+								// result[4] = number of trees needed to reach significance
+
+								double uncertainty = result[ 4 ] / numOfTrees;
+								int certainty = (int) ( (1.0 - uncertainty) *
+										(double)( CLASS_LUT_WIDTH-1 ) );
+								int classOffset = (int) result[0] * CLASS_LUT_WIDTH;
 								classificationResult[z][iInstanceThisSlice++] = (byte) (classOffset + certainty);
 
 								uncertaintyRegion.sumUncertainty += uncertainty;

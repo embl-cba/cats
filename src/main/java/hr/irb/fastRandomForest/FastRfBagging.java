@@ -670,16 +670,15 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
   public double[] distributionForInstanceUntilSignificant( Instance instance,
                                                            double requiredSignificance ) throws Exception {
 
-    int numClasses = instance.numClasses();
-
-    double[] sums = new double[numClasses], newProbs;
-
-    double[] sums01 = new double[numClasses];
-    double[] currentProbs = new double[numClasses];
-
+    double[] sums = new double[instance.numClasses()], newProbs;
+    double sum = 0.0, p0 = 0.0, p1 = 0.0;
+    double[] currentProbs = new double[instance.numClasses()];
+    double diffSquared;
+    double semSquared;
+    double significance;
+    int c0 = 0, c1 = 0;
 
     for (int i = 0; i < m_NumIterations; i++) {
-
       if (instance.classAttribute().isNumeric()) {
         sums[0] += m_Classifiers[i].classifyInstance(instance);
       } else {
@@ -687,86 +686,69 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
         for (int j = 0; j < newProbs.length; j++)
         {
           sums[j] += newProbs[j];
-          sums01[j] += newProbs[j] > 0 ? 1.0 : 0.0;
         }
       }
 
-      // Evaluate statistical significance of difference
-      // between most and second-most likely class
-      int numEvaluatedTrees = i + 1;
-
-      if ( numEvaluatedTrees > 10 )
+      if ( ( (i > 0) && ( (i % 10) == 0 ) ) || (i == m_NumIterations - 1) )
       {
-        for (int c = 0; c < numClasses; c++)
+        // Evaluate statistical significance of difference
+        // between most and second-most likely class
+
+        // normalise current probabilities to sum up to 1
+        // - and also determine the two most likely probabilities
+        //
+        sum = 0.0;
+
+        for ( int c = 0; c < sums.length; c++ )
         {
-          currentProbs[c] = sums01[c] / numEvaluatedTrees;
+          sum += sums[c];
         }
 
-        double[] p = maxProbs(currentProbs);
-        double diff = (p[0] - p[1]);
-        double sem = Math.sqrt(p[0] * (1 - p[0]) / numEvaluatedTrees);
-
-        if ( sem == 0.0 )
+        for ( int c = 0; c < sums.length; c++ )
         {
-          return ( currentProbs );
+          currentProbs[c] = sums[c] / sum;
+
+          if ( c == 0 )
+          {
+            p0 = currentProbs[ 0 ];
+            p1 = 0.0;
+            c0 = 0;
+            c1 = 0;
+          }
+          else if ( currentProbs[ c ] > p0 )
+          {
+              p1 = p0;
+              p0 = currentProbs[ c ];
+              c1 = c0;
+              c0 = c;
+          }
+          else if ( currentProbs[ c ] > p1 )
+          {
+              p1 = currentProbs[ c ];
+              c1 = c;
+          }
         }
 
-        double significance = diff / sem;
+        // compute sort of an statistical significance:
+        // significance = diff / sem
+        diffSquared = ( p0 - p1 ) * ( p0 - p1 );
+        semSquared = p0 * ( 1 - p0 ) / ( i + 1) ;
 
-        if ( significance > requiredSignificance )
+        significance = diffSquared / semSquared;
+
+        if ( ( significance > requiredSignificance ) )
         {
-          return ( currentProbs );
+          return ( new double[] { c0, c1, p0, p1, i+1 } );
         }
 
       }
 
     }
 
-    return ( currentProbs );
+    // all trees were evaluated without the required significance being reached
+    //
+    return ( new double[] { c0, c1, p0, p1, m_NumIterations} );
 
-    /*
-    if (instance.classAttribute().isNumeric()) {
-      sums[0] /= (double) m_NumIterations;
-      return sums;
-    } else if (Utils.eq(Utils.sum(sums), 0)) {
-      return sums;
-    } else {
-      Utils.normalize(sums);
-      return sums;
-    }
-    */
-
-  }
-
-  // Tischi
-  // TODO: Can this be faster?
-  public static double[] maxProbs(double[] doubles) {
-    double maximum;
-    int[] maxIndicies = new int[2];
-
-    // 1st maximum
-    maximum = -1.0;
-    for(int i = 0; i < doubles.length; ++i) {
-      if( doubles[i] >= maximum ) {
-        maxIndicies[0] = i;  // 1st max
-        maximum = doubles[i];
-      }
-    }
-
-    // 2nd maximum
-    maximum = -1.0;
-    for(int i = 0; i < doubles.length; ++i) {
-      if( doubles[i] >= maximum && i != maxIndicies[0]) {
-          maxIndicies[1] = i;  // 2nd max
-          maximum = doubles[i];
-      }
-    }
-
-    double[] maxProbs = new double[]
-            { doubles[maxIndicies[0]],
-              doubles[maxIndicies[1]]};
-
-    return maxProbs;
   }
 
 
