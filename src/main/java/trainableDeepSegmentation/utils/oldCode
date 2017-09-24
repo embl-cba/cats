@@ -5391,3 +5391,129 @@
 			}
 		};
 	}
+
+
+	private double[] getMultiColorFeatureValues(
+			double[][][][] featureSlice,
+			int x,
+			int y,
+			int classNum)
+	{
+		int nFeaturesPerChannel = featureSlice[0][0][0].length;
+		int nFeatures =  nFeaturesPerChannel * 2;
+		nFeatures = classNum > -1 ? nFeatures + 1 : nFeatures;
+		double[] featureValues = new double[ nFeatures ];
+
+		for ( int c = 0; c < activeChannels.size(); c++ )
+		{
+			System.arraycopy( featureSlice[c][x][y], 0, featureValues, c * nFeaturesPerChannel, nFeaturesPerChannel );
+		}
+
+		if( classNum > -1 )
+		{
+			// set class value
+			featureValues[ featureValues.length ] = classNum;
+		}
+
+		return ( featureValues );
+
+	}
+
+		private double[] getFeatureValuesOld(
+    			double[][][][] featureValues,
+    			int x,
+    			int y,
+    			int classNum,
+    			boolean onlyActiveFeatures)
+    	{
+    		int numActiveFeatures = getNumActiveFeatures();
+    		if ( classNum > -1 ) numActiveFeatures++;
+    		double[] values = new double[ numActiveFeatures ];
+
+    		int numFeaturesPerChannel = featureValues[0][0][0].length;
+    		int iFeature = 0;
+    		int iActiveFeature = 0;
+    		for ( int c = 0; c < activeChannels.size(); c++ )
+    		{
+    			for (int i = 0; i < numFeaturesPerChannel; i++)
+    			{
+    				if ( onlyActiveFeatures )
+    				{
+    					if ( featureList.get(iFeature++).isActive )
+    					{
+    						values[iActiveFeature++] = featureValues[c][x][y][i];
+    					}
+    				}
+    				else
+    				{
+    					values[iActiveFeature++] = featureValues[c][x][y][i];
+    				}
+
+    			}
+    		}
+
+    		if( classNum > -1 ) values[iActiveFeature] = classNum;
+
+    		return ( values );
+    	}
+
+
+    		private double[] getBalancedFeatureValues(
+        			double[][][][] featureValues,
+        			int x,
+        			int y,
+        			int classNum)
+        	{
+        		int nResolutions = numFeaturesPerResolution.size();
+        		int nBalancedFeatures = getNumBalancedFeatureValues();
+        		nBalancedFeatures = classNum > -1 ? nBalancedFeatures + 1 : nBalancedFeatures;
+        		double[] balancedFeatureValues = new double[ nBalancedFeatures ];
+
+        		int iBalanced = 0;
+        		for ( int c = 0; c < activeChannels.size(); c++ )
+        		{
+        			int iFeatureThisChannel = 0;
+        			for ( int r = 0; r < nResolutions; r++ ) // resolutions
+        			{
+        				int n = numFeaturesPerResolution.get(r);
+        				int w = resolutionWeights.get(r);
+        				for (int i = 0; i < n; i++) // all features in resolution
+        				{
+        					for (int j = 0; j < w; j++) // set this feature w times
+        					{
+        						balancedFeatureValues[iBalanced++] = featureValues[c][x][y][iFeatureThisChannel];
+        					}
+        					iFeatureThisChannel++;
+        				}
+        			}
+        		}
+
+        		if( classNum > -1 )
+        		{
+        			// set class value
+        			balancedFeatureValues[iBalanced] = classNum;
+        		}
+
+        		return ( balancedFeatureValues );
+
+        	}
+
+
+
+	// TODO:
+	// - the idea of the balancing is currently not used...
+	// maybe remove this completely again? It should not matter too much
+	// anymore due to the high fraction of random features
+	public int getNumBalancedFeatureValues()
+	{
+		int nResolutions = numFeaturesPerResolution.size();
+		int nC = activeChannels.size();
+		int nBalancedFeatures = 0;
+		for ( int iResolution = 0; iResolution < nResolutions; iResolution++ )
+		{
+			nBalancedFeatures += nC * numFeaturesPerResolution.get(iResolution)
+					* resolutionWeights.get(iResolution);
+		}
+		return( nBalancedFeatures );
+	}
+

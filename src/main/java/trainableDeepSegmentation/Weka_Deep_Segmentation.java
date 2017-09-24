@@ -2,12 +2,10 @@ package trainableDeepSegmentation;
 
 import bigDataTools.Region5D;
 import bigDataTools.dataStreamingTools.DataStreamingTools;
-import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
 import bigDataTools.utils.ImageDataInfo;
 import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
-import hr.irb.fastRandomForest.FastRandomForest;
 import ij.*;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
@@ -80,6 +78,8 @@ import weka.core.PluginManager;
  *          Albert Cardona
  */
 
+// TODO:
+// - button color should be class color
 
 /**
  * Segmentation plugin based on the machine learning library Weka
@@ -303,7 +303,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		overlayLUT = new LUT(red, green, blue);
 
 		exampleList = new java.awt.List[WekaSegmentation.MAX_NUM_CLASSES];
-		addAnnotationButton = new JButton[WekaSegmentation.MAX_NUM_CLASSES];
+		addAnnotationButton = new JButton[ WekaSegmentation.MAX_NUM_CLASSES ];
 
 		roiOverlay = new RoiListOverlay[WekaSegmentation.MAX_NUM_CLASSES];
 
@@ -465,7 +465,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 									int featureID = wekaSegmentation.featureList.indexOf( feature );
 
 									logger.info("ID: " + featureID +
-											"; Name: " + feature.featureName +
+											"; Name: " + feature.name +
 											"; Usage: " + feature.usageInRF +
 											"; Active: " + feature.isActive);
 								}
@@ -474,9 +474,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 							logger.info( "Sum feature usage: " + sumFeatureUsage );
 
-							int i = 0;
-							for (int n : wekaSegmentation.numFeaturesPerResolution)
-								logger.info("Number of features at resolution level " + (i++) + ": " + n);
+							// TODO:
+							// - write a function that computes some stats about
+							// which kind of features, e.g. from which resolution levels
+							// were used and how much a.s.o.
+							// - report the output of this function here
 
 						}
 						else
@@ -738,10 +740,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			for(int i = 0; i < wekaSegmentation.getNumClasses(); i++)
 			{
-				exampleList[i].addActionListener( listener );
-				exampleList[i].addItemListener( itemListener );
-				addAnnotationButton[i] = new JButton(wekaSegmentation.getClassLabel(i) + " [" + (i+1) + "]" );
-				addAnnotationButton[i].setToolTipText("Add markings of label '" + wekaSegmentation.getClassLabel(i) + "'");
+				exampleList[i].addActionListener(listener);
+				exampleList[i].addItemListener(itemListener);
+
+				addAnnotationButton[i] = createAnnotationButton( i );
 
 				annotationsConstraints.insets = new Insets(5, 5, 6, 6);
 
@@ -755,7 +757,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			}
 
 			// Select first class
-			addAnnotationButton[0].setSelected(true);
+			//addAnnotationButton[0].setSelected(true);
 
 			// Add listeners
 			for(int i = 0; i < wekaSegmentation.getNumClasses(); i++)
@@ -1243,6 +1245,18 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		}
 
+		private JButton createAnnotationButton( int classNum )
+		{
+			JButton button = new JButton(
+					wekaSegmentation.getClassLabel( classNum )
+							+ " [" + (classNum+1) + "]" );
+			button.setToolTipText("Add markings of label '"
+					+ wekaSegmentation.getClassLabel( classNum ) + "'");
+			button.setOpaque(true);
+			button.setBackground(colors[classNum]);
+
+			return ( button );
+		}
 
 		private void uncertaintyNavigation( String cmd, int iRegion )
 		{
@@ -1411,17 +1425,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 			int classNum = numOfClasses;
 
 			exampleList[classNum] = new java.awt.List(5);
-			exampleList[classNum].setForeground(colors[classNum]);
+			//exampleList[classNum].setForeground(colors[classNum]);
+			exampleList[classNum].setForeground( Color.black );
 
 			exampleList[classNum].addActionListener(listener);
 			exampleList[classNum].addItemListener(itemListener);
-			addAnnotationButton[classNum] = new JButton(wekaSegmentation.getClassLabel(classNum) + " [" + (classNum+1) + "]");
+
+			addAnnotationButton[classNum] = createAnnotationButton( classNum );
 
 			annotationsConstraints.fill = GridBagConstraints.HORIZONTAL;
 			annotationsConstraints.insets = new Insets(5, 5, 6, 6);
 
-			boxAnnotation.setConstraints(addAnnotationButton[classNum], annotationsConstraints);
-			annotationsPanel.add(addAnnotationButton[classNum]);
+			boxAnnotation.setConstraints( addAnnotationButton[classNum], annotationsConstraints);
+			annotationsPanel.add( addAnnotationButton[classNum] );
 			annotationsConstraints.gridy++;
 
 			annotationsConstraints.insets = new Insets(0,0,0,0);
@@ -1686,8 +1702,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		for(int i = 0; i < wekaSegmentation.getNumClasses() ; i++)
 		{
-			exampleList[i] = new java.awt.List(5);
-			exampleList[i].setForeground(colors[i]);
+			exampleList[i] = new java.awt.List( 5 );
+			//exampleList[i].setForeground(colors[i]);
+			exampleList[i].setForeground( Color.black );
+
 		}
 		numOfClasses = wekaSegmentation.getNumClasses();
 
@@ -2099,7 +2117,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 										wekaSegmentation.minFeatureUsage);
 								logger.info("Resulting active features: "
 										+ wekaSegmentation.getNumActiveFeatures()
-										+ "/" + wekaSegmentation.getNumFeatures());
+										+ "/" + wekaSegmentation.getNumAllFeatures());
 
 								wekaSegmentation.trainClassifier( false );
 							}
@@ -3072,9 +3090,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 			if (newEnableFeatures[i] != oldEnableFeatures[i])
 			{
 				featuresChanged = true;
-				final String featureName = availableFeatures[ i ];
+				final String name = availableFeatures[ i ];
 				// Macro recording
-				record(SET_FEATURE, new String[]{ featureName + "=" + newEnableFeatures[ i ] });
+				record(SET_FEATURE, new String[]{ name + "=" + newEnableFeatures[ i ] });
 			}
 		}
 
@@ -3283,7 +3301,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				return;
 			final FeatureImages featureImages
 								= wekaSegmentation.getFeatureImages();
-			for(int i=0; i< featureImages.getNumFeatures(); i++)
+			for(int i=0; i< featureImages.getNumAllFeatures(); i++)
 				wekaSegmentation.saveFeatureStack( i+1, dir, fileWithExt );
 
 			// macro recording

@@ -376,12 +376,12 @@ public class FeatureImagesMultiResolution
     }
 
 
-    public void setInterpolatedFeatureSliceRegion(int z,
-                                                  int xs,
-                                                  int xe,
-                                                  int ys,
-                                                  int ye,
-                                                  double[][][] featureSlice)
+    public void setFeatureSliceRegion(int z,
+                                      int xs,
+                                      int xe,
+                                      int ys,
+                                      int ye,
+                                      double[][][] featureSlice)
     {
         int nf = getNumFeatures();
 
@@ -924,7 +924,8 @@ public class FeatureImagesMultiResolution
             String channelName,
             boolean showFeatureImages,
             ArrayList<Integer> featuresToShow,
-            int numThreads )
+            int numThreads,
+            boolean computeAll)
     {
 
         // TODO:
@@ -1006,6 +1007,10 @@ public class FeatureImagesMultiResolution
                     {
                         if ( level == wekaSegmentation.maxResolutionLevel)
                         {
+
+                            // TODO:
+                            // - don't compute this feature if not needed
+
                             // don't bin but smooth last scale to keep spatial information better
                             // radius of 3 is the largest that will not cause boundary effects,
                             // because the ignored border during classification is
@@ -1013,15 +1018,13 @@ public class FeatureImagesMultiResolution
                             int filterRadius = 2;
                             featureImagesThisResolution.add( filter3d( featureImage,
                                     filterRadius ) );
+
                             //featureImagesThisResolution.add( bin(featureImage, binning, "AVERAGE").call());
                         }
                         else
                         {
 
-                            // check if we actually need this or
-                            // descendants of this image
-                            // for classification
-                            if ( wekaSegmentation.isFeatureOrChildrenNeeded(
+                            if ( computeAll || wekaSegmentation.isFeatureOrChildrenNeeded(
                                     binningTitle + "_" +
                                             featureImage.getTitle()) )
                             {
@@ -1085,21 +1088,21 @@ public class FeatureImagesMultiResolution
 
                         if (level <= 1) // multi-threaded
                         {
-                            if ( wekaSegmentation.isFeatureOrChildrenNeeded(
+                            if ( computeAll ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "He_" + featureImage.getTitle()) )
                                 futures.add(exe.submit(getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
 
-                            if ( wekaSegmentation.isFeatureOrChildrenNeeded(
+                            if ( computeAll ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "St_" + featureImage.getTitle()) )
                                 futures.add( exe.submit( getStructure(featureImage, smoothingScale, integrationScale)));
                         }
                         else // single-threaded
                         {
-                            if ( wekaSegmentation.isFeatureOrChildrenNeeded(
+                            if ( computeAll ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "He_" + featureImage.getTitle()) )
                                 featureImagesList.add( getHessian(featureImage, smoothingScale, hessianAbsoluteValues).call());
 
-                            if ( wekaSegmentation.isFeatureOrChildrenNeeded(
+                            if ( computeAll ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "St_" + featureImage.getTitle()) )
                                 featureImagesList.add( getStructure(featureImage, smoothingScale, integrationScale).call());
                         }
@@ -1149,11 +1152,9 @@ public class FeatureImagesMultiResolution
 
             multiResolutionFeatureImageArray = new ArrayList<>();
 
-            int iFeature = 0, iLevel = 0;
-            ArrayList < Integer > numFeaturesPerResolution = new ArrayList<>();
+            int iFeature = 0;
             for ( ArrayList<ImagePlus> featureImages : multiResolutionFeatureImages )
             {
-                int numFeaturesThisResolution = 0;
 
                 for ( ImagePlus featureImage : featureImages )
                 {
@@ -1167,18 +1168,15 @@ public class FeatureImagesMultiResolution
                         }
                     }
 
-                    if ( wekaSegmentation.isFeatureNeeded(featureImage.getTitle() ) )
+                    if ( computeAll || wekaSegmentation.isFeatureNeeded(featureImage.getTitle() ) )
                     {
                         multiResolutionFeatureImageArray.add ( featureImage );
                         featureNames.add( featureImage.getTitle() );
-                        numFeaturesThisResolution++;
                     }
                 }
-                numFeaturesPerResolution.add( numFeaturesThisResolution );
-                iLevel++;
             }
 
-            wekaSegmentation.setNumFeaturesPerResolution( numFeaturesPerResolution );
+
 
         }
         catch (InterruptedException ie)

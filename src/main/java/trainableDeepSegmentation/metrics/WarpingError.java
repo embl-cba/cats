@@ -1622,7 +1622,7 @@ public class WarpingError extends Metrics {
 				warpingError += wr.warpingError;
 		}
 
-		//IJ.log("Warping error = " + (warpingError / sourceSlices.getNumFeatures()));
+		//IJ.log("Warping error = " + (warpingError / sourceSlices.getNumAllFeatures()));
 
 		return new ImagePlus("warped source", warpedSource);
 	}
