@@ -2046,7 +2046,7 @@ public class WekaSegmentation {
 				";     debug info: attributeUsages.length: " + attributeUsages.length );
 		logger.info("Number of decision nodes in RF: "
 				+ numDecisionNodes +
-				";     debug info: total feature usage in RF: \" + totalFeatureUsage");
+				";     debug info: total feature usage in RF: " + totalFeatureUsage);
 		logger.info(String.format("Random feature usage: numDecisionNodes " +
 						"/ numUsedFeatures = %.2f" , randomFeatureUsage ));
 		logger.info("Average number of decision nodes per tree: " +

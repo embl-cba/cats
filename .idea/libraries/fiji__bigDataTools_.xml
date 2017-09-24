@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="fiji--bigDataTools_">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../fiji-plugin-bigDataTools/out/artifacts/fiji--bigDataTools_.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
