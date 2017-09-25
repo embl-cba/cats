@@ -929,7 +929,8 @@ public class FeatureImagesMultiResolution
     {
 
         // TODO:
-        // - bit of a mess which variables are passed on via wekaSegmentation object...
+        // - bit of a mess which variables are passed on via
+        // wekaSegmentation object and which not
         double anisotropy = wekaSegmentation.anisotropy;
 
         if (Thread.currentThread().isInterrupted() )
@@ -1007,14 +1008,34 @@ public class FeatureImagesMultiResolution
                     {
                         if ( level == wekaSegmentation.maxResolutionLevel)
                         {
+                            /*
+                            don't bin but smooth last scale to better preserve
+                            spatial information.
+                            smoothing radius of 3 is the largest that will not
+                            cause boundary effects,
+                            because the ignored border during classification is
+                            3 pixel at maxResolutionLevel - 1
+                            (i.e. 1 pixel at maxResolutionLevel)
+                            */
 
                             // TODO:
                             // - don't compute this feature if not needed
 
-                            // don't bin but smooth last scale to keep spatial information better
-                            // radius of 3 is the largest that will not cause boundary effects,
-                            // because the ignored border during classification is
-                            // 3 pixel at maxResolutionLevel - 1 (i.e. 1 pixel at maxResolutionLevel)
+                            // TODO:
+                            // - maybe change below to gaussian smoothing for better
+                            // derivative computation further down
+
+                            /*
+                             currently below there is an average filter computed.
+                             for computing image derivatives this might not be ideal
+                             because the difference of two shifted means only
+                             reflects difference between the two pixels at the edge
+                             of the mean filter, which could be quite noisy.
+                             on the other hand, the hessian and structure themselves
+                             gaussian-smooth a bit before computing the derivatives
+                             such that it actually might be ok.
+                             */
+
                             int filterRadius = 2;
                             featureImagesThisResolution.add( filter3d( featureImage,
                                     filterRadius ) );
@@ -1081,11 +1102,15 @@ public class FeatureImagesMultiResolution
                     // in order to account for the anisotropy in xz vs z
                     featureImage.setCalibration( calibrationFeatureComp );
 
-                    // do not convolve too deep because it becomes too many features
+                    /*
+                     The next if statement serves to only compute
+                     features of features up to a certain level; the
+                     reason for this is to keep the number of features
+                     at bay.
+                    */
                     if ( ! featureImage.getTitle().contains(
                             CONV_DEPTH + wekaSegmentation.maxDeepConvolutionLevel) )
                     {
-
                         if (level <= 1) // multi-threaded
                         {
                             if ( computeAll ||  wekaSegmentation.isFeatureOrChildrenNeeded(
@@ -1213,7 +1238,8 @@ public class FeatureImagesMultiResolution
         ImageStack result = ImageStack.create(imp.getWidth(), imp.getHeight(), imp.getNSlices(), 32);
         StackProcessor stackProcessor = new StackProcessor( imp.getStack() );
         int rz = r;
-        stackProcessor.filter3D( result, (float) r, (float) r, (float) rz, 0, result.size(), StackProcessor.FILTER_MEAN );
+        stackProcessor.filter3D( result, (float) r, (float) r, (float) rz,
+                0, result.size(), StackProcessor.FILTER_MEAN );
         String title = imp.getTitle();
         ImagePlus impResult = new ImagePlus("Mean"+r+"x"+r+"x"+r+"_" + title, result);
         impResult.setCalibration( imp.getCalibration().copy() );
