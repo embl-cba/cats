@@ -43,9 +43,7 @@ Supported data types:
     - 2D+c+t, 3D+c+t
     - spatially anisotropic data 
 
-### Starting a new project
-
-#### Define your classes
+### Define your classes
 
 - The first class must always be the background class
 	- e.g., to mark everything that is outside your sample
@@ -53,7 +51,7 @@ Supported data types:
 - Rename a class: [Settings]
 	- The class names will be there and you can change them
 
-#### Set up your results image
+### Set up your results image
 
 - [Create result image]
 - For creating a disk-resident results image: `[X] Disk`
@@ -73,6 +71,11 @@ Assuming the name of your image is 'cell'
 	- `cell-labels`
 		- here you can store your labels
 	- `cell-for-imaris`
+
+### Logging
+
+Information about what is happening is printed into IJ's log window.
+In addition, when you chose to save your classification results to disk (see above), another folder with the ending "--log" will be automatically created next to your results folder. The content of the logging window will be constantly written into a file in this folder.
 
 #### Put labels
 
@@ -130,12 +133,10 @@ As this tool is able to learn long range context you have to really tell it what
 
 ### Settings
 
-- Minimum tile size
-	- The minimal volume that will be classified, kind of the classification 'chunk-size'
-	- Considerations:
-		- The larger you go the more you risk running out of memory
-		- Smaller sizes will give you quicker feedback for classifying really small regions during the training
-		- Larger sizes will speed up the classification of a really large volume, such as you whole data set. The reason is that the boundary voxels of each tile cannot be used for classification; as the size of the boundary region is fixed (given by the maximal downsampling), the fraction of boundary voxels compared to the full tile volume decreases with the tile size.
+Very often you could just leave them as is.
+
+- Minimum tile size:
+	- auto: currently the only supported setting; hopefully doing a good job.
 
 
 
@@ -154,8 +155,10 @@ The first aim is to have a folder with files named like below:
 
 1. Create a folder, e.g. cell-for-imaris
 2. Copy your raw data into this folder and rename it to class0--C00--T00000.tif
-3. Use the DataStreaming tools to generate one tif file per class
-4. Open the whole folder in Imaris
+3. Use the DataStreaming tools to generate one tif file per class (see below)
+4. Open whole folder in Imaris
+
+Note: You do not need to save the background class
 
 #### Using the DataStreamingTools to generate one Tiff file per class
 
@@ -170,16 +173,26 @@ The first aim is to have a folder with files named like below:
 				- class 2 and 3 together: Min = 20, Max = 59
 		- [Save as stacks]
 
-#### Open Imaris
+#### Open your files in Imaris
 
+...
 
 Tips and tricks:
 
-
 - If you are working in a file server enviroment, it might be faster to first save locally, and then later copy everything in one go from your local computer to the server
-- You do not need to save the background class
-
  
+## Additional comments
+
+### Tile size
+
+The tile size determines tThe minimal volume that will be classified, kind of the classification 'chunk-size'
+
+- Considerations:
+	- The larger you go the more you risk running out of memory
+	- Smaller sizes will give you quicker feedback for classifying really small regions during the training
+	- Larger sizes will speed up the classification of a really large volume, such as you whole data set. The reason is that the boundary voxels of each tile cannot be used for classification; as the size of the boundary region is fixed (given by the maximal downsampling), the fraction of boundary voxels compared to the full tile volume decreases with the tile size.
+
+
 
 
 

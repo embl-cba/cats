@@ -315,8 +315,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 		overlayButton.setToolTipText("Toggle between current segmentation and original image");
 		overlayButton.setEnabled(false);
 
-		getResultButton = new JButton("Create result");
-		getResultButton.setToolTipText("Generate result image");
+		getResultButton = new JButton("Assign result");
+		getResultButton.setToolTipText("Assign result image. " +
+				"It will either allocate memory in RAM; " +
+				"or, if [X] disk, you can specify a " +
+				"folder where the classification results should be saved.");
 		getResultButton.setEnabled(false);
 
 		setResultButton = new JButton("Set result image");
@@ -2215,7 +2218,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		if ( classifiedImage == null )
 		{
 			logger.error("classification_result image not set.\n" +
-					"Please [Create result image].");
+					"Please [Assign result image].");
 			return;
 		}
 

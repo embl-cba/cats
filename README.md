@@ -110,7 +110,7 @@ In addition, when you chose to save your classification results to disk (see abo
 - 
 
 
-### Reloading an existing project
+### Reload an existing project
 
 - Open your image
 - Start the Trainable Deep Segmentation
@@ -139,13 +139,40 @@ Very often you could just leave them as is.
 	- auto: currently the only supported setting; hopefully doing a good job.
 
 
+### Open data in Imaris 9.0.1
 
-### Open your project in Imaris
+1. Imaris: [File > Open]: load your raw data.
 
-The first aim is to have a folder with files named like below:
+2. Generate a tif stack containing the classification result
+	- Fiji-TDWS: [Get result]
+	- Fiji: Click on the result image and [Image > Duplicate]
+		- This will load the result image into RAM
+	- Fiji5: Click on the duplicated result image and [File > Save]
+
+3. Imaris: [Edit > Add channels]: load classification result tif stack
+
+4. Imaris: For each class do the following:
+	- [Add new Surfaces]
+	- Source channel: channel 2
+	- [ ] Smooth
+		- It is critical that you do not smooth!!
+	- Thresholding: Absolute intensity
+	- Select your class by intensity gating, e.g.
+		- class1: 25..39
+		- class2: 45..59
+		- classN: N*20+5..N*20+19
+		- Note: In principle the classes start at N*20, but the classification was not very certain there..
+ 
+NOTES:
+- In fact the data do not need to be saved as Tiff, anything that Imaris can open will work.
+
+
+### Open data in Imaris 9.0.0
+
+The aim is to have a folder with files named like below:
 
 - folder-for-imaris
-	- class0--C00--T00000.tif
+	- c0--C00--T00000.tif
 		- this is your raw data
 	- class1--C00--T00000.tif
 		- this is the classification result for class1
