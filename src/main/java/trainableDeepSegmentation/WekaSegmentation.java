@@ -2048,7 +2048,7 @@ public class WekaSegmentation {
 				+ numDecisionNodes +
 				";     debug info: total feature usage in RF: " + totalFeatureUsage);
 		logger.info(String.format("Random feature usage: numDecisionNodes " +
-						"/ numUsedFeatures = %.2f" , randomFeatureUsage ));
+				"/ numUsedFeatures = %.2f", randomFeatureUsage));
 		logger.info("Average number of decision nodes per tree: " +
 				avgRfTreeSize );
 		logger.info("Average tree depth: log2(numDecisionNodes) + 1 = " +
@@ -2674,7 +2674,7 @@ public class WekaSegmentation {
 
 								/*
 								Compute classification:
-								result[0] = most class ID
+								result[0] = most likley class ID
 								result[1] = 2nd most likely class ID
 								result[2] = most likely class probability
 								result[3] = 2nd most likely class probability
@@ -2689,7 +2689,9 @@ public class WekaSegmentation {
 								pixelsClassified.incrementAndGet();
 								treesEvaluated.addAndGet( (int) result[4] );
 
-								double uncertainty = result[ 4 ] / numOfTrees;
+								// double uncertainty = result[ 4 ] / numOfTrees;
+								double uncertainty = result[ 2 ] - result [ 3 ];
+
 								int certainty = (int) ( (1.0 - uncertainty) *
 										(double)( CLASS_LUT_WIDTH-1 ) );
 								int classOffset = (int) result[0] * CLASS_LUT_WIDTH;

@@ -142,6 +142,7 @@ Very often you could just leave them as is.
 ### Open data in Imaris 9.0.1
 
 1. Imaris: [File > Open]: load your raw data.
+	- Please make sure that there is no other data than the raw data in the same folder, as this will tend to confuse Imaris!
 
 2. Generate a tif stack containing the classification result
 	- Fiji-TDWS: [Get result]
@@ -150,6 +151,8 @@ Very often you could just leave them as is.
 	- Fiji5: Click on the duplicated result image and [File > Save]
 
 3. Imaris: [Edit > Add channels]: load classification result tif stack
+	- Please make sure that there is no other data than the classification data in the same folder, as this will tend to confuse Imaris!
+
 
 4. Imaris: For each class do the following:
 	- [Add new Surfaces]

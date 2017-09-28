@@ -16,7 +16,7 @@ public class Example implements Serializable {
     public int t; // zero-based
     public ArrayList< double[] > instanceValuesArray = null;
 
-    public Example(int classNum, Point[] points, int strokeWidth, int z, int t)
+    public Example( int classNum, Point[] points, int strokeWidth, int z, int t )
     {
         this.classNum = classNum;
         this.points = points;
@@ -24,6 +24,5 @@ public class Example implements Serializable {
         this.t = t;
         this.z = z;
     }
-
 
 }

@@ -118,10 +118,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	/** toggle overlay button */
 	private JButton overlayButton = null;
+
+
 	/** create result button */
 	private JButton getResultButton = null;
 	/** create result button */
 	private JButton setResultButton = null;
+
 
 	private JButton createResultButton = null;
 
@@ -315,8 +318,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		overlayButton.setToolTipText("Toggle between current segmentation and original image");
 		overlayButton.setEnabled(false);
 
-		getResultButton = new JButton("Assign result");
-		getResultButton.setToolTipText("Assign result image. " +
+		getResultButton = new JButton("Get result image");
+		getResultButton.setToolTipText("Get result image. " +
 				"It will either allocate memory in RAM; " +
 				"or, if [X] disk, you can specify a " +
 				"folder where the classification results should be saved.");
@@ -326,8 +329,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		setResultButton.setToolTipText("Set result image");
 		setResultButton.setEnabled(true);
 
-		createResultButton = new JButton("Create result image");
-		createResultButton.setToolTipText("Create result image");
+		createResultButton = new JButton("Assign result image");
+		createResultButton.setToolTipText("Assign result image");
 		createResultButton.setEnabled(true);
 
 		resultOnDiskCheckBox = new JCheckBox("Disk", true);
@@ -1293,9 +1296,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			}
 		}
 
-
-		void zoomToSelection(ImagePlus imp, double marginFactor) {
-
+		void zoomToSelection(ImagePlus imp, double marginFactor)
+		{
 			ImageCanvas ic = imp.getCanvas();
 			Roi roi = imp.getRoi();
 			ic.unzoom();
@@ -1304,11 +1306,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 			Rectangle r = roi.getBounds();
 			double mag = ic.getMagnification();
 			int marginw = (int)(marginFactor * (w.width - mag * imp.getWidth()));
-			int marginh = (int)(marginFactor * (w.height - mag * imp.getHeight()));
+			int marginh = marginw;
+			//int marginh = (int)(marginFactor * (w.height - mag * imp.getHeight()));
 			int x = r.x+r.width/2;
 			int y = r.y+r.height/2;
 			mag = ic.getHigherZoomLevel(mag);
-			while(r.width*mag < w.width-marginw && r.height*mag<w.height-marginh) {
+			while( (r.width*mag < w.width-marginw)
+					&& (r.height*mag<w.height-marginh) ) {
 				ic.zoomIn(ic.screenX(x), ic.screenY(y));
 				double cmag = ic.getMagnification();
 				if (cmag==32.0) break;
@@ -1789,7 +1793,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		String directory = null;
 
-		if ( buttonText.contains("Create") )
+		if ( buttonText.contains("Assign") )
 		{
 			if ( resultOnDiskCheckBox.isSelected() )
 			{
@@ -2217,7 +2221,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		if ( classifiedImage == null )
 		{
-			logger.error("classification_result image not set.\n" +
+			logger.error("Classification result image yet assigned.\n" +
 					"Please [Assign result image].");
 			return;
 		}
