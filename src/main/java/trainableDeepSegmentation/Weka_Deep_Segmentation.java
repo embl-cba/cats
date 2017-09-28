@@ -1280,7 +1280,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 							wekaSegmentation.minTileSizes[0],
 							wekaSegmentation.minTileSizes[1]
 					);
-					zoomToSelection( displayImage, 3.0 );
+					// TODO: below does not work
+					//zoomToSelection( displayImage, 3.0 );
 					displayImage.updateAndDraw();
 				}
 				else
