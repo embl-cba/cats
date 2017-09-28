@@ -1,42 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="11fbcd29-9375-459b-85c8-2a59ead8fa06" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation$2.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation$2.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$1$1.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$1$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$1.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$2$1.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$2$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$2.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$2.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$3.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$3.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$4.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$4.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$5.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$5.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$6.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$6.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$7.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$7.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$8.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$8.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomCanvas$1.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomCanvas$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomCanvas.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomCanvas.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$1$1.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$1$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$1.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$2$1.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$2$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$2.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$2.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$3$1.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$3$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$3.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$3.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$4$1.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$4$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$4$2.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$4$2.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$4.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$4.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$5.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$5.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$6.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow$6.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$CustomWindow.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$SaveFeatureStackButtonListener.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$SaveFeatureStackButtonListener.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/artifacts/fiji_plugin_trainableDeepSegmentation.jar" afterPath="$PROJECT_DIR$/out/artifacts/fiji_plugin_trainableDeepSegmentation.jar" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Example.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Example.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-    </list>
+    <list default="true" id="11fbcd29-9375-459b-85c8-2a59ead8fa06" name="Default" comment="" />
     <ignored path="fiji-plugin-deep-segmentation.iws" />
     <ignored path=".idea/workspace.xml" />
     <ignored path="$PROJECT_DIR$/target/" />
