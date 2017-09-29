@@ -93,7 +93,6 @@ public final class Utils {
 
 	public static void joinThreads( ArrayList<Future> futures, Logger logger )
 	{
-
 		if ( futures.size() > 0)
 		{
 			try
@@ -113,14 +112,13 @@ public final class Utils {
 			}
 			catch (OutOfMemoryError err)
 			{
-				logger.error("TrainClassifier run out of memory. Please, "
+				logger.error("TrainClassifier ran out of memory. Please, "
 						+ "provide more memory and/or use less threads " +
 						"[ImageJ > Edit > Options > Memory & Threads].");
 				err.printStackTrace();
 				return;
 			}
 		}
-
 		return;
 	}
 

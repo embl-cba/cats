@@ -104,7 +104,7 @@ public class WekaSegmentation {
 	/** default classifier (Fast Random Forest) */
 	private FastRandomForest rf;
 	/** current number of classes */
-	private int numOfClasses = 0;
+	private int numClasses = 0;
 	/** names of the current classes */
 	private String[] classNames = new String[MAX_NUM_CLASSES];
 
@@ -398,7 +398,6 @@ public class WekaSegmentation {
 		return ( new Rectangle( xMin, yMin, xMax-xMin+1, yMax-yMin+1 ) );
 	}
 
-
 	/**
 	 * Check whether the example is valid, i.e.
 	 * - not too close to the image boundary
@@ -515,10 +514,24 @@ public class WekaSegmentation {
 
 		for ( Example example : examples )
 		{
-			classNums.add(example.classNum);
+			classNums.add( example.classNum );
 		}
 		return classNums.size();
 	}
+
+	public int[] getNumExamplesPerClass()
+	{
+		int[] numExamplesPerClass = new int[numClasses];
+
+		for ( Example example : examples )
+		{
+			numExamplesPerClass[ example.classNum ] ++;
+		}
+
+		return ( numExamplesPerClass );
+	}
+
+
 
 	/**
 	 * Set flag to homogenize classes before training
@@ -548,7 +561,7 @@ public class WekaSegmentation {
 	 * @param numOfClasses the new number of classes
 	 */
 	public void setNumClasses(int numOfClasses) {
-		this.numOfClasses = numOfClasses;
+		this.numClasses = numOfClasses;
 	}
 
 	/**
@@ -558,7 +571,7 @@ public class WekaSegmentation {
 	 */
 	public int getNumClasses()
 	{
-		return numOfClasses;
+		return numClasses;
 	}
 
 	/**
@@ -567,7 +580,7 @@ public class WekaSegmentation {
 	public void addClass()
 	{
 		// increase number of available classes
-		numOfClasses++;
+		numClasses++;
 	}
 
 	/**
@@ -1435,15 +1448,20 @@ public class WekaSegmentation {
 		for ( int i = 0; i < exampleList.size(); i++ )
 		{
 			ArrayList< Example > neighboringExamples = exampleList.get( i );
-			futures.add( exe.submit( setExamplesInstanceValues( neighboringExamples,
-					i, exampleList.size()-1 ) ) );
+			futures.add(
+					exe.submit(
+							setExamplesInstanceValues( neighboringExamples,
+											i, exampleList.size() - 1 ) ) );
 			this.totalThreadsExecuted.addAndGet(1);
 		}
 
 		trainableDeepSegmentation.utils.Utils.joinThreads( futures, logger );
 		exe.shutdown();
 
-		if ( examplesWithoutFeatures.size() > 0 )
+		// TODO:
+		// - there is a bug, as it quite often it never reaches below line
+		// or at least does not log anything
+		if ( exampleList.size() > 0 )
 		{
 			logger.info( "Computed feature values for all new annotations." );
 		}
@@ -1534,7 +1552,7 @@ public class WekaSegmentation {
 				if ( sizes[i] > imgDims[i] )
 				{
 					logger.error("Cannot compute the image features, " +
-							"becasue the size of the features if too large " +
+							"because size of features if too large " +
 							"compared with the size of the image. " +
 							"Please go to [Settings] and reduce the downsampling " +
 							"factor or the maximum downsampling level.");
@@ -1665,6 +1683,9 @@ public class WekaSegmentation {
 
 				}
 			}
+
+			logger.info("" + (counter+1) + "/" + (counterMax+1) + ": " + "...done" );
+
 		};
 	}
 
@@ -1679,6 +1700,37 @@ public class WekaSegmentation {
 				featureList.add( new Feature(featureName, 0, true) );
 			}
 		}
+	}
+
+
+	public long getNeededBytesPerRegionVoxel()
+	{
+		long oneByte = 8;
+		long floatingPointImp = 32;
+		long mem = floatingPointImp * 10 * numRegionThreads / oneByte;
+		return ( mem );
+	}
+
+	public long getMaximalNumberOfRegionVoxels()
+	{
+		long maxMemory = IJ.maxMemory();
+		long currentMemory = IJ.currentMemory();
+		long freeMemory = maxMemory - currentMemory;
+
+		long maxNumVoxels = freeMemory / getNeededBytesPerRegionVoxel();
+
+		long maxNumRegionWidth = (long) Math.pow( maxNumVoxels, 1.0/3 );
+
+		return maxNumVoxels;
+	}
+
+	public int getMaximalRegionSize()
+	{
+		int maxNumRegionWidth = (int) Math.pow( getMaximalNumberOfRegionVoxels(), 1.0/3 );
+		// to keep it kind of interactive limit the maximal size
+		// to something (500 is arbitrary)
+		maxNumRegionWidth = Math.min( maxNumRegionWidth, 500 );
+		return maxNumRegionWidth;
 	}
 
 
@@ -1811,7 +1863,7 @@ public class WekaSegmentation {
 	 */
 	public int getFeatureVoxelSizeAtMaximumScale()
 	{
-		int maxFeatureVoxelSize = (int) Math.pow( downSamplingFactor, maxResolutionLevel);
+		int maxFeatureVoxelSize = (int) Math.pow( downSamplingFactor, maxResolutionLevel );
 		return maxFeatureVoxelSize;
 	}
 
@@ -1845,7 +1897,7 @@ public class WekaSegmentation {
 	public ArrayList<String> getClassNamesAsArrayList()
 	{
 		ArrayList<String> classes = new ArrayList<>();
-		for(int i = 0; i < numOfClasses ; i++)
+		for(int i = 0; i < numClasses; i++)
 		{
 			classes.add("class"+i);
 		}
@@ -1914,7 +1966,7 @@ public class WekaSegmentation {
 
 		// At least two lists of different classes of examples need to be non empty
 		int nonEmpty = 0;
-		for(int i = 0; i < numOfClasses; i++)
+		for(int i = 0; i < numClasses; i++)
 			for(int j = 0; j< trainingImage.getImageStackSize(); j++)
 				if( getNumExamples(i) > 0 )
 				{
@@ -2188,11 +2240,26 @@ public class WekaSegmentation {
 
 			ImagePlus imageToClassify = null;
 
+			final int[] borderSizes = getFeatureBorderSizes();
+			int nx = 0;
+			int ny = 0;
+			int nz = 0;
+			int zs = 0;
+
 			ArrayList < FeatureImagesMultiResolution > featureImagesChannels = new ArrayList<>();
 			for ( int c : activeChannels )
 			{
 				region5DToClassify.c = c;
 				imageToClassify = Utils.getDataCube( trainingImage, region5DToClassify, new int[]{-1,-1}, 1 );
+
+				// border pixels cannot be classified,
+				// because the interpolated features
+				// cannot not be computed properly
+				// thus leave them out
+				nx = imageToClassify.getWidth() - 2 * borderSizes[0];
+				ny = imageToClassify.getHeight() - 2 * borderSizes[1];
+				nz = imageToClassify.getNSlices() > 1 ? imageToClassify.getNSlices() - 2 * borderSizes[2] : 1;
+				zs = imageToClassify.getNSlices() > 1 ? borderSizes[2] : 0;
 
 				// TODO:
 				// - implement better multi-channel treatment for background threshold
@@ -2202,7 +2269,9 @@ public class WekaSegmentation {
 					// check whether the region is background
 					if ( isBackgroundRegion( imageToClassify, backgroundThreshold ) )
 					{
-						return; // don't classify, but leave all classification pixels as is, hopefully 0...
+						// don't classify, but leave all classification pixels as is, hopefully 0...
+						pixelsClassified.addAndGet( nx * ny * nz  );
+						return;
 					}
 				}
 
@@ -2225,15 +2294,6 @@ public class WekaSegmentation {
 
 			start = System.currentTimeMillis();
 
-			// border pixels cannot be classified,
-			// because the interpolated features
-			// cannot not be computed properly
-			// thus leave them out
-			final int[] borderSizes = getFeatureBorderSizes();
-			int nx = imageToClassify.getWidth() - 2 * borderSizes[0];
-			int ny = imageToClassify.getHeight() - 2 * borderSizes[1];
-			int nz = imageToClassify.getNSlices() > 1 ? imageToClassify.getNSlices() - 2 * borderSizes[2] : 1;
-			int zs = imageToClassify.getNSlices() > 1 ? borderSizes[2] : 0;
 
 			// create instances information (each instance needs a pointer to this)
 			Instances dataInfo = new Instances("segment", getAttributes(), 1);

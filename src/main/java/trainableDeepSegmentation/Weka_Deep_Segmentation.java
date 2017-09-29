@@ -271,6 +271,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			return;
 		}
 
+		//IJ.run("Monitor Memory...", "");
+
 		// reserve shortcuts
 		String macros = "macro 'shortcut 1 [1]' {};\n"
 				+ "macro 'shortcut 2 [2]' {};"
@@ -1707,6 +1709,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// instantiate segmentation backend
 		wekaSegmentation = new WekaSegmentation();
 		logger = wekaSegmentation.getLogger();
+		wekaSegmentation.getMaximalNumberOfRegionVoxels();
+
 
 		for(int i = 0; i < wekaSegmentation.getNumClasses() ; i++)
 		{
@@ -1912,7 +1916,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		if ( wekaSegmentation.isValidExample( newExample ) )
 		{
-			wekaSegmentation.addExample(newExample);
+			wekaSegmentation.addExample( newExample );
 
 			traceCounter[classNum]++;
 			win.drawExamples();
@@ -1923,6 +1927,15 @@ public class Weka_Deep_Segmentation implements PlugIn
 					Integer.toString(classNum),
 					Integer.toString(n)};
 			record(ADD_TRACE, arg);
+
+			String numLabelsPerClassString = "";
+			int[] numLabelsPerClass = wekaSegmentation.getNumExamplesPerClass();
+			for ( int i = 0 ; i <  numLabelsPerClass.length; i++ )
+			{
+				numLabelsPerClassString += " "+(i+1)+":"+numLabelsPerClass[i];
+			}
+			logger.progress("Number of labels per class:", numLabelsPerClassString);
+
 		}
 		else
 		{
@@ -2271,11 +2284,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 					int[] borders = wekaSegmentation.getFeatureBorderSizes();
 					int[] imgDims = wekaSegmentation.getImgDims();
 
-
 					int[] xyztStart = new int[4];
 					int[] xyztEnd = new int[4];
 					int[] xyztNum = new int[4];
-
 
 					xyztStart[0] = (int) rectangle.getX() - borders[0];
 					xyztEnd[0] = xyztStart[0] + (int) rectangle.getWidth() - 1;
@@ -2340,8 +2351,15 @@ public class Weka_Deep_Segmentation implements PlugIn
 							}
 							else
 							{
-								// TODO: could be even larger, but RAM?!
-								sizes[i] = Math.min ( 2 * 3 * borders[i],
+								// TODO:
+								// - check whether maximal region size really makes sense
+
+								// the larger the faster, because the border pixels
+								// play less of a role
+								// Useful fraction = (N-2)^3 / N^3
+								// where N = size / borderSize
+								sizes[i] = Math.min (
+										wekaSegmentation.getMaximalRegionSize(),
 										imgDims[i] );
 							}
 						}
@@ -2372,9 +2390,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 					logger.info("Selected region size [x,y,z,t]: "  + xyztSizes );
 
 					logger.info("Tile size (incl. borders) [x,y,z]: "
-									+ ( sizes[0] - borders[0] )
-									+ ", " + ( sizes[1] - borders[1] )
-									+ ", " + ( sizes[2] - borders[2] )
+									+ ( sizes[0] - 2 * borders[0] )
+									+ ", " + ( sizes[1] - 2 * borders[1] )
+									+ ", " + ( sizes[2] - 2 * borders[2] )
 									+ " (" + sizes[0]
 									+ "," + sizes[1]
 									+ "," + sizes[2] + ")"
@@ -2445,7 +2463,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 						}
 					}
 
-
 					int regionsClassified = 0;
 					long nThreadsLast = wekaSegmentation.totalThreadsExecuted.get();
 					long maximumMemoryUsage = 0L;
@@ -2474,7 +2491,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 								if ( currentMemoryUsage > maximumMemoryUsage )
 									maximumMemoryUsage = currentMemoryUsage;
 
-
+								// TODO:
+								// - max memory usage must be monitored during computation
 								String memoryUsage = "; Memory (curr,max,tot) [MB]: "
 										+ currentMemoryUsage / 1000000L
 										+ ", " + maximumMemoryUsage / 1000000L
