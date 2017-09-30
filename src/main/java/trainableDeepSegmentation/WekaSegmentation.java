@@ -532,7 +532,6 @@ public class WekaSegmentation {
 	}
 
 
-
 	/**
 	 * Set flag to homogenize classes before training
 	 *
@@ -1445,13 +1444,17 @@ public class WekaSegmentation {
 		//
 		ExecutorService exe = Executors.newFixedThreadPool( numRegionThreads );
 		ArrayList<Future> futures = new ArrayList<>();
+		boolean updateFeatureList = true;
 		for ( int i = 0; i < exampleList.size(); i++ )
 		{
 			ArrayList< Example > neighboringExamples = exampleList.get( i );
 			futures.add(
 					exe.submit(
-							setExamplesInstanceValues( neighboringExamples,
-											i, exampleList.size() - 1 ) ) );
+							setExamplesInstanceValues(
+									neighboringExamples,
+									i, exampleList.size() - 1,
+									updateFeatureList) ) );
+			updateFeatureList = false; // only needed once
 			this.totalThreadsExecuted.addAndGet(1);
 		}
 
@@ -1459,7 +1462,7 @@ public class WekaSegmentation {
 		exe.shutdown();
 
 		// TODO:
-		// - there is a bug, as it quite often it never reaches below line
+		// - there is a bug, as it quite often never reaches below line
 		// or at least does not log anything
 		if ( exampleList.size() > 0 )
 		{
@@ -1527,7 +1530,8 @@ public class WekaSegmentation {
 
 	private Runnable setExamplesInstanceValues( ArrayList< Example > examples,
 												int counter,
-												int counterMax)
+												int counterMax,
+												boolean updateFeatureList)
 	{
 		if (Thread.currentThread().isInterrupted())
 			return null;
@@ -1545,9 +1549,9 @@ public class WekaSegmentation {
 			for ( int i = 0; i < 3; ++i )
 			{
 				// add one to width and height, as, e.g., a horizontal line has zero height.
-				int exampleWidth = (bounds[i][1] - bounds[i][0] + 1);
+				int exampleWidth = ( bounds[i][1] - bounds[i][0] + 1 );
 
-				sizes[i] = borders[i] * (2 + (int) Math.ceil( 1.0 * exampleWidth / borders[i]));
+				sizes[i] = borders[i] * ( 2 + (int) Math.ceil( 1.0 * exampleWidth / borders[i] ) );
 
 				if ( sizes[i] > imgDims[i] )
 				{
@@ -1591,11 +1595,16 @@ public class WekaSegmentation {
 				featureImagesChannels.add( featureImages );
 			}
 
-			// update feature list, which might have been changed during
-			// this training, because the user might have altered the
-			// feature computation settings
-			// TODO: this should be done only once, for the first example
-			updateFeatureList(featureImagesChannels);
+			/* update feature list, which might have been changed during
+			this training, because the user might have altered the
+			feature computation settings.
+			this is only need for one of the new examples, thus the
+			if statement
+			*/
+			if ( updateFeatureList )
+			{
+				updateFeatureList(featureImagesChannels);
+			}
 
 			final int[] borderSizes = getFeatureBorderSizes();
 
@@ -1626,7 +1635,7 @@ public class WekaSegmentation {
 				for ( int c = 0; c < activeChannels.size(); c++ )
 				{
 					featureImagesChannels.get( c ).setFeatureSliceRegion(
-							z, xs, xe, ys, ye, featureSlices.get(c));
+							z, xs, xe, ys, ye, featureSlices.get( c ));
 
 				}
 				long duration = System.currentTimeMillis() - start;
@@ -1701,7 +1710,6 @@ public class WekaSegmentation {
 			}
 		}
 	}
-
 
 	public long getNeededBytesPerRegionVoxel()
 	{
@@ -2117,7 +2125,6 @@ public class WekaSegmentation {
 		return true;
 	}
 
-
 	/**
 	 *
 	 * @param region5D
@@ -2289,7 +2296,9 @@ public class WekaSegmentation {
 
 			if ( counterMax == 1 )
 			{
-				logger.info("Features computed in [ms]: " + (System.currentTimeMillis() - start));
+				logger.info("Features computed in [ms]: " +
+						(System.currentTimeMillis() - start) +
+				", using " + numThreads + " threads");
 			}
 
 			start = System.currentTimeMillis();
