@@ -140,7 +140,7 @@ public class WekaSegmentation {
 
 	public int minFeatureUsage = 0;
 
-	public double minFeatureUsageFactor = 1.5;
+	public double minFeatureUsageFactor = 2.0;
 
 	private boolean computeFeatureImportance = false;
 
