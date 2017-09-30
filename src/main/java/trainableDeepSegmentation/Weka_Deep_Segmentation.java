@@ -254,9 +254,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** boolean flag set to true while training */
 	private boolean trainingFlag = false;
 
+	private boolean isFirstTime = true;
 
 	private Logger logger;
-
 
 	/**
 	 * Basic constructor for graphical user interface use
@@ -1772,12 +1772,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 				new Runnable() {
 					public void run()
 					{
-						win = new CustomWindow( displayImage );
+						win = new CustomWindow(displayImage);
 						win.pack();
 					}
 				});
-
-		IJ.run("Monitor Memory...", "");
 
 	}
 
@@ -2233,6 +2231,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		// TODO
 		// move all of this into wekaSegmentation class
+
+		if ( isFirstTime )
+		{
+			Thread thread = new Thread(new Runnable() {
+				//exec.submit(new Runnable() {
+
+				public void run()
+				{
+					IJ.run("Monitor Memory...", "");
+					isFirstTime = false;
+				}
+			}); thread.start();
+		}
 
 		if ( ! wekaSegmentation.isTrainingCompleted )
 		{
