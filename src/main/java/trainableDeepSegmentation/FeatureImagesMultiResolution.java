@@ -931,7 +931,7 @@ public class FeatureImagesMultiResolution
         // TODO:
         // - bit of a mess which variables are passed on via
         // wekaSegmentation object and which not
-        double anisotropy = wekaSegmentation.anisotropy;
+        double anisotropy = wekaSegmentation.settings.anisotropy;
 
         if (Thread.currentThread().isInterrupted() )
             return false;
@@ -960,7 +960,7 @@ public class FeatureImagesMultiResolution
 
             ArrayList< int[] > binnings = new ArrayList<>();
 
-            for (int level = 0; level <= wekaSegmentation.maxResolutionLevel; level++)
+            for (int level = 0; level <= wekaSegmentation.settings.maxResolutionLevel; level++)
             {
 
                 final ArrayList<ImagePlus> featureImagesThisResolution = new ArrayList<>();
@@ -970,7 +970,7 @@ public class FeatureImagesMultiResolution
                 {
 
                     featureImagesThisResolution.add( originalImageCopy );
-                    binnings.add(new int[]{1, 1, 1});
+                    binnings.add( new int[]{1, 1, 1} );
 
                 }
                 else
@@ -986,7 +986,8 @@ public class FeatureImagesMultiResolution
                     int[] binning = getBinning(
                             featureImagesPreviousResolution.get(0),
                             anisotropy,
-                            wekaSegmentation.downSamplingFactor );
+                            wekaSegmentation.settings.downSamplingFactor);
+
                     int[] combinedBinning = new int[3];
                     for ( int i = 0; i < 3; i++ )
                     {
@@ -1000,13 +1001,13 @@ public class FeatureImagesMultiResolution
                             binning[1] + "x" +
                             binning[2];
 
-                    // adapt anisotropy, which could have changed during
+                    // adapt settingAnisotropy, which could have changed during
                     // the (anisotropic) binning
                     anisotropy /= 1.0 * binning[0] / binning[2];
 
                     for (ImagePlus featureImage : featureImagesPreviousResolution)
                     {
-                        if ( level == wekaSegmentation.maxResolutionLevel)
+                        if ( level == wekaSegmentation.settings.maxResolutionLevel)
                         {
                             /*
                             don't bin but smooth last scale to better preserve
@@ -1014,8 +1015,8 @@ public class FeatureImagesMultiResolution
                             smoothing radius of 3 is the largest that will not
                             cause boundary effects,
                             because the ignored border during classification is
-                            3 pixel at maxResolutionLevel - 1
-                            (i.e. 1 pixel at maxResolutionLevel)
+                            3 pixel at settings.maxResolutionLevel - 1
+                            (i.e. 1 pixel at settings.maxResolutionLevel)
                             */
 
                             // TODO:
@@ -1069,7 +1070,7 @@ public class FeatureImagesMultiResolution
                 double smoothingScale = 1.0;
                 double integrationScale = smoothingScale;
 
-                if ( level == wekaSegmentation.maxResolutionLevel )
+                if ( level == wekaSegmentation.settings.maxResolutionLevel)
                 {
                     // for the last scale we do not bin but only smooth (s.a.),
                     // thus we need to look for features over a wider range
@@ -1087,7 +1088,7 @@ public class FeatureImagesMultiResolution
                 ArrayList<ArrayList<ImagePlus>> featureImagesList = new ArrayList<>();
 
                 // Generate calibration for feature computation
-                // to account for current anisotropy
+                // to account for current settingAnisotropy
                 Calibration calibrationFeatureComp = new Calibration();
                 calibrationFeatureComp.pixelWidth = 1.0;
                 calibrationFeatureComp.pixelHeight = 1.0;
@@ -1099,7 +1100,7 @@ public class FeatureImagesMultiResolution
 
                     // temporarily change calibration while computing
                     // hessian and structure
-                    // in order to account for the anisotropy in xz vs z
+                    // in order to account for the settingAnisotropy in xz vs z
                     featureImage.setCalibration( calibrationFeatureComp );
 
                     /*
@@ -1109,7 +1110,7 @@ public class FeatureImagesMultiResolution
                      at bay.
                     */
                     if ( ! featureImage.getTitle().contains(
-                            CONV_DEPTH + wekaSegmentation.maxDeepConvolutionLevel) )
+                            CONV_DEPTH + wekaSegmentation.settings.maxDeepConvolutionLevel) )
                     {
                         if (level <= 1) // multi-threaded
                         {
@@ -1193,7 +1194,7 @@ public class FeatureImagesMultiResolution
                         }
                     }
 
-                    if ( computeAll || wekaSegmentation.isFeatureNeeded(featureImage.getTitle() ) )
+                    if ( computeAll || wekaSegmentation.isFeatureNeeded( featureImage.getTitle() ) )
                     {
                         multiResolutionFeatureImageArray.add ( featureImage );
                         featureNames.add( featureImage.getTitle() );
