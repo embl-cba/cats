@@ -1010,11 +1010,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingConstraints.insets = new Insets(5, 5, 6, 6);
 			trainingJPanel.setLayout(trainingLayout);
 
-			trainingConstraints.gridy++;
 			trainingJPanel.add(settingsButton, trainingConstraints);
-
 			trainingConstraints.gridy++;
+
 			trainingJPanel.add(addClassButton, trainingConstraints);
+			trainingConstraints.gridy++;
 
 			JPanel trainClassifierPanel = new JPanel();
 			trainClassifierPanel.add(trainButton);
@@ -1069,12 +1069,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 			*/
 
 			trainingJPanel.add( applyButton, trainingConstraints );
-
 			trainingConstraints.gridy++;
+
 			JPanel panelZRange = new JPanel();
 			panelZRange.add( new JLabel("Range") );
 			panelZRange.add( classificationRangeTextField );
 			trainingJPanel.add( panelZRange, trainingConstraints );
+			trainingConstraints.gridy++;
 
 			/*
 			// Post processing
@@ -1095,20 +1096,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingJPanel.add(saveClassifierButton, trainingConstraints);
 			*/
 
-			trainingConstraints.gridy++;
 			trainingJPanel.add(loadProjectButton, trainingConstraints);
-
 			trainingConstraints.gridy++;
+
 			trainingJPanel.add(saveProjectButton, trainingConstraints);
+			trainingConstraints.gridy++;
 
 			trainingJPanel.add(printProjectInfoButton, trainingConstraints);
 			trainingConstraints.gridy++;
 
-			//trainingConstraints.gridy++;
-			//trainingJPanel.add(testThreadsButton, trainingConstraints);
-
-			trainingConstraints.gridy++;
 			trainingJPanel.add(wekaButton, trainingConstraints);
+			trainingConstraints.gridy++;
 
 			//trainingConstraints.gridy++;
 
