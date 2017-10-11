@@ -584,28 +584,57 @@ public class WekaSegmentation {
 		private ArrayList < Example > newExamples = null;
 	}
 
+
+
 	/**
-	 * load a binary classifier
-	 *
-	 * @param projectInputStream
-	 * @throws Exception
-	 *             exception is thrown if the reading is not properly done, the
-	 *             caller has to handle this exception
+	 * Returns the current classifier.
 	 */
-	private LoadedProject internalLoadProject(
-			InputStream projectInputStream) throws Exception
-	{
-		ObjectInputStream objectInputStream = new ObjectInputStream(
-				projectInputStream);
-		LoadedProject lp = new LoadedProject();
-		lp.newClassifier = (AbstractClassifier) objectInputStream.readObject();
-		try { // see if we can load the settings
-			lp.newSettings = (Settings) objectInputStream.readObject();
-		} finally {
-			objectInputStream.close();
-		}
-		return lp;
+	public AbstractClassifier getClassifier() {
+		return classifier;
 	}
+
+	/**
+	 * Write current project into a file
+	 *
+	 * @param filename name (with complete path) of the destination file
+	 * @return false if error
+	 */
+	public boolean saveProject(String filename)
+	{
+		File sFile = null;
+		boolean saveOK = true;
+
+		logger.info("Saving project to disk...");
+
+
+		try {
+			sFile = new File(filename);
+			OutputStream os = new FileOutputStream(sFile);
+			if (sFile.getName().endsWith(".gz"))
+			{
+				os = new GZIPOutputStream(os);
+			}
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(os);
+			objectOutputStream.writeObject( classifier );
+			objectOutputStream.writeObject( settings );
+			objectOutputStream.writeObject( getExamples() );
+			objectOutputStream.flush();
+			objectOutputStream.close();
+		}
+		catch ( Exception e )
+		{
+			IJ.error("Save Failed", "Error when saving project to disk");
+			logger.info( e.toString() );
+			saveOK = false;
+		}
+		if (saveOK)
+		{
+			IJ.log("Saved project to " + filename);
+		}
+
+		return saveOK;
+	}
+
 
 	/**
 	 * Read header classifier from a .model file
@@ -618,7 +647,9 @@ public class WekaSegmentation {
 		Settings newSettings = null;
 		ArrayList < Example > newExamples = null;
 
-		File selected = new File(pathName);
+		logger.info("Loading project from disk...");
+
+		File selected = new File( pathName );
 		try {
 			InputStream is = new FileInputStream( selected );
 			if (selected.getName().endsWith(".gz"))
@@ -626,19 +657,20 @@ public class WekaSegmentation {
 				is = new GZIPInputStream(is);
 			}
 			try {
-				LoadedProject loadedProject = internalLoadProject(is);
-				newClassifier = loadedProject.newClassifier;
-				newSettings = loadedProject.newSettings;
-				newExamples = loadedProject.newExamples;
+				ObjectInputStream objectInputStream = new ObjectInputStream( is );
+				newClassifier = (AbstractClassifier) objectInputStream.readObject();
+				newSettings = (Settings) objectInputStream.readObject();
+				newExamples = (ArrayList<Example>)  objectInputStream.readObject();
+				objectInputStream.close();
 			} catch (Exception e) {
-				IJ.error("Load Failed", "Error while loading project");
-				e.printStackTrace();
+				logger.error("Error while loading project");
+				logger.info( e.toString() );
 				return false;
 			}
 		}
 		catch (Exception e)
 		{
-			IJ.error("Load Failed", "Error while loading project");
+			logger.error( "Error while loading project" );
 			e.printStackTrace();
 			return false;
 		}
@@ -661,65 +693,13 @@ public class WekaSegmentation {
 		}
 		*/
 
-		this.classifier = newClassifier;
-		this.settings = newSettings;
-		this.examples = newExamples;
+		setClassifier( newClassifier );
+		setSettings( newSettings );
+		setExamples( newExamples );
+
+		logger.info("Loaded project: " + pathName );
 
 		return true;
-	}
-
-	/**
-	 * Returns the current classifier.
-	 */
-	public AbstractClassifier getClassifier() {
-		return classifier;
-	}
-
-	/**
-	 * Write current project into a file
-	 *
-	 * @param filename name (with complete path) of the destination file
-	 * @return false if error
-	 */
-	public boolean saveProject(String filename)
-	{
-		File sFile = null;
-		boolean saveOK = true;
-
-		logger.info("Saving project to disk...");
-
-		/*
-		examples.settings.featureList = settings.featureList;
-		examples.settings.classNames = getClassNames();
-		examples.maxResolutionLevel = settings.maxResolutionLevel;
-		examples.anisotropy = settings.anisotropy;
-		examples.downSamplingFactor = settings.downSamplingFactor;
-		examples.maxDeepConvolutionLevel = settings.maxDeepConvolutionLevel;
-		*/
-
-		try {
-			sFile = new File(filename);
-			OutputStream os = new FileOutputStream(sFile);
-			if (sFile.getName().endsWith(".gz"))
-			{
-				os = new GZIPOutputStream(os);
-			}
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(os);
-			objectOutputStream.writeObject( classifier );
-			objectOutputStream.writeObject( settings );
-			objectOutputStream.writeObject( getExamples() );
-			objectOutputStream.flush();
-			objectOutputStream.close();
-		}
-		catch (Exception e)
-		{
-			IJ.error("Save Failed", "Error when saving project to disk");
-			saveOK = false;
-		}
-		if (saveOK)
-			IJ.log("Saved project to " + filename );
-
-		return saveOK;
 	}
 
 	/**
@@ -730,6 +710,16 @@ public class WekaSegmentation {
 	{
 		this.classifier = cls;
 	}
+
+	/**
+	 * Set current settings
+	 * @param settings
+	 */
+	public void setSettings( Settings settings)
+	{
+		this.settings = settings;
+	}
+
 
 	/**
 	 * Homogenize number of instances per class

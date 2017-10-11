@@ -2,11 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="11fbcd29-9375-459b-85c8-2a59ead8fa06" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/classes/trainableDeepSegmentation/Settings" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__jitk_jitk_tps_3_0_1_SNAPSHOT.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Settings.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/test/java/trainableDeepSegmentation/TestHeadless.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/libraries/Maven__jitk_jitk_tps_2_1_2_SNAPSHOT.xml" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation$2.class" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation$LoadedClassifier.class" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$1$1.class" afterPath="" />
@@ -37,23 +32,9 @@
       <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation$SaveFeatureStackButtonListener.class" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/Weka_Deep_Segmentation.class" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/artifacts/fiji_plugin_trainableDeepSegmentation.jar" afterPath="$PROJECT_DIR$/out/artifacts/fiji_plugin_trainableDeepSegmentation.jar" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/FeatureImagesMultiResolution.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/FeatureImagesMultiResolution.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation$1.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/compiler.xml" afterPath="$PROJECT_DIR$/.idea/compiler.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/Maven__net_imglib2_imglib2_algorithm_0_8_1_SNAPSHOT.xml" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__net_imglib2_imglib2_algorithm_0_8_1_SNAPSHOT.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/Maven__sc_fiji_Anisotropic_Diffusion_2D_2_0_2_SNAPSHOT.xml" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__sc_fiji_Anisotropic_Diffusion_2D_2_0_2_SNAPSHOT.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/Maven__sc_fiji_Image_5D_2_0_3_SNAPSHOT.xml" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__sc_fiji_Image_5D_2_0_3_SNAPSHOT.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/Maven__sc_fiji_VIB_lib_2_1_3_SNAPSHOT.xml" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__sc_fiji_VIB_lib_2_1_3_SNAPSHOT.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/Maven__sc_fiji_fiji_lib_2_1_3_SNAPSHOT.xml" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__sc_fiji_fiji_lib_2_1_3_SNAPSHOT.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/Maven__sc_fiji_pal_optimization_2_0_2_SNAPSHOT.xml" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__sc_fiji_pal_optimization_2_0_2_SNAPSHOT.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Trainable_Segmentation.iml" afterPath="$PROJECT_DIR$/Trainable_Segmentation.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Settings.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Settings.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/java/trainableDeepSegmentation/TestGUI.java" afterPath="$PROJECT_DIR$/src/test/java/trainableDeepSegmentation/TestGUI.java" />
     </list>
     <ignored path="fiji-plugin-deep-segmentation.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -73,11 +54,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="WekaSegmentation.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="WekaSegmentation.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="243">
-              <caret line="523" column="45" lean-forward="false" selection-start-line="523" selection-start-column="45" selection-end-line="523" selection-end-column="45" />
+            <state relative-caret-position="177">
+              <caret line="698" column="0" lean-forward="false" selection-start-line="698" selection-start-column="0" selection-end-line="698" selection-end-column="0" />
               <folding>
                 <element signature="docComment;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;field#MAX_NUM_CLASSES#0;class#WekaSegmentation#0" expanded="false" />
@@ -135,21 +116,21 @@
                 <element signature="e#13351#13352#0" expanded="true" />
                 <element signature="e#13379#13380#0" expanded="true" />
                 <element signature="method#getFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="method#internalLoadProject#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="method#loadProject#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#16932#16933#0" expanded="true" />
-                <element signature="e#16956#16957#0" expanded="true" />
+                <element signature="e#14623#14624#0" expanded="true" />
+                <element signature="e#14647#14648#0" expanded="true" />
                 <element signature="method#saveProject#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#18375#18376#0" expanded="true" />
-                <element signature="e#18403#18404#0" expanded="true" />
-                <element signature="e#18648#18649#0" expanded="true" />
-                <element signature="e#18706#18707#0" expanded="true" />
+                <element signature="e#17560#17561#0" expanded="true" />
+                <element signature="e#17588#17589#0" expanded="true" />
+                <element signature="e#17692#17693#0" expanded="true" />
+                <element signature="e#17723#17724#0" expanded="true" />
+                <element signature="e#17969#17970#0" expanded="true" />
+                <element signature="e#18027#18028#0" expanded="true" />
                 <element signature="method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#19474#19475#0" expanded="true" />
-                <element signature="e#19502#19503#0" expanded="true" />
+                <element signature="e#18795#18796#0" expanded="true" />
+                <element signature="e#18823#18824#0" expanded="true" />
                 <element signature="method#balanceTrainingData#1;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#createTrainingInstances#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#23379#23390#0" expanded="true" />
+                <element signature="e#22700#22711#0" expanded="true" />
                 <element signature="method#setExamplesInstanceValues#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#updateFeatureList#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getNeededBytesPerRegionVoxel#0;class#WekaSegmentation#0" expanded="true" />
@@ -174,28 +155,28 @@
                 <element signature="method#getSettingActiveFeatureNames#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getAttributes#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#classifyRegion#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="method#call#0;class#57970:63281" expanded="true" />
+                <element signature="method#call#0;class#57291:62602" expanded="true" />
                 <element signature="method#getUncertaintyRegion#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#63628#63629#0" expanded="true" />
-                <element signature="e#63673#63674#0" expanded="true" />
-                <element signature="e#63723#63724#0" expanded="true" />
-                <element signature="e#63760#63761#0" expanded="true" />
-                <element signature="e#63803#63804#0" expanded="true" />
-                <element signature="e#63846#63847#0" expanded="true" />
+                <element signature="e#62949#62950#0" expanded="true" />
+                <element signature="e#62994#62995#0" expanded="true" />
+                <element signature="e#63044#63045#0" expanded="true" />
+                <element signature="e#63081#63082#0" expanded="true" />
+                <element signature="e#63124#63125#0" expanded="true" />
+                <element signature="e#63167#63168#0" expanded="true" />
                 <element signature="method#maxIndicies#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#setMinimumSigma#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#64760#64761#0" expanded="true" />
-                <element signature="e#64775#64776#0" expanded="true" />
-                <element signature="e#64882#64883#0" expanded="true" />
-                <element signature="e#64903#64904#0" expanded="true" />
-                <element signature="e#65032#65033#0" expanded="true" />
-                <element signature="e#65056#65057#0" expanded="true" />
-                <element signature="e#65108#65109#0" expanded="true" />
-                <element signature="e#65141#65142#0" expanded="true" />
-                <element signature="e#65179#65180#0" expanded="true" />
-                <element signature="e#65209#65210#0" expanded="true" />
-                <element signature="e#65263#65264#0" expanded="true" />
-                <element signature="e#65291#65292#0" expanded="true" />
+                <element signature="e#64081#64082#0" expanded="true" />
+                <element signature="e#64096#64097#0" expanded="true" />
+                <element signature="e#64203#64204#0" expanded="true" />
+                <element signature="e#64224#64225#0" expanded="true" />
+                <element signature="e#64353#64354#0" expanded="true" />
+                <element signature="e#64377#64378#0" expanded="true" />
+                <element signature="e#64429#64430#0" expanded="true" />
+                <element signature="e#64462#64463#0" expanded="true" />
+                <element signature="e#64500#64501#0" expanded="true" />
+                <element signature="e#64530#64531#0" expanded="true" />
+                <element signature="e#64584#64585#0" expanded="true" />
+                <element signature="e#64612#64613#0" expanded="true" />
                 <element signature="method#getFeaturesToShowAsString#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#setFeaturesToShowFromString#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getTileSizeSetting#0;class#WekaSegmentation#0" expanded="true" />
@@ -204,23 +185,23 @@
                 <element signature="method#isFeatureOrChildrenNeeded#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getActiveChannelsAsString#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#setActiveChannelsFromString#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#67481#67482#0" expanded="true" />
-                <element signature="e#67503#67504#0" expanded="true" />
-                <element signature="e#67750#67751#0" expanded="true" />
-                <element signature="e#67796#67797#0" expanded="true" />
-                <element signature="e#67997#67998#0" expanded="true" />
-                <element signature="e#68025#68026#0" expanded="true" />
-                <element signature="e#68223#68224#0" expanded="true" />
-                <element signature="e#68266#68267#0" expanded="true" />
-                <element signature="e#68427#68428#0" expanded="true" />
-                <element signature="e#68455#68456#0" expanded="true" />
-                <element signature="e#68602#68603#0" expanded="true" />
-                <element signature="e#68645#68646#0" expanded="true" />
+                <element signature="e#66802#66803#0" expanded="true" />
+                <element signature="e#66824#66825#0" expanded="true" />
+                <element signature="e#67071#67072#0" expanded="true" />
+                <element signature="e#67117#67118#0" expanded="true" />
+                <element signature="e#67318#67319#0" expanded="true" />
+                <element signature="e#67346#67347#0" expanded="true" />
+                <element signature="e#67544#67545#0" expanded="true" />
+                <element signature="e#67587#67588#0" expanded="true" />
+                <element signature="e#67748#67749#0" expanded="true" />
+                <element signature="e#67776#67777#0" expanded="true" />
+                <element signature="e#67923#67924#0" expanded="true" />
+                <element signature="e#67966#67967#0" expanded="true" />
                 <element signature="method#setFeaturesDirty#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#updateClassifier#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#mergeDataInPlace#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#69867#69868#0" expanded="true" />
-                <element signature="e#69900#69901#0" expanded="true" />
+                <element signature="e#69188#69189#0" expanded="true" />
+                <element signature="e#69221#69222#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -229,8 +210,8 @@
       <file leaf-file-name="Settings.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Settings.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="440">
-              <caret line="30" column="42" lean-forward="false" selection-start-line="30" selection-start-column="32" selection-end-line="30" selection-end-column="42" />
+            <state relative-caret-position="114">
+              <caret line="6" column="0" lean-forward="true" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -332,11 +313,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Weka_Deep_Segmentation.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Examples.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Examples.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="180">
+              <caret line="13" column="0" lean-forward="false" selection-start-line="13" selection-start-column="0" selection-end-line="16" selection-end-column="43" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Weka_Deep_Segmentation.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="152">
-              <caret line="2773" column="58" lean-forward="false" selection-start-line="2773" selection-start-column="58" selection-end-line="2773" selection-end-column="58" />
+            <state relative-caret-position="178">
+              <caret line="2036" column="25" lean-forward="true" selection-start-line="2036" selection-start-column="25" selection-end-line="2036" selection-end-column="25" />
               <folding>
                 <element signature="docComment;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#PLUGIN_NAME#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -368,7 +359,7 @@
                 <element signature="docComment;field#overlayLUT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#exampleList#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#addAnnotationButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-                <element signature="e#5834#5880#0" expanded="false" />
+                <element signature="e#5833#5879#0" expanded="false" />
                 <element signature="docComment;field#ADD_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#DELETE_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#TRAIN_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -400,132 +391,117 @@
                 <element signature="docComment;field#trainingFlag#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#9799#9825#0" expanded="false" />
+                <element signature="e#9798#9824#0" expanded="false" />
                 <element signature="docComment;field#trainingTask#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#listener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-                <element signature="method#actionPerformed#0;class#14558:18606" expanded="true" />
-                <element signature="e#14684#14741#0" expanded="false" />
-                <element signature="method#run#0;class#14792:18589" expanded="true" />
-                <element signature="e#15591#15609#0" expanded="false" />
-                <element signature="method#itemStateChanged#0;class#18698:19030" expanded="true" />
-                <element signature="method#run#0;class#18785:19013" expanded="true" />
+                <element signature="method#actionPerformed#0;class#14589:18691" expanded="true" />
+                <element signature="e#14715#14772#0" expanded="false" />
+                <element signature="method#run#0;class#14823:18674" expanded="true" />
+                <element signature="e#15622#15640#0" expanded="false" />
+                <element signature="method#itemStateChanged#0;class#18783:19115" expanded="true" />
+                <element signature="method#run#0;class#18870:19098" expanded="true" />
                 <element signature="method#CustomCanvas#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#19516#19604#0" expanded="true" />
-                <element signature="e#19603#19604#0" expanded="true" />
+                <element signature="e#19601#19689#0" expanded="true" />
+                <element signature="e#19688#19689#0" expanded="true" />
                 <element signature="method#setDstDimensions#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#paint#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#20671#20672#0" expanded="true" />
-                <element signature="e#20695#20696#0" expanded="true" />
+                <element signature="e#20756#20757#0" expanded="true" />
+                <element signature="e#20780#20781#0" expanded="true" />
                 <element signature="method#testThreads#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="method#run#0;class#20833:20961" expanded="true" />
+                <element signature="method#run#0;class#20918:21046" expanded="true" />
                 <element signature="method#CustomWindow#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="method#adjustmentValueChanged#0;class#25923:26477" expanded="true" />
-                <element signature="method#run#0;class#26040:26453" expanded="true" />
-                <element signature="method#adjustmentValueChanged#0;class#26755:27331" expanded="true" />
-                <element signature="method#run#0;class#26875:27305" expanded="true" />
-                <element signature="method#mouseWheelMoved#0;class#27435:27883" expanded="true" />
-                <element signature="method#run#0;class#27562:27867" expanded="true" />
-                <element signature="method#keyTyped#0;class#28035:30471" expanded="true" />
-                <element signature="method#run#0;class#28125:29631" expanded="true" />
-                <element signature="method#keyReleased#0;class#28035:30471" expanded="true" />
-                <element signature="method#run#0;class#29731:30392" expanded="true" />
-                <element signature="e#37972#39184#0" expanded="true" />
-                <element signature="e#39183#39184#0" expanded="true" />
-                <element signature="e#39219#39396#0" expanded="true" />
-                <element signature="e#39395#39396#0" expanded="true" />
+                <element signature="method#adjustmentValueChanged#0;class#26007:26561" expanded="true" />
+                <element signature="method#run#0;class#26124:26537" expanded="true" />
+                <element signature="method#adjustmentValueChanged#0;class#26839:27415" expanded="true" />
+                <element signature="method#run#0;class#26959:27389" expanded="true" />
+                <element signature="method#mouseWheelMoved#0;class#27519:27967" expanded="true" />
+                <element signature="method#run#0;class#27646:27951" expanded="true" />
+                <element signature="method#keyTyped#0;class#28119:30555" expanded="true" />
+                <element signature="method#run#0;class#28209:29715" expanded="true" />
+                <element signature="method#keyReleased#0;class#28119:30555" expanded="true" />
+                <element signature="method#run#0;class#29815:30476" expanded="true" />
+                <element signature="e#38004#39216#0" expanded="true" />
+                <element signature="e#39215#39216#0" expanded="true" />
+                <element signature="e#39251#39428#0" expanded="true" />
+                <element signature="e#39427#39428#0" expanded="true" />
                 <element signature="method#createAnnotationButton#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#uncertaintyNavigation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#zoomToSelection#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#41930#41931#0" expanded="true" />
                 <element signature="e#41962#41963#0" expanded="true" />
-                <element signature="e#42105#42106#0" expanded="true" />
-                <element signature="e#42131#42132#0" expanded="true" />
+                <element signature="e#41994#41995#0" expanded="true" />
+                <element signature="e#42137#42138#0" expanded="true" />
+                <element signature="e#42163#42164#0" expanded="true" />
                 <element signature="method#drawExamples#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#updateExampleLists#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#43335#43336#0" expanded="true" />
                 <element signature="e#43367#43368#0" expanded="true" />
-                <element signature="e#43588#43589#0" expanded="true" />
-                <element signature="e#43623#43624#0" expanded="true" />
+                <element signature="e#43399#43400#0" expanded="true" />
+                <element signature="e#43620#43621#0" expanded="true" />
+                <element signature="e#43655#43656#0" expanded="true" />
                 <element signature="method#setSliceSelectorEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#repaintAll#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="method#addClass#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="method#setImagePlus#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#setButtonsEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#updateButtonsEnabling#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#48710#48711#0" expanded="true" />
-                <element signature="e#48742#48743#0" expanded="true" />
+                <element signature="e#48740#48741#0" expanded="true" />
+                <element signature="e#48772#48773#0" expanded="true" />
                 <element signature="method#toggleOverlay#1;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#51313#51314#0" expanded="true" />
-                <element signature="e#51360#51361#0" expanded="true" />
+                <element signature="e#51343#51344#0" expanded="true" />
+                <element signature="e#51390#51391#0" expanded="true" />
                 <element signature="method#updateAddClassButtons#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#51955#51956#0" expanded="true" />
-                <element signature="e#51989#51990#0" expanded="true" />
-                <element signature="e#52096#52097#0" expanded="true" />
-                <element signature="e#52125#52126#0" expanded="true" />
+                <element signature="e#51985#51986#0" expanded="true" />
+                <element signature="e#52019#52020#0" expanded="true" />
+                <element signature="e#52126#52127#0" expanded="true" />
+                <element signature="e#52155#52156#0" expanded="true" />
                 <element signature="method#run#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="method#run#0;class#53894:54011" expanded="true" />
+                <element signature="method#run#0;class#53924:54041" expanded="true" />
                 <element signature="method#setClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#createClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#58996#58997#0" expanded="true" />
-                <element signature="e#59041#59042#0" expanded="true" />
+                <element signature="e#59026#59027#0" expanded="true" />
+                <element signature="e#59071#59072#0" expanded="true" />
                 <element signature="method#updateResultOverlay#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#listSelected#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="method#deleteSelected#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#runStopTraining#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#62520#64434#0" expanded="true" />
-                <element signature="e#64433#64434#0" expanded="true" />
+                <element signature="e#62550#64464#0" expanded="true" />
+                <element signature="e#64463#64464#0" expanded="true" />
                 <element signature="method#convertTo8bitNoScaling#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#applyClassifierToSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="method#run#0;class#65712:65863" expanded="true" />
-                <element signature="e#67140#75668#0" expanded="true" />
-                <element signature="e#75667#75668#0" expanded="true" />
+                <element signature="method#run#0;class#65742:65893" expanded="true" />
+                <element signature="e#67170#75698#0" expanded="true" />
+                <element signature="e#75697#75698#0" expanded="true" />
                 <element signature="method#postProcessSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#76440#77582#0" expanded="true" />
-                <element signature="e#77581#77582#0" expanded="true" />
+                <element signature="e#76470#77612#0" expanded="true" />
+                <element signature="e#77611#77612#0" expanded="true" />
                 <element signature="method#saveProject#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#saveProject#1;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#writeClassifier#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#loadNewImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="method#saveAnnotations#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+                <element signature="method#loadProject#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#addNewClass#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#repaintWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="method#run#0;class#84240:84357" expanded="true" />
+                <element signature="method#run#0;class#82877:82994" expanded="true" />
                 <element signature="method#launchWeka#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#showSettingsDialog#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="method#loadClassifier#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+                <element signature="method#toggleOverlay#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#saveProject#2;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#setOpacity#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <marker date="1507635159000" expanded="false" signature="93073:93197" ph="//..." />
-                <marker date="1507635159000" expanded="false" signature="93976:94066" ph="//..." />
-                <marker date="1507635159000" expanded="false" signature="94627:94758" ph="//..." />
-                <marker date="1507635159000" expanded="false" signature="94767:95563" ph="{...}" />
-                <marker date="1507635159000" expanded="false" signature="95245:95418" ph="//..." />
-                <marker date="1507635159000" expanded="false" signature="95566:95683" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="95756:96860" ph="{...}" />
-                <marker date="1507635159000" expanded="false" signature="95856:96033" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="96135:96208" ph="{...}" />
-                <marker date="1507635159000" expanded="false" signature="96212:96284" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="96332:96857" ph="{}" />
-                <marker date="1507635159000" expanded="false" signature="97026:97271" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="97332:97709" ph="{...}" />
-                <marker date="1507635159000" expanded="false" signature="97714:97762" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="97813:98001" ph="{...}" />
-                <marker date="1507635159000" expanded="false" signature="98004:98115" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="99956:100027" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="100084:100807" ph="{...}" />
-                <marker date="1507635159000" expanded="false" signature="100811:100975" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="101034:101040" ph=" { " />
-                <marker date="1507635159000" expanded="false" signature="101067:101070" ph=" }" />
-                <marker date="1507635159000" expanded="false" signature="101073:101230" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="101286:101616" ph="{...}" />
-                <marker date="1507635159000" expanded="false" signature="101619:101789" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="101864:102347" ph="{...}" />
-                <marker date="1507635159000" expanded="false" signature="102350:102473" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="102543:102933" ph="{...}" />
-                <marker date="1507635159000" expanded="false" signature="102936:103046" ph="/**...*/" />
-                <marker date="1507635159000" expanded="false" signature="103635:103753" ph="{...}" />
-                <marker date="1507635159000" expanded="false" signature="104163:105742" ph="{...}" />
+                <element signature="method#getLabelImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+                <marker date="1507640835000" expanded="false" signature="91710:91834" ph="//..." />
+                <marker date="1507640835000" expanded="false" signature="92613:92703" ph="//..." />
+                <marker date="1507640835000" expanded="false" signature="93264:93395" ph="//..." />
+                <marker date="1507640835000" expanded="false" signature="93404:94200" ph="{...}" />
+                <marker date="1507640835000" expanded="false" signature="93882:94055" ph="//..." />
+                <marker date="1507640835000" expanded="false" signature="94203:94320" ph="/**...*/" />
+                <marker date="1507640835000" expanded="false" signature="94393:95497" ph="{...}" />
+                <marker date="1507640835000" expanded="false" signature="94493:94670" ph="/**...*/" />
+                <marker date="1507640835000" expanded="false" signature="94772:94845" ph="{...}" />
+                <marker date="1507640835000" expanded="false" signature="94849:94921" ph="/**...*/" />
+                <marker date="1507640835000" expanded="false" signature="94969:95494" ph="{}" />
+                <marker date="1507640835000" expanded="false" signature="95663:95908" ph="/**...*/" />
+                <marker date="1507640835000" expanded="false" signature="95969:96346" ph="{...}" />
+                <marker date="1507640835000" expanded="false" signature="96351:96399" ph="/**...*/" />
+                <marker date="1507640835000" expanded="false" signature="97183:97306" ph="/**...*/" />
+                <marker date="1507640835000" expanded="false" signature="97376:97766" ph="{...}" />
+                <marker date="1507640835000" expanded="false" signature="98468:98586" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -561,8 +537,15 @@
       <find>saveAnno</find>
       <find>classNames</find>
       <find>wekaSegmentation.featureList</find>
-      <find>settings.settings.featureList</find>
       <find>getClass</find>
+      <find>settings.settings.featureList</find>
+      <find>createNew</find>
+      <find>.model</find>
+      <find>loadPr</find>
+      <find>loaded</find>
+      <find>Project</find>
+      <find>Feature in</find>
+      <find>saveP</find>
     </findStrings>
     <replaceStrings>
       <replace>settings.</replace>
@@ -573,8 +556,8 @@
       <replace>settings.active</replace>
       <replace>settings.activ</replace>
       <replace>settings.classNames</replace>
-      <replace>settings.featureList</replace>
       <replace>wekaSegmentation.settings.featureList</replace>
+      <replace>settings.featureList</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -605,8 +588,8 @@
         <option value="$PROJECT_DIR$/src/test/java/trainableDeepSegmentation/TestHeadless.java" />
         <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java" />
         <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Settings.java" />
-        <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java" />
         <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" />
+        <option value="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java" />
       </list>
     </option>
   </component>
@@ -910,7 +893,7 @@
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.31922612" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31922612" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
@@ -927,7 +910,7 @@
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29638556" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.36396614" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -975,15 +958,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java</url>
-          <line>1525</line>
-          <properties />
-          <option name="timeStamp" value="126" />
-        </line-breakpoint>
-      </breakpoints>
-      <option name="time" value="129" />
+      <option name="time" value="147" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1027,7 +1002,7 @@
             <element signature="docComment;field#overlayLUT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#exampleList#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#addAnnotationButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="e#5834#5880#0" expanded="false" />
+            <element signature="e#5833#5879#0" expanded="false" />
             <element signature="docComment;field#ADD_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#DELETE_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#TRAIN_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -1059,132 +1034,117 @@
             <element signature="docComment;field#trainingFlag#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#9799#9825#0" expanded="false" />
+            <element signature="e#9798#9824#0" expanded="false" />
             <element signature="docComment;field#trainingTask#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#listener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="method#actionPerformed#0;class#14558:18606" expanded="true" />
-            <element signature="e#14684#14741#0" expanded="false" />
-            <element signature="method#run#0;class#14792:18589" expanded="true" />
-            <element signature="e#15591#15609#0" expanded="false" />
-            <element signature="method#itemStateChanged#0;class#18698:19030" expanded="true" />
-            <element signature="method#run#0;class#18785:19013" expanded="true" />
+            <element signature="method#actionPerformed#0;class#14589:18691" expanded="true" />
+            <element signature="e#14715#14772#0" expanded="false" />
+            <element signature="method#run#0;class#14823:18674" expanded="true" />
+            <element signature="e#15622#15640#0" expanded="false" />
+            <element signature="method#itemStateChanged#0;class#18783:19115" expanded="true" />
+            <element signature="method#run#0;class#18870:19098" expanded="true" />
             <element signature="method#CustomCanvas#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#19516#19604#0" expanded="true" />
-            <element signature="e#19603#19604#0" expanded="true" />
+            <element signature="e#19601#19689#0" expanded="true" />
+            <element signature="e#19688#19689#0" expanded="true" />
             <element signature="method#setDstDimensions#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#paint#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#20671#20672#0" expanded="true" />
-            <element signature="e#20695#20696#0" expanded="true" />
+            <element signature="e#20756#20757#0" expanded="true" />
+            <element signature="e#20780#20781#0" expanded="true" />
             <element signature="method#testThreads#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#20833:20961" expanded="true" />
+            <element signature="method#run#0;class#20918:21046" expanded="true" />
             <element signature="method#CustomWindow#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#adjustmentValueChanged#0;class#25923:26477" expanded="true" />
-            <element signature="method#run#0;class#26040:26453" expanded="true" />
-            <element signature="method#adjustmentValueChanged#0;class#26755:27331" expanded="true" />
-            <element signature="method#run#0;class#26875:27305" expanded="true" />
-            <element signature="method#mouseWheelMoved#0;class#27435:27883" expanded="true" />
-            <element signature="method#run#0;class#27562:27867" expanded="true" />
-            <element signature="method#keyTyped#0;class#28035:30471" expanded="true" />
-            <element signature="method#run#0;class#28125:29631" expanded="true" />
-            <element signature="method#keyReleased#0;class#28035:30471" expanded="true" />
-            <element signature="method#run#0;class#29731:30392" expanded="true" />
-            <element signature="e#37972#39184#0" expanded="true" />
-            <element signature="e#39183#39184#0" expanded="true" />
-            <element signature="e#39219#39396#0" expanded="true" />
-            <element signature="e#39395#39396#0" expanded="true" />
+            <element signature="method#adjustmentValueChanged#0;class#26007:26561" expanded="true" />
+            <element signature="method#run#0;class#26124:26537" expanded="true" />
+            <element signature="method#adjustmentValueChanged#0;class#26839:27415" expanded="true" />
+            <element signature="method#run#0;class#26959:27389" expanded="true" />
+            <element signature="method#mouseWheelMoved#0;class#27519:27967" expanded="true" />
+            <element signature="method#run#0;class#27646:27951" expanded="true" />
+            <element signature="method#keyTyped#0;class#28119:30555" expanded="true" />
+            <element signature="method#run#0;class#28209:29715" expanded="true" />
+            <element signature="method#keyReleased#0;class#28119:30555" expanded="true" />
+            <element signature="method#run#0;class#29815:30476" expanded="true" />
+            <element signature="e#38004#39216#0" expanded="true" />
+            <element signature="e#39215#39216#0" expanded="true" />
+            <element signature="e#39251#39428#0" expanded="true" />
+            <element signature="e#39427#39428#0" expanded="true" />
             <element signature="method#createAnnotationButton#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#uncertaintyNavigation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#zoomToSelection#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#41930#41931#0" expanded="true" />
             <element signature="e#41962#41963#0" expanded="true" />
-            <element signature="e#42105#42106#0" expanded="true" />
-            <element signature="e#42131#42132#0" expanded="true" />
+            <element signature="e#41994#41995#0" expanded="true" />
+            <element signature="e#42137#42138#0" expanded="true" />
+            <element signature="e#42163#42164#0" expanded="true" />
             <element signature="method#drawExamples#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#updateExampleLists#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#43335#43336#0" expanded="true" />
             <element signature="e#43367#43368#0" expanded="true" />
-            <element signature="e#43588#43589#0" expanded="true" />
-            <element signature="e#43623#43624#0" expanded="true" />
+            <element signature="e#43399#43400#0" expanded="true" />
+            <element signature="e#43620#43621#0" expanded="true" />
+            <element signature="e#43655#43656#0" expanded="true" />
             <element signature="method#setSliceSelectorEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#repaintAll#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#addClass#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#setImagePlus#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#setButtonsEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#updateButtonsEnabling#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#48710#48711#0" expanded="true" />
-            <element signature="e#48742#48743#0" expanded="true" />
+            <element signature="e#48740#48741#0" expanded="true" />
+            <element signature="e#48772#48773#0" expanded="true" />
             <element signature="method#toggleOverlay#1;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#51313#51314#0" expanded="true" />
-            <element signature="e#51360#51361#0" expanded="true" />
+            <element signature="e#51343#51344#0" expanded="true" />
+            <element signature="e#51390#51391#0" expanded="true" />
             <element signature="method#updateAddClassButtons#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#51955#51956#0" expanded="true" />
-            <element signature="e#51989#51990#0" expanded="true" />
-            <element signature="e#52096#52097#0" expanded="true" />
-            <element signature="e#52125#52126#0" expanded="true" />
+            <element signature="e#51985#51986#0" expanded="true" />
+            <element signature="e#52019#52020#0" expanded="true" />
+            <element signature="e#52126#52127#0" expanded="true" />
+            <element signature="e#52155#52156#0" expanded="true" />
             <element signature="method#run#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#53894:54011" expanded="true" />
+            <element signature="method#run#0;class#53924:54041" expanded="true" />
             <element signature="method#setClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#createClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#58996#58997#0" expanded="true" />
-            <element signature="e#59041#59042#0" expanded="true" />
+            <element signature="e#59026#59027#0" expanded="true" />
+            <element signature="e#59071#59072#0" expanded="true" />
             <element signature="method#updateResultOverlay#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#listSelected#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#deleteSelected#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#runStopTraining#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#62520#64434#0" expanded="true" />
-            <element signature="e#64433#64434#0" expanded="true" />
+            <element signature="e#62550#64464#0" expanded="true" />
+            <element signature="e#64463#64464#0" expanded="true" />
             <element signature="method#convertTo8bitNoScaling#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#applyClassifierToSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#65712:65863" expanded="true" />
-            <element signature="e#67140#75668#0" expanded="true" />
-            <element signature="e#75667#75668#0" expanded="true" />
+            <element signature="method#run#0;class#65742:65893" expanded="true" />
+            <element signature="e#67170#75698#0" expanded="true" />
+            <element signature="e#75697#75698#0" expanded="true" />
             <element signature="method#postProcessSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#76440#77582#0" expanded="true" />
-            <element signature="e#77581#77582#0" expanded="true" />
+            <element signature="e#76470#77612#0" expanded="true" />
+            <element signature="e#77611#77612#0" expanded="true" />
             <element signature="method#saveProject#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#saveProject#1;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#writeClassifier#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#loadNewImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#saveAnnotations#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#loadProject#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#addNewClass#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#repaintWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#84240:84357" expanded="true" />
+            <element signature="method#run#0;class#82877:82994" expanded="true" />
             <element signature="method#launchWeka#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#showSettingsDialog#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#loadClassifier#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#toggleOverlay#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#saveProject#2;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#setOpacity#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <marker date="1507635159000" expanded="false" signature="93073:93197" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="93976:94066" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="94627:94758" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="94767:95563" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="95245:95418" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="95566:95683" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="95756:96860" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="95856:96033" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="96135:96208" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="96212:96284" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="96332:96857" ph="{}" />
-            <marker date="1507635159000" expanded="false" signature="97026:97271" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="97332:97709" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="97714:97762" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="97813:98001" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="98004:98115" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="99956:100027" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="100084:100807" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="100811:100975" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101034:101040" ph=" { " />
-            <marker date="1507635159000" expanded="false" signature="101067:101070" ph=" }" />
-            <marker date="1507635159000" expanded="false" signature="101073:101230" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101286:101616" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="101619:101789" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101864:102347" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="102350:102473" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="102543:102933" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="102936:103046" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="103635:103753" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="104163:105742" ph="{...}" />
+            <element signature="method#getLabelImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <marker date="1507640835000" expanded="false" signature="91710:91834" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="92613:92703" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="93264:93395" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="93404:94200" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="93882:94055" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="94203:94320" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94393:95497" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="94493:94670" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94772:94845" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="94849:94921" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94969:95494" ph="{}" />
+            <marker date="1507640835000" expanded="false" signature="95663:95908" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="95969:96346" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="96351:96399" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="97183:97306" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="97376:97766" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="98468:98586" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1290,21 +1250,21 @@
             <element signature="e#13351#13352#0" expanded="true" />
             <element signature="e#13379#13380#0" expanded="true" />
             <element signature="method#getFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#internalLoadProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#loadProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#16932#16933#0" expanded="true" />
-            <element signature="e#16956#16957#0" expanded="true" />
+            <element signature="e#14623#14624#0" expanded="true" />
+            <element signature="e#14647#14648#0" expanded="true" />
             <element signature="method#saveProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#18375#18376#0" expanded="true" />
-            <element signature="e#18403#18404#0" expanded="true" />
-            <element signature="e#18648#18649#0" expanded="true" />
-            <element signature="e#18706#18707#0" expanded="true" />
+            <element signature="e#17560#17561#0" expanded="true" />
+            <element signature="e#17588#17589#0" expanded="true" />
+            <element signature="e#17692#17693#0" expanded="true" />
+            <element signature="e#17723#17724#0" expanded="true" />
+            <element signature="e#17969#17970#0" expanded="true" />
+            <element signature="e#18027#18028#0" expanded="true" />
             <element signature="method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#19474#19475#0" expanded="true" />
-            <element signature="e#19502#19503#0" expanded="true" />
+            <element signature="e#18795#18796#0" expanded="true" />
+            <element signature="e#18823#18824#0" expanded="true" />
             <element signature="method#balanceTrainingData#1;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#createTrainingInstances#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#23379#23390#0" expanded="true" />
+            <element signature="e#22700#22711#0" expanded="true" />
             <element signature="method#setExamplesInstanceValues#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#updateFeatureList#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNeededBytesPerRegionVoxel#0;class#WekaSegmentation#0" expanded="true" />
@@ -1329,28 +1289,28 @@
             <element signature="method#getSettingActiveFeatureNames#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getAttributes#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#classifyRegion#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#call#0;class#57970:63281" expanded="true" />
+            <element signature="method#call#0;class#57291:62602" expanded="true" />
             <element signature="method#getUncertaintyRegion#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#63628#63629#0" expanded="true" />
-            <element signature="e#63673#63674#0" expanded="true" />
-            <element signature="e#63723#63724#0" expanded="true" />
-            <element signature="e#63760#63761#0" expanded="true" />
-            <element signature="e#63803#63804#0" expanded="true" />
-            <element signature="e#63846#63847#0" expanded="true" />
+            <element signature="e#62949#62950#0" expanded="true" />
+            <element signature="e#62994#62995#0" expanded="true" />
+            <element signature="e#63044#63045#0" expanded="true" />
+            <element signature="e#63081#63082#0" expanded="true" />
+            <element signature="e#63124#63125#0" expanded="true" />
+            <element signature="e#63167#63168#0" expanded="true" />
             <element signature="method#maxIndicies#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setMinimumSigma#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#64760#64761#0" expanded="true" />
-            <element signature="e#64775#64776#0" expanded="true" />
-            <element signature="e#64882#64883#0" expanded="true" />
-            <element signature="e#64903#64904#0" expanded="true" />
-            <element signature="e#65032#65033#0" expanded="true" />
-            <element signature="e#65056#65057#0" expanded="true" />
-            <element signature="e#65108#65109#0" expanded="true" />
-            <element signature="e#65141#65142#0" expanded="true" />
-            <element signature="e#65179#65180#0" expanded="true" />
-            <element signature="e#65209#65210#0" expanded="true" />
-            <element signature="e#65263#65264#0" expanded="true" />
-            <element signature="e#65291#65292#0" expanded="true" />
+            <element signature="e#64081#64082#0" expanded="true" />
+            <element signature="e#64096#64097#0" expanded="true" />
+            <element signature="e#64203#64204#0" expanded="true" />
+            <element signature="e#64224#64225#0" expanded="true" />
+            <element signature="e#64353#64354#0" expanded="true" />
+            <element signature="e#64377#64378#0" expanded="true" />
+            <element signature="e#64429#64430#0" expanded="true" />
+            <element signature="e#64462#64463#0" expanded="true" />
+            <element signature="e#64500#64501#0" expanded="true" />
+            <element signature="e#64530#64531#0" expanded="true" />
+            <element signature="e#64584#64585#0" expanded="true" />
+            <element signature="e#64612#64613#0" expanded="true" />
             <element signature="method#getFeaturesToShowAsString#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setFeaturesToShowFromString#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getTileSizeSetting#0;class#WekaSegmentation#0" expanded="true" />
@@ -1359,23 +1319,23 @@
             <element signature="method#isFeatureOrChildrenNeeded#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getActiveChannelsAsString#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setActiveChannelsFromString#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#67481#67482#0" expanded="true" />
-            <element signature="e#67503#67504#0" expanded="true" />
-            <element signature="e#67750#67751#0" expanded="true" />
-            <element signature="e#67796#67797#0" expanded="true" />
-            <element signature="e#67997#67998#0" expanded="true" />
-            <element signature="e#68025#68026#0" expanded="true" />
-            <element signature="e#68223#68224#0" expanded="true" />
-            <element signature="e#68266#68267#0" expanded="true" />
-            <element signature="e#68427#68428#0" expanded="true" />
-            <element signature="e#68455#68456#0" expanded="true" />
-            <element signature="e#68602#68603#0" expanded="true" />
-            <element signature="e#68645#68646#0" expanded="true" />
+            <element signature="e#66802#66803#0" expanded="true" />
+            <element signature="e#66824#66825#0" expanded="true" />
+            <element signature="e#67071#67072#0" expanded="true" />
+            <element signature="e#67117#67118#0" expanded="true" />
+            <element signature="e#67318#67319#0" expanded="true" />
+            <element signature="e#67346#67347#0" expanded="true" />
+            <element signature="e#67544#67545#0" expanded="true" />
+            <element signature="e#67587#67588#0" expanded="true" />
+            <element signature="e#67748#67749#0" expanded="true" />
+            <element signature="e#67776#67777#0" expanded="true" />
+            <element signature="e#67923#67924#0" expanded="true" />
+            <element signature="e#67966#67967#0" expanded="true" />
             <element signature="method#setFeaturesDirty#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#updateClassifier#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#mergeDataInPlace#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#69867#69868#0" expanded="true" />
-            <element signature="e#69900#69901#0" expanded="true" />
+            <element signature="e#69188#69189#0" expanded="true" />
+            <element signature="e#69221#69222#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1466,7 +1426,7 @@
             <element signature="docComment;field#overlayLUT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#exampleList#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#addAnnotationButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="e#5834#5880#0" expanded="false" />
+            <element signature="e#5833#5879#0" expanded="false" />
             <element signature="docComment;field#ADD_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#DELETE_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#TRAIN_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -1498,132 +1458,117 @@
             <element signature="docComment;field#trainingFlag#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#9799#9825#0" expanded="false" />
+            <element signature="e#9798#9824#0" expanded="false" />
             <element signature="docComment;field#trainingTask#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#listener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="method#actionPerformed#0;class#14558:18606" expanded="true" />
-            <element signature="e#14684#14741#0" expanded="false" />
-            <element signature="method#run#0;class#14792:18589" expanded="true" />
-            <element signature="e#15591#15609#0" expanded="false" />
-            <element signature="method#itemStateChanged#0;class#18698:19030" expanded="true" />
-            <element signature="method#run#0;class#18785:19013" expanded="true" />
+            <element signature="method#actionPerformed#0;class#14589:18691" expanded="true" />
+            <element signature="e#14715#14772#0" expanded="false" />
+            <element signature="method#run#0;class#14823:18674" expanded="true" />
+            <element signature="e#15622#15640#0" expanded="false" />
+            <element signature="method#itemStateChanged#0;class#18783:19115" expanded="true" />
+            <element signature="method#run#0;class#18870:19098" expanded="true" />
             <element signature="method#CustomCanvas#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#19516#19604#0" expanded="true" />
-            <element signature="e#19603#19604#0" expanded="true" />
+            <element signature="e#19601#19689#0" expanded="true" />
+            <element signature="e#19688#19689#0" expanded="true" />
             <element signature="method#setDstDimensions#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#paint#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#20671#20672#0" expanded="true" />
-            <element signature="e#20695#20696#0" expanded="true" />
+            <element signature="e#20756#20757#0" expanded="true" />
+            <element signature="e#20780#20781#0" expanded="true" />
             <element signature="method#testThreads#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#20833:20961" expanded="true" />
+            <element signature="method#run#0;class#20918:21046" expanded="true" />
             <element signature="method#CustomWindow#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#adjustmentValueChanged#0;class#25923:26477" expanded="true" />
-            <element signature="method#run#0;class#26040:26453" expanded="true" />
-            <element signature="method#adjustmentValueChanged#0;class#26755:27331" expanded="true" />
-            <element signature="method#run#0;class#26875:27305" expanded="true" />
-            <element signature="method#mouseWheelMoved#0;class#27435:27883" expanded="true" />
-            <element signature="method#run#0;class#27562:27867" expanded="true" />
-            <element signature="method#keyTyped#0;class#28035:30471" expanded="true" />
-            <element signature="method#run#0;class#28125:29631" expanded="true" />
-            <element signature="method#keyReleased#0;class#28035:30471" expanded="true" />
-            <element signature="method#run#0;class#29731:30392" expanded="true" />
-            <element signature="e#37972#39184#0" expanded="true" />
-            <element signature="e#39183#39184#0" expanded="true" />
-            <element signature="e#39219#39396#0" expanded="true" />
-            <element signature="e#39395#39396#0" expanded="true" />
+            <element signature="method#adjustmentValueChanged#0;class#26007:26561" expanded="true" />
+            <element signature="method#run#0;class#26124:26537" expanded="true" />
+            <element signature="method#adjustmentValueChanged#0;class#26839:27415" expanded="true" />
+            <element signature="method#run#0;class#26959:27389" expanded="true" />
+            <element signature="method#mouseWheelMoved#0;class#27519:27967" expanded="true" />
+            <element signature="method#run#0;class#27646:27951" expanded="true" />
+            <element signature="method#keyTyped#0;class#28119:30555" expanded="true" />
+            <element signature="method#run#0;class#28209:29715" expanded="true" />
+            <element signature="method#keyReleased#0;class#28119:30555" expanded="true" />
+            <element signature="method#run#0;class#29815:30476" expanded="true" />
+            <element signature="e#38004#39216#0" expanded="true" />
+            <element signature="e#39215#39216#0" expanded="true" />
+            <element signature="e#39251#39428#0" expanded="true" />
+            <element signature="e#39427#39428#0" expanded="true" />
             <element signature="method#createAnnotationButton#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#uncertaintyNavigation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#zoomToSelection#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#41930#41931#0" expanded="true" />
             <element signature="e#41962#41963#0" expanded="true" />
-            <element signature="e#42105#42106#0" expanded="true" />
-            <element signature="e#42131#42132#0" expanded="true" />
+            <element signature="e#41994#41995#0" expanded="true" />
+            <element signature="e#42137#42138#0" expanded="true" />
+            <element signature="e#42163#42164#0" expanded="true" />
             <element signature="method#drawExamples#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#updateExampleLists#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#43335#43336#0" expanded="true" />
             <element signature="e#43367#43368#0" expanded="true" />
-            <element signature="e#43588#43589#0" expanded="true" />
-            <element signature="e#43623#43624#0" expanded="true" />
+            <element signature="e#43399#43400#0" expanded="true" />
+            <element signature="e#43620#43621#0" expanded="true" />
+            <element signature="e#43655#43656#0" expanded="true" />
             <element signature="method#setSliceSelectorEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#repaintAll#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#addClass#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#setImagePlus#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#setButtonsEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#updateButtonsEnabling#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#48710#48711#0" expanded="true" />
-            <element signature="e#48742#48743#0" expanded="true" />
+            <element signature="e#48740#48741#0" expanded="true" />
+            <element signature="e#48772#48773#0" expanded="true" />
             <element signature="method#toggleOverlay#1;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#51313#51314#0" expanded="true" />
-            <element signature="e#51360#51361#0" expanded="true" />
+            <element signature="e#51343#51344#0" expanded="true" />
+            <element signature="e#51390#51391#0" expanded="true" />
             <element signature="method#updateAddClassButtons#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#51955#51956#0" expanded="true" />
-            <element signature="e#51989#51990#0" expanded="true" />
-            <element signature="e#52096#52097#0" expanded="true" />
-            <element signature="e#52125#52126#0" expanded="true" />
+            <element signature="e#51985#51986#0" expanded="true" />
+            <element signature="e#52019#52020#0" expanded="true" />
+            <element signature="e#52126#52127#0" expanded="true" />
+            <element signature="e#52155#52156#0" expanded="true" />
             <element signature="method#run#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#53894:54011" expanded="true" />
+            <element signature="method#run#0;class#53924:54041" expanded="true" />
             <element signature="method#setClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#createClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#58996#58997#0" expanded="true" />
-            <element signature="e#59041#59042#0" expanded="true" />
+            <element signature="e#59026#59027#0" expanded="true" />
+            <element signature="e#59071#59072#0" expanded="true" />
             <element signature="method#updateResultOverlay#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#listSelected#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#deleteSelected#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#runStopTraining#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#62520#64434#0" expanded="true" />
-            <element signature="e#64433#64434#0" expanded="true" />
+            <element signature="e#62550#64464#0" expanded="true" />
+            <element signature="e#64463#64464#0" expanded="true" />
             <element signature="method#convertTo8bitNoScaling#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#applyClassifierToSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#65712:65863" expanded="true" />
-            <element signature="e#67140#75668#0" expanded="true" />
-            <element signature="e#75667#75668#0" expanded="true" />
+            <element signature="method#run#0;class#65742:65893" expanded="true" />
+            <element signature="e#67170#75698#0" expanded="true" />
+            <element signature="e#75697#75698#0" expanded="true" />
             <element signature="method#postProcessSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#76440#77582#0" expanded="true" />
-            <element signature="e#77581#77582#0" expanded="true" />
+            <element signature="e#76470#77612#0" expanded="true" />
+            <element signature="e#77611#77612#0" expanded="true" />
             <element signature="method#saveProject#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#saveProject#1;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#writeClassifier#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#loadNewImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#saveAnnotations#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#loadProject#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#addNewClass#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#repaintWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#84240:84357" expanded="true" />
+            <element signature="method#run#0;class#82877:82994" expanded="true" />
             <element signature="method#launchWeka#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#showSettingsDialog#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#loadClassifier#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#toggleOverlay#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#saveProject#2;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#setOpacity#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <marker date="1507635159000" expanded="false" signature="93073:93197" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="93976:94066" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="94627:94758" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="94767:95563" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="95245:95418" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="95566:95683" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="95756:96860" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="95856:96033" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="96135:96208" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="96212:96284" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="96332:96857" ph="{}" />
-            <marker date="1507635159000" expanded="false" signature="97026:97271" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="97332:97709" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="97714:97762" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="97813:98001" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="98004:98115" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="99956:100027" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="100084:100807" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="100811:100975" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101034:101040" ph=" { " />
-            <marker date="1507635159000" expanded="false" signature="101067:101070" ph=" }" />
-            <marker date="1507635159000" expanded="false" signature="101073:101230" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101286:101616" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="101619:101789" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101864:102347" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="102350:102473" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="102543:102933" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="102936:103046" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="103635:103753" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="104163:105742" ph="{...}" />
+            <element signature="method#getLabelImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <marker date="1507640835000" expanded="false" signature="91710:91834" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="92613:92703" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="93264:93395" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="93404:94200" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="93882:94055" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="94203:94320" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94393:95497" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="94493:94670" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94772:94845" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="94849:94921" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94969:95494" ph="{}" />
+            <marker date="1507640835000" expanded="false" signature="95663:95908" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="95969:96346" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="96351:96399" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="97183:97306" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="97376:97766" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="98468:98586" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1729,21 +1674,21 @@
             <element signature="e#13351#13352#0" expanded="true" />
             <element signature="e#13379#13380#0" expanded="true" />
             <element signature="method#getFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#internalLoadProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#loadProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#16932#16933#0" expanded="true" />
-            <element signature="e#16956#16957#0" expanded="true" />
+            <element signature="e#14623#14624#0" expanded="true" />
+            <element signature="e#14647#14648#0" expanded="true" />
             <element signature="method#saveProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#18375#18376#0" expanded="true" />
-            <element signature="e#18403#18404#0" expanded="true" />
-            <element signature="e#18648#18649#0" expanded="true" />
-            <element signature="e#18706#18707#0" expanded="true" />
+            <element signature="e#17560#17561#0" expanded="true" />
+            <element signature="e#17588#17589#0" expanded="true" />
+            <element signature="e#17692#17693#0" expanded="true" />
+            <element signature="e#17723#17724#0" expanded="true" />
+            <element signature="e#17969#17970#0" expanded="true" />
+            <element signature="e#18027#18028#0" expanded="true" />
             <element signature="method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#19474#19475#0" expanded="true" />
-            <element signature="e#19502#19503#0" expanded="true" />
+            <element signature="e#18795#18796#0" expanded="true" />
+            <element signature="e#18823#18824#0" expanded="true" />
             <element signature="method#balanceTrainingData#1;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#createTrainingInstances#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#23379#23390#0" expanded="true" />
+            <element signature="e#22700#22711#0" expanded="true" />
             <element signature="method#setExamplesInstanceValues#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#updateFeatureList#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNeededBytesPerRegionVoxel#0;class#WekaSegmentation#0" expanded="true" />
@@ -1768,28 +1713,28 @@
             <element signature="method#getSettingActiveFeatureNames#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getAttributes#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#classifyRegion#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#call#0;class#57970:63281" expanded="true" />
+            <element signature="method#call#0;class#57291:62602" expanded="true" />
             <element signature="method#getUncertaintyRegion#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#63628#63629#0" expanded="true" />
-            <element signature="e#63673#63674#0" expanded="true" />
-            <element signature="e#63723#63724#0" expanded="true" />
-            <element signature="e#63760#63761#0" expanded="true" />
-            <element signature="e#63803#63804#0" expanded="true" />
-            <element signature="e#63846#63847#0" expanded="true" />
+            <element signature="e#62949#62950#0" expanded="true" />
+            <element signature="e#62994#62995#0" expanded="true" />
+            <element signature="e#63044#63045#0" expanded="true" />
+            <element signature="e#63081#63082#0" expanded="true" />
+            <element signature="e#63124#63125#0" expanded="true" />
+            <element signature="e#63167#63168#0" expanded="true" />
             <element signature="method#maxIndicies#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setMinimumSigma#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#64760#64761#0" expanded="true" />
-            <element signature="e#64775#64776#0" expanded="true" />
-            <element signature="e#64882#64883#0" expanded="true" />
-            <element signature="e#64903#64904#0" expanded="true" />
-            <element signature="e#65032#65033#0" expanded="true" />
-            <element signature="e#65056#65057#0" expanded="true" />
-            <element signature="e#65108#65109#0" expanded="true" />
-            <element signature="e#65141#65142#0" expanded="true" />
-            <element signature="e#65179#65180#0" expanded="true" />
-            <element signature="e#65209#65210#0" expanded="true" />
-            <element signature="e#65263#65264#0" expanded="true" />
-            <element signature="e#65291#65292#0" expanded="true" />
+            <element signature="e#64081#64082#0" expanded="true" />
+            <element signature="e#64096#64097#0" expanded="true" />
+            <element signature="e#64203#64204#0" expanded="true" />
+            <element signature="e#64224#64225#0" expanded="true" />
+            <element signature="e#64353#64354#0" expanded="true" />
+            <element signature="e#64377#64378#0" expanded="true" />
+            <element signature="e#64429#64430#0" expanded="true" />
+            <element signature="e#64462#64463#0" expanded="true" />
+            <element signature="e#64500#64501#0" expanded="true" />
+            <element signature="e#64530#64531#0" expanded="true" />
+            <element signature="e#64584#64585#0" expanded="true" />
+            <element signature="e#64612#64613#0" expanded="true" />
             <element signature="method#getFeaturesToShowAsString#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setFeaturesToShowFromString#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getTileSizeSetting#0;class#WekaSegmentation#0" expanded="true" />
@@ -1798,23 +1743,23 @@
             <element signature="method#isFeatureOrChildrenNeeded#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getActiveChannelsAsString#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setActiveChannelsFromString#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#67481#67482#0" expanded="true" />
-            <element signature="e#67503#67504#0" expanded="true" />
-            <element signature="e#67750#67751#0" expanded="true" />
-            <element signature="e#67796#67797#0" expanded="true" />
-            <element signature="e#67997#67998#0" expanded="true" />
-            <element signature="e#68025#68026#0" expanded="true" />
-            <element signature="e#68223#68224#0" expanded="true" />
-            <element signature="e#68266#68267#0" expanded="true" />
-            <element signature="e#68427#68428#0" expanded="true" />
-            <element signature="e#68455#68456#0" expanded="true" />
-            <element signature="e#68602#68603#0" expanded="true" />
-            <element signature="e#68645#68646#0" expanded="true" />
+            <element signature="e#66802#66803#0" expanded="true" />
+            <element signature="e#66824#66825#0" expanded="true" />
+            <element signature="e#67071#67072#0" expanded="true" />
+            <element signature="e#67117#67118#0" expanded="true" />
+            <element signature="e#67318#67319#0" expanded="true" />
+            <element signature="e#67346#67347#0" expanded="true" />
+            <element signature="e#67544#67545#0" expanded="true" />
+            <element signature="e#67587#67588#0" expanded="true" />
+            <element signature="e#67748#67749#0" expanded="true" />
+            <element signature="e#67776#67777#0" expanded="true" />
+            <element signature="e#67923#67924#0" expanded="true" />
+            <element signature="e#67966#67967#0" expanded="true" />
             <element signature="method#setFeaturesDirty#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#updateClassifier#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#mergeDataInPlace#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#69867#69868#0" expanded="true" />
-            <element signature="e#69900#69901#0" expanded="true" />
+            <element signature="e#69188#69189#0" expanded="true" />
+            <element signature="e#69221#69222#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1883,7 +1828,7 @@
             <element signature="docComment;field#overlayLUT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#exampleList#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#addAnnotationButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="e#5834#5880#0" expanded="false" />
+            <element signature="e#5833#5879#0" expanded="false" />
             <element signature="docComment;field#ADD_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#DELETE_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#TRAIN_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -1915,132 +1860,117 @@
             <element signature="docComment;field#trainingFlag#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#9799#9825#0" expanded="false" />
+            <element signature="e#9798#9824#0" expanded="false" />
             <element signature="docComment;field#trainingTask#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#listener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="method#actionPerformed#0;class#14558:18606" expanded="true" />
-            <element signature="e#14684#14741#0" expanded="false" />
-            <element signature="method#run#0;class#14792:18589" expanded="true" />
-            <element signature="e#15591#15609#0" expanded="false" />
-            <element signature="method#itemStateChanged#0;class#18698:19030" expanded="true" />
-            <element signature="method#run#0;class#18785:19013" expanded="true" />
+            <element signature="method#actionPerformed#0;class#14589:18691" expanded="true" />
+            <element signature="e#14715#14772#0" expanded="false" />
+            <element signature="method#run#0;class#14823:18674" expanded="true" />
+            <element signature="e#15622#15640#0" expanded="false" />
+            <element signature="method#itemStateChanged#0;class#18783:19115" expanded="true" />
+            <element signature="method#run#0;class#18870:19098" expanded="true" />
             <element signature="method#CustomCanvas#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#19516#19604#0" expanded="true" />
-            <element signature="e#19603#19604#0" expanded="true" />
+            <element signature="e#19601#19689#0" expanded="true" />
+            <element signature="e#19688#19689#0" expanded="true" />
             <element signature="method#setDstDimensions#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#paint#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#20671#20672#0" expanded="true" />
-            <element signature="e#20695#20696#0" expanded="true" />
+            <element signature="e#20756#20757#0" expanded="true" />
+            <element signature="e#20780#20781#0" expanded="true" />
             <element signature="method#testThreads#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#20833:20961" expanded="true" />
+            <element signature="method#run#0;class#20918:21046" expanded="true" />
             <element signature="method#CustomWindow#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#adjustmentValueChanged#0;class#25923:26477" expanded="true" />
-            <element signature="method#run#0;class#26040:26453" expanded="true" />
-            <element signature="method#adjustmentValueChanged#0;class#26755:27331" expanded="true" />
-            <element signature="method#run#0;class#26875:27305" expanded="true" />
-            <element signature="method#mouseWheelMoved#0;class#27435:27883" expanded="true" />
-            <element signature="method#run#0;class#27562:27867" expanded="true" />
-            <element signature="method#keyTyped#0;class#28035:30471" expanded="true" />
-            <element signature="method#run#0;class#28125:29631" expanded="true" />
-            <element signature="method#keyReleased#0;class#28035:30471" expanded="true" />
-            <element signature="method#run#0;class#29731:30392" expanded="true" />
-            <element signature="e#37972#39184#0" expanded="true" />
-            <element signature="e#39183#39184#0" expanded="true" />
-            <element signature="e#39219#39396#0" expanded="true" />
-            <element signature="e#39395#39396#0" expanded="true" />
+            <element signature="method#adjustmentValueChanged#0;class#26007:26561" expanded="true" />
+            <element signature="method#run#0;class#26124:26537" expanded="true" />
+            <element signature="method#adjustmentValueChanged#0;class#26839:27415" expanded="true" />
+            <element signature="method#run#0;class#26959:27389" expanded="true" />
+            <element signature="method#mouseWheelMoved#0;class#27519:27967" expanded="true" />
+            <element signature="method#run#0;class#27646:27951" expanded="true" />
+            <element signature="method#keyTyped#0;class#28119:30555" expanded="true" />
+            <element signature="method#run#0;class#28209:29715" expanded="true" />
+            <element signature="method#keyReleased#0;class#28119:30555" expanded="true" />
+            <element signature="method#run#0;class#29815:30476" expanded="true" />
+            <element signature="e#38004#39216#0" expanded="true" />
+            <element signature="e#39215#39216#0" expanded="true" />
+            <element signature="e#39251#39428#0" expanded="true" />
+            <element signature="e#39427#39428#0" expanded="true" />
             <element signature="method#createAnnotationButton#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#uncertaintyNavigation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#zoomToSelection#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#41930#41931#0" expanded="true" />
             <element signature="e#41962#41963#0" expanded="true" />
-            <element signature="e#42105#42106#0" expanded="true" />
-            <element signature="e#42131#42132#0" expanded="true" />
+            <element signature="e#41994#41995#0" expanded="true" />
+            <element signature="e#42137#42138#0" expanded="true" />
+            <element signature="e#42163#42164#0" expanded="true" />
             <element signature="method#drawExamples#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#updateExampleLists#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#43335#43336#0" expanded="true" />
             <element signature="e#43367#43368#0" expanded="true" />
-            <element signature="e#43588#43589#0" expanded="true" />
-            <element signature="e#43623#43624#0" expanded="true" />
+            <element signature="e#43399#43400#0" expanded="true" />
+            <element signature="e#43620#43621#0" expanded="true" />
+            <element signature="e#43655#43656#0" expanded="true" />
             <element signature="method#setSliceSelectorEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#repaintAll#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#addClass#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#setImagePlus#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#setButtonsEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#updateButtonsEnabling#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#48710#48711#0" expanded="true" />
-            <element signature="e#48742#48743#0" expanded="true" />
+            <element signature="e#48740#48741#0" expanded="true" />
+            <element signature="e#48772#48773#0" expanded="true" />
             <element signature="method#toggleOverlay#1;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#51313#51314#0" expanded="true" />
-            <element signature="e#51360#51361#0" expanded="true" />
+            <element signature="e#51343#51344#0" expanded="true" />
+            <element signature="e#51390#51391#0" expanded="true" />
             <element signature="method#updateAddClassButtons#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#51955#51956#0" expanded="true" />
-            <element signature="e#51989#51990#0" expanded="true" />
-            <element signature="e#52096#52097#0" expanded="true" />
-            <element signature="e#52125#52126#0" expanded="true" />
+            <element signature="e#51985#51986#0" expanded="true" />
+            <element signature="e#52019#52020#0" expanded="true" />
+            <element signature="e#52126#52127#0" expanded="true" />
+            <element signature="e#52155#52156#0" expanded="true" />
             <element signature="method#run#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#53894:54011" expanded="true" />
+            <element signature="method#run#0;class#53924:54041" expanded="true" />
             <element signature="method#setClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#createClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#58996#58997#0" expanded="true" />
-            <element signature="e#59041#59042#0" expanded="true" />
+            <element signature="e#59026#59027#0" expanded="true" />
+            <element signature="e#59071#59072#0" expanded="true" />
             <element signature="method#updateResultOverlay#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#listSelected#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#deleteSelected#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#runStopTraining#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#62520#64434#0" expanded="true" />
-            <element signature="e#64433#64434#0" expanded="true" />
+            <element signature="e#62550#64464#0" expanded="true" />
+            <element signature="e#64463#64464#0" expanded="true" />
             <element signature="method#convertTo8bitNoScaling#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#applyClassifierToSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#65712:65863" expanded="true" />
-            <element signature="e#67140#75668#0" expanded="true" />
-            <element signature="e#75667#75668#0" expanded="true" />
+            <element signature="method#run#0;class#65742:65893" expanded="true" />
+            <element signature="e#67170#75698#0" expanded="true" />
+            <element signature="e#75697#75698#0" expanded="true" />
             <element signature="method#postProcessSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#76440#77582#0" expanded="true" />
-            <element signature="e#77581#77582#0" expanded="true" />
+            <element signature="e#76470#77612#0" expanded="true" />
+            <element signature="e#77611#77612#0" expanded="true" />
             <element signature="method#saveProject#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#saveProject#1;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#writeClassifier#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#loadNewImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#saveAnnotations#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#loadProject#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#addNewClass#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#repaintWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#84240:84357" expanded="true" />
+            <element signature="method#run#0;class#82877:82994" expanded="true" />
             <element signature="method#launchWeka#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#showSettingsDialog#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#loadClassifier#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#toggleOverlay#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#saveProject#2;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#setOpacity#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <marker date="1507635159000" expanded="false" signature="93073:93197" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="93976:94066" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="94627:94758" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="94767:95563" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="95245:95418" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="95566:95683" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="95756:96860" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="95856:96033" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="96135:96208" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="96212:96284" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="96332:96857" ph="{}" />
-            <marker date="1507635159000" expanded="false" signature="97026:97271" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="97332:97709" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="97714:97762" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="97813:98001" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="98004:98115" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="99956:100027" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="100084:100807" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="100811:100975" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101034:101040" ph=" { " />
-            <marker date="1507635159000" expanded="false" signature="101067:101070" ph=" }" />
-            <marker date="1507635159000" expanded="false" signature="101073:101230" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101286:101616" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="101619:101789" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101864:102347" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="102350:102473" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="102543:102933" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="102936:103046" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="103635:103753" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="104163:105742" ph="{...}" />
+            <element signature="method#getLabelImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <marker date="1507640835000" expanded="false" signature="91710:91834" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="92613:92703" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="93264:93395" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="93404:94200" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="93882:94055" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="94203:94320" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94393:95497" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="94493:94670" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94772:94845" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="94849:94921" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94969:95494" ph="{}" />
+            <marker date="1507640835000" expanded="false" signature="95663:95908" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="95969:96346" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="96351:96399" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="97183:97306" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="97376:97766" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="98468:98586" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -2205,14 +2135,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Examples.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="13" column="0" lean-forward="false" selection-start-line="13" selection-start-column="0" selection-end-line="16" selection-end-column="43" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Example.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
@@ -2332,217 +2254,28 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Examples.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="13" column="0" lean-forward="false" selection-start-line="13" selection-start-column="0" selection-end-line="16" selection-end-column="43" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Settings.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="440">
-          <caret line="30" column="42" lean-forward="false" selection-start-line="30" selection-start-column="32" selection-end-line="30" selection-end-column="42" />
+        <state relative-caret-position="114">
+          <caret line="6" column="0" lean-forward="true" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="152">
-          <caret line="2773" column="58" lean-forward="false" selection-start-line="2773" selection-start-column="58" selection-end-line="2773" selection-end-column="58" />
-          <folding>
-            <element signature="docComment;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#PLUGIN_NAME#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#PLUGIN_VERSION#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#wekaSegmentation#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#displayImage#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#trainingImage#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#classifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#win#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#numOfClasses#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#traceCounter#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#showColorOverlay#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#exec#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#trainButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#overlayButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#getResultButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#setResultButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#probabilityButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#plotButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#applyButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#postProcessButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#loadProjectButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#saveProjectButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#settingsButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#wekaButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#addClassButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#roiOverlay#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#colors#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#overlayLUT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#exampleList#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#addAnnotationButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="e#5834#5880#0" expanded="false" />
-            <element signature="docComment;field#ADD_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#DELETE_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#TRAIN_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#TOGGLE_OVERLAY#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#GET_RESULT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SET_RESULT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#GET_PROBABILITY#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#PLOT_RESULT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#APPLY_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#LOAD_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SAVE_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#LOAD_DATA#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SAVE_DATA#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#LOAD_ANNOTATIONS#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SAVE_ANNOTATIONS#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#CREATE_CLASS#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#LAUNCH_WEKA#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SET_FEATURE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SET_MEMBRANE_THICKNESS#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SET_MEMBRANE_PATCH#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SET_MINIMUM_SIGMA#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SET_MAXIMUM_SIGMA#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SET_HOMOGENIZATION#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SET_BALANCE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SET_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SAVE_FEATURE_STACK#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#CHANGE_CLASS_NAME#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#SET_OPACITY#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#trainingFlag#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#9799#9825#0" expanded="false" />
-            <element signature="docComment;field#trainingTask#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="docComment;field#listener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="method#actionPerformed#0;class#14558:18606" expanded="true" />
-            <element signature="e#14684#14741#0" expanded="false" />
-            <element signature="method#run#0;class#14792:18589" expanded="true" />
-            <element signature="e#15591#15609#0" expanded="false" />
-            <element signature="method#itemStateChanged#0;class#18698:19030" expanded="true" />
-            <element signature="method#run#0;class#18785:19013" expanded="true" />
-            <element signature="method#CustomCanvas#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#19516#19604#0" expanded="true" />
-            <element signature="e#19603#19604#0" expanded="true" />
-            <element signature="method#setDstDimensions#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#paint#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#20671#20672#0" expanded="true" />
-            <element signature="e#20695#20696#0" expanded="true" />
-            <element signature="method#testThreads#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#20833:20961" expanded="true" />
-            <element signature="method#CustomWindow#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#adjustmentValueChanged#0;class#25923:26477" expanded="true" />
-            <element signature="method#run#0;class#26040:26453" expanded="true" />
-            <element signature="method#adjustmentValueChanged#0;class#26755:27331" expanded="true" />
-            <element signature="method#run#0;class#26875:27305" expanded="true" />
-            <element signature="method#mouseWheelMoved#0;class#27435:27883" expanded="true" />
-            <element signature="method#run#0;class#27562:27867" expanded="true" />
-            <element signature="method#keyTyped#0;class#28035:30471" expanded="true" />
-            <element signature="method#run#0;class#28125:29631" expanded="true" />
-            <element signature="method#keyReleased#0;class#28035:30471" expanded="true" />
-            <element signature="method#run#0;class#29731:30392" expanded="true" />
-            <element signature="e#37972#39184#0" expanded="true" />
-            <element signature="e#39183#39184#0" expanded="true" />
-            <element signature="e#39219#39396#0" expanded="true" />
-            <element signature="e#39395#39396#0" expanded="true" />
-            <element signature="method#createAnnotationButton#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#uncertaintyNavigation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#zoomToSelection#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#41930#41931#0" expanded="true" />
-            <element signature="e#41962#41963#0" expanded="true" />
-            <element signature="e#42105#42106#0" expanded="true" />
-            <element signature="e#42131#42132#0" expanded="true" />
-            <element signature="method#drawExamples#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#updateExampleLists#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#43335#43336#0" expanded="true" />
-            <element signature="e#43367#43368#0" expanded="true" />
-            <element signature="e#43588#43589#0" expanded="true" />
-            <element signature="e#43623#43624#0" expanded="true" />
-            <element signature="method#setSliceSelectorEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#repaintAll#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#addClass#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#setImagePlus#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#setButtonsEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#updateButtonsEnabling#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#48710#48711#0" expanded="true" />
-            <element signature="e#48742#48743#0" expanded="true" />
-            <element signature="method#toggleOverlay#1;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#51313#51314#0" expanded="true" />
-            <element signature="e#51360#51361#0" expanded="true" />
-            <element signature="method#updateAddClassButtons#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#51955#51956#0" expanded="true" />
-            <element signature="e#51989#51990#0" expanded="true" />
-            <element signature="e#52096#52097#0" expanded="true" />
-            <element signature="e#52125#52126#0" expanded="true" />
-            <element signature="method#run#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#53894:54011" expanded="true" />
-            <element signature="method#setClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#createClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#58996#58997#0" expanded="true" />
-            <element signature="e#59041#59042#0" expanded="true" />
-            <element signature="method#updateResultOverlay#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#listSelected#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#deleteSelected#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#runStopTraining#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#62520#64434#0" expanded="true" />
-            <element signature="e#64433#64434#0" expanded="true" />
-            <element signature="method#convertTo8bitNoScaling#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#applyClassifierToSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#65712:65863" expanded="true" />
-            <element signature="e#67140#75668#0" expanded="true" />
-            <element signature="e#75667#75668#0" expanded="true" />
-            <element signature="method#postProcessSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#76440#77582#0" expanded="true" />
-            <element signature="e#77581#77582#0" expanded="true" />
-            <element signature="method#saveProject#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#saveProject#1;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#writeClassifier#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#loadNewImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#saveAnnotations#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#addNewClass#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#repaintWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#run#0;class#84240:84357" expanded="true" />
-            <element signature="method#launchWeka#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#showSettingsDialog#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#loadClassifier#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#saveProject#2;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="method#setOpacity#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <marker date="1507635159000" expanded="false" signature="93073:93197" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="93976:94066" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="94627:94758" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="94767:95563" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="95245:95418" ph="//..." />
-            <marker date="1507635159000" expanded="false" signature="95566:95683" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="95756:96860" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="95856:96033" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="96135:96208" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="96212:96284" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="96332:96857" ph="{}" />
-            <marker date="1507635159000" expanded="false" signature="97026:97271" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="97332:97709" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="97714:97762" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="97813:98001" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="98004:98115" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="99956:100027" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="100084:100807" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="100811:100975" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101034:101040" ph=" { " />
-            <marker date="1507635159000" expanded="false" signature="101067:101070" ph=" }" />
-            <marker date="1507635159000" expanded="false" signature="101073:101230" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101286:101616" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="101619:101789" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="101864:102347" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="102350:102473" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="102543:102933" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="102936:103046" ph="/**...*/" />
-            <marker date="1507635159000" expanded="false" signature="103635:103753" ph="{...}" />
-            <marker date="1507635159000" expanded="false" signature="104163:105742" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="243">
-          <caret line="523" column="45" lean-forward="false" selection-start-line="523" selection-start-column="45" selection-end-line="523" selection-end-column="45" />
+        <state relative-caret-position="177">
+          <caret line="698" column="0" lean-forward="false" selection-start-line="698" selection-start-column="0" selection-end-line="698" selection-end-column="0" />
           <folding>
             <element signature="docComment;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;field#MAX_NUM_CLASSES#0;class#WekaSegmentation#0" expanded="false" />
@@ -2600,21 +2333,21 @@
             <element signature="e#13351#13352#0" expanded="true" />
             <element signature="e#13379#13380#0" expanded="true" />
             <element signature="method#getFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#internalLoadProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#loadProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#16932#16933#0" expanded="true" />
-            <element signature="e#16956#16957#0" expanded="true" />
+            <element signature="e#14623#14624#0" expanded="true" />
+            <element signature="e#14647#14648#0" expanded="true" />
             <element signature="method#saveProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#18375#18376#0" expanded="true" />
-            <element signature="e#18403#18404#0" expanded="true" />
-            <element signature="e#18648#18649#0" expanded="true" />
-            <element signature="e#18706#18707#0" expanded="true" />
+            <element signature="e#17560#17561#0" expanded="true" />
+            <element signature="e#17588#17589#0" expanded="true" />
+            <element signature="e#17692#17693#0" expanded="true" />
+            <element signature="e#17723#17724#0" expanded="true" />
+            <element signature="e#17969#17970#0" expanded="true" />
+            <element signature="e#18027#18028#0" expanded="true" />
             <element signature="method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#19474#19475#0" expanded="true" />
-            <element signature="e#19502#19503#0" expanded="true" />
+            <element signature="e#18795#18796#0" expanded="true" />
+            <element signature="e#18823#18824#0" expanded="true" />
             <element signature="method#balanceTrainingData#1;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#createTrainingInstances#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#23379#23390#0" expanded="true" />
+            <element signature="e#22700#22711#0" expanded="true" />
             <element signature="method#setExamplesInstanceValues#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#updateFeatureList#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNeededBytesPerRegionVoxel#0;class#WekaSegmentation#0" expanded="true" />
@@ -2639,28 +2372,28 @@
             <element signature="method#getSettingActiveFeatureNames#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getAttributes#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#classifyRegion#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#call#0;class#57970:63281" expanded="true" />
+            <element signature="method#call#0;class#57291:62602" expanded="true" />
             <element signature="method#getUncertaintyRegion#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#63628#63629#0" expanded="true" />
-            <element signature="e#63673#63674#0" expanded="true" />
-            <element signature="e#63723#63724#0" expanded="true" />
-            <element signature="e#63760#63761#0" expanded="true" />
-            <element signature="e#63803#63804#0" expanded="true" />
-            <element signature="e#63846#63847#0" expanded="true" />
+            <element signature="e#62949#62950#0" expanded="true" />
+            <element signature="e#62994#62995#0" expanded="true" />
+            <element signature="e#63044#63045#0" expanded="true" />
+            <element signature="e#63081#63082#0" expanded="true" />
+            <element signature="e#63124#63125#0" expanded="true" />
+            <element signature="e#63167#63168#0" expanded="true" />
             <element signature="method#maxIndicies#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setMinimumSigma#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#64760#64761#0" expanded="true" />
-            <element signature="e#64775#64776#0" expanded="true" />
-            <element signature="e#64882#64883#0" expanded="true" />
-            <element signature="e#64903#64904#0" expanded="true" />
-            <element signature="e#65032#65033#0" expanded="true" />
-            <element signature="e#65056#65057#0" expanded="true" />
-            <element signature="e#65108#65109#0" expanded="true" />
-            <element signature="e#65141#65142#0" expanded="true" />
-            <element signature="e#65179#65180#0" expanded="true" />
-            <element signature="e#65209#65210#0" expanded="true" />
-            <element signature="e#65263#65264#0" expanded="true" />
-            <element signature="e#65291#65292#0" expanded="true" />
+            <element signature="e#64081#64082#0" expanded="true" />
+            <element signature="e#64096#64097#0" expanded="true" />
+            <element signature="e#64203#64204#0" expanded="true" />
+            <element signature="e#64224#64225#0" expanded="true" />
+            <element signature="e#64353#64354#0" expanded="true" />
+            <element signature="e#64377#64378#0" expanded="true" />
+            <element signature="e#64429#64430#0" expanded="true" />
+            <element signature="e#64462#64463#0" expanded="true" />
+            <element signature="e#64500#64501#0" expanded="true" />
+            <element signature="e#64530#64531#0" expanded="true" />
+            <element signature="e#64584#64585#0" expanded="true" />
+            <element signature="e#64612#64613#0" expanded="true" />
             <element signature="method#getFeaturesToShowAsString#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setFeaturesToShowFromString#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getTileSizeSetting#0;class#WekaSegmentation#0" expanded="true" />
@@ -2669,23 +2402,205 @@
             <element signature="method#isFeatureOrChildrenNeeded#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getActiveChannelsAsString#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setActiveChannelsFromString#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#67481#67482#0" expanded="true" />
-            <element signature="e#67503#67504#0" expanded="true" />
-            <element signature="e#67750#67751#0" expanded="true" />
-            <element signature="e#67796#67797#0" expanded="true" />
-            <element signature="e#67997#67998#0" expanded="true" />
-            <element signature="e#68025#68026#0" expanded="true" />
-            <element signature="e#68223#68224#0" expanded="true" />
-            <element signature="e#68266#68267#0" expanded="true" />
-            <element signature="e#68427#68428#0" expanded="true" />
-            <element signature="e#68455#68456#0" expanded="true" />
-            <element signature="e#68602#68603#0" expanded="true" />
-            <element signature="e#68645#68646#0" expanded="true" />
+            <element signature="e#66802#66803#0" expanded="true" />
+            <element signature="e#66824#66825#0" expanded="true" />
+            <element signature="e#67071#67072#0" expanded="true" />
+            <element signature="e#67117#67118#0" expanded="true" />
+            <element signature="e#67318#67319#0" expanded="true" />
+            <element signature="e#67346#67347#0" expanded="true" />
+            <element signature="e#67544#67545#0" expanded="true" />
+            <element signature="e#67587#67588#0" expanded="true" />
+            <element signature="e#67748#67749#0" expanded="true" />
+            <element signature="e#67776#67777#0" expanded="true" />
+            <element signature="e#67923#67924#0" expanded="true" />
+            <element signature="e#67966#67967#0" expanded="true" />
             <element signature="method#setFeaturesDirty#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#updateClassifier#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#mergeDataInPlace#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#69867#69868#0" expanded="true" />
-            <element signature="e#69900#69901#0" expanded="true" />
+            <element signature="e#69188#69189#0" expanded="true" />
+            <element signature="e#69221#69222#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="178">
+          <caret line="2036" column="25" lean-forward="true" selection-start-line="2036" selection-start-column="25" selection-end-line="2036" selection-end-column="25" />
+          <folding>
+            <element signature="docComment;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#PLUGIN_NAME#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#PLUGIN_VERSION#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#wekaSegmentation#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#displayImage#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#trainingImage#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#classifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#win#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#numOfClasses#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#traceCounter#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#showColorOverlay#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#exec#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#trainButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#overlayButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#getResultButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#setResultButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#probabilityButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#plotButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#applyButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#postProcessButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#loadProjectButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#saveProjectButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#settingsButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#wekaButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#addClassButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#roiOverlay#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#colors#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#overlayLUT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#exampleList#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#addAnnotationButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="e#5833#5879#0" expanded="false" />
+            <element signature="docComment;field#ADD_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#DELETE_TRACE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#TRAIN_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#TOGGLE_OVERLAY#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#GET_RESULT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SET_RESULT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#GET_PROBABILITY#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#PLOT_RESULT#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#APPLY_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#LOAD_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SAVE_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#LOAD_DATA#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SAVE_DATA#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#LOAD_ANNOTATIONS#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SAVE_ANNOTATIONS#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#CREATE_CLASS#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#LAUNCH_WEKA#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SET_FEATURE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SET_MEMBRANE_THICKNESS#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SET_MEMBRANE_PATCH#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SET_MINIMUM_SIGMA#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SET_MAXIMUM_SIGMA#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SET_HOMOGENIZATION#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SET_BALANCE#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SET_CLASSIFIER#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SAVE_FEATURE_STACK#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#CHANGE_CLASS_NAME#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#SET_OPACITY#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#trainingFlag#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="e#9798#9824#0" expanded="false" />
+            <element signature="docComment;field#trainingTask#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="docComment;field#listener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
+            <element signature="method#actionPerformed#0;class#14589:18691" expanded="true" />
+            <element signature="e#14715#14772#0" expanded="false" />
+            <element signature="method#run#0;class#14823:18674" expanded="true" />
+            <element signature="e#15622#15640#0" expanded="false" />
+            <element signature="method#itemStateChanged#0;class#18783:19115" expanded="true" />
+            <element signature="method#run#0;class#18870:19098" expanded="true" />
+            <element signature="method#CustomCanvas#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="e#19601#19689#0" expanded="true" />
+            <element signature="e#19688#19689#0" expanded="true" />
+            <element signature="method#setDstDimensions#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#paint#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="e#20756#20757#0" expanded="true" />
+            <element signature="e#20780#20781#0" expanded="true" />
+            <element signature="method#testThreads#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#run#0;class#20918:21046" expanded="true" />
+            <element signature="method#CustomWindow#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#adjustmentValueChanged#0;class#26007:26561" expanded="true" />
+            <element signature="method#run#0;class#26124:26537" expanded="true" />
+            <element signature="method#adjustmentValueChanged#0;class#26839:27415" expanded="true" />
+            <element signature="method#run#0;class#26959:27389" expanded="true" />
+            <element signature="method#mouseWheelMoved#0;class#27519:27967" expanded="true" />
+            <element signature="method#run#0;class#27646:27951" expanded="true" />
+            <element signature="method#keyTyped#0;class#28119:30555" expanded="true" />
+            <element signature="method#run#0;class#28209:29715" expanded="true" />
+            <element signature="method#keyReleased#0;class#28119:30555" expanded="true" />
+            <element signature="method#run#0;class#29815:30476" expanded="true" />
+            <element signature="e#38004#39216#0" expanded="true" />
+            <element signature="e#39215#39216#0" expanded="true" />
+            <element signature="e#39251#39428#0" expanded="true" />
+            <element signature="e#39427#39428#0" expanded="true" />
+            <element signature="method#createAnnotationButton#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#uncertaintyNavigation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#zoomToSelection#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="e#41962#41963#0" expanded="true" />
+            <element signature="e#41994#41995#0" expanded="true" />
+            <element signature="e#42137#42138#0" expanded="true" />
+            <element signature="e#42163#42164#0" expanded="true" />
+            <element signature="method#drawExamples#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#updateExampleLists#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="e#43367#43368#0" expanded="true" />
+            <element signature="e#43399#43400#0" expanded="true" />
+            <element signature="e#43620#43621#0" expanded="true" />
+            <element signature="e#43655#43656#0" expanded="true" />
+            <element signature="method#setSliceSelectorEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#repaintAll#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#setButtonsEnabled#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#updateButtonsEnabling#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="e#48740#48741#0" expanded="true" />
+            <element signature="e#48772#48773#0" expanded="true" />
+            <element signature="method#toggleOverlay#1;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="e#51343#51344#0" expanded="true" />
+            <element signature="e#51390#51391#0" expanded="true" />
+            <element signature="method#updateAddClassButtons#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="e#51985#51986#0" expanded="true" />
+            <element signature="e#52019#52020#0" expanded="true" />
+            <element signature="e#52126#52127#0" expanded="true" />
+            <element signature="e#52155#52156#0" expanded="true" />
+            <element signature="method#run#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#run#0;class#53924:54041" expanded="true" />
+            <element signature="method#setClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#createClassifiedImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="e#59026#59027#0" expanded="true" />
+            <element signature="e#59071#59072#0" expanded="true" />
+            <element signature="method#updateResultOverlay#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#listSelected#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#runStopTraining#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="e#62550#64464#0" expanded="true" />
+            <element signature="e#64463#64464#0" expanded="true" />
+            <element signature="method#convertTo8bitNoScaling#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#applyClassifierToSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#run#0;class#65742:65893" expanded="true" />
+            <element signature="e#67170#75698#0" expanded="true" />
+            <element signature="e#75697#75698#0" expanded="true" />
+            <element signature="method#postProcessSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="e#76470#77612#0" expanded="true" />
+            <element signature="e#77611#77612#0" expanded="true" />
+            <element signature="method#saveProject#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#saveProject#1;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#writeClassifier#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#loadNewImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#loadProject#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#addNewClass#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#repaintWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#run#0;class#82877:82994" expanded="true" />
+            <element signature="method#launchWeka#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#showSettingsDialog#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#toggleOverlay#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#saveProject#2;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#setOpacity#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <element signature="method#getLabelImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
+            <marker date="1507640835000" expanded="false" signature="91710:91834" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="92613:92703" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="93264:93395" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="93404:94200" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="93882:94055" ph="//..." />
+            <marker date="1507640835000" expanded="false" signature="94203:94320" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94393:95497" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="94493:94670" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94772:94845" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="94849:94921" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="94969:95494" ph="{}" />
+            <marker date="1507640835000" expanded="false" signature="95663:95908" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="95969:96346" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="96351:96399" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="97183:97306" ph="/**...*/" />
+            <marker date="1507640835000" expanded="false" signature="97376:97766" ph="{...}" />
+            <marker date="1507640835000" expanded="false" signature="98468:98586" ph="{...}" />
           </folding>
         </state>
       </provider>

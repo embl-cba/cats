@@ -1,10 +1,11 @@
 package trainableDeepSegmentation;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import static trainableDeepSegmentation.WekaSegmentation.MAX_NUM_CLASSES;
 
-public class Settings {
+public class Settings implements Serializable {
 
     public double anisotropy = 1.0;
 
