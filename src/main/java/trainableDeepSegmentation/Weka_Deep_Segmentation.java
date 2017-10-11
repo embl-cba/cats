@@ -2293,29 +2293,31 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 						if ( trainingImage.getNFrames() == 1 )
 						{
+							// slices
 							xyztStart[2] = range[0] - 1;
 							xyztEnd[2] = range[1] - 1;
 						}
 						else if ( trainingImage.getNSlices() == 1 )
 						{
-							// time
+							// frames
 							xyztStart[3] = range[0] - 1;
 							xyztEnd[3] = range[1] - 1;
 						}
 						else
 						{
+							// slices
 							xyztStart[2] = range[0] - 1;
 							xyztEnd[2] = range[1] - 1;
 
 							if ( range.length == 4 )
 							{
-								// time
+								// frames
 								xyztStart[3] = range[2] - 1;
 								xyztEnd[3] = range[3] - 1;
 							}
 						}
 					}
-					catch (NumberFormatException e)
+					catch ( NumberFormatException e )
 					{
 						// logger.info("No z or t range selected.");
 					}
@@ -2333,6 +2335,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							if ( xyztEnd[i] - xyztStart[i] < wekaSegmentation.getMaximalRegionSize() )
 							{
 								sizes[i] = ( xyztEnd[i] - xyztStart[i] + 1 ) + 2 * borders[i];
+
 							}
 							else
 							{
@@ -2349,8 +2352,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 								int tileSize = regionSize / n + 2 * borders[i];
 
-								sizes[i] = Math.min ( tileSize, imgDims[i] );
+								sizes[i] = tileSize;
 							}
+
+							// make sure it fits into the image
+							sizes[i] = Math.min ( sizes[i], imgDims[i] );
+
 						}
 					}
 
@@ -2589,7 +2596,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					else
 					{
 						int[] tmp = bigDataTools.utils.Utils.delimitedStringToIntegerArray(zRange,",");
-						zs = tmp[0]; ze = tmp[1];
+						zs = tmp[0] - 1; ze = tmp[1] - 1;
 						zc = ( ze + zs ) / 2;
 					}
 
@@ -2597,9 +2604,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 					Region5D region5D = new Region5D();
 					region5D.t = displayImage.getT() - 1;
 					region5D.c = displayImage.getC() - 1;
-					region5D.size = new Point3D( rectangle.width, rectangle.height, ze-zs);
+					region5D.size = new Point3D( rectangle.width, rectangle.height, ze - zs + 1);
 					region5D.subSampling = new Point3D(1, 1, 1);
-					region5D.offset = new Point3D(rectangle.x,  rectangle.y, zs);
+					region5D.offset = new Point3D( rectangle.x,  rectangle.y, zs );
 
 					wekaSegmentation.postProcess(region5D, sizesMinMax).run();
 

@@ -306,76 +306,6 @@ public class FeatureImagesMultiResolution
         };
     }
 
-    public void setFeatureSlice(int z, int t, double[][][] featureSlice)
-    {
-        int nf = getNumFeatures();
-
-        for ( int f = 0; f < nf; f++ )
-        {
-            ImagePlus imp = multiResolutionFeatureImageArray.get(f);
-            Calibration calibration = imp.getCalibration();
-            double calX = calibration.pixelWidth;
-            double calY = calibration.pixelHeight;
-            double calZ = calibration.pixelDepth;
-            int nxFeatureImage = imp.getWidth();
-            int nyFeatureImage = imp.getHeight();
-
-            // deal with the fact that the feature image might
-            // not have all pixels
-            // due to the binning
-            int nx = (int)( nxFeatureImage * calX );
-            int ny = (int)( nyFeatureImage * calY );
-
-            int sliceCal =  (int) ( z / calZ ) + 1;
-
-            if ( sliceCal == imp.getNSlices()+1 )
-            {
-                // this can happen due to the binning
-                sliceCal = imp.getNSlices();
-            }
-
-
-            // get feature values as doubles
-            double[] pixels = null;
-            if ( imp.getBitDepth() == 8 )
-            {
-                byte[] bytePixels = (byte[]) imp.getStack().getProcessor(sliceCal).getPixels();
-                pixels = new double[bytePixels.length];
-                for (int i = 0; i < bytePixels.length; ++i)
-                {
-                    pixels[i] = (double) (bytePixels[i] & 0xFF);
-                }
-            }
-            else if ( imp.getBitDepth() == 16 )
-            {
-                short[] shortPixels = (short[]) imp.getStack().getProcessor(sliceCal).getPixels();
-                pixels = new double[shortPixels.length];
-                for (int i = 0; i < shortPixels.length; ++i)
-                {
-                    pixels[i] = (double) (shortPixels[i] & 0xFFFF);
-                }
-            }
-            else if ( imp.getBitDepth() == 32 )
-            {
-                pixels = (double[]) imp.getStack().getProcessor(sliceCal).getPixels();
-            }
-
-
-            // set feature values
-            int widthFeatureImage = imp.getWidth();
-            for ( int y = 0; y < ny; y++ )
-            {
-                int offsetY = (int) ( (double)y/calY) * widthFeatureImage;
-                for ( int x = 0; x < nx; x++ )
-                {
-                    featureSlice[x][y][f] = pixels[offsetY + (int)((double)x/calX)];
-                }
-            }
-
-        }
-    }
-
-
     public void setFeatureSliceRegion(int z,
                                       int xs,
                                       int xe,
@@ -925,7 +855,7 @@ public class FeatureImagesMultiResolution
             boolean showFeatureImages,
             ArrayList<Integer> featuresToShow,
             int numThreads,
-            boolean computeAll)
+            boolean computeAllFeatures)
     {
 
         // TODO:
@@ -1046,7 +976,7 @@ public class FeatureImagesMultiResolution
                         else
                         {
 
-                            if ( computeAll || wekaSegmentation.isFeatureOrChildrenNeeded(
+                            if ( computeAllFeatures || wekaSegmentation.isFeatureOrChildrenNeeded(
                                     binningTitle + "_" +
                                             featureImage.getTitle()) )
                             {
@@ -1114,21 +1044,21 @@ public class FeatureImagesMultiResolution
                     {
                         if (level <= 1) // multi-threaded
                         {
-                            if ( computeAll ||  wekaSegmentation.isFeatureOrChildrenNeeded(
+                            if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "He_" + featureImage.getTitle()) )
                                 futures.add(exe.submit(getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
 
-                            if ( computeAll ||  wekaSegmentation.isFeatureOrChildrenNeeded(
+                            if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "St_" + featureImage.getTitle()) )
                                 futures.add( exe.submit( getStructure(featureImage, smoothingScale, integrationScale)));
                         }
                         else // single-threaded
                         {
-                            if ( computeAll ||  wekaSegmentation.isFeatureOrChildrenNeeded(
+                            if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "He_" + featureImage.getTitle()) )
                                 featureImagesList.add( getHessian(featureImage, smoothingScale, hessianAbsoluteValues).call());
 
-                            if ( computeAll ||  wekaSegmentation.isFeatureOrChildrenNeeded(
+                            if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "St_" + featureImage.getTitle()) )
                                 featureImagesList.add( getStructure(featureImage, smoothingScale, integrationScale).call());
                         }
@@ -1194,7 +1124,7 @@ public class FeatureImagesMultiResolution
                         }
                     }
 
-                    if ( computeAll || wekaSegmentation.isFeatureNeeded( featureImage.getTitle() ) )
+                    if ( computeAllFeatures || wekaSegmentation.isFeatureNeeded( featureImage.getTitle() ) )
                     {
                         multiResolutionFeatureImageArray.add ( featureImage );
                         featureNames.add( featureImage.getTitle() );

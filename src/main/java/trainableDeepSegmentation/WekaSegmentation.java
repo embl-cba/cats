@@ -2,20 +2,14 @@ package trainableDeepSegmentation;
 
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +24,6 @@ import bigDataTools.logging.Logger;
 import bigDataTools.logging.IJLazySwingLogger;
 import ij.gui.PolygonRoi;
 import javafx.geometry.Point3D;
-import org.scijava.vecmath.Point3f;
 
 import hr.irb.fastRandomForest.FastRandomForest;
 import ij.IJ;
@@ -43,6 +36,7 @@ import weka.classifiers.AbstractClassifier;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
@@ -90,7 +84,7 @@ public class WekaSegmentation {
 	/** features to be used in the training */
 	//private FeatureImagesMultiResolution  featureImages = null;
 	/** set of instances from loaded data (previously saved segmentation) */
-	private Instances loadedTrainingData = null;
+	private Instances labelImageTrainingData = null;
 	/** set of instances from the user's traces */
 	private Instances traceTrainingData = null;
 	/** current classifier */
@@ -205,6 +199,8 @@ public class WekaSegmentation {
 	public boolean stopCurrentThreads = false;
 
 	private int currentUncertaintyRegion = 0;
+
+	private ImagePlus labelImage = null;
 
 	/**
 	 * Default constructor.
@@ -775,22 +771,22 @@ public class WekaSegmentation {
 		Instances filteredIns = null;
 		filter.setBiasToUniformClass(1.0);
 		try {
-			filter.setInputFormat(this.loadedTrainingData);
+			filter.setInputFormat(this.labelImageTrainingData);
 			filter.setNoReplacement(false);
 			filter.setSampleSizePercent(100);
-			filteredIns = Filter.useFilter(this.loadedTrainingData, filter);
+			filteredIns = Filter.useFilter(this.labelImageTrainingData, filter);
 		} catch (Exception e) {
 			IJ.log("Error when resampling input data!");
 			e.printStackTrace();
 		}
-		this.loadedTrainingData = filteredIns;
+		this.labelImageTrainingData = filteredIns;
 	}
 
 	/**
 	 * Create training instances out of the user markings
 	 * @return set of instances (feature vectors in Weka format)
 	 */
-	public Instances createTrainingInstances( boolean recomputeFeatures )
+	public Instances createTrainingInstancesFromTraces(boolean recomputeFeatures )
 	{
 		ArrayList< Example > examplesWithoutFeatures = new ArrayList<>();
 
@@ -1381,6 +1377,183 @@ public class WekaSegmentation {
 		}
 	}
 
+
+	/**
+	 * Add instances from a labeled image in a random and balanced way.
+	 * For convention, the label zero is used to define pixels with no class
+	 * assigned. The rest of integer values correspond to the order of the
+	 * classes (1 for the first class, 2 for the second class, etc.).
+	 *
+	 * @param labelImage labeled image (labels are positive integer or 0)
+	 * @param featureStack corresponding feature stack
+	 * @param numSamples number of samples to add of each class
+	 * @return false if error
+	 */
+
+	/**
+	 * Questions:
+	 * - how many of the label image pixels did you use and why?
+	 * - can you give an example of why balancing is important?
+	 *
+	 * 	 */
+	public Instances createTrainingInstancesFromLabelImageRegion(
+			Region5D region5D,
+			int numInstancesPerClass,
+			boolean balanceInstances,
+			int numThreads)
+	{
+
+		int xs = (int) region5D.offset.getX();
+		int ys = (int) region5D.offset.getY();
+		int zs = (int) region5D.offset.getZ();
+		int nx = (int) region5D.size.getX();
+		int ny = (int) region5D.size.getY();
+		int nz = (int) region5D.size.getZ();
+
+		// Load trainingImage region into RAM
+		ImagePlus trainingImageRegion = Utils.getDataCube( trainingImage,
+				region5D, new int[]{-1,-1}, 1 );
+
+		// Compute features
+		FeatureImagesMultiResolution featureImages = new FeatureImagesMultiResolution();
+		featureImages.setOriginalImage( trainingImageRegion );
+		featureImages.wekaSegmentation = this;
+		featureImages.updateFeaturesMT(
+				"ch" + region5D.c,
+				true,
+				featuresToShow,
+				numThreads,
+				true );
+
+
+		// Create lists of coordinates of pixels of each class
+		//
+		ArrayList<Point3D>[] classCoordinates = new ArrayList[ getNumClasses() ];
+		for(int i = 0; i < getNumClasses() ; i ++)
+			classCoordinates[ i ] = new ArrayList<Point3D>();
+
+		for(int z = zs; z < zs + nz; ++z )
+		{
+			ImageProcessor ip = labelImage.getStack().getProcessor( z + 1 );
+
+			for (int y = ys; y < ys + ny; y++)
+			{
+				for (int x = xs; x < xs + nx; x++)
+				{
+					int classIndex = ip.get( x, y );
+					classCoordinates[classIndex].add( new Point3D(x, y, z) );
+				}
+			}
+		}
+
+		// Get all the features
+		//
+		ArrayList < double[][][] > featureSlices = new ArrayList<>();
+		// prepare featureSlice arrays
+		for (int z = 0; z < nz; ++z )
+		{
+			featureSlices.add( new double [nx][ny][nz] );
+
+			featureImages.setFeatureSliceRegion(
+					z,
+					0, nx - 1,
+					0, ny - 1,
+					featureSlices.get( z ) );
+			
+		}
+
+		// Select random samples from each class
+		Random rand = new Random();
+		for( int i=0; i < numInstancesPerClass; i++ )
+		{
+			for( int j = 0; j < getNumClasses() ; j ++ )
+			{
+				if( !classCoordinates[ j ].isEmpty() )
+				{
+					int randomSample = rand.nextInt( classCoordinates[ j ].size() );
+
+					// TODO:
+					// get values from featureImage
+					//featureImages.setFeatureSlice();
+					featureImages.setFeatureSliceRegion();
+					featureStack.createInstance( classCoordinates[ j ].get( randomSample ).x,
+							classCoordinates[ j ].get( randomSample ).y, j )
+
+					addInstanceToLabelImageTrainingData( );
+				}
+			}
+		}
+
+		//for( int j = 0; j < numOfClasses ; j ++ )
+		//	IJ.log("Added " + numSamples + " instances of '" + loadedClassNames.get( j ) +"'.");
+
+		logger.progress("Label image training dataset updated ",
+				"(" + labelImageTrainingData.numInstances() +
+				" instances, " + labelImageTrainingData.numAttributes() +
+				" attributes, " + labelImageTrainingData.numClasses() + " classes).");
+
+	}
+
+	private synchronized void addInstanceToLabelImageTrainingData( Instance instance )
+	{
+		labelImageTrainingData.add( instance );
+	}
+
+
+	public void setTrainingInstancesFromLabelImage( ImagePlus labelImageTrainingData )
+	{
+
+		final long start = System.currentTimeMillis();
+
+		// set classes
+		settings.classNames = new ArrayList<>();
+		int maxLabel = 1; // TODO: determine from Label image
+		for (int iClass = 0; iClass <= maxLabel; ++iClass)
+		{
+			settings.classNames.add("class_" + iClass);
+		}
+		logger.info("Found " + (maxLabel + 1) + " classes in label image.");
+
+
+		// Create loaded training data if it does not exist yet
+		if (null == labelImageTrainingData)
+		{
+			IJ.log("Initializing label image training data...");
+
+			// Create instances
+			ArrayList<Attribute> attributes = getAttributes();
+
+			labelImageTrainingData = new Instances("segment", attributes, 1);
+			labelImageTrainingData.setClassIndex(labelImageTrainingData.numAttributes() - 1);
+		}
+
+		int numInstancesPerClass = 100; // TODO: how to determine this?
+		boolean balanceInstances = true; // TODO: ...
+
+		// TODO:
+		// here a loop over subsets could be implemented
+		// in case not everything is fitting into RAM at once
+		Region5D region5D = new Region5D();
+		region5D.size = new Point3D(
+				labelImage.getWidth(),
+				labelImage.getHeight(),
+				labelImage.getNSlices());
+		region5D.offset = new Point3D(0, 0, 0);
+		region5D.t = 0;
+		region5D.c = 0;
+		region5D.subSampling = new Point3D(1, 1, 1);
+
+		labelImageTrainingData = createTrainingInstancesFromLabelImageRegion(
+				region5D,
+				numInstancesPerClass,
+				balanceInstances,
+				numThreadsPerRegion
+		);
+
+		final long end = System.currentTimeMillis();
+		logger.info("Created training data from label image in " + (end - start) + " ms");
+	}
+
 	/**
 	 * Train classifier with the current instances
 	 * and current classifier settings
@@ -1399,38 +1572,47 @@ public class WekaSegmentation {
 		// At least two lists of different classes of examples need to be non empty
 		int nonEmpty = 0;
 		for(int i = 0; i < getNumClasses(); i++)
-			for(int j = 0; j< trainingImage.getImageStackSize(); j++)
-				if( getNumExamples(i) > 0 )
+		{
+			for (int j = 0; j < trainingImage.getImageStackSize(); j++)
+			{
+				if (getNumExamples(i) > 0)
 				{
 					nonEmpty++;
 					break;
 				}
+			}
+		}
 
-		if ( nonEmpty < 2 && null == loadedTrainingData )
+		if ( nonEmpty < 2 && null == labelImageTrainingData)
 		{
 			logger.error( "Cannot train without at least 2 sets of examples!" );
 			return false;
 		}
 
-		// Create feature stack if necessary (training from traces
-		// and the features stack is empty or the settings changed)
 		Instances data = null;
+
 		if (nonEmpty < 1)
 		{
-			IJ.log("Training from loaded data only...");
+			logger.info("Training from loaded data only...");
 		}
 		else
 		{
 			final long start = System.currentTimeMillis();
 
-			traceTrainingData = data = createTrainingInstances( recomputeFeatures );
+			traceTrainingData = data = createTrainingInstancesFromTraces( recomputeFeatures );
 
 			final long end = System.currentTimeMillis();
-			logger.info("Created training data in " + (end - start) + " ms");
+			logger.info("Created training data from traces in " + (end - start) + " ms");
 		}
 
-		// Update train header
-		this.trainHeader = new Instances(data, 0);
+		// Compute training data from label images
+		if ( labelImage != null )
+		{
+
+		}
+
+		// Combine trace and labelImage training data
+		// TODO
 
 		// Resample data if necessary
 		if( balanceClasses )
@@ -2041,7 +2223,7 @@ public class WekaSegmentation {
 	{
 		ArrayList<Attribute> attributes = new ArrayList<>();
 
-		for (Feature feature : settings.featureList)
+		for ( Feature feature : settings.featureList )
 		{
 			attributes.add( new Attribute( feature.name) );
 		}
