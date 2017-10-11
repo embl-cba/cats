@@ -357,7 +357,7 @@ public class WekaSegmentation {
 	 */
 	public boolean isValidExample( Example example )
 	{
-		int[][] bounds = getExample3DBounds(example);
+		int[][] bounds = getExample3DBounds( example );
 		int[][] borders = getClassifiableImageBorders();
 
 		for ( int i = 0; i < 3; ++i )

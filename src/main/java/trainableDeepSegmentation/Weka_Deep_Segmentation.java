@@ -120,16 +120,15 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private JButton overlayButton = null;
 
 
-	/** create result button */
-	private JButton getResultButton = null;
-	/** create result button */
-	private JButton setResultButton = null;
 
+	/** create result button */
+	//private JButton getResultButton = null;
+	/** create result button */
+	//private JButton setResultButton = null;
 
 	private JButton createResultButton = null;
 
 	private JCheckBox resultOnDiskCheckBox = null;
-
 
 	private JButton printProjectInfoButton = null;
 
@@ -315,6 +314,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		overlayButton.setToolTipText("Toggle between current segmentation and original image");
 		overlayButton.setEnabled(false);
 
+		/*
 		getResultButton = new JButton("Get result image");
 		getResultButton.setToolTipText("Get result image. " +
 				"It will either allocate memory in RAM; " +
@@ -325,6 +325,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		setResultButton = new JButton("Set result image");
 		setResultButton.setToolTipText("Set result image");
 		setResultButton.setEnabled(true);
+		*/
 
 		createResultButton = new JButton("Assign result image");
 		createResultButton.setToolTipText("Assign result image");
@@ -411,6 +412,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 						record(TOGGLE_OVERLAY, arg);
 						win.toggleOverlay();
 					}
+					/*
 					else if(e.getSource() == getResultButton){
 						// Macro recording
 						String[] arg = new String[] {};
@@ -423,8 +425,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 						record(SET_RESULT, arg);
 						setClassifiedImage();
 						postProcessButton.setEnabled( true );
-					}
+					}*/
 					else if(e.getSource() == createResultButton){
+
 						// Macro recording
 						//String[] arg = new String[] {};
 						//record(SET_RESULT, arg);
@@ -755,8 +758,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				addAnnotationButton[i].addActionListener(listener);
 			trainButton.addActionListener(listener);
 			overlayButton.addActionListener(listener);
-			getResultButton.addActionListener(listener);
-			setResultButton.addActionListener(listener);
+			//getResultButton.addActionListener(listener);
+			//setResultButton.addActionListener(listener);
 			createResultButton.addActionListener(listener);
 			probabilityButton.addActionListener(listener);
 			plotButton.addActionListener(listener);
@@ -1205,8 +1208,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 						addAnnotationButton[i].removeActionListener(listener);
 					trainButton.removeActionListener(listener);
 					overlayButton.removeActionListener(listener);
-					getResultButton.removeActionListener(listener);
-					setResultButton.removeActionListener(listener);
+					//getResultButton.removeActionListener(listener);
+					//setResultButton.removeActionListener(listener);
 					createResultButton.removeActionListener(listener);
 					probabilityButton.removeActionListener(listener);
 					plotButton.removeActionListener(listener);
@@ -1469,8 +1472,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		{
 			trainButton.setEnabled(s);
 			overlayButton.setEnabled(s);
-			getResultButton.setEnabled(s);
-			setResultButton.setEnabled(s);
+			//getResultButton.setEnabled(s);
+			//setResultButton.setEnabled(s);
 			createResultButton.setEnabled(s);
 			probabilityButton.setEnabled(s);
 			probabilityButton.setEnabled(s);
@@ -1515,10 +1518,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 											 null != classifiedImage.getProcessor();
 
 				overlayButton.setEnabled(resultExists);
-				getResultButton.setEnabled(win.trainingComplete);
-				setResultButton.setEnabled( true) ;
+				//getResultButton.setEnabled(win.trainingComplete);
+				//setResultButton.setEnabled( true) ;
 				createResultButton.setEnabled( true) ;
-
 
 				plotButton.setEnabled( win.trainingComplete );
 				probabilityButton.setEnabled( win.trainingComplete );
@@ -1768,6 +1770,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 			if ( resultOnDiskCheckBox.isSelected() )
 			{
 				directory = IJ.getDirectory("Select a directory");
+
+				// TODO: check for cancel!
+
 
 				DataStreamingTools dst = new DataStreamingTools();
 				String tMax = String.format("%05d", trainingImage.getNFrames());
@@ -2748,7 +2753,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/**
 	 * Load annotations from a file
 	 */
-	public void loadProject(String directory, String fileName)
+	public void loadProject( String directory, String fileName )
 	{
 
 		if ( directory == null || fileName == null )
@@ -2779,6 +2784,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 				changeClassName(c, wekaSegmentation.getClassName( c ));
 			}
 
+			if ( wekaSegmentation.getClassifier() != null )
+			{
+				win.trainingComplete = true;
+			}
+
 			repaintWindow();
 			win.updateExampleLists();
 
@@ -2787,6 +2797,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		{
 			IJ.showMessage(e.toString());
 		}
+
+
 
 		win.updateButtonsEnabling();
 	}
