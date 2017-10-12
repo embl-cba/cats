@@ -1475,11 +1475,13 @@ public class WekaSegmentation {
 					// TODO:
 					// get values from featureImage
 					//featureImages.setFeatureSlice();
+					/*
 					featureImages.setFeatureSliceRegion();
 					featureStack.createInstance( classCoordinates[ j ].get( randomSample ).x,
 							classCoordinates[ j ].get( randomSample ).y, j )
 
 					addInstanceToLabelImageTrainingData( );
+					*/
 				}
 			}
 		}
@@ -1492,6 +1494,8 @@ public class WekaSegmentation {
 				" instances, " + labelImageTrainingData.numAttributes() +
 				" attributes, " + labelImageTrainingData.numClasses() + " classes).");
 
+		return null;
+		
 	}
 
 	private synchronized void addInstanceToLabelImageTrainingData( Instance instance )
@@ -1503,6 +1507,7 @@ public class WekaSegmentation {
 	public void setTrainingInstancesFromLabelImage( ImagePlus labelImageTrainingData )
 	{
 
+		/*
 		final long start = System.currentTimeMillis();
 
 		// set classes
@@ -1552,6 +1557,7 @@ public class WekaSegmentation {
 
 		final long end = System.currentTimeMillis();
 		logger.info("Created training data from label image in " + (end - start) + " ms");
+		*/
 	}
 
 	/**

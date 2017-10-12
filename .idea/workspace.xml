@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="11fbcd29-9375-459b-85c8-2a59ead8fa06" name="Default" comment="" />
+    <list default="true" id="11fbcd29-9375-459b-85c8-2a59ead8fa06" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/artifacts/fiji_plugin_trainableDeepSegmentation.jar" afterPath="$PROJECT_DIR$/out/artifacts/fiji_plugin_trainableDeepSegmentation.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/FeatureImagesMultiResolution$2.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/FeatureImagesMultiResolution$2.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/FeatureImagesMultiResolution.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/FeatureImagesMultiResolution.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation$1.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation$1.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation$LoadedProject.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation$LoadedProject.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation.class" afterPath="$PROJECT_DIR$/target/classes/trainableDeepSegmentation/WekaSegmentation.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" afterPath="$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java" />
+    </list>
     <ignored path="fiji-plugin-deep-segmentation.iws" />
     <ignored path=".idea/workspace.xml" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -23,64 +33,28 @@
       <file leaf-file-name="WekaSegmentation.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="188">
-              <caret line="1398" column="53" lean-forward="false" selection-start-line="1398" selection-start-column="48" selection-end-line="1398" selection-end-column="53" />
+            <state relative-caret-position="214">
+              <caret line="1497" column="8" lean-forward="true" selection-start-line="1497" selection-start-column="8" selection-end-line="1497" selection-end-column="8" />
               <folding>
-                <element signature="e#4900#4901#0" expanded="true" />
-                <element signature="e#4920#4921#0" expanded="true" />
                 <element signature="method#setLogFileNameAndDirectory#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#5372#5373#0" expanded="true" />
-                <element signature="e#5410#5411#0" expanded="true" />
                 <element signature="method#WekaSegmentation#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#setImgDims#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#6804#6805#0" expanded="true" />
-                <element signature="e#6828#6829#0" expanded="true" />
-                <element signature="e#6978#6979#0" expanded="true" />
-                <element signature="e#6997#6998#0" expanded="true" />
                 <element signature="method#initialize#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#setTrainingImage#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#8155#8156#0" expanded="true" />
-                <element signature="e#8183#8184#0" expanded="true" />
                 <element signature="method#createExample#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#deleteExample#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getExampleBounds#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#isValidExample#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getExampleRois#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#10996#10997#0" expanded="true" />
-                <element signature="e#11018#11019#0" expanded="true" />
-                <element signature="e#11080#11081#0" expanded="true" />
-                <element signature="e#11111#11112#0" expanded="true" />
                 <element signature="method#getNumExamples#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#setAllFeaturesActive#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#deactivateRarelyUsedFeatures#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getNumClassesInExamples#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getNumExamplesPerClass#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#12371#12372#0" expanded="true" />
-                <element signature="e#12411#12412#0" expanded="true" />
-                <element signature="e#12585#12586#0" expanded="true" />
-                <element signature="e#12630#12631#0" expanded="true" />
-                <element signature="e#12757#12758#0" expanded="true" />
-                <element signature="e#12802#12803#0" expanded="true" />
-                <element signature="e#12930#12931#0" expanded="true" />
-                <element signature="e#12973#12974#0" expanded="true" />
-                <element signature="e#13094#13095#0" expanded="true" />
-                <element signature="e#13123#13124#0" expanded="true" />
-                <element signature="e#13176#13177#0" expanded="true" />
-                <element signature="e#13204#13205#0" expanded="true" />
                 <element signature="method#getFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#14448#14449#0" expanded="true" />
-                <element signature="e#14472#14473#0" expanded="true" />
                 <element signature="method#saveProject#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#loadProject#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#17385#17386#0" expanded="true" />
-                <element signature="e#17413#17414#0" expanded="true" />
-                <element signature="e#17517#17518#0" expanded="true" />
-                <element signature="e#17548#17549#0" expanded="true" />
-                <element signature="e#17794#17795#0" expanded="true" />
-                <element signature="e#17852#17853#0" expanded="true" />
                 <element signature="method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#18620#18621#0" expanded="true" />
-                <element signature="e#18648#18649#0" expanded="true" />
                 <element signature="method#balanceTrainingData#1;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#createTrainingInstancesFromTraces#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="e#22546#22557#0" expanded="true" />
@@ -100,7 +74,6 @@
                 <element signature="method#getClassNamesAsArrayList#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getNumActiveFeatures#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getNumAllFeatures#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="method#createTrainingInstancesFromLabelImageRegion#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#addInstanceToLabelImageTrainingData#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#setTrainingInstancesFromLabelImage#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#trainClassifier#0;class#WekaSegmentation#0" expanded="true" />
@@ -110,8 +83,8 @@
                 <element signature="method#setClassificationResult#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getSettingActiveFeatureNames#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="method#getAttributes#0;class#WekaSegmentation#0" expanded="true" />
-                <element signature="e#70493#70543#0" expanded="false" />
-                <element signature="e#70918#70968#0" expanded="false" />
+                <element signature="e#70537#70587#0" expanded="false" />
+                <element signature="e#70962#71012#0" expanded="false" />
                 <element signature="docComment;method#getMaxDepth#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#setDoHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#doHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
@@ -122,39 +95,6 @@
                 <element signature="docComment;method#updateClassifier#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#mergeDataInPlace#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="docComment;method#getClassNames#0;class#WekaSegmentation#0" expanded="false" />
-                <marker date="1507755775000" expanded="false" signature="61265:61916" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="62277:67670" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="62375:67666" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="62416:67662" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="64342:64451" ph="//..." />
-                <marker date="1507755775000" expanded="false" signature="67729:67971" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="68011:68017" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="68056:68059" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="68106:68112" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="68143:68146" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="68186:68192" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="68229:68232" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="68285:68781" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="68785:68922" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="68966:68984" ph="{}" />
-                <marker date="1507755775000" expanded="false" signature="68987:69111" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="69143:69149" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="69158:69161" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="69164:69233" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="69265:69271" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="69286:69289" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="69292:69389" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="69415:69421" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="69439:69442" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="69491:69497" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="69524:69527" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="69562:69568" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="69592:69595" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="69646:69652" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="69674:69677" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="69723:69847" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="69916:70179" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="70218:70268" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -163,7 +103,7 @@
       <file leaf-file-name="Settings.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Settings.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="432">
+            <state relative-caret-position="465">
               <caret line="31" column="37" lean-forward="false" selection-start-line="31" selection-start-column="37" selection-end-line="31" selection-end-column="37" />
               <folding>
                 <element signature="imports" expanded="true" />
@@ -175,54 +115,9 @@
       <file leaf-file-name="FeatureImagesMultiResolution.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="529">
-              <caret line="378" column="16" lean-forward="false" selection-start-line="378" selection-start-column="16" selection-end-line="378" selection-end-column="16" />
-              <folding>
-                <marker date="1507755775000" expanded="true" signature="44302:44956" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="45025:45431" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="45489:46056" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="46124:46295" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="46368:46765" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="46797:46914" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="47002:47516" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="47574:47822" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="47931:50300" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="47954:50293" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="48472:48703" ph="//..." />
-                <marker date="1507755775000" expanded="true" signature="48938:49169" ph="//..." />
-                <marker date="1507755775000" expanded="true" signature="50109:50196" ph="//..." />
-                <marker date="1507755775000" expanded="false" signature="50349:50364" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="50384:50390" ph=" }" />
-                <marker date="1507755775000" expanded="true" signature="50396:50491" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="50524:50539" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="50569:50575" ph=" }" />
-                <marker date="1507755775000" expanded="true" signature="50581:50674" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="50716:50731" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="50764:50770" ph=" }" />
-                <marker date="1507755775000" expanded="true" signature="50776:50825" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="50860:50894" ph="{}" />
-                <marker date="1507755775000" expanded="true" signature="50901:51028" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="51062:51258" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="51264:51393" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="51436:51584" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="51446:51503" ph="//..." />
-                <marker date="1507755775000" expanded="true" signature="51590:51712" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="51754:51769" ph=" { " />
-                <marker date="1507755775000" expanded="true" signature="51792:51798" ph=" }" />
-                <marker date="1507755775000" expanded="true" signature="51804:51935" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="51997:52012" ph=" { " />
-                <marker date="1507755775000" expanded="true" signature="52051:52057" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="52098:52113" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="52140:52146" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="52173:52188" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="52220:52226" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="52254:52269" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="52302:52308" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="52335:52350" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="52384:52390" ph=" }" />
-                <marker date="1507755775000" expanded="false" signature="52416:52427" ph=" { " />
-                <marker date="1507755775000" expanded="false" signature="52451:52457" ph=" }" />
-              </folding>
+            <state relative-caret-position="2205">
+              <caret line="309" column="16" lean-forward="false" selection-start-line="309" selection-start-column="16" selection-end-line="309" selection-end-column="16" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -237,11 +132,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Example.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Example.java">
+      <file leaf-file-name="FastRfBagging.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRfBagging.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="17" column="0" lean-forward="false" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+            <state relative-caret-position="384">
+              <caret line="146" column="14" lean-forward="false" selection-start-line="146" selection-start-column="14" selection-end-line="146" selection-end-column="14" />
               <folding />
             </state>
           </provider>
@@ -250,9 +145,11 @@
       <file leaf-file-name="FastRandomForest.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomForest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5955">
-              <caret line="695" column="42" lean-forward="false" selection-start-line="695" selection-start-column="42" selection-end-line="695" selection-end-column="42" />
-              <folding />
+            <state relative-caret-position="297">
+              <caret line="614" column="36" lean-forward="false" selection-start-line="614" selection-start-column="36" selection-end-line="614" selection-end-column="36" />
+              <folding>
+                <element signature="method#distributionForInstance#0;class#FastRandomForest#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -260,7 +157,7 @@
       <file leaf-file-name="TestHeadless.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/test/java/trainableDeepSegmentation/TestHeadless.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="168">
+            <state relative-caret-position="510">
               <caret line="34" column="0" lean-forward="false" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
               <folding>
                 <element signature="imports" expanded="true" />
@@ -292,7 +189,7 @@
       <file leaf-file-name="Weka_Deep_Segmentation.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="270">
+            <state relative-caret-position="7455">
               <caret line="2200" column="26" lean-forward="false" selection-start-line="2200" selection-start-column="26" selection-end-line="2200" selection-end-column="26" />
               <folding>
                 <element signature="docComment;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -309,7 +206,6 @@
                 <element signature="docComment;field#exec#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#trainButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#overlayButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-                <element signature="e#4046#4073#0" expanded="false" />
                 <element signature="docComment;field#createResultButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#probabilityButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#plotButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -366,8 +262,6 @@
                 <element signature="method#itemStateChanged#0;class#18807:19139" expanded="true" />
                 <element signature="method#run#0;class#18894:19122" expanded="true" />
                 <element signature="method#CustomCanvas#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <element signature="e#19625#19713#0" expanded="true" />
-                <element signature="e#19712#19713#0" expanded="true" />
                 <element signature="method#setDstDimensions#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#paint#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="e#20780#20781#0" expanded="true" />
@@ -385,10 +279,6 @@
                 <element signature="method#run#0;class#28237:29743" expanded="true" />
                 <element signature="method#keyReleased#0;class#28147:30583" expanded="true" />
                 <element signature="method#run#0;class#29843:30504" expanded="true" />
-                <element signature="e#37964#39180#0" expanded="true" />
-                <element signature="e#39179#39180#0" expanded="true" />
-                <element signature="e#39215#39392#0" expanded="true" />
-                <element signature="e#39391#39392#0" expanded="true" />
                 <element signature="method#createAnnotationButton#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#uncertaintyNavigation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#zoomToSelection#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
@@ -398,59 +288,6 @@
                 <element signature="e#42127#42128#0" expanded="true" />
                 <element signature="method#drawExamples#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="method#updateExampleLists#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-                <marker date="1507755775000" expanded="true" signature="77519:77773" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="77739:77746" ph="}" />
-                <marker date="1507755775000" expanded="true" signature="77776:77824" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="77853:78256" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="78259:78513" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="78631:79385" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="79388:79556" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="79638:79838" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="79841:79881" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="79911:81031" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="81034:81075" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="81139:82071" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="82075:82138" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="82168:82982" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="82985:83018" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="83050:83232" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="83121:83227" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="83146:83221" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="83235:83269" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="83304:83485" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="83488:83566" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="83605:93469" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="85389:85582" ph="//..." />
-                <marker date="1507755775000" expanded="true" signature="86044:86410" ph="//..." />
-                <marker date="1507755775000" expanded="true" signature="86539:86726" ph="//..." />
-                <marker date="1507755775000" expanded="true" signature="89448:89571" ph="//..." />
-                <marker date="1507755775000" expanded="true" signature="89712:89914" ph="//..." />
-                <marker date="1507755775000" expanded="true" signature="90116:90260" ph="//..." />
-                <marker date="1507755775000" expanded="false" signature="91943:92067" ph="//..." />
-                <marker date="1507755775000" expanded="false" signature="92846:92936" ph="//..." />
-                <marker date="1507755775000" expanded="false" signature="93497:93628" ph="//..." />
-                <marker date="1507755775000" expanded="false" signature="93637:94433" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="94115:94288" ph="//..." />
-                <marker date="1507755775000" expanded="false" signature="94436:94553" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="94626:95730" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="94726:94903" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="95005:95078" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="95082:95154" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="95202:95727" ph="{}" />
-                <marker date="1507755775000" expanded="false" signature="95896:96141" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="96202:96579" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="96584:96632" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="96683:96871" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="96874:96986" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="97039:97413" ph="{...}" />
-                <marker date="1507755775000" expanded="false" signature="97416:97539" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="97609:97999" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="98002:98112" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="98166:98534" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="98537:98650" ph="/**...*/" />
-                <marker date="1507755775000" expanded="false" signature="98701:98819" ph="{...}" />
-                <marker date="1507755775000" expanded="true" signature="98823:99186" ph="/**...*/" />
-                <marker date="1507755775000" expanded="true" signature="99229:100808" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -467,7 +304,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>settingBack</find>
       <find>settingActiv</find>
       <find>activeCh</find>
       <find>save</find>
@@ -497,6 +333,7 @@
       <find>Region5D</find>
       <find>apply</find>
       <find>settingMax</find>
+      <find>m_B</find>
     </findStrings>
     <replaceStrings>
       <replace>settings.</replace>
@@ -577,8 +414,8 @@
     </navigator>
     <panes>
       <pane id="Scope" />
-      <pane id="PackagesPane" />
       <pane id="AndroidView" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -610,13 +447,21 @@
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="main" type="462c0819:PsiDirectoryNode" />
               <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="fastRandomForest" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="fiji-plugin-deep-segmentation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="fiji-plugin-deep-segmentation" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
               <item name="trainableDeepSegmentation" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scratches" />
+      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -846,50 +691,29 @@
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31922612" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18742442" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25894135" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25151148" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36396614" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36396614" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31922612" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.18742442" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25894135" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25151148" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
     </layout>
     <layout-to-restore>
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -930,20 +754,6 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java</url>
-          <line>368</line>
-          <properties />
-          <option name="timeStamp" value="147" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java</url>
-          <line>1321</line>
-          <properties />
-          <option name="timeStamp" value="149" />
-        </line-breakpoint>
-      </breakpoints>
       <option name="time" value="150" />
     </breakpoint-manager>
     <watches-manager />
@@ -972,7 +782,6 @@
             <element signature="docComment;field#exec#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#trainButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#overlayButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="e#4046#4073#0" expanded="false" />
             <element signature="docComment;field#createResultButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#probabilityButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#plotButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -1029,8 +838,6 @@
             <element signature="method#itemStateChanged#0;class#18807:19139" expanded="true" />
             <element signature="method#run#0;class#18894:19122" expanded="true" />
             <element signature="method#CustomCanvas#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#19625#19713#0" expanded="true" />
-            <element signature="e#19712#19713#0" expanded="true" />
             <element signature="method#setDstDimensions#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#paint#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="e#20780#20781#0" expanded="true" />
@@ -1048,10 +855,6 @@
             <element signature="method#run#0;class#28237:29743" expanded="true" />
             <element signature="method#keyReleased#0;class#28147:30583" expanded="true" />
             <element signature="method#run#0;class#29843:30504" expanded="true" />
-            <element signature="e#37964#39180#0" expanded="true" />
-            <element signature="e#39179#39180#0" expanded="true" />
-            <element signature="e#39215#39392#0" expanded="true" />
-            <element signature="e#39391#39392#0" expanded="true" />
             <element signature="method#createAnnotationButton#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#uncertaintyNavigation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#zoomToSelection#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
@@ -1061,59 +864,6 @@
             <element signature="e#42127#42128#0" expanded="true" />
             <element signature="method#drawExamples#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#updateExampleLists#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <marker date="1507755775000" expanded="true" signature="77519:77773" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="77739:77746" ph="}" />
-            <marker date="1507755775000" expanded="true" signature="77776:77824" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="77853:78256" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="78259:78513" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="78631:79385" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="79388:79556" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="79638:79838" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="79841:79881" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="79911:81031" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="81034:81075" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="81139:82071" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="82075:82138" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="82168:82982" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="82985:83018" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83050:83232" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83121:83227" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83146:83221" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83235:83269" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83304:83485" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83488:83566" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83605:93469" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="85389:85582" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="86044:86410" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="86539:86726" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="89448:89571" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="89712:89914" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="90116:90260" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="91943:92067" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="92846:92936" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="93497:93628" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="93637:94433" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="94115:94288" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="94436:94553" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="94626:95730" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="94726:94903" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="95005:95078" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="95082:95154" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="95202:95727" ph="{}" />
-            <marker date="1507755775000" expanded="false" signature="95896:96141" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="96202:96579" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="96584:96632" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="96683:96871" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="96874:96986" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="97039:97413" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="97416:97539" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="97609:97999" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98002:98112" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="98166:98534" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98537:98650" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="98701:98819" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98823:99186" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="99229:100808" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1122,52 +872,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="1371" column="0" lean-forward="false" selection-start-line="1371" selection-start-column="0" selection-end-line="1425" selection-end-column="0" />
-          <folding>
-            <marker date="1507755775000" expanded="true" signature="44302:44956" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="45025:45431" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="45489:46056" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46124:46295" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46368:46765" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46797:46914" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47002:47516" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47574:47822" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47931:50300" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="47954:50293" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="48472:48703" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="48938:49169" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="50109:50196" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="50349:50364" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50384:50390" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50396:50491" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50524:50539" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50569:50575" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50581:50674" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50716:50731" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50764:50770" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50776:50825" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50860:50894" ph="{}" />
-            <marker date="1507755775000" expanded="true" signature="50901:51028" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="51062:51258" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="51264:51393" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="51436:51584" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="51446:51503" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="51590:51712" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="51754:51769" ph=" { " />
-            <marker date="1507755775000" expanded="true" signature="51792:51798" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="51804:51935" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="51997:52012" ph=" { " />
-            <marker date="1507755775000" expanded="true" signature="52051:52057" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52098:52113" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52140:52146" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52173:52188" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52220:52226" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52254:52269" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52302:52308" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52335:52350" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52384:52390" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52416:52427" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52451:52457" ph=" }" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1176,61 +881,25 @@
         <state relative-caret-position="0">
           <caret line="129" column="23" lean-forward="false" selection-start-line="129" selection-start-column="23" selection-end-line="129" selection-end-column="23" />
           <folding>
-            <element signature="e#4900#4901#0" expanded="true" />
-            <element signature="e#4920#4921#0" expanded="true" />
             <element signature="method#setLogFileNameAndDirectory#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#5372#5373#0" expanded="true" />
-            <element signature="e#5410#5411#0" expanded="true" />
             <element signature="method#WekaSegmentation#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setImgDims#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#6804#6805#0" expanded="true" />
-            <element signature="e#6828#6829#0" expanded="true" />
-            <element signature="e#6978#6979#0" expanded="true" />
-            <element signature="e#6997#6998#0" expanded="true" />
             <element signature="method#initialize#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setTrainingImage#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#8155#8156#0" expanded="true" />
-            <element signature="e#8183#8184#0" expanded="true" />
             <element signature="method#createExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#deleteExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getExampleBounds#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#isValidExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getExampleRois#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#10996#10997#0" expanded="true" />
-            <element signature="e#11018#11019#0" expanded="true" />
-            <element signature="e#11080#11081#0" expanded="true" />
-            <element signature="e#11111#11112#0" expanded="true" />
             <element signature="method#getNumExamples#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setAllFeaturesActive#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#deactivateRarelyUsedFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumClassesInExamples#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumExamplesPerClass#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#12371#12372#0" expanded="true" />
-            <element signature="e#12411#12412#0" expanded="true" />
-            <element signature="e#12585#12586#0" expanded="true" />
-            <element signature="e#12630#12631#0" expanded="true" />
-            <element signature="e#12757#12758#0" expanded="true" />
-            <element signature="e#12802#12803#0" expanded="true" />
-            <element signature="e#12930#12931#0" expanded="true" />
-            <element signature="e#12973#12974#0" expanded="true" />
-            <element signature="e#13094#13095#0" expanded="true" />
-            <element signature="e#13123#13124#0" expanded="true" />
-            <element signature="e#13176#13177#0" expanded="true" />
-            <element signature="e#13204#13205#0" expanded="true" />
             <element signature="method#getFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#14448#14449#0" expanded="true" />
-            <element signature="e#14472#14473#0" expanded="true" />
             <element signature="method#saveProject#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#loadProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#17385#17386#0" expanded="true" />
-            <element signature="e#17413#17414#0" expanded="true" />
-            <element signature="e#17517#17518#0" expanded="true" />
-            <element signature="e#17548#17549#0" expanded="true" />
-            <element signature="e#17794#17795#0" expanded="true" />
-            <element signature="e#17852#17853#0" expanded="true" />
             <element signature="method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#18620#18621#0" expanded="true" />
-            <element signature="e#18648#18649#0" expanded="true" />
             <element signature="method#balanceTrainingData#1;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#createTrainingInstancesFromTraces#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="e#22546#22557#0" expanded="true" />
@@ -1250,7 +919,6 @@
             <element signature="method#getClassNamesAsArrayList#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumActiveFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumAllFeatures#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#createTrainingInstancesFromLabelImageRegion#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#addInstanceToLabelImageTrainingData#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setTrainingInstancesFromLabelImage#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#trainClassifier#0;class#WekaSegmentation#0" expanded="true" />
@@ -1260,8 +928,8 @@
             <element signature="method#setClassificationResult#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getSettingActiveFeatureNames#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getAttributes#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#70493#70543#0" expanded="false" />
-            <element signature="e#70918#70968#0" expanded="false" />
+            <element signature="e#70537#70587#0" expanded="false" />
+            <element signature="e#70962#71012#0" expanded="false" />
             <element signature="docComment;method#getMaxDepth#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#setDoHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#doHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
@@ -1272,39 +940,6 @@
             <element signature="docComment;method#updateClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#mergeDataInPlace#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#getClassNames#0;class#WekaSegmentation#0" expanded="false" />
-            <marker date="1507755775000" expanded="false" signature="61265:61916" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="62277:67670" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="62375:67666" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="62416:67662" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="64342:64451" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="67729:67971" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="68011:68017" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="68056:68059" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="68106:68112" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="68143:68146" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="68186:68192" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="68229:68232" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="68285:68781" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="68785:68922" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="68966:68984" ph="{}" />
-            <marker date="1507755775000" expanded="false" signature="68987:69111" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="69143:69149" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69158:69161" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69164:69233" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="69265:69271" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69286:69289" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69292:69389" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="69415:69421" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69439:69442" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69491:69497" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69524:69527" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69562:69568" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69592:69595" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69646:69652" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69674:69677" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69723:69847" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="69916:70179" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="70218:70268" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1320,7 +955,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="659" column="56" lean-forward="false" selection-start-line="659" selection-start-column="56" selection-end-line="659" selection-end-column="57" />
-          <folding />
+          <folding>
+            <element signature="method#distributionForInstance#0;class#FastRandomForest#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1379,7 +1016,6 @@
             <element signature="docComment;field#exec#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#trainButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#overlayButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="e#4046#4073#0" expanded="false" />
             <element signature="docComment;field#createResultButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#probabilityButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#plotButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -1436,8 +1072,6 @@
             <element signature="method#itemStateChanged#0;class#18807:19139" expanded="true" />
             <element signature="method#run#0;class#18894:19122" expanded="true" />
             <element signature="method#CustomCanvas#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#19625#19713#0" expanded="true" />
-            <element signature="e#19712#19713#0" expanded="true" />
             <element signature="method#setDstDimensions#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#paint#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="e#20780#20781#0" expanded="true" />
@@ -1455,10 +1089,6 @@
             <element signature="method#run#0;class#28237:29743" expanded="true" />
             <element signature="method#keyReleased#0;class#28147:30583" expanded="true" />
             <element signature="method#run#0;class#29843:30504" expanded="true" />
-            <element signature="e#37964#39180#0" expanded="true" />
-            <element signature="e#39179#39180#0" expanded="true" />
-            <element signature="e#39215#39392#0" expanded="true" />
-            <element signature="e#39391#39392#0" expanded="true" />
             <element signature="method#createAnnotationButton#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#uncertaintyNavigation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#zoomToSelection#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
@@ -1468,59 +1098,6 @@
             <element signature="e#42127#42128#0" expanded="true" />
             <element signature="method#drawExamples#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#updateExampleLists#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <marker date="1507755775000" expanded="true" signature="77519:77773" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="77739:77746" ph="}" />
-            <marker date="1507755775000" expanded="true" signature="77776:77824" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="77853:78256" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="78259:78513" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="78631:79385" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="79388:79556" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="79638:79838" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="79841:79881" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="79911:81031" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="81034:81075" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="81139:82071" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="82075:82138" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="82168:82982" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="82985:83018" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83050:83232" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83121:83227" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83146:83221" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83235:83269" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83304:83485" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83488:83566" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83605:93469" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="85389:85582" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="86044:86410" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="86539:86726" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="89448:89571" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="89712:89914" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="90116:90260" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="91943:92067" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="92846:92936" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="93497:93628" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="93637:94433" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="94115:94288" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="94436:94553" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="94626:95730" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="94726:94903" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="95005:95078" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="95082:95154" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="95202:95727" ph="{}" />
-            <marker date="1507755775000" expanded="false" signature="95896:96141" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="96202:96579" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="96584:96632" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="96683:96871" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="96874:96986" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="97039:97413" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="97416:97539" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="97609:97999" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98002:98112" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="98166:98534" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98537:98650" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="98701:98819" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98823:99186" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="99229:100808" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1529,52 +1106,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="1111" column="50" lean-forward="false" selection-start-line="1111" selection-start-column="50" selection-end-line="1111" selection-end-column="50" />
-          <folding>
-            <marker date="1507755775000" expanded="true" signature="44302:44956" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="45025:45431" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="45489:46056" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46124:46295" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46368:46765" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46797:46914" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47002:47516" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47574:47822" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47931:50300" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="47954:50293" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="48472:48703" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="48938:49169" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="50109:50196" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="50349:50364" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50384:50390" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50396:50491" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50524:50539" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50569:50575" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50581:50674" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50716:50731" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50764:50770" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50776:50825" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50860:50894" ph="{}" />
-            <marker date="1507755775000" expanded="true" signature="50901:51028" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="51062:51258" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="51264:51393" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="51436:51584" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="51446:51503" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="51590:51712" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="51754:51769" ph=" { " />
-            <marker date="1507755775000" expanded="true" signature="51792:51798" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="51804:51935" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="51997:52012" ph=" { " />
-            <marker date="1507755775000" expanded="true" signature="52051:52057" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52098:52113" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52140:52146" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52173:52188" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52220:52226" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52254:52269" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52302:52308" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52335:52350" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52384:52390" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52416:52427" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52451:52457" ph=" }" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1583,61 +1115,25 @@
         <state relative-caret-position="0">
           <caret line="2043" column="0" lean-forward="false" selection-start-line="2043" selection-start-column="0" selection-end-line="2043" selection-end-column="0" />
           <folding>
-            <element signature="e#4900#4901#0" expanded="true" />
-            <element signature="e#4920#4921#0" expanded="true" />
             <element signature="method#setLogFileNameAndDirectory#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#5372#5373#0" expanded="true" />
-            <element signature="e#5410#5411#0" expanded="true" />
             <element signature="method#WekaSegmentation#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setImgDims#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#6804#6805#0" expanded="true" />
-            <element signature="e#6828#6829#0" expanded="true" />
-            <element signature="e#6978#6979#0" expanded="true" />
-            <element signature="e#6997#6998#0" expanded="true" />
             <element signature="method#initialize#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setTrainingImage#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#8155#8156#0" expanded="true" />
-            <element signature="e#8183#8184#0" expanded="true" />
             <element signature="method#createExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#deleteExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getExampleBounds#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#isValidExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getExampleRois#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#10996#10997#0" expanded="true" />
-            <element signature="e#11018#11019#0" expanded="true" />
-            <element signature="e#11080#11081#0" expanded="true" />
-            <element signature="e#11111#11112#0" expanded="true" />
             <element signature="method#getNumExamples#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setAllFeaturesActive#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#deactivateRarelyUsedFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumClassesInExamples#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumExamplesPerClass#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#12371#12372#0" expanded="true" />
-            <element signature="e#12411#12412#0" expanded="true" />
-            <element signature="e#12585#12586#0" expanded="true" />
-            <element signature="e#12630#12631#0" expanded="true" />
-            <element signature="e#12757#12758#0" expanded="true" />
-            <element signature="e#12802#12803#0" expanded="true" />
-            <element signature="e#12930#12931#0" expanded="true" />
-            <element signature="e#12973#12974#0" expanded="true" />
-            <element signature="e#13094#13095#0" expanded="true" />
-            <element signature="e#13123#13124#0" expanded="true" />
-            <element signature="e#13176#13177#0" expanded="true" />
-            <element signature="e#13204#13205#0" expanded="true" />
             <element signature="method#getFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#14448#14449#0" expanded="true" />
-            <element signature="e#14472#14473#0" expanded="true" />
             <element signature="method#saveProject#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#loadProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#17385#17386#0" expanded="true" />
-            <element signature="e#17413#17414#0" expanded="true" />
-            <element signature="e#17517#17518#0" expanded="true" />
-            <element signature="e#17548#17549#0" expanded="true" />
-            <element signature="e#17794#17795#0" expanded="true" />
-            <element signature="e#17852#17853#0" expanded="true" />
             <element signature="method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#18620#18621#0" expanded="true" />
-            <element signature="e#18648#18649#0" expanded="true" />
             <element signature="method#balanceTrainingData#1;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#createTrainingInstancesFromTraces#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="e#22546#22557#0" expanded="true" />
@@ -1657,7 +1153,6 @@
             <element signature="method#getClassNamesAsArrayList#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumActiveFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumAllFeatures#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#createTrainingInstancesFromLabelImageRegion#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#addInstanceToLabelImageTrainingData#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setTrainingInstancesFromLabelImage#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#trainClassifier#0;class#WekaSegmentation#0" expanded="true" />
@@ -1667,8 +1162,8 @@
             <element signature="method#setClassificationResult#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getSettingActiveFeatureNames#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getAttributes#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#70493#70543#0" expanded="false" />
-            <element signature="e#70918#70968#0" expanded="false" />
+            <element signature="e#70537#70587#0" expanded="false" />
+            <element signature="e#70962#71012#0" expanded="false" />
             <element signature="docComment;method#getMaxDepth#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#setDoHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#doHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
@@ -1679,39 +1174,6 @@
             <element signature="docComment;method#updateClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#mergeDataInPlace#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#getClassNames#0;class#WekaSegmentation#0" expanded="false" />
-            <marker date="1507755775000" expanded="false" signature="61265:61916" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="62277:67670" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="62375:67666" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="62416:67662" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="64342:64451" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="67729:67971" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="68011:68017" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="68056:68059" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="68106:68112" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="68143:68146" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="68186:68192" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="68229:68232" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="68285:68781" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="68785:68922" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="68966:68984" ph="{}" />
-            <marker date="1507755775000" expanded="false" signature="68987:69111" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="69143:69149" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69158:69161" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69164:69233" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="69265:69271" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69286:69289" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69292:69389" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="69415:69421" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69439:69442" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69491:69497" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69524:69527" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69562:69568" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69592:69595" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69646:69652" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69674:69677" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69723:69847" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="69916:70179" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="70218:70268" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1727,7 +1189,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="218" column="39" lean-forward="false" selection-start-line="218" selection-start-column="32" selection-end-line="218" selection-end-column="39" />
-          <folding />
+          <folding>
+            <element signature="method#distributionForInstance#0;class#FastRandomForest#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1764,7 +1228,6 @@
             <element signature="docComment;field#exec#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#trainButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#overlayButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="e#4046#4073#0" expanded="false" />
             <element signature="docComment;field#createResultButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#probabilityButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#plotButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -1821,8 +1284,6 @@
             <element signature="method#itemStateChanged#0;class#18807:19139" expanded="true" />
             <element signature="method#run#0;class#18894:19122" expanded="true" />
             <element signature="method#CustomCanvas#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#19625#19713#0" expanded="true" />
-            <element signature="e#19712#19713#0" expanded="true" />
             <element signature="method#setDstDimensions#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#paint#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="e#20780#20781#0" expanded="true" />
@@ -1840,10 +1301,6 @@
             <element signature="method#run#0;class#28237:29743" expanded="true" />
             <element signature="method#keyReleased#0;class#28147:30583" expanded="true" />
             <element signature="method#run#0;class#29843:30504" expanded="true" />
-            <element signature="e#37964#39180#0" expanded="true" />
-            <element signature="e#39179#39180#0" expanded="true" />
-            <element signature="e#39215#39392#0" expanded="true" />
-            <element signature="e#39391#39392#0" expanded="true" />
             <element signature="method#createAnnotationButton#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#uncertaintyNavigation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#zoomToSelection#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
@@ -1853,59 +1310,6 @@
             <element signature="e#42127#42128#0" expanded="true" />
             <element signature="method#drawExamples#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#updateExampleLists#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <marker date="1507755775000" expanded="true" signature="77519:77773" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="77739:77746" ph="}" />
-            <marker date="1507755775000" expanded="true" signature="77776:77824" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="77853:78256" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="78259:78513" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="78631:79385" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="79388:79556" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="79638:79838" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="79841:79881" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="79911:81031" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="81034:81075" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="81139:82071" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="82075:82138" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="82168:82982" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="82985:83018" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83050:83232" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83121:83227" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83146:83221" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83235:83269" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83304:83485" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83488:83566" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83605:93469" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="85389:85582" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="86044:86410" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="86539:86726" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="89448:89571" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="89712:89914" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="90116:90260" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="91943:92067" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="92846:92936" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="93497:93628" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="93637:94433" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="94115:94288" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="94436:94553" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="94626:95730" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="94726:94903" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="95005:95078" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="95082:95154" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="95202:95727" ph="{}" />
-            <marker date="1507755775000" expanded="false" signature="95896:96141" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="96202:96579" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="96584:96632" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="96683:96871" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="96874:96986" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="97039:97413" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="97416:97539" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="97609:97999" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98002:98112" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="98166:98534" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98537:98650" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="98701:98819" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98823:99186" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="99229:100808" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1914,52 +1318,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="495" column="16" lean-forward="false" selection-start-line="495" selection-start-column="16" selection-end-line="495" selection-end-column="16" />
-          <folding>
-            <marker date="1507755775000" expanded="true" signature="44302:44956" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="45025:45431" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="45489:46056" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46124:46295" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46368:46765" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46797:46914" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47002:47516" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47574:47822" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47931:50300" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="47954:50293" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="48472:48703" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="48938:49169" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="50109:50196" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="50349:50364" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50384:50390" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50396:50491" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50524:50539" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50569:50575" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50581:50674" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50716:50731" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50764:50770" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50776:50825" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50860:50894" ph="{}" />
-            <marker date="1507755775000" expanded="true" signature="50901:51028" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="51062:51258" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="51264:51393" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="51436:51584" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="51446:51503" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="51590:51712" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="51754:51769" ph=" { " />
-            <marker date="1507755775000" expanded="true" signature="51792:51798" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="51804:51935" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="51997:52012" ph=" { " />
-            <marker date="1507755775000" expanded="true" signature="52051:52057" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52098:52113" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52140:52146" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52173:52188" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52220:52226" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52254:52269" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52302:52308" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52335:52350" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52384:52390" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52416:52427" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52451:52457" ph=" }" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -2090,14 +1449,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomForest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5955">
-          <caret line="695" column="42" lean-forward="false" selection-start-line="695" selection-start-column="42" selection-end-line="695" selection-end-column="42" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/filters/HessianImgLib2.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -2117,13 +1468,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="212" column="27" lean-forward="false" selection-start-line="212" selection-start-column="27" selection-end-line="212" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRfBagging.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="668" column="11" lean-forward="false" selection-start-line="668" selection-start-column="11" selection-end-line="668" selection-end-column="11" />
         </state>
       </provider>
     </entry>
@@ -2151,7 +1495,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/test/java/trainableDeepSegmentation/TestHeadless.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
+        <state relative-caret-position="510">
           <caret line="34" column="0" lean-forward="false" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
@@ -2169,7 +1513,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
+        <state relative-caret-position="7455">
           <caret line="2200" column="26" lean-forward="false" selection-start-line="2200" selection-start-column="26" selection-end-line="2200" selection-end-column="26" />
           <folding>
             <element signature="docComment;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -2186,7 +1530,6 @@
             <element signature="docComment;field#exec#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#trainButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#overlayButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="e#4046#4073#0" expanded="false" />
             <element signature="docComment;field#createResultButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#probabilityButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#plotButton#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -2243,8 +1586,6 @@
             <element signature="method#itemStateChanged#0;class#18807:19139" expanded="true" />
             <element signature="method#run#0;class#18894:19122" expanded="true" />
             <element signature="method#CustomCanvas#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <element signature="e#19625#19713#0" expanded="true" />
-            <element signature="e#19712#19713#0" expanded="true" />
             <element signature="method#setDstDimensions#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#paint#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="e#20780#20781#0" expanded="true" />
@@ -2262,10 +1603,6 @@
             <element signature="method#run#0;class#28237:29743" expanded="true" />
             <element signature="method#keyReleased#0;class#28147:30583" expanded="true" />
             <element signature="method#run#0;class#29843:30504" expanded="true" />
-            <element signature="e#37964#39180#0" expanded="true" />
-            <element signature="e#39179#39180#0" expanded="true" />
-            <element signature="e#39215#39392#0" expanded="true" />
-            <element signature="e#39391#39392#0" expanded="true" />
             <element signature="method#createAnnotationButton#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#uncertaintyNavigation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#zoomToSelection#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
@@ -2275,66 +1612,13 @@
             <element signature="e#42127#42128#0" expanded="true" />
             <element signature="method#drawExamples#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="method#updateExampleLists#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="true" />
-            <marker date="1507755775000" expanded="true" signature="77519:77773" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="77739:77746" ph="}" />
-            <marker date="1507755775000" expanded="true" signature="77776:77824" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="77853:78256" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="78259:78513" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="78631:79385" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="79388:79556" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="79638:79838" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="79841:79881" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="79911:81031" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="81034:81075" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="81139:82071" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="82075:82138" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="82168:82982" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="82985:83018" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83050:83232" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83121:83227" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83146:83221" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83235:83269" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83304:83485" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="83488:83566" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="83605:93469" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="85389:85582" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="86044:86410" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="86539:86726" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="89448:89571" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="89712:89914" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="90116:90260" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="91943:92067" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="92846:92936" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="93497:93628" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="93637:94433" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="94115:94288" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="94436:94553" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="94626:95730" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="94726:94903" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="95005:95078" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="95082:95154" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="95202:95727" ph="{}" />
-            <marker date="1507755775000" expanded="false" signature="95896:96141" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="96202:96579" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="96584:96632" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="96683:96871" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="96874:96986" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="97039:97413" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="97416:97539" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="97609:97999" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98002:98112" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="98166:98534" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98537:98650" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="98701:98819" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="98823:99186" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="99229:100808" ph="{...}" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Settings.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="432">
+        <state relative-caret-position="465">
           <caret line="31" column="37" lean-forward="false" selection-start-line="31" selection-start-column="37" selection-end-line="31" selection-end-column="37" />
           <folding>
             <element signature="imports" expanded="true" />
@@ -2344,117 +1628,54 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureImagesMultiResolution.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="529">
-          <caret line="378" column="16" lean-forward="false" selection-start-line="378" selection-start-column="16" selection-end-line="378" selection-end-column="16" />
+        <state relative-caret-position="2205">
+          <caret line="309" column="16" lean-forward="false" selection-start-line="309" selection-start-column="16" selection-end-line="309" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRandomForest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="297">
+          <caret line="614" column="36" lean-forward="false" selection-start-line="614" selection-start-column="36" selection-end-line="614" selection-end-column="36" />
           <folding>
-            <marker date="1507755775000" expanded="true" signature="44302:44956" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="45025:45431" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="45489:46056" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46124:46295" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46368:46765" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="46797:46914" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47002:47516" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47574:47822" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="47931:50300" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="47954:50293" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="48472:48703" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="48938:49169" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="50109:50196" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="50349:50364" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50384:50390" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50396:50491" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50524:50539" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50569:50575" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50581:50674" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50716:50731" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="50764:50770" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="50776:50825" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="50860:50894" ph="{}" />
-            <marker date="1507755775000" expanded="true" signature="50901:51028" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="51062:51258" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="51264:51393" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="51436:51584" ph="{...}" />
-            <marker date="1507755775000" expanded="true" signature="51446:51503" ph="//..." />
-            <marker date="1507755775000" expanded="true" signature="51590:51712" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="51754:51769" ph=" { " />
-            <marker date="1507755775000" expanded="true" signature="51792:51798" ph=" }" />
-            <marker date="1507755775000" expanded="true" signature="51804:51935" ph="/**...*/" />
-            <marker date="1507755775000" expanded="true" signature="51997:52012" ph=" { " />
-            <marker date="1507755775000" expanded="true" signature="52051:52057" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52098:52113" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52140:52146" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52173:52188" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52220:52226" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52254:52269" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52302:52308" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52335:52350" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52384:52390" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="52416:52427" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="52451:52457" ph=" }" />
+            <element signature="method#distributionForInstance#0;class#FastRandomForest#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hr/irb/fastRandomForest/FastRfBagging.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="384">
+          <caret line="146" column="14" lean-forward="false" selection-start-line="146" selection-start-column="14" selection-end-line="146" selection-end-column="14" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/WekaSegmentation.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="188">
-          <caret line="1398" column="53" lean-forward="false" selection-start-line="1398" selection-start-column="48" selection-end-line="1398" selection-end-column="53" />
+        <state relative-caret-position="214">
+          <caret line="1497" column="8" lean-forward="true" selection-start-line="1497" selection-start-column="8" selection-end-line="1497" selection-end-column="8" />
           <folding>
-            <element signature="e#4900#4901#0" expanded="true" />
-            <element signature="e#4920#4921#0" expanded="true" />
             <element signature="method#setLogFileNameAndDirectory#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#5372#5373#0" expanded="true" />
-            <element signature="e#5410#5411#0" expanded="true" />
             <element signature="method#WekaSegmentation#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setImgDims#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#6804#6805#0" expanded="true" />
-            <element signature="e#6828#6829#0" expanded="true" />
-            <element signature="e#6978#6979#0" expanded="true" />
-            <element signature="e#6997#6998#0" expanded="true" />
             <element signature="method#initialize#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setTrainingImage#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#8155#8156#0" expanded="true" />
-            <element signature="e#8183#8184#0" expanded="true" />
             <element signature="method#createExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#deleteExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getExampleBounds#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#isValidExample#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getExampleRois#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#10996#10997#0" expanded="true" />
-            <element signature="e#11018#11019#0" expanded="true" />
-            <element signature="e#11080#11081#0" expanded="true" />
-            <element signature="e#11111#11112#0" expanded="true" />
             <element signature="method#getNumExamples#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setAllFeaturesActive#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#deactivateRarelyUsedFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumClassesInExamples#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumExamplesPerClass#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#12371#12372#0" expanded="true" />
-            <element signature="e#12411#12412#0" expanded="true" />
-            <element signature="e#12585#12586#0" expanded="true" />
-            <element signature="e#12630#12631#0" expanded="true" />
-            <element signature="e#12757#12758#0" expanded="true" />
-            <element signature="e#12802#12803#0" expanded="true" />
-            <element signature="e#12930#12931#0" expanded="true" />
-            <element signature="e#12973#12974#0" expanded="true" />
-            <element signature="e#13094#13095#0" expanded="true" />
-            <element signature="e#13123#13124#0" expanded="true" />
-            <element signature="e#13176#13177#0" expanded="true" />
-            <element signature="e#13204#13205#0" expanded="true" />
             <element signature="method#getFeatureValues#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#14448#14449#0" expanded="true" />
-            <element signature="e#14472#14473#0" expanded="true" />
             <element signature="method#saveProject#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#loadProject#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#17385#17386#0" expanded="true" />
-            <element signature="e#17413#17414#0" expanded="true" />
-            <element signature="e#17517#17518#0" expanded="true" />
-            <element signature="e#17548#17549#0" expanded="true" />
-            <element signature="e#17794#17795#0" expanded="true" />
-            <element signature="e#17852#17853#0" expanded="true" />
             <element signature="method#balanceTrainingData#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#18620#18621#0" expanded="true" />
-            <element signature="e#18648#18649#0" expanded="true" />
             <element signature="method#balanceTrainingData#1;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#createTrainingInstancesFromTraces#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="e#22546#22557#0" expanded="true" />
@@ -2474,7 +1695,6 @@
             <element signature="method#getClassNamesAsArrayList#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumActiveFeatures#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getNumAllFeatures#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="method#createTrainingInstancesFromLabelImageRegion#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#addInstanceToLabelImageTrainingData#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#setTrainingInstancesFromLabelImage#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#trainClassifier#0;class#WekaSegmentation#0" expanded="true" />
@@ -2484,8 +1704,8 @@
             <element signature="method#setClassificationResult#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getSettingActiveFeatureNames#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="method#getAttributes#0;class#WekaSegmentation#0" expanded="true" />
-            <element signature="e#70493#70543#0" expanded="false" />
-            <element signature="e#70918#70968#0" expanded="false" />
+            <element signature="e#70537#70587#0" expanded="false" />
+            <element signature="e#70962#71012#0" expanded="false" />
             <element signature="docComment;method#getMaxDepth#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#setDoHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#doHomogenizeClasses#0;class#WekaSegmentation#0" expanded="false" />
@@ -2496,39 +1716,6 @@
             <element signature="docComment;method#updateClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#mergeDataInPlace#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="docComment;method#getClassNames#0;class#WekaSegmentation#0" expanded="false" />
-            <marker date="1507755775000" expanded="false" signature="61265:61916" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="62277:67670" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="62375:67666" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="62416:67662" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="64342:64451" ph="//..." />
-            <marker date="1507755775000" expanded="false" signature="67729:67971" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="68011:68017" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="68056:68059" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="68106:68112" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="68143:68146" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="68186:68192" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="68229:68232" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="68285:68781" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="68785:68922" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="68966:68984" ph="{}" />
-            <marker date="1507755775000" expanded="false" signature="68987:69111" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="69143:69149" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69158:69161" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69164:69233" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="69265:69271" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69286:69289" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69292:69389" ph="/**...*/" />
-            <marker date="1507755775000" expanded="false" signature="69415:69421" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69439:69442" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69491:69497" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69524:69527" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69562:69568" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69592:69595" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69646:69652" ph=" { " />
-            <marker date="1507755775000" expanded="false" signature="69674:69677" ph=" }" />
-            <marker date="1507755775000" expanded="false" signature="69723:69847" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="69916:70179" ph="{...}" />
-            <marker date="1507755775000" expanded="false" signature="70218:70268" ph="{...}" />
           </folding>
         </state>
       </provider>
