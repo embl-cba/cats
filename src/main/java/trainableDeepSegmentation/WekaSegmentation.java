@@ -1130,30 +1130,37 @@ public class WekaSegmentation {
 		}
 	}
 
-	public long getNeededBytesPerRegionVoxel()
+	public long getNeededBytesPerVoxel()
 	{
 		long oneByte = 8;
 		long floatingPointImp = 32;
-		long mem = floatingPointImp * 10 * numRegionThreads / oneByte;
+		long mem = (long) settings.memoryFactor * floatingPointImp / oneByte;
 		return ( mem );
 	}
 
-	public long getMaximalNumberOfRegionVoxels()
+	public long getMaximalNumberOfVoxelsPerRegion()
 	{
 		long maxMemory = IJ.maxMemory();
 		long currentMemory = IJ.currentMemory();
 		long freeMemory = maxMemory - currentMemory;
 
-		long maxNumVoxels = freeMemory / getNeededBytesPerRegionVoxel();
+		long maxNumVoxelsPerRegion = (long) 1.0 * freeMemory /( getNeededBytesPerVoxel() * numRegionThreads );
 
-		long maxNumRegionWidth = (long) Math.pow( maxNumVoxels, 1.0/3 );
+		long maxNumRegionWidth = (long) Math.pow( maxNumVoxelsPerRegion, 1.0/3 );
 
-		return maxNumVoxels;
+		logger.setShowDebug( true );
+		logger.debug( "memory factor " + settings.memoryFactor );
+		logger.debug( "maxNumVoxelsPerRegion " + maxNumVoxelsPerRegion );
+		logger.debug( "memoryPerRegionMemoryEstimate [MB] " +
+				(maxNumVoxelsPerRegion * getNeededBytesPerVoxel() / 1000000) );
+
+		return maxNumVoxelsPerRegion;
 	}
 
 	public int getMaximalRegionSize()
 	{
-		int maxNumRegionWidth = (int) Math.pow( getMaximalNumberOfRegionVoxels(), 1.0/3 );
+		// TODO: this is wrong if the regions are not cubic...
+		int maxNumRegionWidth = (int) Math.pow( getMaximalNumberOfVoxelsPerRegion(), 1.0/3 );
 		// to keep it kind of interactive limit the maximal size
 		// to something (500 is arbitrary)
 		maxNumRegionWidth = Math.min( maxNumRegionWidth, 500 );
@@ -1495,7 +1502,7 @@ public class WekaSegmentation {
 				" attributes, " + labelImageTrainingData.numClasses() + " classes).");
 
 		return null;
-		
+
 	}
 
 	private synchronized void addInstanceToLabelImageTrainingData( Instance instance )

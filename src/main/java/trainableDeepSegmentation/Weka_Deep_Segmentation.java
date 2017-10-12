@@ -1686,7 +1686,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// instantiate segmentation backend
 		wekaSegmentation = new WekaSegmentation();
 		logger = wekaSegmentation.getLogger();
-		wekaSegmentation.getMaximalNumberOfRegionVoxels();
+		wekaSegmentation.getMaximalNumberOfVoxelsPerRegion();
 
 
 		for(int i = 0; i < wekaSegmentation.getNumClasses() ; i++)
@@ -2335,7 +2335,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 							if ( xyztEnd[i] - xyztStart[i] < wekaSegmentation.getMaximalRegionSize() )
 							{
 								sizes[i] = ( xyztEnd[i] - xyztStart[i] + 1 ) + 2 * borders[i];
-
 							}
 							else
 							{
@@ -2345,12 +2344,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 								// play less of a role
 								// Useful fraction = (N-2)^3 / N^3
 								// where N = size / borderSize
-								int regionSize = xyztEnd[i] - xyztStart[i] + 1;
+								int regionWidth = xyztEnd[i] - xyztStart[i] + 1 + 2 * borders[i] ;
 
-								int n = (int) Math.ceil( 1.0 * regionSize
+								int n = (int) Math.ceil( (1.0 * regionWidth)
 										/ wekaSegmentation.getMaximalRegionSize() );
 
-								int tileSize = regionSize / n + 2 * borders[i];
+								int tileSize = regionWidth / n ;
 
 								sizes[i] = tileSize;
 							}
@@ -2916,6 +2915,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.settings.maxDeepConvolutionLevel, 0);
 		gd.addNumericField("Feature computation: z/xy settings.anisotropy",
 				wekaSegmentation.settings.anisotropy, 0);
+		gd.addNumericField("Computation: Memory factor",
+				wekaSegmentation.settings.memoryFactor, 1);
+
 
 
 		/*
@@ -3028,8 +3030,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.settings.downSamplingFactor = (int) gd.getNextNumber();
 		wekaSegmentation.settings.maxResolutionLevel = (int) gd.getNextNumber();
 		wekaSegmentation.settings.maxDeepConvolutionLevel = (int) gd.getNextNumber();
+		wekaSegmentation.settings.anisotropy = gd.getNextNumber();
+		wekaSegmentation.settings.memoryFactor = gd.getNextNumber();
 
-		wekaSegmentation.settings.anisotropy = (int) gd.getNextNumber();
 
 		// Set classifier and options
 		wekaSegmentation.setNumTrees((int) gd.getNextNumber());

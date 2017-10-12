@@ -841,6 +841,7 @@ public class FeatureImagesMultiResolution
                     "probably a memory issue. Please try increasing your RAM " +
                     "and/or got to [Settings] and reduce the " +
                     "'Maximum resolution level'");
+            System.gc();
         }
         return multiResolutionFeatureImageArray.size();
     }
