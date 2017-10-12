@@ -141,7 +141,7 @@ public class WekaSegmentation {
 
 	public double accuracy = 3.0;
 
-	public double memoryFactor = 10;
+	public double memoryFactor = 1.0;
 
 	private static Logger logger = new IJLazySwingLogger();
 
@@ -973,8 +973,8 @@ public class WekaSegmentation {
 			{
 				// add one to width and height, as, e.g., a horizontal line has zero height.
 				int exampleWidth = ( bounds[i][1] - bounds[i][0] + 1 );
-
 				sizes[i] = borders[i] * ( 2 + (int) Math.ceil( 1.0 * exampleWidth / borders[i] ) );
+				sizes[i]++; // This is necessary for the 2D case, where otherwise the z-size would be zero
 
 				if ( sizes[i] > imgDims[i] )
 				{
@@ -1147,7 +1147,8 @@ public class WekaSegmentation {
 		long currentMemory = IJ.currentMemory();
 		long freeMemory = maxMemory - currentMemory;
 
-		long maxNumVoxelsPerRegion = (long) 1.0 * freeMemory /( getNeededBytesPerVoxel() * numRegionThreads );
+		long maxNumVoxelsPerRegion = (long) 1.0 * freeMemory /
+				( getNeededBytesPerVoxel() * numRegionThreads * numThreadsPerRegion );
 
 		long maxNumRegionWidth = (long) Math.pow( maxNumVoxelsPerRegion, 1.0/3 );
 
@@ -1311,8 +1312,9 @@ public class WekaSegmentation {
 		// - check whether this is too conservative
 		int[] borderSize = new int[3];
 		borderSize[0] = borderSize[1] = getFeatureVoxelSizeAtMaximumScale();
+		// 2D case:
 		borderSize[2] = ( imgDims[2] == 1 ) ? 0 : (int) (1.0 * getFeatureVoxelSizeAtMaximumScale() / settings.anisotropy);
-		borderSize[2] = borderSize[2] == 0 ? 1 : borderSize[2];
+		//borderSize[2] = borderSize[2] == 0 ? 1 : borderSize[2];
 		return( borderSize );
 	}
 
@@ -1923,8 +1925,8 @@ public class WekaSegmentation {
 				", using " + numThreads + " threads");
 			}
 
-			start = System.currentTimeMillis();
 
+			start = System.currentTimeMillis();
 
 			// create instances information (each instance needs a pointer to this)
 			Instances dataInfo = new Instances("segment", getAttributes(), 1);
@@ -1947,6 +1949,14 @@ public class WekaSegmentation {
 
 			for ( int slicesClassified = 0; slicesClassified < nz; slicesClassified += slicesPerChunk )
 			{
+
+				if ( stopCurrentThreads || Thread.currentThread().isInterrupted() )
+				{
+					logger.progress("Thread stopped:", "" + counter + "/" + counterMax);
+					exe.shutdownNow();
+					return;
+				}
+
 				if ( slicesClassified + slicesPerChunk >= nz )
 				{
 					// adapt the last chunk

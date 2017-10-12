@@ -95,7 +95,7 @@ public class TestGUI {
 				true,
 				false);*/
 		//IJ.open("/Users/tischi/Desktop/mitosis.tif");
-		IJ.open( "/Users/tischi/Desktop/mri-stack-big.tif" );
+		IJ.open( "/Users/tischi/Desktop/mri-stack-big-2d-movie.tif" );
 		//IJ.open("/Users/tischi/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
 		IJ.wait(100);
 

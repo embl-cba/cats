@@ -864,9 +864,6 @@ public class FeatureImagesMultiResolution
         // wekaSegmentation object and which not
         double anisotropy = wekaSegmentation.settings.anisotropy;
 
-        if (Thread.currentThread().isInterrupted() )
-            return false;
-
         featureNames = new ArrayList<>();
 
         multiResolutionFeatureImages = new ArrayList<>();
@@ -893,6 +890,12 @@ public class FeatureImagesMultiResolution
 
             for (int level = 0; level <= wekaSegmentation.settings.maxResolutionLevel; level++)
             {
+
+                if ( wekaSegmentation.stopCurrentThreads || Thread.currentThread().isInterrupted() )
+                {
+                    return ( false );
+                }
+
 
                 final ArrayList<ImagePlus> featureImagesThisResolution = new ArrayList<>();
                 final ArrayList<ImagePlus> featureImagesPreviousResolution;

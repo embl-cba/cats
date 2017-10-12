@@ -1686,8 +1686,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// instantiate segmentation backend
 		wekaSegmentation = new WekaSegmentation();
 		logger = wekaSegmentation.getLogger();
-		wekaSegmentation.getMaximalNumberOfVoxelsPerRegion();
-
 
 		for(int i = 0; i < wekaSegmentation.getNumClasses() ; i++)
 		{
@@ -1709,6 +1707,21 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingImage = WindowManager.getCurrentImage(); //.duplicate();
 			trainingImage.setSlice(WindowManager.getCurrentImage().getSlice());
 		}
+
+		if ( trainingImage.getNFrames() > 1 && trainingImage.getNSlices() == 1)
+		{
+			IJ.showMessage("Please note:\nThis is a 2-D movie and 2-D features will thus be computed.\n" +
+					"If this is not what you want please stop this plugin and change the " +
+					"[Image > Properties...].");
+		}
+
+		if ( trainingImage.getNFrames() == 1 && trainingImage.getNSlices() > 1)
+		{
+			IJ.showMessage("Please note:\nThis is a z-stack and 3-D features will be thus computed.\n" +
+					"If this is not what you want please stop this plugin and change the " +
+					"[Image > Properties...].");
+		}
+
 
 		wekaSegmentation.setTrainingImage( trainingImage );
 
