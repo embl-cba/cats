@@ -140,6 +140,8 @@ public class WekaSegmentation {
 
 	public double accuracy = 3.0;
 
+	public double memoryFactor = 10;
+
 	private static Logger logger = new IJLazySwingLogger();
 
 	private ArrayList< UncertaintyRegion > uncertaintyRegions = new ArrayList<>();
@@ -1134,7 +1136,7 @@ public class WekaSegmentation {
 	{
 		long oneByte = 8;
 		long floatingPointImp = 32;
-		long mem = (long) settings.memoryFactor * floatingPointImp / oneByte;
+		long mem = (long) memoryFactor * floatingPointImp / oneByte;
 		return ( mem );
 	}
 
@@ -1149,7 +1151,7 @@ public class WekaSegmentation {
 		long maxNumRegionWidth = (long) Math.pow( maxNumVoxelsPerRegion, 1.0/3 );
 
 		logger.setShowDebug( true );
-		logger.debug( "memory factor " + settings.memoryFactor );
+		logger.debug( "memory factor " + memoryFactor );
 		logger.debug( "maxNumVoxelsPerRegion " + maxNumVoxelsPerRegion );
 		logger.debug( "memoryPerRegionMemoryEstimate [MB] " +
 				(maxNumVoxelsPerRegion * getNeededBytesPerVoxel() / 1000000) );

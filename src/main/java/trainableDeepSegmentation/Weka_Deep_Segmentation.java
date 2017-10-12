@@ -2916,7 +2916,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		gd.addNumericField("Feature computation: z/xy settings.anisotropy",
 				wekaSegmentation.settings.anisotropy, 0);
 		gd.addNumericField("Computation: Memory factor",
-				wekaSegmentation.settings.memoryFactor, 1);
+				wekaSegmentation.memoryFactor, 1);
 
 
 
@@ -3031,7 +3031,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.settings.maxResolutionLevel = (int) gd.getNextNumber();
 		wekaSegmentation.settings.maxDeepConvolutionLevel = (int) gd.getNextNumber();
 		wekaSegmentation.settings.anisotropy = gd.getNextNumber();
-		wekaSegmentation.settings.memoryFactor = gd.getNextNumber();
+		wekaSegmentation.memoryFactor = gd.getNextNumber();
 
 
 		// Set classifier and options

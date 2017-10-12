@@ -15,8 +15,6 @@ public class Settings implements Serializable {
 
     public int maxDeepConvolutionLevel = 3; // 3
 
-    public double memoryFactor = 10;
-
     public int backgroundThreshold = 0; // gray-values
 
     public ArrayList< String > activeFeatureNames = null;
