@@ -22,6 +22,7 @@ import bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import bigDataTools.utils.Utils;
 import bigDataTools.logging.Logger;
 import bigDataTools.logging.IJLazySwingLogger;
+import edu.mines.jtk.util.Threads;
 import ij.gui.PolygonRoi;
 import javafx.geometry.Point3D;
 
@@ -1849,6 +1850,7 @@ public class WekaSegmentation {
 			{
 				try
 				{
+					System.gc();
 					Thread.sleep( counter * tilingDelay);
 				} catch (InterruptedException e)
 				{
