@@ -2,6 +2,7 @@ package trainableDeepSegmentation;
 
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.image.AreaAveragingScaleFilter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -33,6 +34,7 @@ import ij.ImageStack;
 import ij.Prefs;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
+import sun.text.resources.cldr.ee.FormatData_ee;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
@@ -1442,7 +1444,7 @@ public class WekaSegmentation {
 		//
 		ArrayList<Point3D>[] classCoordinates = new ArrayList[ getNumClasses() ];
 		for(int i = 0; i < getNumClasses() ; i ++)
-			classCoordinates[ i ] = new ArrayList<Point3D>();
+			classCoordinates[ i ] = new ArrayList<>();
 
 		for(int z = zs; z < zs + nz; ++z )
 		{
@@ -1458,42 +1460,59 @@ public class WekaSegmentation {
 			}
 		}
 
-		// Get all the features
+		// Get image features
 		//
 		ArrayList < double[][][] > featureSlices = new ArrayList<>();
-		// prepare featureSlice arrays
+
 		for (int z = 0; z < nz; ++z )
 		{
-			featureSlices.add( new double [nx][ny][nz] );
+			ArrayList < double[][][] > featureSlicesThisPlane = new ArrayList<>();
+
+			for ( int c = 0; c < 1; c++ )
+			{
+
+			}
+			double[][][] slice = new double [nx][ny][ featureImages.getNumFeatures() ];
 
 			featureImages.setFeatureSliceRegion(
 					z,
 					0, nx - 1,
 					0, ny - 1,
-					featureSlices.get( z ) );
-			
+					slice );
+
+			featureSlices.add( slice );
 		}
 
 		// Select random samples from each class
 		Random rand = new Random();
-		for( int i=0; i < numInstancesPerClass; i++ )
+
+		for( int i = 0; i < numInstancesPerClass; i++ )
 		{
-			for( int j = 0; j < getNumClasses() ; j ++ )
+			for( int cl = 0; cl < getNumClasses() ; cl ++ )
 			{
-				if( !classCoordinates[ j ].isEmpty() )
+				if( !classCoordinates[ cl ].isEmpty() )
 				{
-					int randomSample = rand.nextInt( classCoordinates[ j ].size() );
+					int randomSample = rand.nextInt( classCoordinates[ cl ].size() );
 
-					// TODO:
-					// get values from featureImage
-					//featureImages.setFeatureSlice();
-					/*
-					featureImages.setFeatureSliceRegion();
-					featureStack.createInstance( classCoordinates[ j ].get( randomSample ).x,
-							classCoordinates[ j ].get( randomSample ).y, j )
+					int z = (int) classCoordinates[ cl ].get( randomSample ).getZ();
 
-					addInstanceToLabelImageTrainingData( );
-					*/
+					// We have to put the featureSlice for this z-plane into
+					// an ArrayList, because there could be multiple channels,
+					// and this is what 'getFeatureValues' expects as input
+					ArrayList< double[][][] > featureSliceChannels = new ArrayList<>();
+					featureSliceChannels.add( featureSlices.get( z ) );
+
+					double[] featureValues = getFeatureValues( featureSliceChannels,
+							(int) classCoordinates[ cl ].get( randomSample ).getX(),
+							(int) classCoordinates[ cl ].get( randomSample ).getY()
+							, cl );
+
+					DenseInstance denseInstance = new DenseInstance(
+							1.0,
+							featureValues);
+
+					addInstanceToLabelImageTrainingData( denseInstance );
+					
 				}
 			}
 		}
@@ -1515,6 +1534,10 @@ public class WekaSegmentation {
 		labelImageTrainingData.add( instance );
 	}
 
+	public void setLabelImage( ImagePlus labelImage )
+	{
+		this.labelImage = labelImage;
+	}
 
 	public void setTrainingInstancesFromLabelImage( ImagePlus labelImageTrainingData )
 	{

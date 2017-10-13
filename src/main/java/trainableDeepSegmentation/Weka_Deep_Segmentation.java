@@ -146,6 +146,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	/** load annotations button */
 	private JButton loadProjectButton = null;
+
 	/** save annotations button */
 	private JButton saveProjectButton = null;
 	/** settings button */
@@ -1686,6 +1687,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// instantiate segmentation backend
 		wekaSegmentation = new WekaSegmentation();
 		logger = wekaSegmentation.getLogger();
+
+		IJ.open( "  /Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train-labels/train-labels.tif ");
+		wekaSegmentation.setLabelImage( IJ.getImage() );
 
 		for(int i = 0; i < wekaSegmentation.getNumClasses() ; i++)
 		{
