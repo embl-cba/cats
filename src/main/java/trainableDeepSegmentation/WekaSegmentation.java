@@ -142,6 +142,8 @@ public class WekaSegmentation {
 
 	public double memoryFactor = 1.0;
 
+	public int labelImageNumInstancesPerClass = 1000;
+
 	private static Logger logger = new IJLazySwingLogger();
 
 	private ArrayList< UncertaintyRegion > uncertaintyRegions = new ArrayList<>();

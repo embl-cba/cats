@@ -115,11 +115,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** train classifier button */
 	private JButton trainButton = null;
 	private JCheckBox trainingRecomputeFeaturesCheckBox = null;
+	private JCheckBox trainingFromLabelImageCheckBox = null;
+
 
 	/** toggle overlay button */
 	private JButton overlayButton = null;
-
-
 
 	/** create result button */
 	//private JButton getResultButton = null;
@@ -146,6 +146,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	/** load annotations button */
 	private JButton loadProjectButton = null;
+
+	private JButton loadLabelImageButton = null;
+
 
 	/** save annotations button */
 	private JButton saveProjectButton = null;
@@ -308,7 +311,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		trainButton = new JButton("Train classifier");
 		trainButton.setToolTipText("Start training the classifier");
-		trainingRecomputeFeaturesCheckBox = new JCheckBox("Recompute", false);
+		trainingRecomputeFeaturesCheckBox = new JCheckBox("ReComp", false);
+		trainingFromLabelImageCheckBox = new JCheckBox("LabelIm", false);
 
 		overlayButton = new JButton("Toggle overlay [r][p][u]");
 		overlayButton.setToolTipText("Toggle between current segmentation and original image");
@@ -360,6 +364,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 		loadProjectButton = new JButton ("Load project");
 		loadProjectButton.setEnabled(true);
 
+		loadLabelImageButton = new JButton ("Load label image");
+		loadLabelImageButton.setEnabled(true);
+
 		saveProjectButton = new JButton ("Save project");
 		saveProjectButton.setEnabled(false);
 
@@ -404,7 +411,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				{
 					if(e.getSource() == trainButton)
 					{
-						runStopTraining(command);
+						runStopTraining( command );
 					}
 					else if(e.getSource() == overlayButton){
 						// Macro recording
@@ -514,6 +521,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 					else if(e.getSource() == settingsButton){
 						showSettingsDialog();
 						win.updateButtonsEnabling();
+					}
+					else if(e.getSource() == loadLabelImageButton)
+					{
+						logger.info("Loading label image" );
 					}
 					else if(e.getSource() == testThreadsButton){
 						testThreads();
@@ -767,6 +778,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			applyButton.addActionListener(listener);
 			postProcessButton.addActionListener(listener);
 			loadProjectButton.addActionListener(listener);
+			loadLabelImageButton.addActionListener(listener);
 			saveProjectButton.addActionListener(listener);
 			addClassButton.addActionListener(listener);
 			settingsButton.addActionListener(listener);
@@ -1022,6 +1034,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			JPanel trainClassifierPanel = new JPanel();
 			trainClassifierPanel.add(trainButton);
 			trainClassifierPanel.add(trainingRecomputeFeaturesCheckBox);
+			trainClassifierPanel.add(trainingFromLabelImageCheckBox);
 			trainingJPanel.add(trainClassifierPanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
@@ -1106,6 +1119,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingConstraints.gridy++;
 
 			trainingJPanel.add(printProjectInfoButton, trainingConstraints);
+			trainingConstraints.gridy++;
+
+			trainingJPanel.add(loadLabelImageButton, trainingConstraints);
 			trainingConstraints.gridy++;
 
 			trainingJPanel.add(wekaButton, trainingConstraints);
@@ -1720,11 +1736,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		if ( trainingImage.getNFrames() == 1 && trainingImage.getNSlices() > 1)
 		{
-			IJ.showMessage("Please note:\nThis is a z-stack and 3-D features will be thus computed.\n" +
+			IJ.showMessage("Please note:\nThis is a z-stack and 3-D features will thus be computed.\n" +
 					"If this is not what you want please stop this plugin and change the " +
 					"[Image > Properties...].");
 		}
-
 
 		wekaSegmentation.setInputImage( trainingImage );
 
@@ -2070,7 +2085,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 *
 	 * @param command current text of the training button ("Train classifier" or "STOP")
 	 */
-	void runStopTraining(final String command)
+	void runStopTraining( final String command )
 	{
 		// If the training is not going on, we start it
 		if (command.equals("Train classifier"))
@@ -2104,10 +2119,22 @@ public class Weka_Deep_Segmentation implements PlugIn
 						String[] arg = new String[] {};
 						record(TRAIN_CLASSIFIER, arg);
 
+						int trainingSource;
+
+						if ( trainingFromLabelImageCheckBox.isSelected() )
+						{
+							trainingSource = wekaSegmentation.TRAIN_FROM_LABEL_IMAGE;
+						}
+						else
+						{
+							trainingSource = wekaSegmentation.TRAIN_FROM_ROIS;
+						}
+
+
 						logger.info("# Training classifier using all features ");
 						wekaSegmentation.setAllFeaturesActive();
 						boolean trainingFinished = wekaSegmentation.trainClassifier(
-								wekaSegmentation.TRAIN_FROM_ROIS,
+								trainingSource,
 								trainingRecomputeFeaturesCheckBox.isSelected(),
 								null,
 								-1
@@ -2217,7 +2244,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	public void applyClassifierToSelectedRegion( String command, String rangeString )
 	{
-
 		// TODO
 		// move all of this into wekaSegmentation class
 
@@ -2271,20 +2297,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 			return;
 		}
 
-
-		Rectangle rectangle = roi.getBounds();
-
-		int[] xyztStart = new int[4];
-		int[] xyztEnd = new int[4];
-
-		xyztStart[0] = (int) rectangle.getX();
-		xyztEnd[0] = xyztStart[0] + (int) rectangle.getWidth() - 1;
-
-		xyztStart[1] = (int) rectangle.getY();
-		xyztEnd[1] = xyztStart[1] + (int) rectangle.getHeight() - 1;
-
-		xyztStart[2] = xyztEnd[2] = displayImage.getZ() - 1;
-		xyztStart[3] = xyztEnd[3] = displayImage.getT() - 1;
+		ArrayList< int[] > xyztMinMax = getXyztMinMaxFromGUI( roi );
+		int[] xyztStart = xyztMinMax.get(0);
+		int[] xyztEnd = xyztMinMax.get(1);
 
 		// potentially change z and t range to user selection
 		try
@@ -2343,6 +2358,31 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			}
 		}; thread.start();
+	}
+
+	private ArrayList< int[] > getXyztMinMaxFromGUI( Roi roi )
+	{
+		Rectangle rectangle = roi.getBounds();
+
+		int[] xyztStart = new int[4];
+		int[] xyztEnd = new int[4];
+
+		xyztStart[0] = (int) rectangle.getX();
+		xyztEnd[0] = xyztStart[0] + (int) rectangle.getWidth() - 1;
+
+		xyztStart[1] = (int) rectangle.getY();
+		xyztEnd[1] = xyztStart[1] + (int) rectangle.getHeight() - 1;
+
+		xyztStart[2] = xyztEnd[2] = displayImage.getZ() - 1;
+		xyztStart[3] = xyztEnd[3] = displayImage.getT() - 1;
+
+		ArrayList < int[] > xyzt = new ArrayList<>();
+		xyzt.add( xyztStart );
+		xyzt.add( xyztEnd );
+
+		return ( xyzt );
+
+
 	}
 
 	public void postProcessSelectedRegion( String command, String zRange, String sizeRange )
@@ -2712,8 +2752,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.settings.anisotropy, 0);
 		gd.addNumericField("Computation: Memory factor",
 				wekaSegmentation.memoryFactor, 1);
-
-
+		gd.addNumericField("Training: Label image: Num. instances per class",
+				wekaSegmentation.labelImageNumInstancesPerClass, 0);
 
 		/*
 		if(wekaSegmentation.getLoadedTrainingData() != null)
@@ -2827,6 +2867,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.settings.maxDeepConvolutionLevel = (int) gd.getNextNumber();
 		wekaSegmentation.settings.anisotropy = gd.getNextNumber();
 		wekaSegmentation.memoryFactor = gd.getNextNumber();
+		wekaSegmentation.labelImageNumInstancesPerClass = (int) gd.getNextNumber();
 
 
 		// Set classifier and options
