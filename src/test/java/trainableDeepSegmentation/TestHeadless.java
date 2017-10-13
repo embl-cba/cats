@@ -22,7 +22,7 @@ public class TestHeadless {
         Logger logger = wekaSegmentation.getLogger();
 
         ImagePlus trainingImage = IJ.openImage("/Users/tischi/Desktop/mri-stack-big.tif");
-        wekaSegmentation.setTrainingImage( trainingImage );
+        wekaSegmentation.setInputImage( trainingImage );
 
         Calibration calibration = trainingImage.getCalibration();
         wekaSegmentation.settings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
