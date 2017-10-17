@@ -128,9 +128,9 @@ public class WekaSegmentation {
 
 	private boolean computeFeatureImportance = false;
 
-	public int numRegionThreads = (int) Math.sqrt( Prefs.getThreads() ) + 1;
+	public int regionThreads = (int) Math.sqrt( Prefs.getThreads() ) + 1;
 
-	public int numThreadsPerRegion = (int) Math.sqrt( Prefs.getThreads() ) + 1;
+	public int threadsPerRegion = (int) Math.sqrt( Prefs.getThreads() ) + 1;
 
 	public int numRfTrainingThreads = Prefs.getThreads();
 
@@ -208,7 +208,7 @@ public class WekaSegmentation {
 	private ArrayList < Integer > featuresToShow = null;
 
 	/** executor service to launch threads for the library operations */
-	private ExecutorService exe = Executors.newFixedThreadPool( numThreadsPerRegion );
+	private ExecutorService exe = Executors.newFixedThreadPool(threadsPerRegion);
 
 	public boolean stopCurrentThreads = false;
 
@@ -863,7 +863,7 @@ public class WekaSegmentation {
 
 		// Compute feature values for examples
 		//
-		ExecutorService exe = Executors.newFixedThreadPool( numRegionThreads );
+		ExecutorService exe = Executors.newFixedThreadPool(regionThreads);
 		ArrayList<Future> futures = new ArrayList<>();
 		boolean updateFeatureList = true;
 		for ( int i = 0; i < exampleList.size(); i++ )
@@ -986,7 +986,7 @@ public class WekaSegmentation {
 			featureProvider.setWekaSegmentation( this );
 			featureProvider.setActiveChannels( settings.activeChannels);
 			featureProvider.setInterval( exampleListBoundingInterval );
-			featureProvider.computeFeatures( numThreadsPerRegion, true);
+			featureProvider.computeFeatures(threadsPerRegion, true);
 
 			/* update feature list, which might have been changed during
 			this training, because the user might have altered the
@@ -1088,7 +1088,7 @@ public class WekaSegmentation {
 		long freeMemory = maxMemory - currentMemory;
 
 		long maxNumVoxelsPerRegion = (long) 1.0 * freeMemory /
-				( getNeededBytesPerVoxel() * numRegionThreads * numThreadsPerRegion );
+				( getNeededBytesPerVoxel() * regionThreads * threadsPerRegion);
 
 		long maxNumRegionWidth = (long) Math.pow( maxNumVoxelsPerRegion, 1.0/3 );
 
@@ -1371,7 +1371,7 @@ public class WekaSegmentation {
 		featureProvider.setWekaSegmentation( this );
 		featureProvider.setInterval( interval );
 		featureProvider.setActiveChannels( settings.activeChannels );
-		featureProvider.computeFeatures( numThreadsPerRegion, true);
+		featureProvider.computeFeatures(threadsPerRegion, true);
 
 		// Create lists of coordinates of pixels of each class
 		//
@@ -1494,7 +1494,7 @@ public class WekaSegmentation {
 				region5D,
 				numInstancesPerClass,
 				balanceInstances,
-				numThreadsPerRegion
+				threadsPerRegion
 		);
 
 		final long end = System.currentTimeMillis();
@@ -1724,7 +1724,7 @@ public class WekaSegmentation {
 			trainableDeepSegmentation.utils.Utils.filterSmallObjects3D(imp, sizesMinMax);
 
 			// save changed classification image
-			ExecutorService exe = Executors.newFixedThreadPool(numThreadsPerRegion);
+			ExecutorService exe = Executors.newFixedThreadPool(threadsPerRegion);
 			ArrayList < Future > futures = new ArrayList<>();
 			for ( int z = 0; z < imp.getNSlices(); ++z )
 			{
@@ -1850,154 +1850,55 @@ public class WekaSegmentation {
 	public void applyClassifier( FinalInterval interval )
 	{
 
-		ArrayList < FinalInterval > intervals = createTiles( interval );
+		// set up tiling
+		ArrayList < FinalInterval > tiles = createTiles( interval );
 
-		ArrayList < FinalInterval > intervals = new ArrayList<>();
+		// set up multi-threading
 
-		long[] imgDims = getImgDims();
-		long[] tileSizes = new long[5];
-		long[] numTiles = new long[5];
+		int adaptedThreadsPerRegion = threadsPerRegion;
+		int adaptedRegionThreads = regionThreads;
 
-		// TODO:
-		// - function that test whether current feature settings
-		// are compatible with image dimensions!
-
-		// tile sizes
-		// TODO: put into extra function
-		for ( int d : XYZ )
+		if ( tiles.size() == 1 )
 		{
-			long size = ( interval.max( d ) - interval.min( d ) + 1 );
-
-			if ( tileSizeSetting.equals("auto") )
-			{
-				if ( size <= getMaximalRegionSize() )
-				{
-					// everything can be computed at once
-					tileSizes[ d ] = size;
-				}
-				else
-				{
-					// we need to tile
-					int n = (int) Math.ceil( (1.0 * size) / getMaximalRegionSize() );
-					tileSizes[ d ] = size / n ;
-				}
-
-				// make sure sizes fit into image
-				tileSizes[ d ] = Math.min ( tileSizes[ d ], imgDims[ d ] );
-
-			}
+			adaptedThreadsPerRegion = Prefs.getThreads();
+			adaptedRegionThreads = 1;
 		}
 
-		// Compute some stuff
-		// TODO: check the logic here again...
+		logger.info("Tile threads: " + adaptedRegionThreads );
+		logger.info("Threads per tile: " + adaptedThreadsPerRegion );
 
-		// xyz
-		int[] distances = new int[3];
-		int iTotal = 0, numRegions = 1;
-		String xyztSizes = "";
 
-		for ( int i = 0; i < 3; ++i )
-		{
-			distances[i] = tileSizes[i];
-			distances[i] = distances[i] < 1 ? 1 : distances[i];
-			numTiles[i] = (int) Math.ceil( ( xyztEnd[i] - xyztStart[i] + 1 ) / distances[i] );
-			xyztSizes += "" + (xyztEnd[i] - xyztStart[i] + 1) +" ";
-			numRegions *= numTiles[i];
-		}
+		// submit tiles to executor service
 
-		// time
-		numTiles[3] = (xyztEnd[3] - xyztStart[3]) + 1;
-		xyztSizes += "" + numTiles[3] +" ";
-		numRegions *= numTiles[3];
-
-		logger.info("Selected region size [x,y,z,t]: "  + xyztSizes );
-
-		int[] borders = getFeatureBorderSizes();
-		logger.info("Tile size (excl. borders) [x,y,z]: "
-				+ ( tileSizes[0] + 2 * borders[0] )
-				+ ", " + ( tileSizes[1] + 2 * borders[1] )
-				+ ", " + ( tileSizes[2] + 2 * borders[2] )
-				+ " (" + tileSizes[0]
-				+ ", " + tileSizes[1]
-				+ ", " + tileSizes[2] + ")"
-
-		);
-
-		// if there is only one region use all threads for it
-		int numAdaptedThreadsPerRegion = ( numRegions == 1 ) ?
-				Prefs.getThreads() : numThreadsPerRegion;
-		int numAdaptedRegionThreads = ( numRegions == 1 ) ?
-				1 : numRegionThreads;
-
-		logger.info("Number of tiles: " + numRegions );
-		logger.info("Tile threads: " + numAdaptedRegionThreads );
-		logger.info("Threads per tile: " + numAdaptedThreadsPerRegion );
-
-		// classify all tiles
+		ExecutorService exe = Executors.newFixedThreadPool(
+				adaptedRegionThreads );
+		ArrayList< Future > futures = new ArrayList<>();
 
 		pixelsClassified.set( 0L );
 		rfStatsTreesEvaluated.set( 0L );
 
-		ExecutorService exe = Executors.newFixedThreadPool(
-				numAdaptedRegionThreads );
-		ArrayList< Future > futures = new ArrayList<>();
-
-		ArrayList<int[]> positions = new ArrayList<>();
-
 		long startTime = System.currentTimeMillis();
 
-		for (int t = xyztStart[3]; t <= xyztEnd[3]; t += 1)
+		int tileCounter = 0;
+
+		for (FinalInterval tile : tiles)
 		{
-			for (int z = xyztStart[2]; z <= xyztEnd[2]; z += distances[2])
-			{
-				for (int y = xyztStart[1]; y <= xyztEnd[1]; y += distances[1])
-				{
-					for (int x = xyztStart[0]; x <= xyztEnd[0]; x += distances[0])
-					{
-						// create region to be classified
-						Region5D region5D = new Region5D();
-						region5D.t = t;
-						region5D.c = 0; // TODO: does not matter, right?
-						region5D.offset = new Point3D(x, y, z);
-						region5D.size = new Point3D( tileSizes[0], tileSizes[1], tileSizes[2] );
-						region5D.subSampling = new Point3D(1, 1, 1);
-
-						// remember, just for reporting to user
-						positions.add(new int[]{
-								(int)region5D.offset.getX(),
-								(int)region5D.offset.getY(),
-								(int)region5D.offset.getZ() + 1,
-								region5D.t + 1});
-
-						try
-						{
-							if (! stopCurrentThreads )
-							{
-								totalThreadsExecuted.addAndGet( 1 );
-
-								futures.add(
-										exe.submit(
-												computeFeaturesAndApplyClassifierToTile(
-														region5D,
-														numAdaptedThreadsPerRegion,
-														++iTotal,
-														numRegions)
-										)
-								);
-							}
-						}
-						catch ( OutOfMemoryError e )
-						{
-							logger.error("Out of memory: " + e.toString());
-							stopCurrentThreads = true;
-						}
-					}
-				}
-			}
+			futures.add(
+					exe.submit(
+							computeFeaturesAndApplyClassifierToTile(
+									tile,
+									adaptedThreadsPerRegion,
+									++tileCounter,
+									tiles.size())
+					)
+			);
 		}
 
-		int regionsClassified = 0;
-		long nThreadsLast = totalThreadsExecuted.get();
+
+
+		// collect results
+
+		int regionCounter = 0;
 		long maximumMemoryUsage = 0L;
 		long totalMemory = IJ.maxMemory();
 
@@ -2009,66 +1910,36 @@ public class WekaSegmentation {
 				{
 					future.get();
 
-					regionsClassified++;
-					long nThreadsNew = totalThreadsExecuted.get() - nThreadsLast;
+					regionCounter++;
 
-					long milliSeconds = (System.currentTimeMillis() - startTime);
-					double milliSecondsPerRegion = 1.0 * milliSeconds / regionsClassified;
-					int regionsToGo = numRegions - regionsClassified;
-					double minutesLeft = 1.0 * regionsToGo * milliSecondsPerRegion / (1000 * 60);
-					double minutesCurr = 1.0 * milliSeconds / (1000 * 60);
-
-					String timeInfo = String.format("Time (spent, left) [min]: " +
-							"%.1f, %.1f", minutesCurr, minutesLeft );
-
-					double rate = 1.0 * pixelsClassified.get() /
-							milliSeconds;
-					long avgTreesUsed = (long) 1.0 * rfStatsTreesEvaluated.get() /
-							pixelsClassified.get();
-
-					long currentMemoryUsage = IJ.currentMemory();
-
-					if ( currentMemoryUsage > maximumMemoryUsage )
-						maximumMemoryUsage = currentMemoryUsage;
-
-					// TODO:
-					// - max memory usage must be monitored during computation
-					String memoryInfo = "Memory (current, max, avail) [MB]: "
-							+ currentMemoryUsage / 1000000L
-							+ ", " + maximumMemoryUsage / 1000000L
-							+ ", " + totalMemory / 1000000L;
-
-					String treeInfo = "Trees (avg, max, avail): "
-							+ avgTreesUsed
-							+ ", " + rfStatsMaximumTreesUsed
-							+ ", " + getNumTrees();
-
-					logger.progress("Region",
-							Arrays.toString(positions.get(regionsClassified - 1))
-									+ "; " + (regionsClassified) + "/" + numRegions
-									+ "; " + timeInfo
-									+ " (" + (int) (rate) + " kv/s)"
-									+ "; " + treeInfo
-									+ "; " + memoryInfo
-
-					);
-
-					nThreadsLast = totalThreadsExecuted.get();
+					reportClassificationProgress( startTime,
+							maximumMemoryUsage,
+							regionCounter,
+							tiles );
 
 					System.gc();
-
 				}
 				else
 				{
 					break;
 				}
 			}
-			catch (InterruptedException e)
+			catch ( InterruptedException e )
 			{
+				logger.info(e.toString());
+				stopCurrentThreads = true;
 				e.printStackTrace();
 			}
-			catch (ExecutionException e)
+			catch ( ExecutionException e )
 			{
+				logger.error(e.toString());
+				stopCurrentThreads = true;
+				e.printStackTrace();
+			}
+			catch ( OutOfMemoryError e )
+			{
+				logger.error("Out of memory:\n" + e.toString());
+				stopCurrentThreads = true;
 				e.printStackTrace();
 			}
 
@@ -2079,6 +1950,89 @@ public class WekaSegmentation {
 
 	}
 
+
+
+	private void reportClassificationProgress(
+			long startTime,
+			long maximumMemoryUsage,
+			long tileCounter,
+			ArrayList< FinalInterval > tiles )
+	{
+
+		long timeUsed = (System.currentTimeMillis() - startTime);
+		double timeUsedPerTile = 1.0 * timeUsed / tileCounter;
+		long regionsLeft = tiles.size() - tileCounter;
+		double minutesLeft = 1.0 * regionsLeft * timeUsedPerTile / (1000 * 60);
+		double minutesCurr = 1.0 * timeUsed / (1000 * 60);
+		double rate = 1.0 * pixelsClassified.get() /
+				timeUsed;
+
+		String timeInfo = String.format("Time (spent, left) [min]: " +
+				"%.1f, %.1f", minutesCurr, minutesLeft );
+		timeInfo += " (" + (int) (rate) + " kv/s)";
+
+
+		long avgTreesUsed = (long) 1.0 * rfStatsTreesEvaluated.get() /
+				pixelsClassified.get();
+
+		long currentMemoryUsage = IJ.currentMemory();
+
+		if ( currentMemoryUsage > maximumMemoryUsage )
+			maximumMemoryUsage = currentMemoryUsage;
+
+		String tileInfo = "Tile: "
+				+ tiles.get( (int) tileCounter ).toString();
+
+
+		String memoryInfo = "Memory (current, max, avail) [MB]: "
+				+ currentMemoryUsage / 1000000L
+				+ ", " + maximumMemoryUsage / 1000000L
+				+ ", " + IJ.maxMemory() / 1000000L;
+
+		String treeInfo = "Trees (avg, max, avail): "
+				+ avgTreesUsed
+				+ ", " + rfStatsMaximumTreesUsed
+				+ ", " + getNumTrees();
+
+		logger.progress("Progress", tileInfo
+						+ "; " + timeInfo
+						+ "; " + treeInfo
+						+ "; " + memoryInfo);
+
+	}
+
+	private void recordUncertainties()
+	{
+
+		/*
+		UncertaintyRegion unitedUncertaintyRegion = new UncertaintyRegion();
+		unitedUncertaintyRegion.xyzt[3] = r5D.t;
+
+		for ( UncertaintyRegion uncertaintyRegion : uncertaintyRegions )
+		{
+			unitedUncertaintyRegion.sumUncertainty += uncertaintyRegion.sumUncertainty;
+
+			unitedUncertaintyRegion.maxUncertainty =
+					uncertaintyRegion.maxUncertainty > unitedUncertaintyRegion.maxUncertainty ?
+							uncertaintyRegion.maxUncertainty : unitedUncertaintyRegion.maxUncertainty;
+
+			for ( int i = 0; i < 3; i++ )
+			{
+				unitedUncertaintyRegion.xyzt[i] += uncertaintyRegion.xyzt[i];
+			}
+		}
+
+		for ( int i = 0; i < 3; i++ )
+		{
+			unitedUncertaintyRegion.xyzt[i] /= unitedUncertaintyRegion.sumUncertainty;
+		}
+
+		unitedUncertaintyRegion.avgUncertainty = unitedUncertaintyRegion.sumUncertainty / ( nx * ny * nz );
+
+		this.uncertaintyRegions.add( unitedUncertaintyRegion );
+		*/
+
+	}
 
 	/**
 	 * Apply current classifier to a set of feature vectors (given in a feature
@@ -2093,8 +2047,8 @@ public class WekaSegmentation {
 	public Runnable computeFeaturesAndApplyClassifierToTile(
 				final FinalInterval tileInterval,
 				final int numThreads,
-				final int counter,
-				final int counterMax)
+				final int tileCounter,
+				final int tileCounterMax)
 	{
 
 		return () ->
@@ -2102,17 +2056,17 @@ public class WekaSegmentation {
 
 			if ( stopCurrentThreads || Thread.currentThread().isInterrupted())
 			{
-				logger.progress("Thread stopped:", "" + counter + "/" + counterMax);
+				logger.progress("Thread stopped:", "" + tileCounter + "/" + tileCounterMax);
 				return;
 			}
 
 			// wait a bit to get threads out-of-sync
-			if ( counter < numRegionThreads )
+			if ( tileCounter < regionThreads)
 			{
 				try
 				{
 					System.gc();
-					Thread.sleep( counter * tilingDelay);
+					Thread.sleep( tileCounter * tilingDelay);
 				} catch (InterruptedException e)
 				{
 					e.printStackTrace();
@@ -2129,41 +2083,32 @@ public class WekaSegmentation {
 
 			long start = System.currentTimeMillis();
 
-			ArrayList <FeatureProvider> featureImagesChannels = new ArrayList<>();
 
-			for ( int c : settings.activeChannels )
+			// check whether this is a background region
+
+			// TODO:
+			// - implement again
+			/*
+			if ( settings.backgroundThreshold > 0 )
 			{
-
-				// TODO:
-				// - implement again
-				/*
-				if ( settings.backgroundThreshold > 0 )
+				// check whether the region is background
+				if ( isBackgroundRegion( imageToClassify, settings.backgroundThreshold) )
 				{
-					// check whether the region is background
-					if ( isBackgroundRegion( imageToClassify, settings.backgroundThreshold) )
-					{
-						// don't classify, but leave all classification pixels as is, hopefully 0...
-						pixelsClassified.addAndGet( nx * ny * nz  );
-						return;
-					}
-				}*/
+					// don't classify, but leave all classification pixels as is, hopefully 0...
+					pixelsClassified.addAndGet( nx * ny * nz  );
+					return;
+				}
+			}*/
 
-				FeatureProvider featureImages = new FeatureProvider();
-				featureImages.setInputImage( inputImage );
-				featureImages.setWekaSegmentation( this );
-				featureImages.setInterval( fixChannel( tileInterval, c ) );
-				featureImages.computeFeatureImages(
-						false,
-						featuresToShow, numThreadsPerRegion,
-						false);
+			// compute image features
+			FeatureProvider featureProvider = new FeatureProvider();
+			featureProvider.setInputImage( inputImage );
+			featureProvider.setWekaSegmentation( this );
+			featureProvider.setActiveChannels( settings.activeChannels );
+			featureProvider.setInterval( fixChannel( tileInterval, c ) );
+			featureProvider.computeFeatures( numThreads,false);
 
-				// add to channel list§
-				featureImagesChannels.add( featureImages );
-
-
-			}
-
-			if ( counterMax == 1 )
+			if ( tileCounterMax == 1 )
 			{
 				logger.info("Features computed in [ms]: " +
 						(System.currentTimeMillis() - start) +
@@ -2172,39 +2117,25 @@ public class WekaSegmentation {
 
 			start = System.currentTimeMillis();
 
-			// create instances information (each instance needs a pointer to this)
-			Instances dataInfo = new Instances("segment", getAttributes(), 1);
-			dataInfo.setClassIndex( dataInfo.numAttributes() - 1 );
-
-			// distribute classification across different threads
-			int slicesPerChunk;
-			if ( tileInterval.dimension( Z ) < numThreads )
-			{
-				slicesPerChunk = 1;
-			}
-			else
-			{
-				slicesPerChunk = (int) Math.ceil ( 1.0 * tileInterval.dimension( Z ) / numThreads );
-			}
-
+			// get z-chunking
+			ArrayList< int[] > zChunks = getZChunks( numThreads, tileInterval );
+			
 			ExecutorService exe = Executors.newFixedThreadPool( numThreads );
 			ArrayList<Future<byte[][]>> classificationFutures = new ArrayList<>();
 			ArrayList<UncertaintyRegion> uncertaintyRegions = new ArrayList<>();
 
-			for ( int slicesClassified = 0; slicesClassified < tileInterval.dimension( Z ); slicesClassified += slicesPerChunk )
+			// create instances information (each instance needs a pointer to this)
+			Instances dataInfo = new Instances("segment", getAttributes(), 1);
+			dataInfo.setClassIndex( dataInfo.numAttributes() - 1 );
+
+			for ( int[] zChunk : zChunks )
 			{
 
 				if ( stopCurrentThreads || Thread.currentThread().isInterrupted() )
 				{
-					logger.progress("Thread stopped:", "" + counter + "/" + counterMax);
+					logger.progress("Thread stopped:", "" + tileCounter + "/" + tileCounterMax);
 					exe.shutdownNow();
 					return;
-				}
-
-				if ( slicesClassified + slicesPerChunk >= tileInterval.dimension( Z ) )
-				{
-					// adapt the last chunk
-					slicesPerChunk = (int) tileInterval.dimension( Z ) - slicesClassified;
 				}
 
 				AbstractClassifier classifierCopy = null;
@@ -2223,15 +2154,14 @@ public class WekaSegmentation {
 					e.printStackTrace();
 				}
 
-
 				UncertaintyRegion uncertaintyRegion = new UncertaintyRegion();
 				uncertaintyRegions.add( uncertaintyRegion );
 
 				classificationFutures.add(
 						exe.submit(
 								applyClassifierToZChunk(
-										featureImagesChannels,
-										zMinMax,
+										featureProvider,
+										zChunk[0], zChunk[1],
 										uncertaintyRegion,
 										dataInfo,
 										classifierCopy
@@ -2273,39 +2203,14 @@ public class WekaSegmentation {
 				err.printStackTrace();
 				return;
 			}
-			// clean up
-			classificationFutures = null;
+
+			// we're done
 			exe.shutdown();
 
-			// unite uncertainty measurements from different threads
-			//
-			UncertaintyRegion unitedUncertaintyRegion = new UncertaintyRegion();
-			unitedUncertaintyRegion.xyzt[3] = r5D.t;
+			// record uncertainty information
+			recordUncertainties();
 
-			for ( UncertaintyRegion uncertaintyRegion : uncertaintyRegions )
-			{
-				unitedUncertaintyRegion.sumUncertainty += uncertaintyRegion.sumUncertainty;
-
-				unitedUncertaintyRegion.maxUncertainty =
-						uncertaintyRegion.maxUncertainty > unitedUncertaintyRegion.maxUncertainty ?
-								uncertaintyRegion.maxUncertainty : unitedUncertaintyRegion.maxUncertainty;
-
-				for ( int i = 0; i < 3; i++ )
-				{
-					unitedUncertaintyRegion.xyzt[i] += uncertaintyRegion.xyzt[i];
-				}
-			}
-
-			for ( int i = 0; i < 3; i++ )
-			{
-				unitedUncertaintyRegion.xyzt[i] /= unitedUncertaintyRegion.sumUncertainty;
-			}
-
-			unitedUncertaintyRegion.avgUncertainty = unitedUncertaintyRegion.sumUncertainty / ( nx * ny * nz );
-
-			this.uncertaintyRegions.add( unitedUncertaintyRegion );
-
-			if ( counterMax == 1 )
+			if ( tileCounterMax == 1 )
 			{
 				logger.info("Classification computed in [ms]: " + (System.currentTimeMillis() - start)
 						+ ", using " + numThreads + " threads");
@@ -2357,13 +2262,55 @@ public class WekaSegmentation {
 			trainableDeepSegmentation.utils.Utils.joinThreads( savingFutures, logger );
 			exe.shutdown();
 
-			if ( counterMax == 1 )
+			if ( tileCounterMax == 1 )
 			{
 				logger.info("Saved classification results in " + (System.currentTimeMillis() - start) + " ms");
 			}
 		};
-
 	}
+
+
+	private ArrayList< int[] > getZChunks( int numThreads, FinalInterval tileInterval )
+	{
+
+		ArrayList< int[] > zChunks = new ArrayList<>();
+
+
+		// Configure z-chunking
+		int sliceChunk;
+
+		if ( tileInterval.dimension( Z ) < numThreads )
+		{
+			sliceChunk = 1;
+		}
+		else
+		{
+			sliceChunk = (int) Math.ceil ( 1.0 * tileInterval.dimension( Z ) / numThreads );
+		}
+
+		new ArrayList<>();
+
+		for ( int iSlice = 0; iSlice < tileInterval.dimension( Z ); iSlice += sliceChunk )
+		{
+
+			long[] zChunk = new long[2];
+
+			if ( (iSlice + 1) * sliceChunk >= tileInterval.dimension(Z))
+			{
+				// last chunk can be smaller
+				zChunk[0] = iSlice * sliceChunk + tileInterval.min( Z );
+				zChunk[1] = tileInterval.dimension( Z ) + tileInterval.min( Z ) + 1;
+			}
+			else
+			{
+				zChunk[0] = iSlice * sliceChunk + tileInterval.min( Z );
+				zChunk[1] = (iSlice + 1) * sliceChunk + tileInterval.min( Z );
+			}
+		}
+
+		return ( zChunks );
+	}
+
 
 	/**
 	 * Checks whether the image only contains background pixels
@@ -2510,7 +2457,7 @@ public class WekaSegmentation {
 	 * @return classification result
 	 */
 	private Callable<byte[][]> applyClassifierToZChunk(
-			final ArrayList <FeatureProvider>  featureImageChannelList,
+			FeatureProvider featureProvider,
 			int zMin, int zMax,
 			UncertaintyRegion uncertaintyRegion,
 			final Instances dataInfo,
@@ -2526,7 +2473,7 @@ public class WekaSegmentation {
 
 				int zDimension = zMax - zMin + 1;
 				// interval is the same for all channels, thus simply take from 0th
-				FinalInterval interval = featureImageChannelList.get( 0 ).getInterval();
+				FinalInterval interval = featureProvider.getInterval();
 
 				// plane-wise array to hold the classifications results
 				final byte[][] classificationResult = new byte[ zDimension ]
@@ -2539,18 +2486,7 @@ public class WekaSegmentation {
 				// create empty reusable instance
 				final ReusableDenseInstance ins =
 						new ReusableDenseInstance( 1.0, values );
-
 				ins.setDataset( dataInfo );
-
-				// create reusable feature slice for each channel
-				ArrayList < double[][][] > featureSlices = new ArrayList<>();
-				for (int c = 0; c < settings.activeChannels.size(); c++ )
-				{
-					featureSlices.add( new double
-									[ (int) interval.dimension( X ) ]
-									[ (int) interval.dimension( Y ) ]
-									[ featureImageChannelList.get(c).getNumFeatures() ]);
-				}
 
 				try
 				{
@@ -2570,7 +2506,7 @@ public class WekaSegmentation {
 
 							for (int c = 0; c < settings.activeChannels.size(); c++ )
 							{
-								featureImageChannelList.get(c).setFullFeatureSlice(zSlice, featureSlices.get(c));
+								featureProvider.get(c).setFullFeatureSlice(zSlice, featureSlices.get(c));
 							}
 
 							iInstanceThisSlice = 0;

@@ -2780,8 +2780,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		gd.addStringField("Show features [ID,ID,..]", featuresToShow );
 		gd.addStringField("Classification: Region tile size", wekaSegmentation.getTileSizeSetting());
-		//gd.addNumericField("Number of region threads", wekaSegmentation.numRegionThreads, 0);
-		//gd.addNumericField("Number of threads inside a region", wekaSegmentation.numThreadsPerRegion, 0);
+		//gd.addNumericField("Number of region threads", wekaSegmentation.regionThreads, 0);
+		//gd.addNumericField("Number of threads inside a region", wekaSegmentation.threadsPerRegion, 0);
 		//gd.addNumericField("Number of RF training threads", wekaSegmentation.numRfTrainingThreads, 0);
 		//gd.addNumericField("Tiling delay [ms]", wekaSegmentation.tilingDelay, 0);
 		gd.addNumericField("Classification: Background threshold [gray values]", wekaSegmentation.settings.backgroundThreshold, 0);
@@ -2878,8 +2878,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.setActiveChannelsFromString(gd.getNextString());
 
 		wekaSegmentation.setFeaturesToShowFromString(gd.getNextString());
-		//wekaSegmentation.numRegionThreads = (int) gd.getNextNumber();
-		//wekaSegmentation.numThreadsPerRegion = (int) gd.getNextNumber();
+		//wekaSegmentation.regionThreads = (int) gd.getNextNumber();
+		//wekaSegmentation.threadsPerRegion = (int) gd.getNextNumber();
 		//wekaSegmentation.numRfTrainingThreads = (int) gd.getNextNumber();
 
 		wekaSegmentation.setTileSizeSetting( gd.getNextString() );
