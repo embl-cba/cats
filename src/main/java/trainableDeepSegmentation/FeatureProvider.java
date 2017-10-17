@@ -32,10 +32,14 @@ import ij.plugin.Duplicator;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.StackProcessor;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.exception.IncompatibleTypeException;
 import trainableDeepSegmentation.filters.HessianImgLib2;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -46,22 +50,27 @@ import java.util.concurrent.*;
  * @author Ignacio Arganda-Carreras (iarganda@mit.edu)
  *
  */
-public class FeatureImagesMultiResolution
+public class FeatureProvider
 {
     /** original input image */
-    private ImagePlus originalImage = null;
+    private ImagePlus inputImage = null;
 
     /** the feature images */
-    private ArrayList < ArrayList < ImagePlus > > multiResolutionFeatureImages;
+    private ArrayList < ImagePlus > multiResolutionFeatureImageArray = new ArrayList<>();
 
-    private ArrayList < ImagePlus > multiResolutionFeatureImageArray = null;
+    /** names of feature images */
+    private ArrayList<String> featureNames = new ArrayList<>();
 
-    private ArrayList<String> featureNames;
+    /** z-slices of features, up-sampled to full resolution
+     * dimensions of double[][][]: x,y,feature */
+    private Map<Integer, double[][][]> featureSlices = new HashMap<>();
 
     /** image width */
     private int width = 0;
     /** image height */
     private int height = 0;
+
+    private ArrayList<Integer> activeChannels;
 
     private final String CONV_DEPTH = "CD";
 
@@ -76,6 +85,12 @@ public class FeatureImagesMultiResolution
     /** Mean flag index */
     public static final int AVERAGE                 =  4;
     /** Median flag index */
+
+    private int X = 0, Y = 1, C = 2, Z = 3, T = 4;
+    private int[] XYZ = new int[]{ X, Y, Z};
+    private int[] XYZT = new int[]{ X, Y, Z, T};
+
+    private int[] featureImageBorderSizes = new int[5];
 
     public WekaSegmentation wekaSegmentation = null;
 
@@ -92,12 +107,13 @@ public class FeatureImagesMultiResolution
     public static final String[] availableFeatures
             = new String[]{	"Hessian", "Structure", "Minimum", "Maximum", "Mean" };
 
-
     /** index of the feature stack that is used as reference (to read attribute, etc.).
      * -1 if not defined yet. */
     private int referenceStackIndex = -1;
 
     private Logger logger = new IJLazySwingLogger();
+
+    private FinalInterval interval = null;
 
     /**
      * Initialize a feature stack list of a specific size
@@ -110,21 +126,47 @@ public class FeatureImagesMultiResolution
      * @param membranePatchSize membrane patch size
      * @param enabledFeatures array of flags to enable features
      */
-    public FeatureImagesMultiResolution()
+    public FeatureProvider()
     {
     }
 
-    public FeatureImagesMultiResolution( ImagePlus imp )
+    public FeatureProvider(ImagePlus imp )
     {
-        setOriginalImage(imp);
+        setInputImage(imp);
     }
 
-    public void setOriginalImage( ImagePlus imp )
+    public void setInputImage(ImagePlus imp )
     {
         width = imp.getWidth();
         height = imp.getHeight();
-        originalImage = imp;
-        originalImage.setTitle("Orig");
+        inputImage = imp;
+        inputImage.setTitle("Orig");
+    }
+
+    public void setActiveChannels( ArrayList<Integer> activeChannels )
+    {
+        this.activeChannels = activeChannels;
+    }
+
+    public void setInterval( FinalInterval interval )
+    {
+        this.interval = interval;
+    }
+
+    public FinalInterval getInterval( )
+    {
+        return ( interval );
+    }
+
+    public long getIntervalWidth ( int d )
+    {
+        long width = interval.max( d ) - interval.min( d ) + 1;
+        return ( width );
+    }
+
+    public void setWekaSegmentation( WekaSegmentation wekaSegmentation )
+    {
+        this.wekaSegmentation = wekaSegmentation;
     }
 
 
@@ -306,14 +348,91 @@ public class FeatureImagesMultiResolution
         };
     }
 
-    public void setFeatureSliceRegion(int z,
+    public double[] getFeatureValues(
+            int xGlobal,
+            int yGlobal,
+            int zGlobal,
+            int classNum )
+    {
+
+        int x = xGlobal - (int) interval.min( X );
+        int y = yGlobal - (int) interval.min( Y );
+        int z = zGlobal - (int) interval.min( Z );
+
+        if ( ! featureSlices.containsKey( z ) )
+        {
+            setFeatureSlice( z );
+        }
+
+        int nf = getNumFeatures();
+
+        double[] values;
+        if ( classNum > -1 )
+        {
+            values = new double[nf + 1];
+            values[ nf ] = classNum;
+        }
+        else
+        {
+            values = new double[nf];
+        }
+
+        System.arraycopy( featureSlices.get( z ), 0, values, 0, nf);
+
+        return ( values );
+    }
+
+
+    public void freeFeatureSliceMemory( int z )
+    {
+        featureSlices.remove( z );
+        System.gc();
+    }
+
+    private void setFeatureSlice(int z )
+    {
+        setFeatureSliceRegion(z,
+                0, (int) (interval.dimension( X ) - 1),
+                0, (int) (interval.dimension( Y ) - 1));
+    }
+
+    /**
+     * set all feature values for one z-slice
+     * coordinates are relative to within the set interval
+     * @param z
+     * @param xs
+     * @param xe
+     * @param ys
+     * @param ye
+     * @param featureSlice
+     */
+    private void setFeatureSliceRegion(int z,
                                       int xs,
                                       int xe,
                                       int ys,
-                                      int ye,
-                                      double[][][] featureSlice)
+                                      int ye)
     {
+
+
+        // The feature images are stored with borders in multiResolutionFeatureImageArray,
+        // where some features could not be computed properly.
+        // Here we omit them and only put the values into the feature
+        // slices that were properly computed, and actually are within
+        // the interval
+        xs += featureImageBorderSizes[ X ];
+        xe += featureImageBorderSizes[ X ];
+        ys += featureImageBorderSizes[ Y ];
+        ye += featureImageBorderSizes[ Z ];
+        z += featureImageBorderSizes[ Z ];
+
         int nf = getNumFeatures();
+
+        double[][][] featureSlice = new double
+                [(int) interval.dimension(X)]
+                [(int) interval.dimension(Y)]
+                [nf];
+
+        featureSlices.put( z, featureSlice );
 
         double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
         double vAA0,vAA1,vAAA;
@@ -827,7 +946,6 @@ public class FeatureImagesMultiResolution
 
     }
 
-
     /**
      * Get the number of features
      *
@@ -846,29 +964,64 @@ public class FeatureImagesMultiResolution
         return multiResolutionFeatureImageArray.size();
     }
 
+
+    public FinalInterval addBordersXYZ( Interval interval, int[] borders ) {
+
+        int n = interval.numDimensions();
+        long[] min = new long[n];
+        long[] max = new long[n];
+        interval.min(min);
+        interval.max(max);
+
+        for( int d : XYZ ) {
+            min[d] -= borders[d];
+            max[d] += borders[d];
+        }
+
+        return new FinalInterval(min, max);
+    }
+
+
+    public boolean computeFeatures( int numThreads, boolean computeAllFeatures )
+    {
+
+        for ( int c = (int) interval.min( C ); c <= interval.max( C ); ++c )
+        {
+            if ( activeChannels.contains( c ) )
+            {
+                FinalInterval intervalOneChannel = wekaSegmentation.fixChannel(interval, c);
+                computeFeatureImages(
+                        intervalOneChannel,
+                        numThreads,
+                        computeAllFeatures);
+            }
+        }
+    }
+
+
     /**
      * Update features with current list in a multi-thread fashion
      *
      * @return true if the features are correctly updated
      */
-    public boolean updateFeaturesMT(
-            String channelName,
-            boolean showFeatureImages,
-            ArrayList<Integer> featuresToShow,
+    public boolean computeFeatureImages(
+            FinalInterval interval,
             int numThreads,
-            boolean computeAllFeatures)
+            boolean computeAllFeatures )
     {
-
         // TODO:
         // - bit of a mess which variables are passed on via
         // wekaSegmentation object and which not
         double anisotropy = wekaSegmentation.settings.anisotropy;
 
-        featureNames = new ArrayList<>();
+        // get part of original image that is
+        // needed to compute the features for the
+        // requested interval
+        featureImageBorderSizes = wekaSegmentation.getFeatureBorderSizes();
+        FinalInterval expandedInterval = addBordersXYZ( interval,
+                featureImageBorderSizes );
 
-        multiResolutionFeatureImages = new ArrayList<>();
-
-        ImagePlus originalImageCopy = originalImage.duplicate();
+        ImagePlus originalImageCrop = getDataCube( inputImage, expandedInterval );
 
         // Set a calibration that can be changed during the binning
         Calibration calibration = new Calibration();
@@ -876,8 +1029,13 @@ public class FeatureImagesMultiResolution
         calibration.pixelWidth = 1;
         calibration.pixelHeight = 1;
         calibration.setUnit("um");
-        originalImageCopy.setCalibration(calibration);
-        originalImageCopy.setTitle( originalImage.getTitle() + "_" + channelName );
+        originalImageCrop.setCalibration(calibration);
+        originalImageCrop.setTitle( inputImage.getTitle() + "_" + channelName );
+
+        String channelName = "ch" + interval.min( C );
+
+        // ResolutionLevelList of ImageList
+        ArrayList < ArrayList < ImagePlus > > multiResolutionFeatureImages = new ArrayList<>();
 
         try
         {
@@ -903,7 +1061,7 @@ public class FeatureImagesMultiResolution
                 if ( level == 0 )
                 {
 
-                    featureImagesThisResolution.add( originalImageCopy );
+                    featureImagesThisResolution.add( originalImageCrop );
                     binnings.add( new int[]{1, 1, 1} );
 
                 }
@@ -1004,7 +1162,7 @@ public class FeatureImagesMultiResolution
                 double smoothingScale = 1.0;
                 double integrationScale = smoothingScale;
 
-                if ( level == wekaSegmentation.settings.maxResolutionLevel)
+                if ( level == wekaSegmentation.settings.maxResolutionLevel )
                 {
                     // for the last scale we do not bin but only smooth (s.a.),
                     // thus we need to look for features over a wider range
@@ -1101,7 +1259,7 @@ public class FeatureImagesMultiResolution
                 }
 
                 // and add everything to the multi-resolution array
-                multiResolutionFeatureImages.add(featureImagesThisResolution);
+                multiResolutionFeatureImages.add( featureImagesThisResolution );
 
             }
 
@@ -1110,14 +1268,13 @@ public class FeatureImagesMultiResolution
             for ( ArrayList<ImagePlus> singleResolutionFeatureImages2 : multiResolutionFeatureImages )
                 numFeatures += singleResolutionFeatureImages2.size();
 
-            multiResolutionFeatureImageArray = new ArrayList<>();
 
             int iFeature = 0;
             for ( ArrayList<ImagePlus> featureImages : multiResolutionFeatureImages )
             {
-
                 for ( ImagePlus featureImage : featureImages )
                 {
+                    /*
                     if (  showFeatureImages && ( featuresToShow != null ) )
                     {
                         if ( featuresToShow.contains( iFeature ) )
@@ -1126,7 +1283,7 @@ public class FeatureImagesMultiResolution
                             //imp.show();
                             featureImage.show();
                         }
-                    }
+                    }*/
 
                     if ( computeAllFeatures || wekaSegmentation.isFeatureNeeded( featureImage.getTitle() ) )
                     {
@@ -1208,7 +1365,7 @@ public class FeatureImagesMultiResolution
 
     public boolean is3D()
     {
-        if ( originalImage.getNSlices() > 1 )
+        if ( inputImage.getNSlices() > 1 )
             return true;
         else
             return false;
@@ -1391,17 +1548,19 @@ public class FeatureImagesMultiResolution
 
     public int getWidth()
     {
-        return originalImage.getWidth();
+
+
+        return inputImage.getWidth();
     }
 
     public int getHeight()
     {
-        return originalImage.getHeight();
+        return inputImage.getHeight();
     }
 
     public int getDepth()
     {
-        return originalImage.getNSlices();
+        return inputImage.getNSlices();
     }
 
     public int getSize() {

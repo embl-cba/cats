@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="mcib3d-core3.9">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/mcib3d-core3.9.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

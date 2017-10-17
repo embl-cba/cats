@@ -38,24 +38,21 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.*;
-import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.zip.GZIPOutputStream;
 
 import javax.swing.*;
 
 import javafx.geometry.Point3D;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instances;
-import weka.core.PluginManager;
 import weka.core.SerializationHelper;
 import weka.gui.GUIChooserApp;
-import weka.gui.GenericObjectEditor;
 
 /**
  *
@@ -116,6 +113,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private JButton trainButton = null;
 	private JCheckBox trainingRecomputeFeaturesCheckBox = null;
 	private JCheckBox trainingFromLabelImageCheckBox = null;
+
+	private int X = 0, Y = 1, C = 2, Z = 3, T = 4;
+	private int[] XYZ = new int[]{ X, Y, Z};
 
 
 	/** toggle overlay button */
@@ -2297,45 +2297,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			return;
 		}
 
-		ArrayList< int[] > xyztMinMax = getXyztMinMaxFromGUI( roi );
-		int[] xyztStart = xyztMinMax.get(0);
-		int[] xyztEnd = xyztMinMax.get(1);
-
-		// potentially change z and t range to user selection
-		try
-		{
-			int[] range = bigDataTools.utils.Utils.delimitedStringToIntegerArray(rangeString, ",");
-
-			if ( trainingImage.getNFrames() == 1 )
-			{
-				// slices
-				xyztStart[2] = range[0] - 1;
-				xyztEnd[2] = range[1] - 1;
-			}
-			else if ( trainingImage.getNSlices() == 1 )
-			{
-				// frames
-				xyztStart[3] = range[0] - 1;
-				xyztEnd[3] = range[1] - 1;
-			}
-			else
-			{
-				// slices
-				xyztStart[2] = range[0] - 1;
-				xyztEnd[2] = range[1] - 1;
-
-				if ( range.length == 4 )
-				{
-					// frames
-					xyztStart[3] = range[2] - 1;
-					xyztEnd[3] = range[3] - 1;
-				}
-			}
-		}
-		catch ( NumberFormatException e )
-		{
-			// logger.info("No z or t range selected.");
-		}
+		FinalInterval interval = getIntervalFromGUI( roi );
 
 		logger.info("# Classifying selected region...");
 		applyButton.setText("STOP");
@@ -2349,7 +2311,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.setOutputImage( classifiedImage );
 				wekaSegmentation.resetUncertaintyRegions();
 
-				wekaSegmentation.applyClassifier( xyztStart, xyztEnd );
+				wekaSegmentation.applyClassifier( interval );
 
 				applyButton.setText("Apply classifier");
 				if (showColorOverlay)
@@ -2360,27 +2322,61 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}; thread.start();
 	}
 
-	private ArrayList< int[] > getXyztMinMaxFromGUI( Roi roi )
+	// TODO: is there a on-final version of an interval?
+	private FinalInterval getIntervalFromGUI(Roi roi )
 	{
 		Rectangle rectangle = roi.getBounds();
 
-		int[] xyztStart = new int[4];
-		int[] xyztEnd = new int[4];
+		long[] xycztMin = new long[ 5 ];
+		long[] xycztMax = new long[ 5 ];
 
-		xyztStart[0] = (int) rectangle.getX();
-		xyztEnd[0] = xyztStart[0] + (int) rectangle.getWidth() - 1;
+		xycztMin[ X ] = (int) rectangle.getX();
+		xycztMax[ X ] = xycztMin[0] + (int) rectangle.getWidth() - 1;
 
-		xyztStart[1] = (int) rectangle.getY();
-		xyztEnd[1] = xyztStart[1] + (int) rectangle.getHeight() - 1;
+		xycztMin[ Y ] = (int) rectangle.getY();
+		xycztMax[ Y ] = xycztMin[1] + (int) rectangle.getHeight() - 1;
 
-		xyztStart[2] = xyztEnd[2] = displayImage.getZ() - 1;
-		xyztStart[3] = xyztEnd[3] = displayImage.getT() - 1;
+		xycztMin[ Z ] = xycztMax[ Z ] = displayImage.getZ() - 1;
+		xycztMin[ T ] = xycztMax[ T ] = displayImage.getT() - 1;
+		xycztMin[ C ] = xycztMax[ C ] = displayImage.getC() - 1;
 
-		ArrayList < int[] > xyzt = new ArrayList<>();
-		xyzt.add( xyztStart );
-		xyzt.add( xyztEnd );
+		// potentially change z and t range to user selection
+		try
+		{
+			int[] range = bigDataTools.utils.Utils.delimitedStringToIntegerArray(rangeString, ",");
 
-		return ( xyzt );
+			if ( trainingImage.getNFrames() == 1 )
+			{
+				xycztMin[ Z ] = range[0] - 1;
+				xycztMax[ Z ] = range[1] - 1;
+			}
+			else if ( trainingImage.getNSlices() == 1 )
+			{
+				xycztMin[ T ] = range[0] - 1;
+				xycztMax[ T ] = range[1] - 1;
+			}
+			else
+			{
+				xycztMin[ Z ] = range[0] - 1;
+				xycztMax[ Z ] = range[1] - 1;
+
+				if ( range.length == 4 )
+				{
+					// frames
+					xycztMin[ T ] = range[2] - 1;
+					xycztMax[ T ] = range[3] - 1;
+				}
+			}
+		}
+		catch ( NumberFormatException e )
+		{
+			// logger.info("No z or t range selected.");
+		}
+
+
+		FinalInterval interval = new FinalInterval( xycztMin, xycztMax );
+
+		return ( interval );
 
 
 	}

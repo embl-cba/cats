@@ -7,3 +7,6 @@
 # Maven #
 
 # IntelliJ #
+.idea/
+.travis/
+target/

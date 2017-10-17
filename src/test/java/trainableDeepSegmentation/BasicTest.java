@@ -53,7 +53,7 @@ public class BasicTest
 
 	@Test
 	public void testDefaultFeatureGenerationMT() {
-		testDefaultFeaturesOnBridge(FeatureStack::updateFeaturesMT);
+		testDefaultFeaturesOnBridge(FeatureStack::computeFeatureImages);
 	}
 
 	private void testDefaultFeaturesOnBridge(Consumer<FeatureStack> updateFeaturesMethod) {

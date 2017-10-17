@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" build-on-make="true" name="LOCAL_fiji_plugin_trainableDeepSegmentation:jar">
-    <output-path>/Applications/Fiji.app/plugins</output-path>
-    <root id="archive" name="fiji_plugin_trainableDeepSegmentation.jar">
-      <element id="module-output" name="Trainable_Segmentation" />
-    </root>
-  </artifact>
-</component>
