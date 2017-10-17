@@ -5515,5 +5515,189 @@
 					* resolutionWeights.get(iResolution);
 		}
 		return( nBalancedFeatures );
+
+
 	}
+
+
+
+	/**
+	 * @param region5D
+	 * @param sizesMinMax
+	 * @return
+	 */
+	public Runnable postProcess(final Region5D region5D, int[] sizesMinMax)
+	{
+		return () ->
+		{
+			if (stopCurrentThreads || Thread.currentThread().isInterrupted())
+			{
+				//logger.info("Thread "+counter+"/"+counterMax+" stopped.");
+				return;
+			}
+
+			/*
+			logger.info("Classifying region "+counter+"/"+counterMax+" at "
+							+ region5DToClassify.offset.getX() + ","
+							+ region5DToClassify.offset.getY() + ","
+							+ region5DToClassify.offset.getZ() + "..."
+			);*/
+			//logger.info("Memory usage [MB]: " + IJ.currentMemory() / 1000000L + "/" + IJ.maxMemory() / 1000000L);
+
+			long start = System.currentTimeMillis();
+
+			ImagePlus imp = null;
+
+			if (region5D != null)
+			{
+				imp = Utils.getDataCube(inputImage, region5D, new int[]{-1, -1}, 1);
+			}
+			else
+			{
+				imp = classifiedImage; // whole image
+			}
+
+			// remove small objects
+			trainableDeepSegmentation.utils.Utils.filterSmallObjects3D(imp, sizesMinMax);
+
+			// save changed classification image
+			ExecutorService exe = Executors.newFixedThreadPool(threadsPerRegion);
+			ArrayList<Future> futures = new ArrayList<>();
+			for (int z = 0; z < imp.getNSlices(); ++z)
+			{
+				Region5D region5DThisSlice = new Region5D();
+				region5DThisSlice.size = new Point3D(imp.getWidth(), imp.getHeight(), 1);
+				region5DThisSlice.offset = new Point3D(
+						region5D.offset.getX(),
+						region5D.offset.getY(),
+						region5D.offset.getZ() + z);
+				region5DThisSlice.t = region5D.t;
+				region5DThisSlice.c = 0;
+				region5DThisSlice.subSampling = new Point3D(1, 1, 1);
+				byte[] thisSlice = (byte[]) imp.getStack().getProcessor(z + 1).getPixels();
+				futures.add(
+						exe.submit(
+								setClassificationResult(
+										classifiedImage,
+										region5DThisSlice,
+										thisSlice
+								)
+						)
+				);
+			}
+
+			trainableDeepSegmentation.utils.Utils.joinThreads(futures, logger);
+			exe.shutdown();
+		};
+
+	}
+
+
+
+
+	public void postProcessSelectedRegion( String command, String zRange, String sizeRange )
+	{
+
+		if ( classifiedImage == null )
+		{
+			logger.error("classification_result image not set!");
+			return;
+		}
+
+		if ( command.equals("STOP") )
+		{
+			logger.info("Stopping post-processing thread...");
+			wekaSegmentation.stopCurrentThreads = true;
+			postProcessButton.setText("Post process");
+			return;
+		}
+		else
+		{
+			Roi roi = displayImage.getRoi();
+			if (roi == null || !(roi.getType() == Roi.RECTANGLE))
+			{
+				IJ.showMessage("Please use ImageJ's rectangle selection tool" +
+						" in order to select a region.");
+				return;
+			}
+
+			postProcessButton.setText("STOP");
+			wekaSegmentation.stopCurrentThreads = false;
+
+			Thread thread = new Thread() {
+				public void run()
+				{
+
+					int[] sizesMinMax = bigDataTools.utils.Utils.delimitedStringToIntegerArray(sizeRange,",");
+
+					int zs, ze, zc;
+					if ( zRange.equals("None") )
+					{
+						zc = displayImage.getZ();
+						zs = zc - wekaSegmentation.getFeatureVoxelSizeAtMaximumScale();
+						ze = zc + wekaSegmentation.getFeatureVoxelSizeAtMaximumScale();
+					}
+					else
+					{
+						int[] tmp = bigDataTools.utils.Utils.delimitedStringToIntegerArray(zRange,",");
+						zs = tmp[0] - 1; ze = tmp[1] - 1;
+						zc = ( ze + zs ) / 2;
+					}
+
+					Rectangle rectangle = roi.getBounds();
+					Region5D region5D = new Region5D();
+					region5D.t = displayImage.getT() - 1;
+					region5D.c = displayImage.getC() - 1;
+					region5D.size = new Point3D( rectangle.width, rectangle.height, ze - zs + 1);
+					region5D.subSampling = new Point3D(1, 1, 1);
+					region5D.offset = new Point3D( rectangle.x,  rectangle.y, zs );
+
+					wekaSegmentation.postProcess(region5D, sizesMinMax).run();
+
+					if (showColorOverlay)
+						win.toggleOverlay();
+					win.toggleOverlay();
+
+					// we're done
+					postProcessButton.setText("Post process");
+				}
+			};
+			thread.start();
+		}
+	}
+
+
+/*
+								CODE FOR DEBUGGING
+
+								int xGlobal = x + (int)region5D.offset.getX() + (int)region5Dglobal.offset.getX();
+								int yGlobal = y + (int)region5D.offset.getY() + (int)region5Dglobal.offset.getY();
+								int zGlobal = z + (int)region5D.offset.getZ() + (int)region5Dglobal.offset.getZ();
+
+								if ( (xGlobal == 1838) & (yGlobal == 716) & (zGlobal == 588) )
+								{
+									IJ.log("global offset " + region5Dglobal.offset);
+									IJ.log("local offset " + region5D.offset);
+									IJ.log("x,y,z global: " + xGlobal + "," + yGlobal + "," + zGlobal);
+
+									//featureImages.getMultiResolutionFeatureImageArray()[0][0].show();
+
+									for (int f = 0; f < nf; f++)
+									{
+										if (f < 7)
+											valueString[0] = valueString[0] + f + ":" + (featureSlice[x][y][f]) + ", ";
+										else if (f < 7 + 24)
+											valueString[1] = valueString[1] + f + ":" +(int) Math.round(featureSlice[x][y][f]) + ", ";
+										else if (f < 7 + 24 + 27)
+											valueString[2] = valueString[2] + f + ":" +(int) Math.round(featureSlice[x][y][f]) + ", ";
+										else
+											valueString[3] = valueString[3] + f + ":" +(int) Math.round(featureSlice[x][y][f]) + ", ";
+									}
+
+									for (String s : valueString)
+										IJ.log(" x,y global: " + xGlobal + "," + yGlobal + "," + zGlobal + " values " + s);
+
+									IJ.log("Classification "+ classificationResult[z][iInstanceThisSlice-1] );
+
+								}*/
 

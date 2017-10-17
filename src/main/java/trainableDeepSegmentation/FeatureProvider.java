@@ -21,8 +21,10 @@ package trainableDeepSegmentation;
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
+import bigDataTools.Region5D;
 import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
+import com.sun.org.apache.regexp.internal.RE;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -32,9 +34,18 @@ import ij.plugin.Duplicator;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.StackProcessor;
+import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
+import net.imglib2.RandomAccessible;
 import net.imglib2.exception.IncompatibleTypeException;
+import net.imglib2.img.ImagePlusAdapter;
+import net.imglib2.img.Img;
+import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.NumericType;
+import net.imglib2.util.Intervals;
+import net.imglib2.view.Views;
 import trainableDeepSegmentation.filters.HessianImgLib2;
 
 import java.util.ArrayList;
@@ -359,6 +370,8 @@ public class FeatureProvider
         int y = yGlobal - (int) interval.min( Y );
         int z = zGlobal - (int) interval.min( Z );
 
+        // if features for this slice have not been
+        // up-sampled yet, do it now
         if ( ! featureSlices.containsKey( z ) )
         {
             setFeatureSlice( z );
@@ -377,7 +390,14 @@ public class FeatureProvider
             values = new double[nf];
         }
 
-        System.arraycopy( featureSlices.get( z ), 0, values, 0, nf);
+        try
+        {
+            System.arraycopy( featureSlices.get(z)[x][y], 0, values, 0, nf);
+        }
+        catch ( Exception e )
+        {
+            logger.error( "getFeatureValues" + e.toString() );
+        }
 
         return ( values );
     }
@@ -389,7 +409,7 @@ public class FeatureProvider
         System.gc();
     }
 
-    private void setFeatureSlice(int z )
+    private void setFeatureSlice( int z )
     {
         setFeatureSliceRegion(z,
                 0, (int) (interval.dimension( X ) - 1),
@@ -413,26 +433,31 @@ public class FeatureProvider
                                       int ye)
     {
 
-
-        // The feature images are stored with borders in multiResolutionFeatureImageArray,
-        // where some features could not be computed properly.
-        // Here we omit them and only put the values into the feature
-        // slices that were properly computed, and actually are within
-        // the interval
-        xs += featureImageBorderSizes[ X ];
-        xe += featureImageBorderSizes[ X ];
-        ys += featureImageBorderSizes[ Y ];
-        ye += featureImageBorderSizes[ Z ];
-        z += featureImageBorderSizes[ Z ];
-
         int nf = getNumFeatures();
 
+        // prepare featureSlice and store in an array
         double[][][] featureSlice = new double
                 [(int) interval.dimension(X)]
                 [(int) interval.dimension(Y)]
                 [nf];
 
+        // the z value is relative to the actual requested interval
+        // ( without the extra borders ! )
         featureSlices.put( z, featureSlice );
+
+        // The feature images in multiResolutionFeatureImageArray
+        // are larger than the requested interval, because of border
+        // issues during feature computation.
+        // Here we omit those borders and only put the values into the feature
+        // slice that were properly computed, and are within
+        // the requested interval
+        xs += featureImageBorderSizes[ X ];
+        xe += featureImageBorderSizes[ X ];
+        ys += featureImageBorderSizes[ Y ];
+        ye += featureImageBorderSizes[ Y ];
+        z += featureImageBorderSizes[ Z ];
+
+
 
         double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
         double vAA0,vAA1,vAAA;
@@ -989,13 +1014,103 @@ public class FeatureProvider
         {
             if ( activeChannels.contains( c ) )
             {
-                FinalInterval intervalOneChannel = wekaSegmentation.fixChannel(interval, c);
-                computeFeatureImages(
+                FinalInterval intervalOneChannel = wekaSegmentation.fixDimension(interval, C, c);
+
+                boolean success = computeFeatureImages(
                         intervalOneChannel,
                         numThreads,
                         computeAllFeatures);
+
+                if ( ! success )
+                {
+                    return false;
+                }
             }
         }
+
+        return true;
+    }
+
+
+    /**
+     * Get data cube from data taking into account and out-of-bounds strategy.
+     *
+     * @param imp image to read voxel values from
+     * @param region5D region to extract
+     * @param outOfBoundsStrategy out-of-bounds strategy to use
+     * @return data cube with correct voxel values for out-of-bounds positions.
+     */
+    public < T extends NumericType< T > & NativeType< T >> ImagePlus getDataCube(
+            ImagePlus imp,
+            FinalInterval interval,
+            String outOfBoundsStrategy )
+    {
+
+        FinalInterval interval3D = new FinalInterval(
+                new long[]{ interval.min( X ), interval.min( Y ), interval.min( Z ) },
+                new long[]{ interval.max( X ), interval.max( Y ), interval.max( Z ) } );
+        FinalInterval impInterval3D = new FinalInterval( new long[]{ imp.getWidth(), imp.getHeight(), imp.getNSlices() } );
+        FinalInterval intersect3D = Intervals.intersect( impInterval3D, interval3D );
+
+        if ( Intervals.equals( intersect3D, interval3D ) )
+        {
+            // everything is within bounds
+            return bigDataTools.utils.Utils.getDataCube(imp,
+                    wekaSegmentation.convertIntervalToRegion5D( interval ),
+                    new int[]{-1, -1}, 1);
+        }
+
+
+        // there are out of bounds pixels
+        // read data cube within bounds
+
+        long[] minIntersect5D = new long[5];
+        long[] maxIntersect5D = new long[5];
+
+        interval.min( minIntersect5D );
+        interval.max( maxIntersect5D );
+
+        for ( int i = 0; i < 3; ++i )
+        {
+            minIntersect5D[ XYZ[i] ] = intersect3D.min( i );
+            maxIntersect5D[ XYZ[i] ] = intersect3D.max( i );
+        }
+
+        FinalInterval intersect5D = new FinalInterval( minIntersect5D, maxIntersect5D );
+        ImagePlus impWithinBounds = bigDataTools.utils.Utils.getDataCube(
+                imp, wekaSegmentation.convertIntervalToRegion5D( intersect5D ),
+                new int[]{-1,-1}, 1 );
+
+        // - copy impWithinBounds into a larger imp
+        // that has the originally requested size
+        // and pad with the chosen outOfBoundsStrategy
+        // wrap it into an ImgLib image (no copying)
+        final Img< T > image = ImagePlusAdapter.wrap( impWithinBounds );
+
+        // create an infinite view where all values outside of the Interval are
+        // the mirrored content, the mirror is the last pixel
+        RandomAccessible< T > infinite = Views.extendMirrorSingle( image );
+
+        // in order to visualize them, we have to define a new interval
+        // on them which can be displayed
+        long[] min = new long[ image.numDimensions() ];
+        long[] max = new long[ image.numDimensions() ];
+
+
+        for ( int d = 0; d < image.numDimensions(); ++d )
+        {
+            min[d] = interval3D.min(d) - intersect3D.min(d);
+            max[d] = min[d] + interval3D.dimension(d);
+        }
+
+        // define the Interval on the infinite random accessibles
+        FinalInterval interval2 = new FinalInterval( min, max );
+        ImagePlus impWithMirror = ImageJFunctions.wrap( Views.interval( infinite, interval2 ), "" );
+        impWithMirror.setDimensions(1, (int) interval2.dimension(2), 1 );
+
+        //impWithMirror.show();
+
+        return ( impWithMirror );
     }
 
 
@@ -1013,15 +1128,16 @@ public class FeatureProvider
         // - bit of a mess which variables are passed on via
         // wekaSegmentation object and which not
         double anisotropy = wekaSegmentation.settings.anisotropy;
+        String channelName = "ch" + interval.min( C );
 
-        // get part of original image that is
-        // needed to compute the features for the
-        // requested interval
+        // get the larger part of original image that is
+        // needed to compute features for requested interval.
         featureImageBorderSizes = wekaSegmentation.getFeatureBorderSizes();
         FinalInterval expandedInterval = addBordersXYZ( interval,
                 featureImageBorderSizes );
 
-        ImagePlus originalImageCrop = getDataCube( inputImage, expandedInterval );
+        // the expanded interval can be out-of-bounds, e.g. having negative values
+        ImagePlus inputImageCrop = getDataCube( inputImage, expandedInterval, "mirror" );
 
         // Set a calibration that can be changed during the binning
         Calibration calibration = new Calibration();
@@ -1029,10 +1145,8 @@ public class FeatureProvider
         calibration.pixelWidth = 1;
         calibration.pixelHeight = 1;
         calibration.setUnit("um");
-        originalImageCrop.setCalibration(calibration);
-        originalImageCrop.setTitle( inputImage.getTitle() + "_" + channelName );
-
-        String channelName = "ch" + interval.min( C );
+        inputImageCrop.setCalibration( calibration );
+        inputImageCrop.setTitle( inputImage.getTitle() + "_" + channelName );
 
         // ResolutionLevelList of ImageList
         ArrayList < ArrayList < ImagePlus > > multiResolutionFeatureImages = new ArrayList<>();
@@ -1061,7 +1175,7 @@ public class FeatureProvider
                 if ( level == 0 )
                 {
 
-                    featureImagesThisResolution.add( originalImageCrop );
+                    featureImagesThisResolution.add( inputImageCrop );
                     binnings.add( new int[]{1, 1, 1} );
 
                 }
@@ -1119,7 +1233,7 @@ public class FeatureProvider
                             // derivative computation further down
 
                             /*
-                             currently below there is an average filter computed.
+                             currently, below an average filter is computed.
                              for computing image derivatives this might not be ideal
                              because the difference of two shifted means only
                              reflects difference between the two pixels at the edge

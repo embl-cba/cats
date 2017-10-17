@@ -502,10 +502,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 					}
 					else if(e.getSource() == postProcessButton)
 					{
+						/*
 						postProcessSelectedRegion(
 								command,
 								classificationRangeTextField.getText(),
 								objectSizeRangeTextField.getText());
+								*/
 					}
 					else if(e.getSource() == loadProjectButton)
 					{
@@ -1916,36 +1918,25 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		Example newExample = wekaSegmentation.createExample(classNum, points, (int)roi.getStrokeWidth(), z, t);
 
-		if ( wekaSegmentation.isValidExample( newExample ) )
+		wekaSegmentation.addExample( newExample );
+
+		traceCounter[classNum]++;
+		win.drawExamples();
+		win.updateExampleLists();
+		// Record
+		final int n = displayImage.getCurrentSlice();
+		String[] arg = new String[]{
+				Integer.toString(classNum),
+				Integer.toString(n)};
+		record(ADD_TRACE, arg);
+
+		String numLabelsPerClassString = "";
+		int[] numLabelsPerClass = wekaSegmentation.getNumExamplesPerClass();
+		for ( int i = 0 ; i <  numLabelsPerClass.length; i++ )
 		{
-			wekaSegmentation.addExample( newExample );
-
-			traceCounter[classNum]++;
-			win.drawExamples();
-			win.updateExampleLists();
-			// Record
-			final int n = displayImage.getCurrentSlice();
-			String[] arg = new String[]{
-					Integer.toString(classNum),
-					Integer.toString(n)};
-			record(ADD_TRACE, arg);
-
-			String numLabelsPerClassString = "";
-			int[] numLabelsPerClass = wekaSegmentation.getNumExamplesPerClass();
-			for ( int i = 0 ; i <  numLabelsPerClass.length; i++ )
-			{
-				numLabelsPerClassString += " "+(i+1)+":"+numLabelsPerClass[i];
-			}
-			logger.progress("Number of labels per class:", numLabelsPerClassString);
-
+			numLabelsPerClassString += " "+(i+1)+":"+numLabelsPerClass[i];
 		}
-		else
-		{
-			logger.error("Label is too close to image boundary.\n" +
-					"Please:\n" +
-					"- Put label more central.\n" +
-					"- Go to [Settings] and reduce maximal feature scale.");
-		}
+		logger.progress("Number of labels per class:", numLabelsPerClassString);
 
 	}
 
@@ -2242,7 +2233,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		ImageConverter.setDoScaling(aux);
 	}
 
-	public void applyClassifierToSelectedRegion( String command, String rangeString )
+	public void applyClassifierToSelectedRegion( String command, String range )
 	{
 		// TODO
 		// move all of this into wekaSegmentation class
@@ -2297,7 +2288,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			return;
 		}
 
-		FinalInterval interval = getIntervalFromGUI( roi );
+		FinalInterval interval = getIntervalFromGUI( roi, range );
 
 		logger.info("# Classifying selected region...");
 		applyButton.setText("STOP");
@@ -2323,133 +2314,60 @@ public class Weka_Deep_Segmentation implements PlugIn
 	}
 
 	// TODO: is there a on-final version of an interval?
-	private FinalInterval getIntervalFromGUI(Roi roi )
+	private FinalInterval getIntervalFromGUI( Roi roi, String rangeString )
 	{
 		Rectangle rectangle = roi.getBounds();
 
-		long[] xycztMin = new long[ 5 ];
-		long[] xycztMax = new long[ 5 ];
+		long[] min = new long[ 5 ];
+		long[] max = new long[ 5 ];
 
-		xycztMin[ X ] = (int) rectangle.getX();
-		xycztMax[ X ] = xycztMin[0] + (int) rectangle.getWidth() - 1;
+		min[ X ] = (int) rectangle.getX();
+		max[ X ] = min[0] + (int) rectangle.getWidth() - 1;
 
-		xycztMin[ Y ] = (int) rectangle.getY();
-		xycztMax[ Y ] = xycztMin[1] + (int) rectangle.getHeight() - 1;
+		min[ Y ] = (int) rectangle.getY();
+		max[ Y ] = min[1] + (int) rectangle.getHeight() - 1;
 
-		xycztMin[ Z ] = xycztMax[ Z ] = displayImage.getZ() - 1;
-		xycztMin[ T ] = xycztMax[ T ] = displayImage.getT() - 1;
-		xycztMin[ C ] = xycztMax[ C ] = displayImage.getC() - 1;
+		min[ Z ] = max[ Z ] = displayImage.getZ() - 1;
+		min[ T ] = max[ T ] = displayImage.getT() - 1;
+		min[ C ] = max[ C ] = displayImage.getC() - 1;
 
-		// potentially change z and t range to user selection
+		// potentially adapt z and t range to user selection
 		try
 		{
-			int[] range = bigDataTools.utils.Utils.delimitedStringToIntegerArray(rangeString, ",");
+			int[] range = bigDataTools.utils.Utils.delimitedStringToIntegerArray( rangeString, ",");
 
 			if ( trainingImage.getNFrames() == 1 )
 			{
-				xycztMin[ Z ] = range[0] - 1;
-				xycztMax[ Z ] = range[1] - 1;
+				min[ Z ] = range[0] - 1;
+				max[ Z ] = range[1] - 1;
 			}
 			else if ( trainingImage.getNSlices() == 1 )
 			{
-				xycztMin[ T ] = range[0] - 1;
-				xycztMax[ T ] = range[1] - 1;
+				min[ T ] = range[0] - 1;
+				max[ T ] = range[1] - 1;
 			}
 			else
 			{
-				xycztMin[ Z ] = range[0] - 1;
-				xycztMax[ Z ] = range[1] - 1;
+				min[ Z ] = range[0] - 1;
+				max[ Z ] = range[1] - 1;
 
 				if ( range.length == 4 )
 				{
-					// frames
-					xycztMin[ T ] = range[2] - 1;
-					xycztMax[ T ] = range[3] - 1;
+					min[ T ] = range[2] - 1;
+					max[ T ] = range[3] - 1;
 				}
 			}
 		}
 		catch ( NumberFormatException e )
 		{
-			// logger.info("No z or t range selected.");
+			logger.info("No (or invalid) z and t range selected.");
 		}
 
-
-		FinalInterval interval = new FinalInterval( xycztMin, xycztMax );
+		FinalInterval interval = new FinalInterval( min, max );
 
 		return ( interval );
 
 
-	}
-
-	public void postProcessSelectedRegion( String command, String zRange, String sizeRange )
-	{
-
-		if ( classifiedImage == null )
-		{
-			logger.error("classification_result image not set!");
-			return;
-		}
-
-		if ( command.equals("STOP") )
-		{
-			logger.info("Stopping post-processing thread...");
-			wekaSegmentation.stopCurrentThreads = true;
-			postProcessButton.setText("Post process");
-			return;
-		}
-		else
-		{
-			Roi roi = displayImage.getRoi();
-			if (roi == null || !(roi.getType() == Roi.RECTANGLE))
-			{
-				IJ.showMessage("Please use ImageJ's rectangle selection tool" +
-						" in order to select a region.");
-				return;
-			}
-
-			postProcessButton.setText("STOP");
-			wekaSegmentation.stopCurrentThreads = false;
-
-			Thread thread = new Thread() {
-				public void run()
-				{
-
-					int[] sizesMinMax = bigDataTools.utils.Utils.delimitedStringToIntegerArray(sizeRange,",");
-
-					int zs, ze, zc;
-					if ( zRange.equals("None") )
-					{
-						zc = displayImage.getZ();
-						zs = zc - wekaSegmentation.getFeatureVoxelSizeAtMaximumScale();
-						ze = zc + wekaSegmentation.getFeatureVoxelSizeAtMaximumScale();
-					}
-					else
-					{
-						int[] tmp = bigDataTools.utils.Utils.delimitedStringToIntegerArray(zRange,",");
-						zs = tmp[0] - 1; ze = tmp[1] - 1;
-						zc = ( ze + zs ) / 2;
-					}
-
-					Rectangle rectangle = roi.getBounds();
-					Region5D region5D = new Region5D();
-					region5D.t = displayImage.getT() - 1;
-					region5D.c = displayImage.getC() - 1;
-					region5D.size = new Point3D( rectangle.width, rectangle.height, ze - zs + 1);
-					region5D.subSampling = new Point3D(1, 1, 1);
-					region5D.offset = new Point3D( rectangle.x,  rectangle.y, zs );
-
-					wekaSegmentation.postProcess(region5D, sizesMinMax).run();
-
-					if (showColorOverlay)
-						win.toggleOverlay();
-					win.toggleOverlay();
-
-					// we're done
-					postProcessButton.setText("Post process");
-				}
-			};
-			thread.start();
-		}
 	}
 
 	/**
