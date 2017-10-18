@@ -1263,6 +1263,9 @@ public class WekaSegmentation {
 		min[Z] = examples.get(0).z;
 		max[Z] = examples.get(0).z;
 
+		min[T] = examples.get(0).t;
+		max[T] = examples.get(0).t;
+
 		for ( Example example : examples )
 		{
 			rectangle = getExampleRectangleBounds( example );
