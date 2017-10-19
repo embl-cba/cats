@@ -359,7 +359,7 @@ public class FeatureProvider
         };
     }
 
-    public double[] getFeatureValues(
+    public double[] getFeatureValuesWithClassIndex(
             int xGlobal,
             int yGlobal,
             int zGlobal,
@@ -396,7 +396,7 @@ public class FeatureProvider
         }
         catch ( Exception e )
         {
-            logger.error( "getFeatureValues" + e.toString() );
+            logger.error( "getFeatureValuesWithClassIndex" + e.toString() );
         }
 
         return ( values );

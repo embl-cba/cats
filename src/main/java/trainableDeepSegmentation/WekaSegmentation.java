@@ -93,10 +93,6 @@ public class WekaSegmentation {
 	/** features to be used in the training */
 	//private FeatureImagesMultiResolution  featureImages = null;
 	/**
-	 * set of instances from loaded data (previously saved segmentation)
-	 */
-	private Instances labelImageTrainingData = null;
-	/**
 	 * set of instances from the user's traces
 	 */
 	private Instances trainingData = null;
@@ -797,17 +793,17 @@ public class WekaSegmentation {
 		filter.setBiasToUniformClass(1.0);
 		try
 		{
-			filter.setInputFormat(this.labelImageTrainingData);
+			filter.setInputFormat(trainingData);
 			filter.setNoReplacement(false);
 			filter.setSampleSizePercent(100);
-			filteredIns = Filter.useFilter(this.labelImageTrainingData, filter);
+			filteredIns = Filter.useFilter(trainingData, filter);
 		}
 		catch (Exception e)
 		{
 			IJ.log("Error when resampling input data!");
 			e.printStackTrace();
 		}
-		this.labelImageTrainingData = filteredIns;
+		trainingData = filteredIns;
 	}
 
 	public void updateExamples( boolean recomputeFeatures )
@@ -946,44 +942,22 @@ public class WekaSegmentation {
 		logger.info("Creating training data... ");
 		final long start = System.currentTimeMillis();
 
-		// prepare training data
-		int numActiveFeatures = getNumActiveFeatures();
-		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-		for (int f = 0; f < numActiveFeatures; f++)
-		{
-			attributes.add(new Attribute("feat_" + f));
-		}
-		attributes.add(new Attribute("class", getClassNamesAsArrayList()));
-
-		// initialize set of instances
-		Instances trainingData = new Instances("segment", attributes, 1);
-		// Set the index of the class attribute
-		trainingData.setClassIndex(numActiveFeatures);
+		setAllFeaturesActive();
+		trainingData = getEmptyTrainingData();
 
 		// add and report training values
 		int[] numExamplesPerClass = new int[getNumClassesInExamples()];
 		int[] numExamplePixelsPerClass = new int[getNumClassesInExamples()];
 
+		int numFeatures = getNumAllFeatures();
 		for ( Example example : examples )
 		{
 			// loop over all pixels of the example
+			// and add the feature values for each pixel to the trainingData
+			// note: subsetting of active features happens in another function
 			for ( double[] values : example.instanceValuesArray )
 			{
-				// loop over all features of the pixel
-				double[] activeValues = new double[numActiveFeatures + 1]; // +1, for class value
-				int iActiveValue = 0;
-				for (int i = 0; i < values.length - 1; i++) // -1, because last value is the class value
-				{
-					// during previous training, features that were
-					// not used in the RF often enough
-					// were set inactive.
-					if ( settings.featureList.get(i).isActive )
-					{
-						activeValues[ iActiveValue++ ] = values[i];
-					}
-				}
-				activeValues[iActiveValue] = example.classNum;
-				trainingData.add( new DenseInstance(1.0, activeValues) );
+				trainingData.add( new DenseInstance(1.0, values) );
 			}
 			numExamplesPerClass[example.classNum] += 1;
 			numExamplePixelsPerClass[example.classNum] += example.instanceValuesArray.size();
@@ -1019,30 +993,19 @@ public class WekaSegmentation {
 		logger.info("Removing inactive features from training data... ");
 		final long start = System.currentTimeMillis();
 
-		// prepare training data
-		int numActiveFeatures = getNumActiveFeatures();
-		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-		for (int f = 0; f < numActiveFeatures; f++)
-		{
-			attributes.add( new Attribute("feat_" + f) );
-		}
-		attributes.add( new Attribute("class", getClassNamesAsArrayList()) );
-
-		// initialize set of instances
-		Instances newTrainingData = new Instances("segment", attributes, 1);
-		// Set the index of the class attribute
-		newTrainingData.setClassIndex( numActiveFeatures );
+		Instances newTrainingData = getEmptyTrainingData();
 
 		int numAllFeatures = getNumAllFeatures();
+		int numActiveFeatures = getNumActiveFeatures();
 		for ( Instance instance : trainingData )
 		{
 			double[] activeValues = new double[ numActiveFeatures + 1 ]; // +1 for class value
 			int iActiveValue = 0;
-			for ( int i = 0; i < numAllFeatures; ++i )
+			for ( int f = 0; f < numAllFeatures; ++f )
 			{
-				if ( settings.featureList.get(i).isActive )
+				if ( settings.featureList.get( f ).isActive )
 				{
-					activeValues[ iActiveValue++ ] = instance.value( i );
+					activeValues[ iActiveValue++ ] = instance.value( f );
 				}
 			}
 			// set the class num
@@ -1118,10 +1081,10 @@ public class WekaSegmentation {
 					int z = example.z;
 
 					// Note: x and y are global coordinates
-					// getFeatureValues will use the exampleListBoundingInterval
+					// getFeatureValuesWithClassIndex will use the exampleListBoundingInterval
 					// to compute the correct coordinates in the featureSlice
 					// TODO: check that this extracts  the right values!
-					double[] featureValues = featureProvider.getFeatureValues(x, y, z, example.classNum);
+					double[] featureValues = featureProvider.getFeatureValuesWithClassIndex(x, y, z, example.classNum);
 					example.instanceValuesArray.add( featureValues );
 
 					// Below is some code for debugging
@@ -1417,7 +1380,7 @@ public class WekaSegmentation {
 	{
 		int numActiveFeatures = 0;
 
-		if (settings.featureList != null)
+		if ( settings.featureList != null )
 		{
 			for (Feature feature : settings.featureList)
 			{
@@ -1464,9 +1427,10 @@ public class WekaSegmentation {
 	 * - how many of the label image pixels did you use and why?
 	 * - can you give an example of why balancing is important?
 	 */
-	public Instances createTrainingDataFromLabelImageRegion(
+	public void addTrainingDataFromLabelImageRegion(
 			FinalInterval interval,
-			int numInstancesPerClass )
+			int numInstancesPerClass,
+			boolean isUpdateFeatureList)
 	{
 
 		// Compute features
@@ -1476,6 +1440,21 @@ public class WekaSegmentation {
 		featureProvider.setInterval(interval);
 		featureProvider.setActiveChannels(settings.activeChannels);
 		featureProvider.computeFeatures(threadsPerRegion, true);
+
+		if ( isUpdateFeatureList )
+		{
+			updateFeatureList(featureProvider.getFeatureNames());
+		}
+
+
+		synchronized (this)
+		{
+			if (trainingData == null)
+			{
+				setAllFeaturesActive();
+				trainingData = getEmptyTrainingData();
+			}
+		}
 
 		// Create lists of coordinates of pixels of each class
 		//
@@ -1508,6 +1487,8 @@ public class WekaSegmentation {
 
 		int nClasses = getNumClasses();
 
+		int[] pixelsPerClass = new int[nClasses];
+
 		for (int iClass = 0; iClass < nClasses; ++iClass )
 		{
 			if (! classCoordinates[iClass].isEmpty() )
@@ -1518,9 +1499,9 @@ public class WekaSegmentation {
 
 					// We have to put the featureSlice for this z-plane into
 					// an ArrayList, because there could be multiple channels,
-					// and this is what 'getFeatureValues' expects as input
+					// and this is what 'getFeatureValuesWithClassIndex' expects as input
 
-					double[] featureValues = featureProvider.getFeatureValues(
+					double[] featureValues = featureProvider.getFeatureValuesWithClassIndex(
 							(int) classCoordinates[iClass].get(randomSample).getX(),
 							(int) classCoordinates[iClass].get(randomSample).getY(),
 							(int) classCoordinates[iClass].get(randomSample).getZ(),
@@ -1532,6 +1513,8 @@ public class WekaSegmentation {
 
 					addInstanceToLabelImageTrainingData( denseInstance );
 
+					pixelsPerClass[iClass]++;
+
 				}
 			}
 		}
@@ -1539,18 +1522,23 @@ public class WekaSegmentation {
 		//for( int j = 0; j < numOfClasses ; j ++ )
 		//	IJ.log("Added " + numSamples + " instances of '" + loadedClassNames.get( j ) +"'.");
 
-		logger.progress("Label image training data updated ",
-				"(" + labelImageTrainingData.numInstances() +
-						" instances, " + labelImageTrainingData.numAttributes() +
-						" attributes, " + labelImageTrainingData.numClasses() + " classes).");
+		logger.progress("Label image training data added ",
+				"(" + trainingData.numInstances() +
+						" instances, " + trainingData.numAttributes() +
+						" attributes, " + trainingData.numClasses() + " classes).");
 
-		return null;
+		for ( int iClass = 0; iClass < nClasses; ++iClass )
+		{
+			logger.info( "Class " + iClass + " [pixels]:" + pixelsPerClass[ iClass ]);
+		}
+
+		return;
 
 	}
 
 	private synchronized void addInstanceToLabelImageTrainingData(Instance instance)
 	{
-		labelImageTrainingData.add( instance );
+		trainingData.add( instance );
 	}
 
 	public void setLabelImage(ImagePlus labelImage)
@@ -1558,16 +1546,45 @@ public class WekaSegmentation {
 		this.labelImage = labelImage;
 	}
 
-	public void createTrainingDataFromLabelImage(
+	public ImagePlus getLabelImage( )
+	{
+		return ( labelImage );
+	}
+
+
+	private Instances getEmptyTrainingData()
+	{
+		// prepare training data
+		int numActiveFeatures = getNumActiveFeatures();
+		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+		for (int f = 0; f < numActiveFeatures; f++)
+		{
+			attributes.add(new Attribute("feat_" + f));
+		}
+		attributes.add(new Attribute("class", getClassNamesAsArrayList()));
+
+		// initialize set of instances
+		Instances newTrainingData = new Instances("segment", attributes, 1);
+		// Set the index of the class attribute
+		newTrainingData.setClassIndex(numActiveFeatures);
+
+		return ( newTrainingData );
+
+	}
+
+	public void setTrainingDataFromLabelImage(
 			FinalInterval labelImageInterval,
 			int labelImageNumInstancesPerClass )
 	{
-		// TODO: loop over tiles if necessary
 		logger.info("Creating training data... ");
+
+		// TODO: loop over tiles if necessary
 		final long start = System.currentTimeMillis();
-		trainingData = createTrainingDataFromLabelImageRegion(
+		boolean isUpdateFeatureList = true;
+		addTrainingDataFromLabelImageRegion(
 				labelImageInterval,
-				labelImageNumInstancesPerClass);
+				labelImageNumInstancesPerClass,
+				isUpdateFeatureList);
 		final long end = System.currentTimeMillis();
 		logger.info("...created training data from label image in " + (end - start) + " ms");
 
@@ -2456,7 +2473,7 @@ public class WekaSegmentation {
 							for (long x = interval.min( X ); x <= interval.max( X ); ++x )
 							{
 								// set reusable instance
-								double[] featureValues = featureProvider.getFeatureValues(
+								double[] featureValues = featureProvider.getFeatureValuesWithClassIndex(
 										(int) x, (int) y, (int) z, -1);
 								ins.setValues( 1.0, featureValues );
 

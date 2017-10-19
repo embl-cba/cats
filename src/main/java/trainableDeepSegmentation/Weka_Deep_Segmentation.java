@@ -561,7 +561,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		OpenDialog od = new OpenDialog("Choose label image",
 				OpenDialog.getLastDirectory());
 
-		if (od.getFileName()==null)
+		if ( od.getFileName()==null )
 			return;
 
 		logger.info("Loading label image " + od.getDirectory() + od.getFileName() + "...");
@@ -2127,13 +2127,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 						Roi roi = null;
 						FinalInterval labelImageInterval = null;
 
-						wekaSegmentation.setAllFeaturesActive();
-
 						if ( trainingFromLabelImageCheckBox.isSelected() )
 						{
-							labelImageInterval = getIntervalFromGUI(  );
+							if ( wekaSegmentation.getLabelImage() == null )
+							{
+								logger.error("Please first [Load label image]." );
+								return;
+							}
+
+							labelImageInterval = getIntervalFromGUI();
 							if ( labelImageInterval == null ) return;
-							wekaSegmentation.createTrainingDataFromLabelImageRegion(
+							wekaSegmentation.setTrainingDataFromLabelImage(
 									labelImageInterval,
 									100 );
 
