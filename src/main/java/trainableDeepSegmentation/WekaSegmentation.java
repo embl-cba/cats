@@ -21,7 +21,6 @@ import bigDataTools.Region5D;
 import bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import bigDataTools.logging.Logger;
 import bigDataTools.logging.IJLazySwingLogger;
-import com.sun.org.apache.regexp.internal.RE;
 import ij.gui.PolygonRoi;
 import javafx.geometry.Point3D;
 
@@ -34,13 +33,6 @@ import ij.gui.Roi;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
-import net.imglib2.RandomAccessible;
-import net.imglib2.img.ImagePlusAdapter;
-import net.imglib2.img.Img;
-import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.NumericType;
-import net.imglib2.view.Views;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
@@ -83,7 +75,7 @@ public class WekaSegmentation {
 	 */
 	public static final int MAX_NUM_CLASSES = 10;
 
-	public static final int CLASS_LUT_WIDTH = 20;
+	public static final int CLASS_LUT_WIDTH = 10;
 
 	/**
 	 * array of lists of Rois for each slice (vector index)
@@ -818,21 +810,15 @@ public class WekaSegmentation {
 		this.labelImageTrainingData = filteredIns;
 	}
 
-	/**
-	 * Create training instances out of the user markings
-	 *
-	 * @return set of instances (feature vectors in Weka format)
-	 */
-	public Instances createTrainingInstancesFromROIs(boolean recomputeFeatures)
+	public void updateExamples( boolean recomputeFeatures )
 	{
-
 		int nonEmpty = 0;
 
-		for (int i = 0; i < getNumClasses(); i++)
+		for ( int i = 0; i < getNumClasses(); i++ )
 		{
-			for (int j = 0; j < inputImage.getImageStackSize(); j++)
+			for ( int j = 0; j < inputImage.getImageStackSize(); j++ )
 			{
-				if (getNumExamples(i) > 0)
+				if ( getNumExamples(i) > 0 )
 				{
 					nonEmpty++;
 					break;
@@ -840,10 +826,10 @@ public class WekaSegmentation {
 			}
 		}
 
-		if (nonEmpty < 2)
+		if ( nonEmpty < 2 )
 		{
 			logger.error("Cannot train without at least 2 sets of examples!");
-			return null;
+			return;
 		}
 
 
@@ -948,6 +934,18 @@ public class WekaSegmentation {
 			logger.info("Computed feature values for all new annotations.");
 		}
 
+	}
+
+	/**
+	 * Create training instances out of the user markings
+	 *
+	 * @return set of instances (feature vectors in Weka format)
+	 */
+	public void setTrainingDataFromExamples( )
+	{
+		logger.info("Creating training data... ");
+		final long start = System.currentTimeMillis();
+
 		// prepare training data
 		int numActiveFeatures = getNumActiveFeatures();
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
@@ -966,7 +964,7 @@ public class WekaSegmentation {
 		int[] numExamplesPerClass = new int[getNumClassesInExamples()];
 		int[] numExamplePixelsPerClass = new int[getNumClassesInExamples()];
 
-		for (Example example : examples)
+		for ( Example example : examples )
 		{
 			// loop over all pixels of the example
 			for ( double[] values : example.instanceValuesArray )
@@ -981,11 +979,11 @@ public class WekaSegmentation {
 					// were set inactive.
 					if ( settings.featureList.get(i).isActive )
 					{
-						activeValues[iActiveValue++] = values[i];
+						activeValues[ iActiveValue++ ] = values[i];
 					}
 				}
 				activeValues[iActiveValue] = example.classNum;
-				trainingData.add(new DenseInstance(1.0, activeValues));
+				trainingData.add( new DenseInstance(1.0, activeValues) );
 			}
 			numExamplesPerClass[example.classNum] += 1;
 			numExamplePixelsPerClass[example.classNum] += example.instanceValuesArray.size();
@@ -1000,11 +998,62 @@ public class WekaSegmentation {
 		}
 
 		if (trainingData.numInstances() == 0)
-			return null;
+			return;
 
 		logger.info("Memory usage [MB]: " + IJ.currentMemory() / 1000000L + "/" + IJ.maxMemory() / 1000000L);
 
-		return trainingData;
+		final long end = System.currentTimeMillis();
+		logger.info("...created training data from ROIs in " + (end - start) + " ms");
+
+		this.trainingData = trainingData;
+	}
+
+
+	/**
+	 * Create training instances out of the user markings
+	 *
+	 * @return set of instances (feature vectors in Weka format)
+	 */
+	public void removeInactiveFeaturesFromTrainingData( )
+	{
+		logger.info("Removing inactive features from training data... ");
+		final long start = System.currentTimeMillis();
+
+		// prepare training data
+		int numActiveFeatures = getNumActiveFeatures();
+		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+		for (int f = 0; f < numActiveFeatures; f++)
+		{
+			attributes.add( new Attribute("feat_" + f) );
+		}
+		attributes.add( new Attribute("class", getClassNamesAsArrayList()) );
+
+		// initialize set of instances
+		Instances newTrainingData = new Instances("segment", attributes, 1);
+		// Set the index of the class attribute
+		newTrainingData.setClassIndex( numActiveFeatures );
+
+		int numAllFeatures = getNumAllFeatures();
+		for ( Instance instance : trainingData )
+		{
+			double[] activeValues = new double[ numActiveFeatures + 1 ]; // +1 for class value
+			int iActiveValue = 0;
+			for ( int i = 0; i < numAllFeatures; ++i )
+			{
+				if ( settings.featureList.get(i).isActive )
+				{
+					activeValues[ iActiveValue++ ] = instance.value( i );
+				}
+			}
+			// set the class num
+			activeValues[ numActiveFeatures ] = instance.value( numAllFeatures );
+			newTrainingData.add( new DenseInstance(1.0, activeValues) );
+		}
+
+		final long end = System.currentTimeMillis();
+		logger.info("...removed inactive features from training data in " + (end - start) + " ms");
+
+		this.trainingData = newTrainingData;
 	}
 
 	// TODO: move to Utils
@@ -1415,11 +1464,9 @@ public class WekaSegmentation {
 	 * - how many of the label image pixels did you use and why?
 	 * - can you give an example of why balancing is important?
 	 */
-	public Instances createTrainingInstancesFromLabelImageRegion(
+	public Instances createTrainingDataFromLabelImageRegion(
 			FinalInterval interval,
-			int numInstancesPerClass,
-			boolean balanceInstances,
-			boolean recomputeFeatures)
+			int numInstancesPerClass )
 	{
 
 		// Compute features
@@ -1445,7 +1492,7 @@ public class WekaSegmentation {
 				for (int x = (int) interval.min(X); x <= interval.max(X); ++x)
 				{
 					int classIndex = ip.get(x, y);
-					classCoordinates[classIndex].add(new Point3D(x, y, z));
+					classCoordinates[classIndex].add( new Point3D(x, y, z) );
 				}
 			}
 		}
@@ -1453,11 +1500,19 @@ public class WekaSegmentation {
 		// Select random samples from each class
 		Random rand = new Random();
 
-		for (int i = 0; i < numInstancesPerClass; i++)
+		// TODO: determine numClasses from labelImage!
+
+		settings.classNames = new ArrayList<>();
+		settings.classNames.add("label_im_class_0");
+		settings.classNames.add("label_im_class_1");
+
+		int nClasses = getNumClasses();
+
+		for (int iClass = 0; iClass < nClasses; ++iClass )
 		{
-			for (int iClass = 0; iClass < getNumClasses(); iClass++)
+			if (! classCoordinates[iClass].isEmpty() )
 			{
-				if (!classCoordinates[iClass].isEmpty())
+				for (int i = 0; i < numInstancesPerClass; ++i)
 				{
 					int randomSample = rand.nextInt(classCoordinates[iClass].size());
 
@@ -1466,16 +1521,16 @@ public class WekaSegmentation {
 					// and this is what 'getFeatureValues' expects as input
 
 					double[] featureValues = featureProvider.getFeatureValues(
-							(int) classCoordinates[iClass].get(randomSample).getZ(),
 							(int) classCoordinates[iClass].get(randomSample).getX(),
 							(int) classCoordinates[iClass].get(randomSample).getY(),
+							(int) classCoordinates[iClass].get(randomSample).getZ(),
 							iClass);
 
 					DenseInstance denseInstance = new DenseInstance(
 							1.0,
 							featureValues);
 
-					addInstanceToLabelImageTrainingData(denseInstance);
+					addInstanceToLabelImageTrainingData( denseInstance );
 
 				}
 			}
@@ -1484,7 +1539,7 @@ public class WekaSegmentation {
 		//for( int j = 0; j < numOfClasses ; j ++ )
 		//	IJ.log("Added " + numSamples + " instances of '" + loadedClassNames.get( j ) +"'.");
 
-		logger.progress("Label image training dataset updated ",
+		logger.progress("Label image training data updated ",
 				"(" + labelImageTrainingData.numInstances() +
 						" instances, " + labelImageTrainingData.numAttributes() +
 						" attributes, " + labelImageTrainingData.numClasses() + " classes).");
@@ -1495,7 +1550,7 @@ public class WekaSegmentation {
 
 	private synchronized void addInstanceToLabelImageTrainingData(Instance instance)
 	{
-		labelImageTrainingData.add(instance);
+		labelImageTrainingData.add( instance );
 	}
 
 	public void setLabelImage(ImagePlus labelImage)
@@ -1503,125 +1558,38 @@ public class WekaSegmentation {
 		this.labelImage = labelImage;
 	}
 
-	public void setTrainingInstancesFromLabelImage(ImagePlus labelImageTrainingData)
+	public void createTrainingDataFromLabelImage(
+			FinalInterval labelImageInterval,
+			int labelImageNumInstancesPerClass )
 	{
-
-		/*
+		// TODO: loop over tiles if necessary
+		logger.info("Creating training data... ");
 		final long start = System.currentTimeMillis();
-
-		// set classes
-		settings.classNames = new ArrayList<>();
-		int maxLabel = 1; // TODO: determine from Label image
-		for (int iClass = 0; iClass <= maxLabel; ++iClass)
-		{
-			settings.classNames.add("class_" + iClass);
-		}
-		logger.info("Found " + (maxLabel + 1) + " classes in label image.");
-
-
-		// Create loaded training data if it does not exist yet
-		if (null == labelImageTrainingData)
-		{
-			IJ.log("Initializing label image training data...");
-
-			// Create instances
-			ArrayList<Attribute> attributes = getAttributes();
-
-			labelImageTrainingData = new Instances("segment", attributes, 1);
-			labelImageTrainingData.setClassIndex(labelImageTrainingData.numAttributes() - 1);
-		}
-
-		int numInstancesPerClass = 100; // TODO: how to determine this?
-		boolean balanceInstances = true; // TODO: ...
-
-		// TODO:
-		// here a loop over subsets could be implemented
-		// in case not everything is fitting into RAM at once
-		Region5D region5D = new Region5D();
-		region5D.size = new Point3D(
-				labelImage.getWidth(),
-				labelImage.getHeight(),
-				labelImage.getNSlices());
-		region5D.offset = new Point3D(0, 0, 0);
-		region5D.t = 0;
-		region5D.c = 0;
-		region5D.subSampling = new Point3D(1, 1, 1);
-
-		labelImageTrainingData = createTrainingInstancesFromLabelImageRegion(
-				region5D,
-				numInstancesPerClass,
-				balanceInstances,
-				threadsPerRegion
-		);
-
+		trainingData = createTrainingDataFromLabelImageRegion(
+				labelImageInterval,
+				labelImageNumInstancesPerClass);
 		final long end = System.currentTimeMillis();
-		logger.info("Created training data from label image in " + (end - start) + " ms");
-		*/
+		logger.info("...created training data from label image in " + (end - start) + " ms");
+
 	}
 
-	public final int TRAIN_FROM_ROIS = 0, TRAIN_FROM_LABEL_IMAGE = 1;
+	public void balanceTrainingData2() // TODO
+	{
+		final long start = System.currentTimeMillis();
+		logger.info("Balancing classes distribution...");
+		trainingData = balanceTrainingData( trainingData );
+		final long end = System.currentTimeMillis();
+		logger.info("Done. Balancing classes distribution took: " + (end - start) + "ms");
+	}
 
 	/**
 	 * Train classifier with the current instances
 	 * and current classifier settings
 	 * and current active features
 	 */
-	public boolean trainClassifier(int trainingDataSource,
-								   boolean recomputeFeatures,
-								   Region5D labelImageRegion,
-								   int labelImageNumInstancesPerClass)
+	public boolean trainClassifier( )
 	{
-		if (Thread.currentThread().isInterrupted())
-		{
-			IJ.log("Classifier training was interrupted.");
-			return false;
-		}
-
 		isTrainingCompleted = false;
-
-		logger.info("Creating training data... ");
-
-		if (trainingDataSource == TRAIN_FROM_ROIS)
-		{
-
-			final long start = System.currentTimeMillis();
-
-			trainingData = createTrainingInstancesFromROIs(recomputeFeatures);
-
-			final long end = System.currentTimeMillis();
-
-			logger.info("...created training data from ROIs in " + (end - start) + " ms");
-		}
-		else if (trainingDataSource == TRAIN_FROM_LABEL_IMAGE)
-		{
-			final long start = System.currentTimeMillis();
-
-			/*
-			trainingData = createTrainingInstancesFromLabelImageRegion(
-					labelImageRegion,
-					labelImageNumInstancesPerClass,
-					true,
-					recomputeFeatures );
-					*/
-
-			final long end = System.currentTimeMillis();
-
-			logger.info("...created training data from label image in " + (end - start) + " ms");
-		}
-
-		// Resample data if necessary
-		//
-		// TODO: check code and ask ignacio
-		if (balanceClasses)
-		{
-			final long start = System.currentTimeMillis();
-			IJ.showStatus("Balancing classes distribution...");
-			IJ.log("Balancing classes distribution...");
-			trainingData = balanceTrainingData(trainingData);
-			final long end = System.currentTimeMillis();
-			IJ.log("Done. Balancing classes distribution took: " + (end - start) + "ms");
-		}
-
 
 		// Train the classifier on the current data
 		logger.info("Training classifier...");
@@ -1644,7 +1612,6 @@ public class WekaSegmentation {
 		rf.setNumFeatures(numRandomFeatures);
 		rf.setBatchSize("" + getBatchSizePercent());
 		rf.setComputeImportances(false); // using own method currently
-
 
 		try
 		{
@@ -1671,7 +1638,6 @@ public class WekaSegmentation {
 
 		return true;
 	}
-
 
 	public void reportClassifierCharacteristics()
 	{
@@ -2407,7 +2373,6 @@ public class WekaSegmentation {
 		return ( region5D );
 	}
 
-
 	public ArrayList<String> getSettingActiveFeatureNames()
 	{
 		ArrayList<String> names = new ArrayList<>();
@@ -2522,17 +2487,15 @@ public class WekaSegmentation {
 									rfStatsMaximumTreesUsed.set( (int) result[4] );
 								}
 
-
 								// double uncertainty = result[ 4 ] / numOfTrees;
 								double uncertainty = result[ 2 ] - result [ 3 ];
 
 								int certainty = (int) ( (1.0 - uncertainty) *
-										(double)( CLASS_LUT_WIDTH-1 ) );
-								int classOffset = (int) result[0] * CLASS_LUT_WIDTH;
+										(double)( CLASS_LUT_WIDTH - 1 ) );
+								int classOffset = (int) result[0] * CLASS_LUT_WIDTH + 1;
 
-								classificationResult
-										[ (int) (z - zMin) ]
-										[ iInstanceThisSlice++ ] = (byte) (classOffset + certainty);
+								classificationResult[ (int) (z - zMin) ]
+										[ iInstanceThisSlice++ ] = (byte) ( classOffset + certainty );
 
 								// record uncertainties in global coordinates
 								/*

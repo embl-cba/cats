@@ -1,6 +1,5 @@
 package trainableDeepSegmentation;
 
-import bigDataTools.Region5D;
 import bigDataTools.dataStreamingTools.DataStreamingTools;
 import bigDataTools.logging.Logger;
 import bigDataTools.utils.ImageDataInfo;
@@ -46,9 +45,7 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.swing.*;
 
-import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
-import net.imglib2.Interval;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
@@ -295,11 +292,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 		for(int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 		{
 			int offset = iClass * WekaSegmentation.CLASS_LUT_WIDTH;
-			for(int i = 0 ; i < WekaSegmentation.CLASS_LUT_WIDTH; i++)
+			for( int i = 1 ; i <= WekaSegmentation.CLASS_LUT_WIDTH; i++ )
 			{
-				red[offset + i] = (byte) (1.0*colors[iClass].getRed()*i/(WekaSegmentation.CLASS_LUT_WIDTH-1));
-				green[offset + i] = (byte) (1.0*colors[iClass].getGreen()*i/(WekaSegmentation.CLASS_LUT_WIDTH-1));
-				blue[offset + i] = (byte) (1.0*colors[iClass].getBlue()*i/(WekaSegmentation.CLASS_LUT_WIDTH-1));
+				red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / (WekaSegmentation.CLASS_LUT_WIDTH - 1));
+				green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / (WekaSegmentation.CLASS_LUT_WIDTH - 1));
+				blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue()*i / (WekaSegmentation.CLASS_LUT_WIDTH - 1));
 			}
 		}
 		overlayLUT = new LUT(red, green, blue);
@@ -496,9 +493,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					}
 					else if(e.getSource() == applyButton)
 					{
-						applyClassifierToSelectedRegion(
-								command,
-								classificationRangeTextField.getText());
+						applyClassifierToSelectedRegion( command );
 					}
 					else if(e.getSource() == postProcessButton)
 					{
@@ -526,7 +521,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					}
 					else if(e.getSource() == loadLabelImageButton)
 					{
-						logger.info("Loading label image" );
+						loadLabelImage();
 					}
 					else if(e.getSource() == testThreadsButton){
 						testThreads();
@@ -560,6 +555,23 @@ public class Weka_Deep_Segmentation implements PlugIn
 			}).start();
 		}
 	};
+
+	private void loadLabelImage()
+	{
+		OpenDialog od = new OpenDialog("Choose label image",
+				OpenDialog.getLastDirectory());
+
+		if (od.getFileName()==null)
+			return;
+
+		logger.info("Loading label image " + od.getDirectory() + od.getFileName() + "...");
+
+		ImagePlus labelImage = new ImagePlus(od.getDirectory() + od.getFileName());
+
+		wekaSegmentation.setLabelImage( labelImage );
+
+		logger.info("...done.");
+	}
 
 	/**
 	 * Item listener for the trace lists
@@ -1594,7 +1606,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				for (int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
 					int offset = iClass * WekaSegmentation.CLASS_LUT_WIDTH;
-					for (int i = 0; i < WekaSegmentation.CLASS_LUT_WIDTH; i++)
+					for (int i = 1; i <= WekaSegmentation.CLASS_LUT_WIDTH; i++)
 					{
 						red[offset + i] = (byte) ( colors[iClass].getRed() );
 						green[offset + i] = (byte) ( colors[iClass].getGreen() );
@@ -1611,7 +1623,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				for (int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
 					int offset = iClass * WekaSegmentation.CLASS_LUT_WIDTH;
-					for (int i = 0; i < WekaSegmentation.CLASS_LUT_WIDTH; i++)
+					for (int i = 1; i <= WekaSegmentation.CLASS_LUT_WIDTH; i++)
 					{
 						red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / (WekaSegmentation.CLASS_LUT_WIDTH - 1));
 						green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / (WekaSegmentation.CLASS_LUT_WIDTH - 1));
@@ -1627,7 +1639,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				for (int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
 					int offset = iClass * WekaSegmentation.CLASS_LUT_WIDTH;
-					for (int i = 0; i < WekaSegmentation.CLASS_LUT_WIDTH; i++)
+					for (int i = 1; i <= WekaSegmentation.CLASS_LUT_WIDTH; i++)
 					{
 						// TODO:
 						// - check whether this is correct
@@ -2112,26 +2124,29 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 						int trainingSource;
 
+						Roi roi = null;
+						FinalInterval labelImageInterval = null;
+
+						wekaSegmentation.setAllFeaturesActive();
+
 						if ( trainingFromLabelImageCheckBox.isSelected() )
 						{
-							trainingSource = wekaSegmentation.TRAIN_FROM_LABEL_IMAGE;
+							labelImageInterval = getIntervalFromGUI(  );
+							if ( labelImageInterval == null ) return;
+							wekaSegmentation.createTrainingDataFromLabelImageRegion(
+									labelImageInterval,
+									100 );
+
 						}
 						else
 						{
-							trainingSource = wekaSegmentation.TRAIN_FROM_ROIS;
+							wekaSegmentation.updateExamples( trainingRecomputeFeaturesCheckBox.isSelected() );
+							wekaSegmentation.setTrainingDataFromExamples();
 						}
 
-
 						logger.info("# Training classifier using all features ");
-						wekaSegmentation.setAllFeaturesActive();
-						boolean trainingFinished = wekaSegmentation.trainClassifier(
-								trainingSource,
-								trainingRecomputeFeaturesCheckBox.isSelected(),
-								null,
-								-1
-								 );
 
-						if( trainingFinished )
+						if( wekaSegmentation.trainClassifier() )
 						{
 							if( this.isInterrupted() )
 							{
@@ -2141,21 +2156,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 							if ( wekaSegmentation.minFeatureUsage > 0 )
 							{
-								wekaSegmentation.deactivateRarelyUsedFeatures();
 
 								logger.info("# Training classifier again, " +
-										"now only with useful features ");
+										"but now only with useful features.");
 								logger.info("Feature usage threshold: " +
 										wekaSegmentation.minFeatureUsage);
 								logger.info("Resulting active features: "
 										+ wekaSegmentation.getNumActiveFeatures()
 										+ "/" + wekaSegmentation.getNumAllFeatures());
 
-								wekaSegmentation.trainClassifier(
-										wekaSegmentation.TRAIN_FROM_ROIS,
-										false,
-										null,
-										-1);
+								wekaSegmentation.deactivateRarelyUsedFeatures();
+								wekaSegmentation.removeInactiveFeaturesFromTrainingData();
+								wekaSegmentation.trainClassifier();
+
 							}
 
 							win.trainingComplete = true;
@@ -2233,7 +2246,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		ImageConverter.setDoScaling(aux);
 	}
 
-	public void applyClassifierToSelectedRegion( String command, String range )
+	public void applyClassifierToSelectedRegion( String command )
 	{
 		// TODO
 		// move all of this into wekaSegmentation class
@@ -2279,16 +2292,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			wekaSegmentation.setOutputImage( classifiedImage );
 		}
 
-
-		Roi roi = displayImage.getRoi();
-		if (roi == null || !(roi.getType() == Roi.RECTANGLE))
-		{
-			IJ.showMessage("Please use ImageJ's rectangle selection tool to  image" +
-					" in order to select the center of the region to be classified");
-			return;
-		}
-
-		FinalInterval interval = getIntervalFromGUI( roi, range );
+		FinalInterval interval = getIntervalFromGUI( );
+		if ( interval == null ) return;
 
 		logger.info("# Classifying selected region...");
 		applyButton.setText("STOP");
@@ -2314,8 +2319,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 	}
 
 	// TODO: is there a on-final version of an interval?
-	private FinalInterval getIntervalFromGUI( Roi roi, String rangeString )
+	private FinalInterval getIntervalFromGUI( )
 	{
+		Roi roi = displayImage.getRoi();
+
+		if (roi == null || !(roi.getType() == Roi.RECTANGLE))
+		{
+			IJ.showMessage("Please use ImageJ's rectangle selection tool to  image" +
+					" in order to select the center of the region to be classified");
+			return ( null );
+		}
+
 		Rectangle rectangle = roi.getBounds();
 
 		long[] min = new long[ 5 ];
@@ -2332,6 +2346,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 		min[ C ] = max[ C ] = displayImage.getC() - 1;
 
 		// potentially adapt z and t range to user selection
+
+		String rangeString = classificationRangeTextField.getText();
+
 		try
 		{
 			int[] range = bigDataTools.utils.Utils.delimitedStringToIntegerArray( rangeString, ",");
