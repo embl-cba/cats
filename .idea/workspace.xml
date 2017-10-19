@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="11fbcd29-9375-459b-85c8-2a59ead8fa06" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/hs_err_pid17444.log" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/artifacts/fiji_plugin_trainableDeepSegmentation.jar" afterPath="$PROJECT_DIR$/out/artifacts/fiji_plugin_trainableDeepSegmentation.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="fiji-plugin-deep-segmentation.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -98,13 +99,8 @@
                 <element signature="e#37051#37105#0" expanded="false" />
                 <element signature="e#38253#38309#0" expanded="false" />
                 <element signature="e#38937#38980#0" expanded="false" />
-                <element signature="e#39527#39528#0" expanded="true" />
-                <element signature="e#39562#39563#0" expanded="true" />
-                <element signature="e#39615#39616#0" expanded="true" />
-                <element signature="e#39650#39651#0" expanded="true" />
-                <element signature="e#39689#39690#0" expanded="true" />
-                <element signature="e#39717#39718#0" expanded="true" />
                 <element signature="method#getEmptyTrainingData#0;class#WekaSegmentation#0" expanded="true" />
+                <element signature="e#39892#39903#0" expanded="true" />
                 <element signature="method#setTrainingDataFromLabelImage#0;class#WekaSegmentation#0" expanded="true" />
                 <element signature="docComment;method#trainClassifier#0;class#WekaSegmentation#0" expanded="false" />
                 <element signature="method#trainClassifier#0;class#WekaSegmentation#0" expanded="true" />
@@ -143,7 +139,7 @@
       <file leaf-file-name="Settings.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Settings.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="151">
+            <state relative-caret-position="360">
               <caret line="27" column="40" lean-forward="false" selection-start-line="27" selection-start-column="40" selection-end-line="27" selection-end-column="40" />
               <folding />
             </state>
@@ -153,12 +149,9 @@
       <file leaf-file-name="Instances.class" pinned="false" current-in-tab="false">
         <entry file="jar://$MAVEN_REPOSITORY$/nz/ac/waikato/cms/weka/weka-dev/3.9.0/weka-dev-3.9.0.jar!/weka/core/Instances.class">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="95">
+            <state relative-caret-position="2595">
               <caret line="963" column="26" lean-forward="false" selection-start-line="963" selection-start-column="18" selection-end-line="963" selection-end-column="26" />
-              <folding>
-                <element signature="method#add#0;class#Instances#0" expanded="true" />
-                <element signature="method#toString#0;class#Instances#0" expanded="true" />
-              </folding>
+              <folding />
             </state>
           </provider>
         </entry>
@@ -176,7 +169,7 @@
       <file leaf-file-name="FeatureProvider.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureProvider.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-5101">
+            <state relative-caret-position="16710">
               <caret line="1121" column="19" lean-forward="false" selection-start-line="1121" selection-start-column="19" selection-end-line="1121" selection-end-column="19" />
               <folding>
                 <element signature="imports" expanded="true" />
@@ -194,11 +187,9 @@
                 <element signature="e#5607#5608#0" expanded="true" />
                 <element signature="e#5663#5664#0" expanded="true" />
                 <element signature="method#mergeResultChannels#0;class#FeatureProvider#0" expanded="true" />
-                <element signature="e#5998#6009#0" expanded="true" />
                 <element signature="method#mergeStacks#0;class#FeatureProvider#0" expanded="true" />
                 <element signature="method#extractChannels#0;class#FeatureProvider#0" expanded="true" />
                 <element signature="method#getHessian#0;class#FeatureProvider#0" expanded="true" />
-                <element signature="method#call#0;class#10663:13018" expanded="true" />
                 <element signature="method#getFeatureValuesWithClassIndex#0;class#FeatureProvider#0" expanded="true" />
                 <element signature="method#freeFeatureSliceMemory#0;class#FeatureProvider#0" expanded="true" />
                 <element signature="method#setFeatureSlice#0;class#FeatureProvider#0" expanded="true" />
@@ -208,7 +199,6 @@
                 <element signature="method#getBytesAsFloats#0;class#FeatureProvider#0" expanded="true" />
                 <element signature="method#getShortsAsFloats#0;class#FeatureProvider#0" expanded="true" />
                 <element signature="method#getStructure#0;class#FeatureProvider#0" expanded="true" />
-                <element signature="method#call#0;class#33074:35174" expanded="true" />
                 <element signature="method#sqrt#0;class#FeatureProvider#0" expanded="true" />
                 <element signature="method#getNumFeatures#0;class#FeatureProvider#0" expanded="true" />
                 <element signature="method#addBordersXYZ#0;class#FeatureProvider#0" expanded="true" />
@@ -252,7 +242,7 @@
       <file leaf-file-name="Weka_Deep_Segmentation.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="181">
+            <state relative-caret-position="13875">
               <caret line="2166" column="61" lean-forward="false" selection-start-line="2166" selection-start-column="61" selection-end-line="2166" selection-end-column="61" />
               <folding>
                 <element signature="docComment;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -318,18 +308,13 @@
                 <element signature="method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="docComment;field#trainingTask#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#listener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-                <element signature="method#actionPerformed#0;class#14778:18944" expanded="true" />
                 <element signature="e#14904#14961#0" expanded="false" />
-                <element signature="method#run#0;class#15012:18927" expanded="true" />
                 <element signature="e#15820#15838#0" expanded="false" />
                 <element signature="e#17179#17187#0" expanded="false" />
                 <element signature="method#loadLabelImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="docComment;field#itemListener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-                <element signature="class#19452:19784" expanded="false" />
-                <element signature="class#19539:19767" expanded="false" />
                 <element signature="docComment;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#serialVersionUID#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-                <element signature="class#21587:21715" expanded="false" />
                 <element signature="docComment;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#serialVersionUID#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;field#boxAnnotation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -348,16 +333,8 @@
                 <element signature="docComment;method#CustomWindow#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="e#25432#25453#0" expanded="false" />
                 <element signature="e#25732#25778#0" expanded="false" />
-                <element signature="class#26733:27287" expanded="false" />
-                <element signature="class#26850:27263" expanded="false" />
-                <element signature="class#27565:28141" expanded="false" />
-                <element signature="class#27685:28115" expanded="false" />
-                <element signature="class#28245:28693" expanded="false" />
-                <element signature="class#28372:28677" expanded="false" />
                 <element signature="e#28706#28765#0" expanded="false" />
                 <element signature="class#28845:31281" expanded="false" />
-                <element signature="class#28935:30441" expanded="false" />
-                <element signature="class#30541:31202" expanded="false" />
                 <element signature="e#32178#32218#0" expanded="false" />
                 <element signature="e#33982#34043#0" expanded="false" />
                 <element signature="e#36238#36268#0" expanded="false" />
@@ -389,7 +366,6 @@
                 <element signature="docComment;method#run#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="method#run#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="e#53084#53092#0" expanded="false" />
-                <element signature="class#55457:55574" expanded="false" />
                 <element signature="e#57593#57620#0" expanded="false" />
                 <element signature="docComment;method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
@@ -402,8 +378,6 @@
                 <element signature="docComment;method#convertTo8bitNoScaling#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="method#applyClassifierToSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="e#67235#67242#0" expanded="false" />
-                <element signature="class#67550:67701" expanded="false" />
-                <element signature="method#run#0;class#67550:67701" expanded="true" />
                 <element signature="method#getIntervalFromGUI#0;class#Weka_Deep_Segmentation#0" expanded="true" />
                 <element signature="docComment;method#saveProject#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;method#saveProject#1;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -412,7 +386,6 @@
                 <element signature="docComment;method#loadProject#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;method#addNewClass#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;method#repaintWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-                <element signature="class#75791:75908" expanded="false" />
                 <element signature="docComment;method#launchWeka#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="docComment;method#showSettingsDialog#0;class#Weka_Deep_Segmentation#0" expanded="false" />
                 <element signature="e#78288#78390#0" expanded="false" />
@@ -439,7 +412,7 @@
       <file leaf-file-name="TestGUI.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/test/java/trainableDeepSegmentation/TestGUI.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="276">
+            <state relative-caret-position="1425">
               <caret line="99" column="8" lean-forward="false" selection-start-line="99" selection-start-column="8" selection-end-line="99" selection-end-column="8" />
               <folding />
             </state>
@@ -574,10 +547,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="PackagesPane" />
-      <pane id="AndroidView" />
-      <pane id="Scratches" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -636,6 +605,10 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scratches" />
+      <pane id="Scope" />
+      <pane id="AndroidView" />
+      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -858,36 +831,35 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
-    <editor active="true" />
+    <frame x="0" y="23" width="1440" height="873" extended-state="0" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18863362" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.18863362" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24375" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24425635" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22246066" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25151148" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22246066" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31438935" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25151148" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1100,18 +1072,13 @@
             <element signature="method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="docComment;field#trainingTask#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#listener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="method#actionPerformed#0;class#14778:18944" expanded="true" />
             <element signature="e#14904#14961#0" expanded="false" />
-            <element signature="method#run#0;class#15012:18927" expanded="true" />
             <element signature="e#15820#15838#0" expanded="false" />
             <element signature="e#17179#17187#0" expanded="false" />
             <element signature="method#loadLabelImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="docComment;field#itemListener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="class#19452:19784" expanded="false" />
-            <element signature="class#19539:19767" expanded="false" />
             <element signature="docComment;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#serialVersionUID#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="class#21587:21715" expanded="false" />
             <element signature="docComment;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#serialVersionUID#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#boxAnnotation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -1130,16 +1097,8 @@
             <element signature="docComment;method#CustomWindow#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="e#25432#25453#0" expanded="false" />
             <element signature="e#25732#25778#0" expanded="false" />
-            <element signature="class#26733:27287" expanded="false" />
-            <element signature="class#26850:27263" expanded="false" />
-            <element signature="class#27565:28141" expanded="false" />
-            <element signature="class#27685:28115" expanded="false" />
-            <element signature="class#28245:28693" expanded="false" />
-            <element signature="class#28372:28677" expanded="false" />
             <element signature="e#28706#28765#0" expanded="false" />
             <element signature="class#28845:31281" expanded="false" />
-            <element signature="class#28935:30441" expanded="false" />
-            <element signature="class#30541:31202" expanded="false" />
             <element signature="e#32178#32218#0" expanded="false" />
             <element signature="e#33982#34043#0" expanded="false" />
             <element signature="e#36238#36268#0" expanded="false" />
@@ -1171,7 +1130,6 @@
             <element signature="docComment;method#run#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="method#run#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="e#53084#53092#0" expanded="false" />
-            <element signature="class#55457:55574" expanded="false" />
             <element signature="e#57593#57620#0" expanded="false" />
             <element signature="docComment;method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
@@ -1184,8 +1142,6 @@
             <element signature="docComment;method#convertTo8bitNoScaling#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="method#applyClassifierToSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="e#67235#67242#0" expanded="false" />
-            <element signature="class#67550:67701" expanded="false" />
-            <element signature="method#run#0;class#67550:67701" expanded="true" />
             <element signature="method#getIntervalFromGUI#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="docComment;method#saveProject#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;method#saveProject#1;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -1194,7 +1150,6 @@
             <element signature="docComment;method#loadProject#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;method#addNewClass#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;method#repaintWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="class#75791:75908" expanded="false" />
             <element signature="docComment;method#launchWeka#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;method#showSettingsDialog#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="e#78288#78390#0" expanded="false" />
@@ -1237,11 +1192,9 @@
             <element signature="e#5607#5608#0" expanded="true" />
             <element signature="e#5663#5664#0" expanded="true" />
             <element signature="method#mergeResultChannels#0;class#FeatureProvider#0" expanded="true" />
-            <element signature="e#5998#6009#0" expanded="true" />
             <element signature="method#mergeStacks#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#extractChannels#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#getHessian#0;class#FeatureProvider#0" expanded="true" />
-            <element signature="method#call#0;class#10663:13018" expanded="true" />
             <element signature="method#getFeatureValuesWithClassIndex#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#freeFeatureSliceMemory#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#setFeatureSlice#0;class#FeatureProvider#0" expanded="true" />
@@ -1251,7 +1204,6 @@
             <element signature="method#getBytesAsFloats#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#getShortsAsFloats#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#getStructure#0;class#FeatureProvider#0" expanded="true" />
-            <element signature="method#call#0;class#33074:35174" expanded="true" />
             <element signature="method#sqrt#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#getNumFeatures#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#addBordersXYZ#0;class#FeatureProvider#0" expanded="true" />
@@ -1455,7 +1407,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1605">
           <caret line="146" column="14" lean-forward="false" selection-start-line="146" selection-start-column="14" selection-end-line="146" selection-end-column="14" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1482,10 +1433,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="7650">
           <caret line="1470" column="15" lean-forward="false" selection-start-line="1470" selection-start-column="15" selection-end-line="1470" selection-end-column="15" />
-          <folding>
-            <element signature="e#43288#43289#0" expanded="false" />
-            <element signature="e#43313#43314#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1493,7 +1440,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="660">
           <caret line="154" column="16" lean-forward="false" selection-start-line="154" selection-start-column="16" selection-end-line="154" selection-end-column="16" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1501,7 +1447,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
           <caret line="18" column="9" lean-forward="false" selection-start-line="18" selection-start-column="9" selection-end-line="18" selection-end-column="9" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1519,7 +1464,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="523">
           <caret line="67" column="25" lean-forward="false" selection-start-line="67" selection-start-column="25" selection-end-line="67" selection-end-column="25" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1527,7 +1471,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="613">
           <caret line="5703" column="0" lean-forward="false" selection-start-line="5703" selection-start-column="0" selection-end-line="5703" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1535,7 +1478,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
           <caret line="7" column="19" lean-forward="false" selection-start-line="7" selection-start-column="19" selection-end-line="7" selection-end-column="19" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1543,12 +1485,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-175">
           <caret line="172" column="32" lean-forward="false" selection-start-line="172" selection-start-column="32" selection-end-line="172" selection-end-column="32" />
-          <folding>
-            <element signature="method#intersect#0;class#Intervals#0" expanded="true" />
-            <element signature="method#union#0;class#Intervals#0" expanded="true" />
-            <element signature="method#largestContainedInterval#0;class#Intervals#0" expanded="true" />
-            <element signature="method#contains#2;class#Intervals#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1556,9 +1492,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="135">
           <caret line="191" column="0" lean-forward="false" selection-start-line="191" selection-start-column="0" selection-end-line="191" selection-end-column="0" />
-          <folding>
-            <element signature="method#report#0;class#FutureTask#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1574,10 +1507,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="602">
           <caret line="108" column="18" lean-forward="false" selection-start-line="108" selection-start-column="18" selection-end-line="108" selection-end-column="18" />
-          <folding>
-            <element signature="e#2124#2125#0" expanded="false" />
-            <element signature="e#2148#2149#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1585,7 +1514,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="195">
           <caret line="16" column="9" lean-forward="false" selection-start-line="16" selection-start-column="9" selection-end-line="16" selection-end-column="9" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1602,7 +1530,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/test/java/trainableDeepSegmentation/TestGUI.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="276">
+        <state relative-caret-position="1425">
           <caret line="99" column="8" lean-forward="false" selection-start-line="99" selection-start-column="8" selection-end-line="99" selection-end-column="8" />
           <folding />
         </state>
@@ -1618,18 +1546,15 @@
     </entry>
     <entry file="jar://$MAVEN_REPOSITORY$/nz/ac/waikato/cms/weka/weka-dev/3.9.0/weka-dev-3.9.0.jar!/weka/core/Instances.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="95">
+        <state relative-caret-position="2595">
           <caret line="963" column="26" lean-forward="false" selection-start-line="963" selection-start-column="18" selection-end-line="963" selection-end-column="26" />
-          <folding>
-            <element signature="method#add#0;class#Instances#0" expanded="true" />
-            <element signature="method#toString#0;class#Instances#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/FeatureProvider.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-5101">
+        <state relative-caret-position="16710">
           <caret line="1121" column="19" lean-forward="false" selection-start-line="1121" selection-start-column="19" selection-end-line="1121" selection-end-column="19" />
           <folding>
             <element signature="imports" expanded="true" />
@@ -1647,11 +1572,9 @@
             <element signature="e#5607#5608#0" expanded="true" />
             <element signature="e#5663#5664#0" expanded="true" />
             <element signature="method#mergeResultChannels#0;class#FeatureProvider#0" expanded="true" />
-            <element signature="e#5998#6009#0" expanded="true" />
             <element signature="method#mergeStacks#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#extractChannels#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#getHessian#0;class#FeatureProvider#0" expanded="true" />
-            <element signature="method#call#0;class#10663:13018" expanded="true" />
             <element signature="method#getFeatureValuesWithClassIndex#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#freeFeatureSliceMemory#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#setFeatureSlice#0;class#FeatureProvider#0" expanded="true" />
@@ -1661,7 +1584,6 @@
             <element signature="method#getBytesAsFloats#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#getShortsAsFloats#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#getStructure#0;class#FeatureProvider#0" expanded="true" />
-            <element signature="method#call#0;class#33074:35174" expanded="true" />
             <element signature="method#sqrt#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#getNumFeatures#0;class#FeatureProvider#0" expanded="true" />
             <element signature="method#addBordersXYZ#0;class#FeatureProvider#0" expanded="true" />
@@ -1703,7 +1625,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Settings.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="151">
+        <state relative-caret-position="360">
           <caret line="27" column="40" lean-forward="false" selection-start-line="27" selection-start-column="40" selection-end-line="27" selection-end-column="40" />
           <folding />
         </state>
@@ -1711,7 +1633,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/trainableDeepSegmentation/Weka_Deep_Segmentation.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="181">
+        <state relative-caret-position="13875">
           <caret line="2166" column="61" lean-forward="false" selection-start-line="2166" selection-start-column="61" selection-end-line="2166" selection-end-column="61" />
           <folding>
             <element signature="docComment;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -1777,18 +1699,13 @@
             <element signature="method#Weka_Deep_Segmentation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="docComment;field#trainingTask#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#listener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="method#actionPerformed#0;class#14778:18944" expanded="true" />
             <element signature="e#14904#14961#0" expanded="false" />
-            <element signature="method#run#0;class#15012:18927" expanded="true" />
             <element signature="e#15820#15838#0" expanded="false" />
             <element signature="e#17179#17187#0" expanded="false" />
             <element signature="method#loadLabelImage#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="docComment;field#itemListener#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="class#19452:19784" expanded="false" />
-            <element signature="class#19539:19767" expanded="false" />
             <element signature="docComment;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#serialVersionUID#0;class#CustomCanvas#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="class#21587:21715" expanded="false" />
             <element signature="docComment;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#serialVersionUID#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;field#boxAnnotation#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -1807,16 +1724,8 @@
             <element signature="docComment;method#CustomWindow#0;class#CustomWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="e#25432#25453#0" expanded="false" />
             <element signature="e#25732#25778#0" expanded="false" />
-            <element signature="class#26733:27287" expanded="false" />
-            <element signature="class#26850:27263" expanded="false" />
-            <element signature="class#27565:28141" expanded="false" />
-            <element signature="class#27685:28115" expanded="false" />
-            <element signature="class#28245:28693" expanded="false" />
-            <element signature="class#28372:28677" expanded="false" />
             <element signature="e#28706#28765#0" expanded="false" />
             <element signature="class#28845:31281" expanded="false" />
-            <element signature="class#28935:30441" expanded="false" />
-            <element signature="class#30541:31202" expanded="false" />
             <element signature="e#32178#32218#0" expanded="false" />
             <element signature="e#33982#34043#0" expanded="false" />
             <element signature="e#36238#36268#0" expanded="false" />
@@ -1848,7 +1757,6 @@
             <element signature="docComment;method#run#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="method#run#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="e#53084#53092#0" expanded="false" />
-            <element signature="class#55457:55574" expanded="false" />
             <element signature="e#57593#57620#0" expanded="false" />
             <element signature="docComment;method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="method#addAnnotation#0;class#Weka_Deep_Segmentation#0" expanded="true" />
@@ -1861,8 +1769,6 @@
             <element signature="docComment;method#convertTo8bitNoScaling#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="method#applyClassifierToSelectedRegion#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="e#67235#67242#0" expanded="false" />
-            <element signature="class#67550:67701" expanded="false" />
-            <element signature="method#run#0;class#67550:67701" expanded="true" />
             <element signature="method#getIntervalFromGUI#0;class#Weka_Deep_Segmentation#0" expanded="true" />
             <element signature="docComment;method#saveProject#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;method#saveProject#1;class#Weka_Deep_Segmentation#0" expanded="false" />
@@ -1871,7 +1777,6 @@
             <element signature="docComment;method#loadProject#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;method#addNewClass#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;method#repaintWindow#0;class#Weka_Deep_Segmentation#0" expanded="false" />
-            <element signature="class#75791:75908" expanded="false" />
             <element signature="docComment;method#launchWeka#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="docComment;method#showSettingsDialog#0;class#Weka_Deep_Segmentation#0" expanded="false" />
             <element signature="e#78288#78390#0" expanded="false" />
@@ -1969,13 +1874,8 @@
             <element signature="e#37051#37105#0" expanded="false" />
             <element signature="e#38253#38309#0" expanded="false" />
             <element signature="e#38937#38980#0" expanded="false" />
-            <element signature="e#39527#39528#0" expanded="true" />
-            <element signature="e#39562#39563#0" expanded="true" />
-            <element signature="e#39615#39616#0" expanded="true" />
-            <element signature="e#39650#39651#0" expanded="true" />
-            <element signature="e#39689#39690#0" expanded="true" />
-            <element signature="e#39717#39718#0" expanded="true" />
             <element signature="method#getEmptyTrainingData#0;class#WekaSegmentation#0" expanded="true" />
+            <element signature="e#39892#39903#0" expanded="true" />
             <element signature="method#setTrainingDataFromLabelImage#0;class#WekaSegmentation#0" expanded="true" />
             <element signature="docComment;method#trainClassifier#0;class#WekaSegmentation#0" expanded="false" />
             <element signature="method#trainClassifier#0;class#WekaSegmentation#0" expanded="true" />
