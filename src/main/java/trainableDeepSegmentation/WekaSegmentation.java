@@ -498,6 +498,12 @@ public class WekaSegmentation {
 				settings.activeFeatureNames.add(feature.name);
 			}
 		}
+
+		logger.info("Feature usage threshold: " + minFeatureUsage);
+		logger.info("Resulting active features: "
+				+ getNumActiveFeatures()
+				+ "/" + getNumAllFeatures());
+
 	}
 
 	public int getNumClassesInExamples()
@@ -2347,8 +2353,8 @@ public class WekaSegmentation {
 				{
 					Region5D region5D = convertIntervalToRegion5D( sliceInterval );
 					classifiedImageStack.setAndSaveBytePixels( classifiedSlice, region5D );
-
-				} catch (IOException e)
+				}
+				catch (IOException e)
 				{
 					logger.warning("WekaSegmentation.setClassificationResult: " + e.toString());
 				}

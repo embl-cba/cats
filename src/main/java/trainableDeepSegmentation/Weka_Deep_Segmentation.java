@@ -2163,13 +2163,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 								logger.info("# Training classifier again, " +
 										"but now only with useful features.");
-								logger.info("Feature usage threshold: " +
-										wekaSegmentation.minFeatureUsage);
-								logger.info("Resulting active features: "
-										+ wekaSegmentation.getNumActiveFeatures()
-										+ "/" + wekaSegmentation.getNumAllFeatures());
 
 								wekaSegmentation.deactivateRarelyUsedFeatures();
+
+
 								wekaSegmentation.removeInactiveFeaturesFromTrainingData();
 								wekaSegmentation.trainClassifier();
 
