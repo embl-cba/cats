@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: net.imglib2:imglib2-algorithm:0.8.1-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/imglib2/imglib2-algorithm/0.8.1-SNAPSHOT/imglib2-algorithm-0.8.1-20170817.181456-3.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/net/imglib2/imglib2-algorithm/0.8.1-SNAPSHOT/imglib2-algorithm-0.8.1-20170817.181456-3-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/imglib2/imglib2-algorithm/0.8.1-SNAPSHOT/imglib2-algorithm-0.8.1-20170817.181456-3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

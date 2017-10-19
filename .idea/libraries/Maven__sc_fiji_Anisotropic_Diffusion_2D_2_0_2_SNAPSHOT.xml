@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: sc.fiji:Anisotropic_Diffusion_2D:2.0.2-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/sc/fiji/Anisotropic_Diffusion_2D/2.0.2-SNAPSHOT/Anisotropic_Diffusion_2D-2.0.2-20171005.231200-2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/sc/fiji/Anisotropic_Diffusion_2D/2.0.2-SNAPSHOT/Anisotropic_Diffusion_2D-2.0.2-20171005.231200-2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/sc/fiji/Anisotropic_Diffusion_2D/2.0.2-SNAPSHOT/Anisotropic_Diffusion_2D-2.0.2-20171005.231200-2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
