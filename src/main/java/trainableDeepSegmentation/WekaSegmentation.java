@@ -1465,7 +1465,6 @@ public class WekaSegmentation {
 
 		long startTime = System.currentTimeMillis();
 
-
 		// Compute features
 		FeatureProvider featureProvider = new FeatureProvider();
 		featureProvider.setInputImage(inputImage);
@@ -1489,17 +1488,35 @@ public class WekaSegmentation {
 			}
 		}
 
-		logger.info( "Computing class coordinates...");
+		logger.info( "Getting instance values...");
 		startTime = System.currentTimeMillis();
 
-		// Create lists of coordinates of pixels of each class
-		//
-		ArrayList<Point3D>[] classCoordinates = new ArrayList[getNumClasses()];
-		for (int i = 0; i < getNumClasses(); i++)
-			classCoordinates[i] = new ArrayList<>();
+		// TODO: determine numClasses from labelImage!
+		settings.classNames = new ArrayList<>();
+		settings.classNames.add("label_im_class_0");
+		settings.classNames.add("label_im_class_1");
 
+		int nClasses = getNumClasses();
+		int nf = getNumAllFeatures();
+
+		int[] pixelsPerClass = new int[nClasses];
+
+		double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
+
+		// Collect instances per plane
 		for (int z = (int) interval.min(Z); z <= interval.max(Z); ++z)
 		{
+
+			logger.progress("Z-plane ", "" + z);
+
+			// Create lists of coordinates of pixels of each class
+			//
+			ArrayList<Point3D>[] classCoordinates = new ArrayList[getNumClasses()];
+			for (int i = 0; i < getNumClasses(); i++)
+			{
+				classCoordinates[i] = new ArrayList<>();
+			}
+
 			ImageProcessor ip = labelImage.getStack().getProcessor(z + 1);
 
 			for (int y = (int) interval.min(Y); y <= interval.max(Y); ++y)
@@ -1507,64 +1524,54 @@ public class WekaSegmentation {
 				for (int x = (int) interval.min(X); x <= interval.max(X); ++x)
 				{
 					int classIndex = ip.get(x, y);
-					classCoordinates[classIndex].add( new Point3D(x, y, z) );
+					classCoordinates[classIndex].add(new Point3D(x, y, z));
 				}
 			}
-		}
 
-		logger.info ( "...class coordinates computed in [ms]: " +
-				( System.currentTimeMillis() - startTime ) );
+			// Select random samples from each class
+			Random rand = new Random();
 
-		// Select random samples from each class
-		Random rand = new Random();
+			featureProvider.setFeatureSlice( z, featureSlice );
 
-		// TODO: determine numClasses from labelImage!
-
-		settings.classNames = new ArrayList<>();
-		settings.classNames.add("label_im_class_0");
-		settings.classNames.add("label_im_class_1");
-
-		int nClasses = getNumClasses();
-
-		int[] pixelsPerClass = new int[nClasses];
-
-		logger.info( "Extracting instances from label image region...");
-
-		startTime = System.currentTimeMillis();
-
-		int nf = getNumAllFeatures();
-
-		for (int iClass = 0; iClass < nClasses; ++iClass )
-		{
-			if (! classCoordinates[iClass].isEmpty() )
+			for (int iClass = 0; iClass < nClasses; ++iClass)
 			{
-				for (int i = 0; i < numInstancesPerClass; ++i)
+				if (!classCoordinates[iClass].isEmpty())
 				{
-					int randomSample = rand.nextInt(classCoordinates[iClass].size());
+					for (int i = 0; i < numInstancesPerClass; ++i)
+					{
+						int randomSample = rand.nextInt(classCoordinates[iClass].size());
 
-					// We have to put the featureSlice for this z-plane into
-					// an ArrayList, because there could be multiple channels,
-					// and this is what 'setFeatureValuesAndClassIndex' expects as input
-					double[] featureValuesWithClassNum = new double[nf + 1];
+						// We have to put the featureSlice for this z-plane into
+						// an ArrayList, because there could be multiple channels,
+						// and this is what 'setFeatureValuesAndClassIndex' expects as input
+						double[] featureValuesWithClassNum = new double[nf + 1];
 
-					featureProvider.setFeatureValuesAndClassIndex(
-							featureValuesWithClassNum,
-							(int) classCoordinates[iClass].get(randomSample).getX(),
-							(int) classCoordinates[iClass].get(randomSample).getY(),
-							(int) classCoordinates[iClass].get(randomSample).getZ(),
-							iClass);
+						featureProvider.setFeatureValuesAndClassIndex(
+								featureValuesWithClassNum,
+								(int) classCoordinates[iClass].get(randomSample).getX(),
+								(int) classCoordinates[iClass].get(randomSample).getY(),
+								(int) classCoordinates[iClass].get(randomSample).getZ(),
+								iClass);
 
-					DenseInstance denseInstance = new DenseInstance(
-							1.0,
-							featureValuesWithClassNum);
+						DenseInstance denseInstance = new DenseInstance(
+								1.0,
+								featureValuesWithClassNum);
 
-					addInstanceToLabelImageTrainingData( denseInstance );
+						addInstanceToLabelImageTrainingData(denseInstance);
 
-					pixelsPerClass[iClass]++;
+						pixelsPerClass[iClass]++;
 
+					}
 				}
 			}
+
+			// this only removes it from the list but keeps
+			// the actual feature slice intact, maybe this is not even necessary?
+			featureProvider.removeFeatureSlice( z );
+			int a = 1;
+
 		}
+
 
 		logger.info ( "...extracted instances in [ms]: " +
 				( System.currentTimeMillis() - startTime ) );
