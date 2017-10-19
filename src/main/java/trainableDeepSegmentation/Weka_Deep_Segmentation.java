@@ -1571,8 +1571,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 								examplesEmpty = false;
 								break;
 							}
-
-				saveProjectButton.setEnabled( !examplesEmpty );
+				saveProjectButton.setEnabled( wekaSegmentation.isTrainingCompleted );
 
 				for(int i = 0 ; i < wekaSegmentation.getNumClasses(); i++)
 				{
@@ -2102,6 +2101,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 			// Set train button text to STOP
 			trainButton.setText("STOP");
 
+			logger.info("# Updating instances and training classifier");
+
+			Thread thread = new Thread(new Runnable() {
+				//exec.submit(new Runnable() {
+
+				public void run()
+				{
+					IJ.run("Monitor Memory...", "");
+					isFirstTime = false;
+				}
+			}); thread.start();
+
+
 			// Thread to run the training
 			Thread newTask = new Thread() {
 
@@ -2122,9 +2134,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 						String[] arg = new String[] {};
 						record(TRAIN_CLASSIFIER, arg);
 
-						int trainingSource;
+						wekaSegmentation.setAllFeaturesActive();
 
-						Roi roi = null;
 						FinalInterval labelImageInterval = null;
 
 						if ( trainingFromLabelImageCheckBox.isSelected() )
@@ -2148,8 +2159,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 							wekaSegmentation.setTrainingDataFromExamples();
 						}
 
-						logger.info("# Training classifier using all features ");
-
 						if( wekaSegmentation.trainClassifier() )
 						{
 							if( this.isInterrupted() )
@@ -2165,7 +2174,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 										"but now only with useful features.");
 
 								wekaSegmentation.deactivateRarelyUsedFeatures();
-
 
 								wekaSegmentation.removeInactiveFeaturesFromTrainingData();
 								wekaSegmentation.trainClassifier();
@@ -2375,6 +2383,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 					max[ T ] = range[3] - 1;
 				}
 			}
+			logger.info("Using selected z and t range: ");
+			logger.info("...");
+			// TODO: make function to print range
 		}
 		catch ( NumberFormatException e )
 		{

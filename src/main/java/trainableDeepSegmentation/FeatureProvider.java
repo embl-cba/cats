@@ -359,7 +359,37 @@ public class FeatureProvider
         };
     }
 
-    public double[] getFeatureValuesWithClassIndex(
+    /**
+     * Also contains empty (0) classID
+     * @param xGlobal
+     * @param yGlobal
+     * @param zGlobal
+     * @return
+     */
+    public double[] getFeatureValues(
+            int xGlobal,
+            int yGlobal,
+            int zGlobal )
+    {
+        int x = xGlobal - (int) interval.min( X );
+        int y = yGlobal - (int) interval.min( Y );
+        int z = zGlobal - (int) interval.min( Z );
+
+        // if features for this slice have not been
+        // up-sampled yet, do it now
+        if ( ! featureSlices.containsKey( z ) )
+        {
+            logger.error("FeatureSlice is not set: " + zGlobal);
+            return ( null );
+        }
+
+        return ( featureSlices.get(z)[x][y] );
+
+    }
+
+
+    public void setFeatureValuesAndClassIndex(
+            double[] values,
             int xGlobal,
             int yGlobal,
             int zGlobal,
@@ -374,89 +404,76 @@ public class FeatureProvider
         // up-sampled yet, do it now
         if ( ! featureSlices.containsKey( z ) )
         {
-            setFeatureSlice( z );
+            logger.error("FeatureSlice is not set: " + z);
+            return;
         }
 
         int nf = getNumFeatures();
 
-        double[] values;
         if ( classNum > -1 )
         {
-            values = new double[nf + 1];
             values[ nf ] = classNum;
-        }
-        else
-        {
-            values = new double[nf];
         }
 
         try
         {
-            System.arraycopy( featureSlices.get(z)[x][y], 0, values, 0, nf);
+            System.arraycopy( featureSlices.get(z)[x][y], 0, values, 0, nf );
         }
         catch ( Exception e )
         {
-            logger.error( "getFeatureValuesWithClassIndex" + e.toString() );
+            logger.error( "setFeatureValuesAndClassIndex" + e.toString() );
         }
 
-        return ( values );
     }
 
-
-    public void freeFeatureSliceMemory( int z )
+    public void removeFeatureSlice(int z )
     {
         featureSlices.remove( z );
-        System.gc();
     }
 
-    private void setFeatureSlice( int z )
+    public double[][][] getReusableFeatureSlice()
     {
-        setFeatureSliceRegion(z,
-                0, (int) (interval.dimension( X ) - 1),
-                0, (int) (interval.dimension( Y ) - 1));
+        // prepare featureSlice array
+        double[][][] featureSlice = new double
+                [(int) interval.dimension(X)]
+                [(int) interval.dimension(Y)]
+                [getNumFeatures() + 1]; // last one for class ID
+
+        return ( featureSlice );
     }
+
 
     /**
      * set all feature values for one z-slice
      * coordinates are relative to within the set interval
      * @param z
-     * @param xs
-     * @param xe
-     * @param ys
-     * @param ye
      * @param featureSlice
      */
-    private void setFeatureSliceRegion(int z,
-                                      int xs,
-                                      int xe,
-                                      int ys,
-                                      int ye)
+    public void setFeatureSlice( int zGlobal, double[][][] featureSlice )
     {
+        int xs = 0;
+        int xe = (int) (interval.dimension( X ) - 1);
+        int ys = 0;
+        int ye = (int) (interval.dimension( Y ) - 1);
+
+        int z = zGlobal - (int) interval.min( Z );
 
         int nf = getNumFeatures();
 
-        // prepare featureSlice and store in an array
-        double[][][] featureSlice = new double
-                [(int) interval.dimension(X)]
-                [(int) interval.dimension(Y)]
-                [nf];
-
-        // the z value is relative to the actual requested interval
-        // ( without the extra borders ! )
         featureSlices.put( z, featureSlice );
 
         // The feature images in multiResolutionFeatureImageArray
         // are larger than the requested interval, because of border
         // issues during feature computation.
-        // Here we omit those borders and only put the values into the feature
-        // slice that were properly computed, and are within
+        // Here we skip to the values outside the borders and
+        // only put the values into the feature
+        // slice that were properly computed, and are in fact within
         // the requested interval
         xs += featureImageBorderSizes[ X ];
         xe += featureImageBorderSizes[ X ];
         ys += featureImageBorderSizes[ Y ];
         ye += featureImageBorderSizes[ Y ];
         z += featureImageBorderSizes[ Z ];
-
 
 
         double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
@@ -1110,7 +1127,10 @@ public class FeatureProvider
 
         //impWithMirror.show();
 
-        return ( impWithMirror );
+        // force into RAM, because seems too slow otherwise
+        ImagePlus impWithMirrorDuplicate = impWithMirror.duplicate();
+
+        return ( impWithMirrorDuplicate );
     }
 
 
@@ -1213,7 +1233,7 @@ public class FeatureProvider
 
                     for (ImagePlus featureImage : featureImagesPreviousResolution)
                     {
-                        if ( level == wekaSegmentation.settings.maxResolutionLevel)
+                        if ( level == wekaSegmentation.settings.maxResolutionLevel )
                         {
                             /*
                             don't bin but smooth last scale to better preserve

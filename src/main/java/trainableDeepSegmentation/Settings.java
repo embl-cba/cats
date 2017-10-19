@@ -17,7 +17,7 @@ public class Settings implements Serializable {
 
     public int backgroundThreshold = 0; // gray-values
 
-    public ArrayList< String > activeFeatureNames = null;
+    //public ArrayList< String > activeFeatureNames = null;
 
     /** List of all possible features for current settings,
      * including active as well as inactive features.
