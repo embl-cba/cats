@@ -2576,14 +2576,16 @@ public class WekaSegmentation {
 								}
 
 								// double uncertainty = result[ 4 ] / numOfTrees;
-								double uncertainty = result[ 2 ] - result [ 3 ];
+								//         0.9 - 0.1    1.0 .. 0.0
+								double certainty = (result[ 2 ] - result [ 3 ]);
 
-								int certainty = (int) ( (1.0 - uncertainty) *
+								int lutCertainty = (int) ( certainty *
 										(double)( CLASS_LUT_WIDTH - 1 ) );
+
 								int classOffset = (int) result[0] * CLASS_LUT_WIDTH + 1;
 
 								classificationResult[ (int) (z - zMin) ]
-										[ iInstanceThisSlice++ ] = (byte) ( classOffset + certainty );
+										[ iInstanceThisSlice++ ] = (byte) ( classOffset + lutCertainty );
 
 								// record uncertainties in global coordinates
 								/*
