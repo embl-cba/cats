@@ -2117,11 +2117,11 @@ public class WekaSegmentation {
 
 			// compute image features
 			FeatureProvider featureProvider = new FeatureProvider();
-			featureProvider.setInputImage(inputImage);
-			featureProvider.setWekaSegmentation(this);
-			featureProvider.setActiveChannels(settings.activeChannels);
-			featureProvider.setInterval(tileInterval);
-			featureProvider.computeFeatures(numThreads, false);
+			featureProvider.setInputImage( inputImage );
+			featureProvider.setWekaSegmentation( this );
+			featureProvider.setActiveChannels( settings.activeChannels );
+			featureProvider.setInterval( tileInterval );
+			featureProvider.computeFeatures( numThreads, false );
 
 			if ( isLogSpeed )
 			{
@@ -2500,7 +2500,7 @@ public class WekaSegmentation {
 			final Instances dataInfo,
 			final AbstractClassifier classifier)
 	{
-		if (Thread.currentThread().isInterrupted())
+		if ( Thread.currentThread().isInterrupted() )
 			return null;
 
 		return new Callable<byte[][]>(){
@@ -2544,7 +2544,7 @@ public class WekaSegmentation {
 							{
 								// set reusable instance values
 
-								values = featureProvider.getFeatureValues( (int) x, (int) y, (int) z);
+								values = featureProvider.getFeatureValues( (int) x, (int) y, (int) z );
 
 								ins.setValues( 1.0, values );
 

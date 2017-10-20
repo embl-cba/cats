@@ -83,21 +83,21 @@ public class TestGUI {
 		weka_segmentation.run("");
 		*/
 
-		/*
+
 		DataStreamingTools dst = new DataStreamingTools();
 		dst.openFromDirectory(
-				"/Volumes/almfspim/tischi/tobias-primordium/stack8-right/",
-				".*--C<c>--T<t>.tif",
-				".*.tif",
-				"data",
+				"/Users/tischi/Desktop/Ashna-Seg-Test/ashna-tmp/imaris-input-raw/",
+				"None",
+				".*",
+				"Data",
 				null,
 				3,
 				true,
-				false);*/
+				false);
 		//IJ.open("/Users/tischi/Desktop/mitosis.tif");
 		//IJ.open( "/Users/tischi/Desktop/mri-stack-big-2d-movie.tif" );
 
-		IJ.open( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train-input/train-input-clahe.tif" );
+		//IJ.open( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train-input/train-input-clahe.tif" );
 		//IJ.open( "/Users/tischi/Desktop/Nils.tif" );
 
 		//IJ.open("/Users/tischi/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");

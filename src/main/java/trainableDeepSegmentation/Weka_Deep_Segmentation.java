@@ -964,7 +964,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							try
 							{
 								int iClass = Integer.parseInt("" + e.getKeyChar());
-								addAnnotation(iClass-1);
+								addAnnotation(iClass - 1 );
 							}
 							catch (NumberFormatException e )
 							{
@@ -1915,7 +1915,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 */
 	private void addAnnotation( int classNum )
 	{
-		if ( classNum >= numOfClasses ) return;
+		if ( (classNum >= numOfClasses) || (classNum < 0))
+		{
+			logger.error( " Class " + ( classNum + 1) + " does not exist." );
+			return;
+		}
 
 		final Roi roi = displayImage.getRoi();
 		if (null == roi)
@@ -1931,7 +1935,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		wekaSegmentation.addExample( newExample );
 
-		traceCounter[classNum]++;
+		traceCounter[ classNum ]++;
 		win.drawExamples();
 		win.updateExampleLists();
 		// Record

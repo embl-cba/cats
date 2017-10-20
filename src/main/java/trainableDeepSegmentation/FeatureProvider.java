@@ -373,17 +373,18 @@ public class FeatureProvider
     {
         int x = xGlobal - (int) interval.min( X );
         int y = yGlobal - (int) interval.min( Y );
-        int z = zGlobal - (int) interval.min( Z );
+        //int z = zGlobal - (int) interval.min( Z );
 
         // if features for this slice have not been
         // up-sampled yet, do it now
-        if ( ! featureSlices.containsKey( z ) )
+        if ( ! featureSlices.containsKey( zGlobal ) )
         {
-            logger.error("FeatureSlice is not set: " + zGlobal);
+            logger.error("FeatureProvider.getFeatureValues:\nFeatureSlice is not set: " + zGlobal);
+            wekaSegmentation.stopCurrentThreads = true;
             return ( null );
         }
 
-        return ( featureSlices.get(z)[x][y] );
+        return ( featureSlices.get(zGlobal)[x][y] );
 
     }
 
@@ -398,13 +399,14 @@ public class FeatureProvider
 
         int x = xGlobal - (int) interval.min( X );
         int y = yGlobal - (int) interval.min( Y );
-        int z = zGlobal - (int) interval.min( Z );
+        //int z = zGlobal - (int) interval.min( Z );
 
         // if features for this slice have not been
         // up-sampled yet, do it now
-        if ( ! featureSlices.containsKey( z ) )
+        if ( ! featureSlices.containsKey( zGlobal ) )
         {
-            logger.error("FeatureSlice is not set: " + z);
+            logger.error("FeatureSlice is not set: " + zGlobal);
+            wekaSegmentation.stopCurrentThreads = true;
             return;
         }
 
@@ -417,7 +419,7 @@ public class FeatureProvider
 
         try
         {
-            System.arraycopy( featureSlices.get(z)[x][y], 0, values, 0, nf );
+            System.arraycopy( featureSlices.get( zGlobal )[x][y], 0, values, 0, nf );
         }
         catch ( Exception e )
         {
@@ -426,7 +428,7 @@ public class FeatureProvider
 
     }
 
-    public void removeFeatureSlice(int z )
+    public void removeFeatureSlice( int z )
     {
         featureSlices.remove( z );
     }
@@ -449,18 +451,18 @@ public class FeatureProvider
      * @param z
      * @param featureSlice
      */
-    public void setFeatureSlice( int zGlobal, double[][][] featureSlice )
+    public boolean setFeatureSlice( int zGlobal, double[][][] featureSlice )
     {
+
+        featureSlices.put( zGlobal, featureSlice );
+
         int xs = 0;
         int xe = (int) (interval.dimension( X ) - 1);
         int ys = 0;
         int ye = (int) (interval.dimension( Y ) - 1);
-
         int z = zGlobal - (int) interval.min( Z );
-
         int nf = getNumFeatures();
 
-        featureSlices.put( z, featureSlice );
 
         // The feature images in multiResolutionFeatureImageArray
         // are larger than the requested interval, because of border
@@ -474,7 +476,6 @@ public class FeatureProvider
         ys += featureImageBorderSizes[ Y ];
         ye += featureImageBorderSizes[ Y ];
         z += featureImageBorderSizes[ Z ];
-
 
         double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
         double vAA0,vAA1,vAAA;
@@ -642,6 +643,8 @@ public class FeatureProvider
                 }
             }
         }
+
+        return ( true );
     }
 
 
