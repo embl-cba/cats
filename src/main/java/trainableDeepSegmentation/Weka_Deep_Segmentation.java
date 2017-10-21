@@ -1709,16 +1709,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		GenericDialog gd = new NonBlockingGenericDialog("Check Image Properties");
 		gd.addMessage(
-				"Please consider going to [Image > Properties] " +
-				"to check the image meta-data.\n" +
-				" \n" +
-				"For this plugin it is very important that:\n" +
-				" \n- The number of Slices (z) and number of Frames (t) are correct " +
+				"Please consider checking the image meta-data in [Image > Properties].\n" +
+				" \nFor this plugin it is very important that...\n" +
+				"...the number of slices (z) and number of frames (t) are correct " +
 						"(sometimes z and t are mixed up).\n" +
-				" \n- The pixel width, height and depth are set properly " +
+				"...the pixel width, height and depth are set properly " +
 						"(sometimes the image calibration got lost and all is in units of 1 pixel).\n" +
-						" \n" +
-						"\nYou can leave this dialog open. " +
+						" \nYou can leave this dialog open. " +
 						"Simply press [OK] once you checked/corrected the meta-data.\n ");
 		gd.showDialog();
 

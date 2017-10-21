@@ -49,6 +49,7 @@ import net.imglib2.view.Views;
 import trainableDeepSegmentation.filters.HessianImgLib2;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -74,7 +75,8 @@ public class FeatureProvider
 
     /** z-slices of features, up-sampled to full resolution
      * dimensions of double[][][]: x,y,feature */
-    private Map<Integer, double[][][]> featureSlices = new HashMap<>();
+    private Map<Integer, double[][][]> featureSlices =
+            Collections.synchronizedMap( new HashMap<>() );
 
     /** image width */
     private int width = 0;
@@ -373,18 +375,19 @@ public class FeatureProvider
     {
         int x = xGlobal - (int) interval.min( X );
         int y = yGlobal - (int) interval.min( Y );
-        //int z = zGlobal - (int) interval.min( Z );
 
-        // if features for this slice have not been
-        // up-sampled yet, do it now
         if ( ! featureSlices.containsKey( zGlobal ) )
         {
-            logger.error("FeatureProvider.getFeatureValues:\nFeatureSlice is not set: " + zGlobal);
+            logger.error("FeatureProvider.getFeatureValues:\n"
+                    + "FeatureSlice not set: " + zGlobal
+                    + "See log for the tile, where the error occurred."
+            );
+            wekaSegmentation.logInterval( interval );
             wekaSegmentation.stopCurrentThreads = true;
             return ( null );
         }
 
-        return ( featureSlices.get(zGlobal)[x][y] );
+        return ( featureSlices.get( zGlobal )[x][y] );
 
     }
 
@@ -428,14 +431,9 @@ public class FeatureProvider
 
     }
 
-    public void removeFeatureSlice( int z )
-    {
-        featureSlices.remove( z );
-    }
-
     public double[][][] getReusableFeatureSlice()
     {
-        // prepare featureSlice array
+        // allocate memory for featureSlice
         double[][][] featureSlice = new double
                 [(int) interval.dimension(X)]
                 [(int) interval.dimension(Y)]
@@ -444,6 +442,15 @@ public class FeatureProvider
         return ( featureSlice );
     }
 
+    private synchronized void putFeatureSlice( int z, double[][][] featureSlice )
+    {
+        featureSlices.put(z, featureSlice);
+    }
+
+    public synchronized void removeFeatureSlice( int z )
+    {
+        featureSlices.remove( z );
+    }
 
     /**
      * set all feature values for one z-slice
@@ -454,7 +461,7 @@ public class FeatureProvider
     public boolean setFeatureSlice( final int zGlobal, double[][][] featureSlice )
     {
 
-        featureSlices.put( zGlobal, featureSlice );
+        putFeatureSlice( zGlobal, featureSlice);
 
         int xs = 0;
         int xe = (int) (interval.dimension( X ) - 1);
@@ -1026,6 +1033,12 @@ public class FeatureProvider
         return new FinalInterval(min, max);
     }
 
+    private boolean isLogging = false;
+
+    public void setLogging( boolean isLogging )
+    {
+        this.isLogging = isLogging;
+    }
 
     public boolean computeFeatures( int numThreads, boolean computeAllFeatures )
     {
@@ -1159,8 +1172,18 @@ public class FeatureProvider
         FinalInterval expandedInterval = addBordersXYZ( interval,
                 featureImageBorderSizes );
 
-        // the expanded interval can be out-of-bounds, e.g. having negative values
+
+        long start = System.currentTimeMillis();
+
         ImagePlus inputImageCrop = getDataCube( inputImage, expandedInterval, "mirror" );
+
+        if ( isLogging )
+        {
+            logger.info("Image data cube loaded in [ms]: " +
+                    (System.currentTimeMillis() - start));
+        }
+
+
 
         // Set a calibration that can be changed during the binning
         Calibration calibration = new Calibration();
@@ -1185,6 +1208,8 @@ public class FeatureProvider
 
             for (int level = 0; level <= wekaSegmentation.settings.maxResolutionLevel; level++)
             {
+
+                start = System.currentTimeMillis();
 
                 if ( wekaSegmentation.stopCurrentThreads || Thread.currentThread().isInterrupted() )
                 {
@@ -1397,6 +1422,14 @@ public class FeatureProvider
 
                 // and add everything to the multi-resolution array
                 multiResolutionFeatureImages.add( featureImagesThisResolution );
+
+                if ( isLogging )
+                {
+                    logger.info("Image features at level " + level +
+                            " computed in [ms]: " +
+                            (System.currentTimeMillis() - start));
+                }
+
 
             }
 

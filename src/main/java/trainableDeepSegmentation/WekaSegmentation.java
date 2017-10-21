@@ -179,9 +179,10 @@ public class WekaSegmentation {
 
 	public boolean isTrainingCompleted = true;
 
-	private static int X = 0, Y = 1, C = 2, Z = 3, T = 4;
-	private static int[] XYZ = new int[]{X, Y, Z};
-	private static int[] XYZT = new int[]{X, Y, Z, T};
+	public static int X = 0, Y = 1, C = 2, Z = 3, T = 4;
+	public static String[] dimNames = new String[]{"x", "y", "c", "z", "t"};
+	public static int[] XYZ = new int[]{X, Y, Z};
+	public static int[] XYZT = new int[]{X, Y, Z, T};
 
 
 	public Logger getLogger()
@@ -1788,18 +1789,24 @@ public class WekaSegmentation {
 
 	}
 
+
+	public static void logInterval( FinalInterval interval )
+
+	{
+		logger.info("Interval: ");
+
+		for ( int d : XYZT )
+		{
+			logger.info(dimNames[d] + ": " + interval.min(d) + ", " + interval.max(d));
+		}
+
+	}
+
+
 	private ArrayList<FinalInterval> createTiles( FinalInterval interval )
 	{
 
-		logger.info("Selected region: ");
-		logger.info("xMin = " + interval.min(X));
-		logger.info("xMax = " + interval.max(X));
-		logger.info("yMin = " + interval.min(Y));
-		logger.info("yMax = " + interval.max(Y));
-		logger.info("zMin = " + interval.min(Z));
-		logger.info("zMax = " + interval.max(Z));
-		logger.info("tMin = " + interval.min(T));
-		logger.info("tMax = " + interval.max(T));
+		logInterval( interval );
 
 		ArrayList<FinalInterval> tiles = new ArrayList<>();
 
@@ -1942,23 +1949,9 @@ public class WekaSegmentation {
 					break;
 				}
 			}
-			catch (InterruptedException e)
+			catch ( Exception e ) // TODO: is it ok to catch all exceptions like this?
 			{
-				logger.info(" Apply classifier: " + e.toString());
-				stopCurrentThreads = true;
-				e.printStackTrace();
-			}
-			catch (ExecutionException e)
-			{
-				logger.error( " Apply classifier: " + e.toString());
-				stopCurrentThreads = true;
-				e.printStackTrace();
-			}
-			catch (OutOfMemoryError e)
-			{
-				logger.error(" Apply classifier: Out of memory:\n" + e.toString());
-				stopCurrentThreads = true;
-				e.printStackTrace();
+				errorHandler( "Apply classifier", e );
 			}
 
 		}
@@ -1968,6 +1961,13 @@ public class WekaSegmentation {
 
 	}
 
+	private void errorHandler( String moduleName, Exception e )
+	{
+		logger.error("There was an error (see log); trying to stop all ongoing computations..." );
+		logger.info("Error in " + moduleName + "\n" + e.toString());
+		stopCurrentThreads = true;
+		e.printStackTrace();
+	}
 
 	private void reportClassificationProgress(
 			long startTime,
@@ -2070,7 +2070,7 @@ public class WekaSegmentation {
 		return () ->
 		{
 
-			boolean isLogSpeed = (tileCounterMax == 1);
+			boolean isLogging = (tileCounterMax == 1);
 
 			if (stopCurrentThreads || Thread.currentThread().isInterrupted())
 			{
@@ -2124,9 +2124,10 @@ public class WekaSegmentation {
 			featureProvider.setWekaSegmentation( this );
 			featureProvider.setActiveChannels( settings.activeChannels );
 			featureProvider.setInterval( tileInterval );
+			featureProvider.setLogging( isLogging );
 			featureProvider.computeFeatures( numThreads, false );
 
-			if ( isLogSpeed )
+			if ( isLogging )
 			{
 				logger.info("Features computed in [ms]: " +
 						(System.currentTimeMillis() - start) +
@@ -2232,7 +2233,7 @@ public class WekaSegmentation {
 			// record classification results
 			storeClassificationResults( numThreads,
 				classificationResults,
-			 	tileInterval, isLogSpeed );
+			 	tileInterval, isLogging );
 
 
 			if (tileCounterMax == 1)
@@ -2537,7 +2538,12 @@ public class WekaSegmentation {
 					for ( long z = zMin; z <= zMax; ++z )
 					{
 
-						featureProvider.setFeatureSlice( (int) z, featureSlice );
+						if ( ! featureProvider.setFeatureSlice( (int) z, featureSlice ) )
+						{
+							logger.error("Feature slice " + z +" could not be set." );
+							stopCurrentThreads = true;
+							return ( null );
+						}
 
 						int iInstanceThisSlice = 0;
 
@@ -2548,6 +2554,12 @@ public class WekaSegmentation {
 								// set reusable instance values
 
 								values = featureProvider.getFeatureValues( (int) x, (int) y, (int) z );
+
+								if ( values == null )
+								{
+									stopCurrentThreads = true;
+									return ( null );
+								}
 
 								ins.setValues( 1.0, values );
 
@@ -2606,6 +2618,7 @@ public class WekaSegmentation {
 						}
 
 						featureProvider.removeFeatureSlice( (int) z );
+
 					}
 
 				}
