@@ -73,11 +73,6 @@ public class FeatureProvider
     /** names of feature images */
     private ArrayList<String> featureNames = new ArrayList<>();
 
-    /** z-slices of features, up-sampled to full resolution
-     * dimensions of double[][][]: x,y,feature */
-    private Map<Integer, double[][][]> featureSlices =
-            Collections.synchronizedMap( new HashMap<>() );
-
     /** image width */
     private int width = 0;
     /** image height */
@@ -365,29 +360,17 @@ public class FeatureProvider
      * Also contains empty (0) classID
      * @param xGlobal
      * @param yGlobal
-     * @param zGlobal
      * @return
      */
-    public double[] getFeatureValues(
+    public double[] getValuesFromFeatureSlice(
             int xGlobal,
             int yGlobal,
-            int zGlobal )
+            double[][][] featureSlice )
     {
         int x = xGlobal - (int) interval.min( X );
         int y = yGlobal - (int) interval.min( Y );
 
-        if ( ! featureSlices.containsKey( zGlobal ) )
-        {
-            logger.error("FeatureProvider.getFeatureValues:\n"
-                    + "FeatureSlice not set: " + zGlobal
-                    + "See log for the tile, where the error occurred."
-            );
-            wekaSegmentation.logInterval( interval );
-            wekaSegmentation.stopCurrentThreads = true;
-            return ( null );
-        }
-
-        return ( featureSlices.get( zGlobal )[x][y] );
+        return ( featureSlice[x][y] );
 
     }
 
@@ -396,38 +379,17 @@ public class FeatureProvider
             double[] values,
             int xGlobal,
             int yGlobal,
-            int zGlobal,
+            double[][][] featureSlice,
             int classNum )
     {
 
         int x = xGlobal - (int) interval.min( X );
         int y = yGlobal - (int) interval.min( Y );
-        //int z = zGlobal - (int) interval.min( Z );
-
-        // if features for this slice have not been
-        // up-sampled yet, do it now
-        if ( ! featureSlices.containsKey( zGlobal ) )
-        {
-            logger.error("FeatureProvider.setFeatureValuesAndClassIndex:\nFeatureSlice is not set: " + zGlobal);
-            wekaSegmentation.stopCurrentThreads = true;
-            return;
-        }
 
         int nf = getNumFeatures();
 
-        if ( classNum > -1 )
-        {
-            values[ nf ] = classNum;
-        }
-
-        try
-        {
-            System.arraycopy( featureSlices.get( zGlobal )[x][y], 0, values, 0, nf );
-        }
-        catch ( Exception e )
-        {
-            logger.error( "setFeatureValuesAndClassIndex" + e.toString() );
-        }
+        System.arraycopy( featureSlice[x][y], 0, values, 0, nf );
+        values[ nf ] = classNum;
 
     }
 
@@ -442,26 +404,22 @@ public class FeatureProvider
         return ( featureSlice );
     }
 
-    private synchronized void putFeatureSlice( int z, double[][][] featureSlice )
-    {
-        featureSlices.put(z, featureSlice);
-    }
-
-    public synchronized void removeFeatureSlice( int z )
-    {
-        featureSlices.remove( z );
-    }
-
     /**
      * set all feature values for one z-slice
      * coordinates are relative to within the set interval
      * @param zGlobal
      * @param featureSlice
      */
-    public boolean setFeatureSlice( final int zGlobal, double[][][] featureSlice )
+    public boolean setFeatureSliceValues(final int zGlobal, double[][][] featureSlice )
     {
 
-        putFeatureSlice( zGlobal, featureSlice);
+
+        if ( (zGlobal > interval.max(Z)) || (zGlobal < interval.min(Z)) )
+        {
+            logger.error("No features have been computed for slice " + zGlobal);
+            return false;
+        }
+
 
         int xs = 0;
         int xe = (int) (interval.dimension( X ) - 1);

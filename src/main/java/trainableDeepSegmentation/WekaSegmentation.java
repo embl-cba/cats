@@ -1079,7 +1079,7 @@ public class WekaSegmentation {
 
 			int nf = getNumAllFeatures();
 
-			ArrayList< Integer > zPlanes = new ArrayList<>();
+			double[][][] featureSlice  = featureProvider.getReusableFeatureSlice();;
 
 			// extract the feature values at
 			// the respective z-position of each example
@@ -1089,12 +1089,7 @@ public class WekaSegmentation {
 
 				int z = example.z;
 
-				if ( ! zPlanes.contains( z ) )
-				{
-					zPlanes.add( z );
-					double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
-					featureProvider.setFeatureSlice( z, featureSlice );
-				}
+				featureProvider.setFeatureSliceValues( z, featureSlice );
 
 				for ( Point point : getPointsFromExample(example) )
 				{
@@ -1102,18 +1097,16 @@ public class WekaSegmentation {
 					int x = (int) point.getX();
 					int y = (int) point.getY();
 
-
 					// Note: x and y are global coordinates
 					// setFeatureValuesAndClassIndex will use the exampleListBoundingInterval
 					// to compute the correct coordinates in the featureSlice
 					// TODO: check that this extracts  the right values!
-					double[] featureValuesWithClassNum = new double[nf + 1];
+					double[] values = new double[nf + 1];
 
 					featureProvider.setFeatureValuesAndClassIndex(
-							featureValuesWithClassNum,
-							x, y, z, example.classNum);
+							values, x, y, featureSlice, example.classNum);
 
-					example.instanceValuesArray.add( featureValuesWithClassNum );
+					example.instanceValuesArray.add( values );
 
 					// Below is some code for debugging
 					//
@@ -1532,7 +1525,7 @@ public class WekaSegmentation {
 			// Select random samples from each class
 			Random rand = new Random();
 
-			featureProvider.setFeatureSlice( z, featureSlice );
+			featureProvider.setFeatureSliceValues( z, featureSlice );
 
 			for (int iClass = 0; iClass < nClasses; ++iClass)
 			{
@@ -1551,7 +1544,7 @@ public class WekaSegmentation {
 								featureValuesWithClassNum,
 								(int) classCoordinates[iClass].get(randomSample).getX(),
 								(int) classCoordinates[iClass].get(randomSample).getY(),
-								(int) classCoordinates[iClass].get(randomSample).getZ(),
+								featureSlice,
 								iClass);
 
 						DenseInstance denseInstance = new DenseInstance(
@@ -1565,11 +1558,6 @@ public class WekaSegmentation {
 					}
 				}
 			}
-
-			// this only removes it from the list but keeps
-			// the actual feature slice intact, maybe this is not even necessary?
-			featureProvider.removeFeatureSlice( z );
-			int a = 1;
 
 		}
 
@@ -2230,19 +2218,17 @@ public class WekaSegmentation {
 			// store uncertainty information
 			storeUncertainties();
 
-			// record classification results
-			storeClassificationResults( numThreads,
-				classificationResults,
-			 	tileInterval, isLogging );
-
-
-			if (tileCounterMax == 1)
+			if ( isLogging )
 			{
 				logger.info("Classification computed in [ms]: "
 						+ (System.currentTimeMillis() - start)
 						+ ", using " + numThreads + " threads");
 			}
 
+			// record classification results
+			storeClassificationResults( numThreads,
+				classificationResults,
+			 	tileInterval, isLogging );
 
 			//
 			// put (local) classification results into (big) results image
@@ -2255,7 +2241,7 @@ public class WekaSegmentation {
 	private void storeClassificationResults( int numThreads,
 											 ArrayList< byte [] > classificationResults,
 											 FinalInterval tileInterval,
-											 boolean isLogSpeed )
+											 boolean isLogging )
 	{
 
 		long startTime = System.currentTimeMillis();
@@ -2282,9 +2268,9 @@ public class WekaSegmentation {
 		trainableDeepSegmentation.utils.Utils.joinThreads(savingFutures,logger );
 		exe.shutdown();
 
-		if( isLogSpeed )
+		if( isLogging )
 		{
-			logger.info("Saved classification results in " + (System.currentTimeMillis() - startTime) + " ms");
+			logger.info("Saved classification results in [ms]:" + (System.currentTimeMillis() - startTime) );
 		}
 
 	}
@@ -2538,7 +2524,7 @@ public class WekaSegmentation {
 					for ( long z = zMin; z <= zMax; ++z )
 					{
 
-						if ( ! featureProvider.setFeatureSlice( (int) z, featureSlice ) )
+						if ( ! featureProvider.setFeatureSliceValues( (int) z, featureSlice ) )
 						{
 							logger.error("Feature slice " + z +" could not be set." );
 							stopCurrentThreads = true;
@@ -2553,7 +2539,7 @@ public class WekaSegmentation {
 							{
 								// set reusable instance values
 
-								values = featureProvider.getFeatureValues( (int) x, (int) y, (int) z );
+								values = featureProvider.getValuesFromFeatureSlice( (int) x, (int) y, featureSlice );
 
 								if ( values == null )
 								{
@@ -2616,9 +2602,6 @@ public class WekaSegmentation {
 
 							}
 						}
-
-						featureProvider.removeFeatureSlice( (int) z );
-
 					}
 
 				}
