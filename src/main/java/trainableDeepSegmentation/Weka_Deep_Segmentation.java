@@ -6,10 +6,7 @@ import bigDataTools.utils.ImageDataInfo;
 import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
 import ij.*;
-import ij.gui.ImageCanvas;
-import ij.gui.ImageWindow;
-import ij.gui.Roi;
-import ij.gui.StackWindow;
+import ij.gui.*;
 import ij.io.FileSaver;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
@@ -1706,6 +1703,31 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 	}// end class CustomWindow
 
+
+	private boolean checkImageProperties()
+	{
+
+		GenericDialog gd = new NonBlockingGenericDialog("Check Image Properties");
+		gd.addMessage(
+				"Please consider going to [Image > Properties] " +
+				"to check the image meta-data.\n" +
+				" \n" +
+				"For this plugin it is very important that:\n" +
+				" \n- The number of Slices (z) and number of Frames (t) are correct " +
+						"(sometimes z and t are mixed up).\n" +
+				" \n- The pixel width, height and depth are set properly " +
+						"(sometimes the image calibration got lost and all is in units of 1 pixel).\n" +
+						" \n" +
+						"\nYou can leave this dialog open. " +
+						"Simply press [OK] once you checked/corrected the meta-data.\n ");
+		gd.showDialog();
+
+		if ( gd.wasCanceled() ) return false;
+		return true;
+
+
+	}
+
 	/**
 	 * Plugin run method
 	 */
@@ -1739,6 +1761,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingImage = WindowManager.getCurrentImage(); //.duplicate();
 			trainingImage.setSlice(WindowManager.getCurrentImage().getSlice());
 		}
+
+		if ( ! checkImageProperties() ) return;
 
 		if ( trainingImage.getNFrames() > 1 && trainingImage.getNSlices() == 1)
 		{
@@ -2086,6 +2110,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		win.updateExampleLists();
 	}
 
+
+
 	/**
 	 * Run/stop the classifier training
 	 *
@@ -2096,6 +2122,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// If the training is not going on, we start it
 		if (command.equals("Train classifier"))
 		{
+
+
+
 			trainingFlag = true;
 			trainButton.setText("STOP");
 			final Thread oldTask = trainingTask;
@@ -2696,7 +2725,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		gd.addNumericField("Feature computation: Maximal convolution depth",
 				wekaSegmentation.settings.maxDeepConvolutionLevel, 0);
 		gd.addNumericField("Feature computation: z/xy settings.anisotropy",
-				wekaSegmentation.settings.anisotropy, 0);
+				wekaSegmentation.settings.anisotropy, 2);
 		gd.addNumericField("Computation: Memory factor",
 				wekaSegmentation.memoryFactor, 1);
 		gd.addNumericField("Training: Label image: Num. instances per class",
@@ -2780,7 +2809,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		gd.showDialog();
 
-		if (gd.wasCanceled())
+		if ( gd.wasCanceled() )
 			return false;
 
 		/*

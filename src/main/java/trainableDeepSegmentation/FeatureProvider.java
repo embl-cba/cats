@@ -405,7 +405,7 @@ public class FeatureProvider
         // up-sampled yet, do it now
         if ( ! featureSlices.containsKey( zGlobal ) )
         {
-            logger.error("FeatureSlice is not set: " + zGlobal);
+            logger.error("FeatureProvider.setFeatureValuesAndClassIndex:\nFeatureSlice is not set: " + zGlobal);
             wekaSegmentation.stopCurrentThreads = true;
             return;
         }
@@ -448,10 +448,10 @@ public class FeatureProvider
     /**
      * set all feature values for one z-slice
      * coordinates are relative to within the set interval
-     * @param z
+     * @param zGlobal
      * @param featureSlice
      */
-    public boolean setFeatureSlice( int zGlobal, double[][][] featureSlice )
+    public boolean setFeatureSlice( final int zGlobal, double[][][] featureSlice )
     {
 
         featureSlices.put( zGlobal, featureSlice );
@@ -1123,7 +1123,7 @@ public class FeatureProvider
             max[d] = min[d] + interval3D.dimension(d);
         }
 
-        // define the Interval on the infinite random accessibles
+        // define the Interval on the infinite random accessible
         FinalInterval interval2 = new FinalInterval( min, max );
         ImagePlus impWithMirror = ImageJFunctions.wrap( Views.interval( infinite, interval2 ), "" );
         impWithMirror.setDimensions(1, (int) interval2.dimension(2), 1 );

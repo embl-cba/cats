@@ -1660,6 +1660,8 @@ public class WekaSegmentation {
 		logger.info("Done. Balancing classes distribution took: " + (end - start) + "ms");
 	}
 
+
+
 	/**
 	 * Train classifier with the current instances
 	 * and current classifier settings
@@ -1667,6 +1669,7 @@ public class WekaSegmentation {
 	 */
 	public boolean trainClassifier( )
 	{
+
 		isTrainingCompleted = false;
 
 		// Train the classifier on the current data
