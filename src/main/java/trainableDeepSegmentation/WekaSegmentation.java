@@ -1861,7 +1861,7 @@ public class WekaSegmentation {
 	}
 
 
-	public void applyClassifier(FinalInterval interval)
+	public void applyClassifier( FinalInterval interval )
 	{
 
 		// set up tiling
@@ -2058,7 +2058,7 @@ public class WekaSegmentation {
 		return () ->
 		{
 
-			boolean isLogging = (tileCounterMax == 1);
+			boolean isLogging = (tileCounter <= regionThreads);
 
 			if (stopCurrentThreads || Thread.currentThread().isInterrupted())
 			{

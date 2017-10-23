@@ -1721,8 +1721,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		if ( gd.wasCanceled() ) return false;
 		return true;
-
-
 	}
 
 	/**
@@ -1760,20 +1758,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 
 		if ( ! checkImageProperties() ) return;
-
-		if ( trainingImage.getNFrames() > 1 && trainingImage.getNSlices() == 1)
-		{
-			IJ.showMessage("Please note:\nThis is a 2-D movie and 2-D features will thus be computed.\n" +
-					"If this is not what you want please stop this plugin and change the " +
-					"[Image > Properties...].");
-		}
-
-		if ( trainingImage.getNFrames() == 1 && trainingImage.getNSlices() > 1)
-		{
-			IJ.showMessage("Please note:\nThis is a z-stack and 3-D features will thus be computed.\n" +
-					"If this is not what you want please stop this plugin and change the " +
-					"[Image > Properties...].");
-		}
 
 		wekaSegmentation.setInputImage( trainingImage );
 
