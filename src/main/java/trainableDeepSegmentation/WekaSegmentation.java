@@ -161,7 +161,7 @@ public class WekaSegmentation {
 
 	public int numRfTrainingThreads = Prefs.getThreads();
 
-	public int tilingDelay = 500; // milli-seconds
+	public int tilingDelay = 2000; // milli-seconds
 
 	public double uncertaintyLUTdecay = 0.5;
 
@@ -196,7 +196,7 @@ public class WekaSegmentation {
 	 * @return returns true if the log file could be sucessfully created
 	 */
 
-	public boolean setLogFileNameAndDirectory(String logFileName, String logFileDirectory)
+	public boolean setLogFileNameAndDirectory( String logFileName, String logFileDirectory )
 	{
 
 		((IJLazySwingLogger) logger).setLogFileNameAndDirectory(logFileName,

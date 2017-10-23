@@ -119,7 +119,7 @@ public class FeatureProvider
      * -1 if not defined yet. */
     private int referenceStackIndex = -1;
 
-    private Logger logger = new IJLazySwingLogger();
+    private Logger logger;
 
     private FinalInterval interval = null;
 
@@ -175,8 +175,13 @@ public class FeatureProvider
     public void setWekaSegmentation( WekaSegmentation wekaSegmentation )
     {
         this.wekaSegmentation = wekaSegmentation;
+        setLogger( wekaSegmentation.getLogger() );
     }
 
+    public void setLogger( Logger logger )
+    {
+        this.logger = logger;
+    }
 
     /**
      * Merge input channels if they are more than 1
