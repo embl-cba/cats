@@ -2270,7 +2270,7 @@ public class WekaSegmentation {
 
 		if( isLogging )
 		{
-			logger.info("Saved classification results in [ms]:" + (System.currentTimeMillis() - startTime) );
+			logger.info("Saved classification results in [ms]: " + (System.currentTimeMillis() - startTime) );
 		}
 
 	}
