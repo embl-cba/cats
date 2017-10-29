@@ -92,6 +92,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private ImagePlus trainingImage = null;
 	/** result image after classification */
 	private ImagePlus classifiedImage = null;
+	private ResultImageInterface resultImage = null;
 	/** GUI window */
 	private CustomWindow win = null;
 	/** number of classes in the GUI */
@@ -288,12 +289,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// assign colors to classes
 		for(int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 		{
-			int offset = iClass * WekaSegmentation.CLASS_LUT_WIDTH;
-			for( int i = 1 ; i <= WekaSegmentation.CLASS_LUT_WIDTH; i++ )
+			int offset = iClass * ResultImage.CLASS_LUT_WIDTH;
+			for( int i = 1; i <= ResultImage.CLASS_LUT_WIDTH; i++ )
 			{
-				red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / (WekaSegmentation.CLASS_LUT_WIDTH - 1));
-				green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / (WekaSegmentation.CLASS_LUT_WIDTH - 1));
-				blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue()*i / (WekaSegmentation.CLASS_LUT_WIDTH - 1));
+				red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / ( ResultImage.CLASS_LUT_WIDTH - 1));
+				green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / ( ResultImage.CLASS_LUT_WIDTH - 1));
+				blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue()*i / ( ResultImage.CLASS_LUT_WIDTH - 1));
 			}
 		}
 		overlayLUT = new LUT(red, green, blue);
@@ -424,7 +425,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 						// Macro recording
 						String[] arg = new String[] {};
 						record(SET_RESULT, arg);
-						setOutputImage();
+						setResultImage();
 						postProcessButton.setEnabled( true );
 					}*/
 					else if(e.getSource() == createResultButton){
@@ -1601,8 +1602,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				// assign colors to classes
 				for (int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
-					int offset = iClass * WekaSegmentation.CLASS_LUT_WIDTH;
-					for (int i = 1; i <= WekaSegmentation.CLASS_LUT_WIDTH; i++)
+					int offset = iClass * ResultImage.CLASS_LUT_WIDTH;
+					for ( int i = 1; i <= ResultImage.CLASS_LUT_WIDTH; i++)
 					{
 						red[offset + i] = (byte) ( colors[iClass].getRed() );
 						green[offset + i] = (byte) ( colors[iClass].getGreen() );
@@ -1618,12 +1619,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 				// assign colors to classes
 				for (int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
-					int offset = iClass * WekaSegmentation.CLASS_LUT_WIDTH;
-					for (int i = 1; i <= WekaSegmentation.CLASS_LUT_WIDTH; i++)
+					int offset = iClass * ResultImage.CLASS_LUT_WIDTH;
+					for ( int i = 1; i <= ResultImage.CLASS_LUT_WIDTH; i++)
 					{
-						red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / (WekaSegmentation.CLASS_LUT_WIDTH - 1));
-						green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / (WekaSegmentation.CLASS_LUT_WIDTH - 1));
-						blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue() * i / (WekaSegmentation.CLASS_LUT_WIDTH - 1));
+						red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / ( ResultImage.CLASS_LUT_WIDTH - 1));
+						green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / ( ResultImage.CLASS_LUT_WIDTH - 1));
+						blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue() * i / ( ResultImage.CLASS_LUT_WIDTH - 1));
 					}
 				}
 				overlayLUT = new LUT(red, green, blue);
@@ -1634,8 +1635,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				// assign colors to classes
 				for (int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
-					int offset = iClass * WekaSegmentation.CLASS_LUT_WIDTH;
-					for (int i = 1; i <= WekaSegmentation.CLASS_LUT_WIDTH; i++)
+					int offset = iClass * ResultImage.CLASS_LUT_WIDTH;
+					for ( int i = 1; i <= ResultImage.CLASS_LUT_WIDTH; i++)
 					{
 						// TODO:
 						// - check whether this is correct
@@ -1793,18 +1794,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
-	private void setClassifiedImage()
-	{
-		classifiedImage = WindowManager.getImage("classification_result");
-		if ( classifiedImage == null )
-		{
-			IJ.showMessage("You need an open image with the name: classification_result");
-			return;
-		}
-		overlayButton.setEnabled(true);
-		classifiedImage.hide();
-		wekaSegmentation.setOutputImage( classifiedImage );
-	}
 
 	private void createClassifiedImage(
 			JButton createResultButton,
@@ -1818,10 +1807,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 		{
 			if ( resultOnDiskCheckBox.isSelected() )
 			{
+
 				directory = IJ.getDirectory("Select a directory");
 
-				// TODO: check for cancel!
+				resultImage = new ResultImage( wekaSegmentation,
+						directory);
 
+
+				// TODO: check for cancel!
 
 				DataStreamingTools dst = new DataStreamingTools();
 				String tMax = String.format("%05d", trainingImage.getNFrames());
@@ -1862,7 +1855,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				classifiedImage.setTitle("classification_result");
 				overlayButton.setEnabled(true);
 
-				wekaSegmentation.setOutputImage( classifiedImage );
+				wekaSegmentation.setResultImage( classifiedImage );
 
 				// set up logging to a file
 				//
@@ -1871,7 +1864,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").
 						format(new Date());
 				String logFileName = "log-" + timeStamp + ".txt";
-				wekaSegmentation.setLogFileNameAndDirectory(logFileName,
+				wekaSegmentation.setLogFilenameAndDirectory(logFileName,
 						logFileDirectory);
 
 				logger.info("Created disk-resident classification result image: " +
@@ -1894,7 +1887,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				//classifiedImage.show();
 				this.classifiedImage = classifiedImage;
 				overlayButton.setEnabled( true );
-				wekaSegmentation.setOutputImage( classifiedImage );
+				wekaSegmentation.setResultImage( classifiedImage );
 
 				logger.info( "Created memory-resident classification result image." );
 
@@ -2312,7 +2305,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		if ( classifiedImage.isVisible() )
 		{
 			classifiedImage.hide();
-			wekaSegmentation.setOutputImage( classifiedImage );
+			wekaSegmentation.setResultImage( classifiedImage );
 		}
 
 		FinalInterval interval = getIntervalFromGUI( );
@@ -2327,7 +2320,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 				wekaSegmentation.stopCurrentThreads = false;
 				wekaSegmentation.setInputImage( displayImage );
-				wekaSegmentation.setOutputImage( classifiedImage );
+				wekaSegmentation.setResultImage( classifiedImage );
 				wekaSegmentation.resetUncertaintyRegions();
 
 				wekaSegmentation.applyClassifier( interval );

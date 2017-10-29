@@ -21,10 +21,7 @@ package trainableDeepSegmentation;
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
-import bigDataTools.Region5D;
-import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
-import com.sun.org.apache.regexp.internal.RE;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -34,7 +31,6 @@ import ij.plugin.Duplicator;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.StackProcessor;
-import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessible;
@@ -49,9 +45,6 @@ import net.imglib2.view.Views;
 import trainableDeepSegmentation.filters.HessianImgLib2;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -1006,11 +999,13 @@ public class FeatureProvider
     public boolean computeFeatures( int numThreads, boolean computeAllFeatures )
     {
 
+        long start = System.currentTimeMillis();
+
         for ( int c = (int) interval.min( C ); c <= interval.max( C ); ++c )
         {
             if ( activeChannels.contains( c ) )
             {
-                FinalInterval intervalOneChannel = wekaSegmentation.fixDimension(interval, C, c);
+                FinalInterval intervalOneChannel = IntervalUtils.fixDimension(interval, C, c);
 
                 boolean success = computeFeatureImages(
                         intervalOneChannel,
@@ -1023,6 +1018,14 @@ public class FeatureProvider
                 }
             }
         }
+
+        if ( isLogging )
+        {
+            logger.info("Features computed in [ms]: " +
+                    (System.currentTimeMillis() - start) +
+                    ", using " + numThreads + " threads");
+        }
+
 
         return true;
     }
@@ -1052,7 +1055,7 @@ public class FeatureProvider
         {
             // everything is within bounds
             return bigDataTools.utils.Utils.getDataCube(imp,
-                    wekaSegmentation.convertIntervalToRegion5D( interval ),
+                    ImageUtils.convertIntervalToRegion5D( interval ),
                     new int[]{-1, -1}, 1);
         }
 
@@ -1074,7 +1077,7 @@ public class FeatureProvider
 
         FinalInterval intersect5D = new FinalInterval( minIntersect5D, maxIntersect5D );
         ImagePlus impWithinBounds = bigDataTools.utils.Utils.getDataCube(
-                imp, wekaSegmentation.convertIntervalToRegion5D( intersect5D ),
+                imp, ImageUtils.convertIntervalToRegion5D( intersect5D ),
                 new int[]{-1,-1}, 1 );
 
         // - copy impWithinBounds into a larger imp

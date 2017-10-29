@@ -91,37 +91,6 @@ public final class Utils {
 
 	}
 
-	public static void joinThreads( ArrayList<Future> futures, Logger logger )
-	{
-		if ( futures.size() > 0)
-		{
-			try
-			{
-				for (Future future : futures)
-					future.get();
-			}
-			catch (InterruptedException e)
-			{
-				e.printStackTrace();
-				return;
-			}
-			catch (ExecutionException e)
-			{
-				e.printStackTrace();
-				return;
-			}
-			catch (OutOfMemoryError err)
-			{
-				logger.error("TrainClassifier ran out of memory. Please, "
-						+ "provide more memory and/or use less threads " +
-						"[ImageJ > Edit > Options > Memory & Threads].");
-				err.printStackTrace();
-				return;
-			}
-		}
-		return;
-	}
-
 
 	public static void filterSmallObjects3D(
 			ImagePlus imp,
