@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -82,10 +83,6 @@ public class WekaSegmentation {
 	 * image to be used in the training
 	 */
 	private ImagePlus inputImage;
-	/**
-	 * result image after classification
-	 */
-	private ImagePlus classifiedImage;
 
 	private ResultImage resultImage;
 	/** features to be used in the training */
@@ -188,8 +185,14 @@ public class WekaSegmentation {
 	 * @return returns true if the log file could be sucessfully created
 	 */
 
-	public boolean setLogFilenameAndDirectory( String logFileName, String logFileDirectory )
+	public boolean setLogFile( String directory )
 	{
+		String logFileDirectory = directory.substring(0, directory.length() - 1)
+				+ "--log";
+		String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").
+				format(new Date());
+		String logFileName = "log-" + timeStamp + ".txt";
+
 		logger.setLogFileNameAndDirectory( logFileDirectory,  logFileName );
 		return (true);
 	}
@@ -247,16 +250,16 @@ public class WekaSegmentation {
 		setInputImage(trainingImage);
 	}
 
-	private void setImgDims()
+	private void setInputImageDimensions()
 	{
-		imgDims[ ImageUtils.X] = inputImage.getWidth();
-		imgDims[ ImageUtils.Y] = inputImage.getHeight();
-		imgDims[ ImageUtils.C] = inputImage.getNChannels();
-		imgDims[ ImageUtils.Z] = inputImage.getNSlices();
-		imgDims[ ImageUtils.T] = inputImage.getNFrames();
+		imgDims[ ImageUtils.X ] = inputImage.getWidth();
+		imgDims[ ImageUtils.Y ] = inputImage.getHeight();
+		imgDims[ ImageUtils.C ] = inputImage.getNChannels();
+		imgDims[ ImageUtils.Z ] = inputImage.getNSlices();
+		imgDims[ ImageUtils.T ] = inputImage.getNFrames();
 	}
 
-	public long[] getImgDims()
+	public long[] getInputImageDimensions()
 	{
 		return (imgDims);
 	}
@@ -304,8 +307,9 @@ public class WekaSegmentation {
 	public void setInputImage(ImagePlus imp)
 	{
 		this.inputImage = imp;
-		setImgDims();
+		setInputImageDimensions();
 	}
+
 
 	/**
 	 * Adds a ROI to the list of examples for a certain class
@@ -558,24 +562,14 @@ public class WekaSegmentation {
 		settings.classNames.add(className);
 	}
 
-
-	/**
-	 * Get current classification result
-	 *
-	 * @return classified image
-	 */
-	public ImagePlus getClassifiedImage()
+	public void setResultImage( ResultImage resultImage )
 	{
-		return classifiedImage;
+		this.resultImage = resultImage;
 	}
 
-	public void setResultImage( ImagePlus imp)
+	public ResultImage getResultImage()
 	{
-		classifiedImage = imp;
-		resultImage = new ResultImage( this, "", "" );
-
-		FinalInterval finalInterval = new FinalInterval(  );
-		ResultImage.Setter aaa = resultImage.getSetter( finalInterval );
+		return ( resultImage );
 	}
 
 
@@ -648,7 +642,7 @@ public class WekaSegmentation {
 	 */
 	public boolean loadProject(String pathName) throws IOException
 	{
-		AbstractClassifier newClassifier = null;
+		FastRandomForest newClassifier = null;
 		Settings newSettings = null;
 		ArrayList<Example> newExamples = null;
 
@@ -665,7 +659,7 @@ public class WekaSegmentation {
 			try
 			{
 				ObjectInputStream objectInputStream = new ObjectInputStream(is);
-				newClassifier = (AbstractClassifier) objectInputStream.readObject();
+				newClassifier = (FastRandomForest) objectInputStream.readObject();
 				newSettings = (Settings) objectInputStream.readObject();
 				newExamples = (ArrayList<Example>) objectInputStream.readObject();
 				objectInputStream.close();
@@ -714,7 +708,7 @@ public class WekaSegmentation {
 	 *
 	 * @param cls new classifier
 	 */
-	public void setClassifier(AbstractClassifier cls)
+	public void setClassifier( FastRandomForest cls )
 	{
 		this.classifier = cls;
 	}
@@ -1776,7 +1770,7 @@ public class WekaSegmentation {
 
 		ArrayList<FinalInterval> tiles = new ArrayList<>();
 
-		long[] imgDims = getImgDims();
+		long[] imgDims = getInputImageDimensions();
 		long[] tileSizes = new long[5];
 
 		for (int d : ImageUtils.XYZ)
@@ -2151,43 +2145,6 @@ public class WekaSegmentation {
 	}
 
 
-	private void storeClassificationResults( int numThreads,
-											 ArrayList< byte [] > classificationResults,
-											 FinalInterval tileInterval,
-											 boolean isLogging )
-	{
-
-		long startTime = System.currentTimeMillis();
-
-		exe = Executors.newFixedThreadPool( numThreads );
-		ArrayList<Future> savingFutures = new ArrayList<>();
-
-		for( int iSlice = 0; iSlice < classificationResults.size(); ++iSlice )
-		{
-			long z = iSlice + tileInterval.min( ImageUtils.Z );
-			FinalInterval sliceInterval = IntervalUtils.fixDimension( tileInterval, ImageUtils.Z, z);
-
-			savingFutures.add(
-					exe.submit(
-							setClassificationResult(
-									classifiedImage,
-									sliceInterval,
-									classificationResults.get(iSlice)
-							)
-					)
-			);
-		}
-
-		ThreadUtils.joinThreads(savingFutures,logger );
-		exe.shutdown();
-
-		if( isLogging )
-		{
-			logger.info("Saved classification results in [ms]: " + (System.currentTimeMillis() - startTime) );
-		}
-
-	}
-
 	// Configure z-chunking
 
 	private ArrayList< long[] > getZChunks( int numThreads, FinalInterval tileInterval )
@@ -2295,48 +2252,6 @@ public class WekaSegmentation {
 
 	}
 
-	private static Runnable setClassificationResult(
-			ImagePlus classifiedImage,
-			FinalInterval singleSlice,
-			byte[] classifiedSlice
-	)
-	{
-
-		if (Thread.currentThread().isInterrupted())
-			return null;
-
-		return () -> {
-
-			if ( classifiedImage.getStack() instanceof VirtualStackOfStacks )
-			{
-				VirtualStackOfStacks classifiedImageStack = (VirtualStackOfStacks) classifiedImage.getStack();
-				try
-				{
-					Region5D region5D = ImageUtils.convertIntervalToRegion5D( singleSlice );
-					classifiedImageStack.setAndSaveBytePixels( classifiedSlice, region5D );
-				}
-				catch (IOException e)
-				{
-					logger.warning("WekaSegmentation.setSliceInterval: " + e.toString());
-				}
-			}
-			else
-			{
-				int z = (int)singleSlice.min( ImageUtils.Z );
-				int t = (int)singleSlice.min( ImageUtils.T );
-
-				int n = classifiedImage.getStackIndex( 1, z+1, t+1 );
-				ImageProcessor ip = classifiedImage.getStack().getProcessor( n );
-
-				int i = 0;
-				for ( int y = (int) singleSlice.min( ImageUtils.Y ); y <= singleSlice.max( ImageUtils.Y ); ++y )
-					for ( int x = (int) singleSlice.min( ImageUtils.X ); x <= singleSlice.max( ImageUtils.X ); ++x )
-						ip.set(x, y, classifiedSlice[i++]);
-			}
-
-		};
-
-	}
 
 	public ArrayList<String> getSettingActiveFeatureNames()
 	{
@@ -2422,7 +2337,7 @@ public class WekaSegmentation {
 					{
 						logger.error("Feature slice " + z +" could not be set." );
 						stopCurrentThreads = true;
-						return ( null );
+						return;
 					}
 
 					int iInstanceThisSlice = 0;
@@ -2474,7 +2389,7 @@ public class WekaSegmentation {
 			{
 					IJ.showMessage("Could not apply Classifier!");
 					e.printStackTrace();
-					return null;
+					return;
 			}
 		};
 	}
@@ -2790,6 +2705,11 @@ public class WekaSegmentation {
 	{
 		for(int i=0; i<second.numInstances(); i++)
 			first.add(second.get(i));
+	}
+
+	public boolean hasResultImage()
+	{
+		return ( resultImage != null );
 	}
 
 	/**

@@ -1,13 +1,10 @@
 package trainableDeepSegmentation;
 
-import bigDataTools.dataStreamingTools.DataStreamingTools;
 import bigDataTools.logging.Logger;
-import bigDataTools.utils.ImageDataInfo;
 import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
 import ij.*;
 import ij.gui.*;
-import ij.io.FileSaver;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.measure.Calibration;
@@ -34,7 +31,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -91,9 +87,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** image to be used in the training */
 	private ImagePlus trainingImage = null;
 	/** result image after classification */
-	private ImagePlus classifiedImage = null;
-	private ResultImageInterface resultImage = null;
-	/** GUI window */
 	private CustomWindow win = null;
 	/** number of classes in the GUI */
 	private int numOfClasses = 2;
@@ -121,9 +114,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** create result button */
 	//private JButton setResultButton = null;
 
-	private JButton createResultButton = null;
+	private JButton assignResultImageButton = null;
 
 	private JCheckBox resultOnDiskCheckBox = null;
+
+	private JButton exportResultImageButton = null;
 
 	private JButton printProjectInfoButton = null;
 
@@ -326,11 +321,15 @@ public class Weka_Deep_Segmentation implements PlugIn
 		setResultButton.setEnabled(true);
 		*/
 
-		createResultButton = new JButton("Assign result image");
-		createResultButton.setToolTipText("Assign result image");
-		createResultButton.setEnabled(true);
+		assignResultImageButton = new JButton("Assign result image");
+		assignResultImageButton.setToolTipText("Assign result image");
+		assignResultImageButton.setEnabled(true);
 
 		resultOnDiskCheckBox = new JCheckBox("Disk", true);
+
+		exportResultImageButton = new JButton("Export results");
+		exportResultImageButton.setToolTipText("Export results");
+		exportResultImageButton.setEnabled(false);
 
 		probabilityButton = new JButton("Get probability");
 		probabilityButton.setToolTipText("Generate current probability maps");
@@ -346,11 +345,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 		printProjectInfoButton.setEnabled(true);
 
 		applyButton = new JButton ("Apply classifier");
-		applyButton.setToolTipText("Apply current classifier to a single image or stack");
+		applyButton.setToolTipText("Apply classifier");
 		applyButton.setEnabled(false);
 
 		postProcessButton = new JButton ("Post process");
-		postProcessButton.setToolTipText("Post process results");
+		postProcessButton.setToolTipText("Post process");
 		postProcessButton.setEnabled( false );
 
 		classificationRangeTextField = new JTextField("None", 15);
@@ -388,6 +387,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private Boolean stopClassificationThread = false;
 
+
 	/**
 	 * Button listener
 	 */
@@ -404,7 +404,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 				public void run()
 				{
-					if(e.getSource() == trainButton)
+					if( e.getSource() == trainButton )
 					{
 						runStopTraining( command );
 					}
@@ -428,16 +428,21 @@ public class Weka_Deep_Segmentation implements PlugIn
 						setResultImage();
 						postProcessButton.setEnabled( true );
 					}*/
-					else if(e.getSource() == createResultButton){
+					else if(e.getSource() == assignResultImageButton )
+					{
+						assignResultImage( resultOnDiskCheckBox );
 
-						// Macro recording
-						//String[] arg = new String[] {};
-						//record(SET_RESULT, arg);
-
-						createClassifiedImage( createResultButton,
-								resultOnDiskCheckBox);
-
-
+						if ( wekaSegmentation.hasResultImage() )
+						{
+							exportResultImageButton.setEnabled( true );
+							applyButton.setEnabled( true );
+						}
+					}
+					else if(e.getSource() == exportResultImageButton )
+					{
+						ResultImageGUI.showExportGUI(
+								wekaSegmentation.getResultImage(),
+								wekaSegmentation.getClassNames() );
 					}
 					else if( e.getSource() == probabilityButton )
 					{
@@ -783,7 +788,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			overlayButton.addActionListener(listener);
 			//getResultButton.addActionListener(listener);
 			//setResultButton.addActionListener(listener);
-			createResultButton.addActionListener(listener);
+			assignResultImageButton.addActionListener(listener);
+			exportResultImageButton.addActionListener(listener);
 			probabilityButton.addActionListener(listener);
 			plotButton.addActionListener(listener);
 			printProjectInfoButton.addActionListener(listener);
@@ -1067,10 +1073,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingConstraints.gridy++;
 			*/
 
-			JPanel resultPanel = new JPanel();
-			resultPanel.add(createResultButton);
-			resultPanel.add(resultOnDiskCheckBox);
-			trainingJPanel.add(resultPanel, trainingConstraints);
+			JPanel assignResultImagePanel = new JPanel();
+			assignResultImagePanel.add( assignResultImageButton );
+			assignResultImagePanel.add( resultOnDiskCheckBox );
+			trainingJPanel.add(assignResultImagePanel, trainingConstraints);
+			trainingConstraints.gridy++;
+
+			trainingJPanel.add( exportResultImageButton, trainingConstraints );
 			trainingConstraints.gridy++;
 
 			//trainingJPanel.add(probabilityButton, trainingConstraints);
@@ -1238,7 +1247,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 					overlayButton.removeActionListener(listener);
 					//getResultButton.removeActionListener(listener);
 					//setResultButton.removeActionListener(listener);
-					createResultButton.removeActionListener(listener);
+					assignResultImageButton.removeActionListener(listener);
+					exportResultImageButton.removeActionListener( listener );
 					probabilityButton.removeActionListener(listener);
 					plotButton.removeActionListener(listener);
 					//newImageButton.removeActionListener(listener);
@@ -1502,7 +1512,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			overlayButton.setEnabled(s);
 			//getResultButton.setEnabled(s);
 			//setResultButton.setEnabled(s);
-			createResultButton.setEnabled(s);
+			assignResultImageButton.setEnabled(s);
+			exportResultImageButton.setEnabled( s );
 			probabilityButton.setEnabled(s);
 			probabilityButton.setEnabled(s);
 			printProjectInfoButton.setEnabled(s);
@@ -1542,13 +1553,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 				trainButton.setEnabled( classifierExists );
 				applyButton.setEnabled( win.trainingComplete );
 				postProcessButton.setEnabled( win.trainingComplete );
-				final boolean resultExists = null != classifiedImage &&
-											 null != classifiedImage.getProcessor();
+				final boolean resultExists = null != wekaSegmentation.getResultImage();
 
 				overlayButton.setEnabled(resultExists);
 				//getResultButton.setEnabled(win.trainingComplete);
 				//setResultButton.setEnabled( true) ;
-				createResultButton.setEnabled( true) ;
+				assignResultImageButton.setEnabled( true );
+				exportResultImageButton.setEnabled( wekaSegmentation.getResultImage() != null );
 
 				plotButton.setEnabled( win.trainingComplete );
 				probabilityButton.setEnabled( win.trainingComplete );
@@ -1650,7 +1661,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			showColorOverlay = !showColorOverlay;
 			//IJ.log("toggle overlay to: " + showColorOverlay);
-			if (showColorOverlay && null != classifiedImage)
+			if (showColorOverlay && null != wekaSegmentation.getResultImage())
 			{
 				updateResultOverlay();
 			}
@@ -1658,15 +1669,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 				resultOverlay.setImage(null);
 
 			displayImage.updateAndDraw();
-		}
-
-		/**
-		 * Set a new result (classified) image
-		 * @param classifiedImage new result image
-		 */
-		protected void setClassfiedImage(ImagePlus classifiedImage)
-		{
-			updateClassifiedImage(classifiedImage);
 		}
 
 		/**
@@ -1794,113 +1796,46 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
-
-	private void createClassifiedImage(
-			JButton createResultButton,
-			JCheckBox resultOnDiskCheckBox)
+	private void assignResultImage( JCheckBox resultOnDiskCheckBox )
 	{
-		String buttonText = createResultButton.getText();
-
-		String directory = null;
-
-		if ( buttonText.contains("Assign") )
+		if ( resultOnDiskCheckBox.isSelected() )
 		{
-			if ( resultOnDiskCheckBox.isSelected() )
-			{
 
-				directory = IJ.getDirectory("Select a directory");
+			String directory = IJ.getDirectory("Select a directory");
 
-				resultImage = new ResultImage( wekaSegmentation,
-						directory);
+			ResultImage resultImage = new ResultImage( wekaSegmentation, directory,
+					wekaSegmentation.getInputImageDimensions() );
 
+			wekaSegmentation.setResultImage( resultImage );
 
-				// TODO: check for cancel!
+			wekaSegmentation.setLogFile( directory );
 
-				DataStreamingTools dst = new DataStreamingTools();
-				String tMax = String.format("%05d", trainingImage.getNFrames());
-				String zMax = String.format("%05d", trainingImage.getNSlices());
-
-				String namingPattern = "classified--C<C01-01>--T<T00001-" +
-						tMax + ">--Z<Z00001-"+zMax+">.tif";
-				bigDataTools.utils.ImageDataInfo imageDataInfo = new ImageDataInfo();
-				imageDataInfo.bitDepth = 8;
-				int nIOthreads = 3;
-
-				// create one image
-				ImageStack stack = ImageStack.create(trainingImage.getWidth(),
-						trainingImage.getHeight(), 1, 8);
-				ImagePlus impC0T0Z0 = new ImagePlus("", stack);
-				FileSaver fileSaver = new FileSaver( impC0T0Z0 );
-				fileSaver.saveAsTiff( directory + "/" +
-						"classified--C01--T00001--Z00001.tif");
-
-				classifiedImage = dst.openFromDirectory(
-						directory,
-						namingPattern,
-						"None",
-						"None",
-						imageDataInfo,
-						nIOthreads,
-						false,
-						true);
-
-				int nZ = trainingImage.getNSlices();
-				int nT = trainingImage.getNFrames();
-				classifiedImage.setDimensions(
-						1,
-						nZ,
-						nT);
-
-				classifiedImage.setOpenAsHyperStack(true);
-				classifiedImage.setTitle("classification_result");
-				overlayButton.setEnabled(true);
-
-				wekaSegmentation.setResultImage( classifiedImage );
-
-				// set up logging to a file
-				//
-				String logFileDirectory = directory.substring(0, directory.length() - 1)
-						+ "--log";
-				String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").
-						format(new Date());
-				String logFileName = "log-" + timeStamp + ".txt";
-				wekaSegmentation.setLogFilenameAndDirectory(logFileName,
-						logFileDirectory);
-
-				logger.info("Created disk-resident classification result image: " +
-						directory);
-
-
-			}
-			else // create in RAM
-			{
-				ImageStack stack = ImageStack.create(
-						trainingImage.getWidth(),
-						trainingImage.getHeight(),
-						trainingImage.getNSlices() * trainingImage.getNFrames(),
-						8
-				);
-
-				ImagePlus classifiedImage = new ImagePlus("classification_result", stack);
-				classifiedImage.setDimensions(1, trainingImage.getNSlices(), trainingImage.getNFrames());
-				classifiedImage.setOpenAsHyperStack( true );
-				//classifiedImage.show();
-				this.classifiedImage = classifiedImage;
-				overlayButton.setEnabled( true );
-				wekaSegmentation.setResultImage( classifiedImage );
-
-				logger.info( "Created memory-resident classification result image." );
-
-			}
-
-			createResultButton.setText( "Get result image" );
+			logger.info("Created disk-resident classification result image: " +
+					directory);
 
 		}
-
-		if ( buttonText.contains("Get") )
+		else // create in RAM
 		{
-			ImagePlus impClassified = classifiedImage.duplicate();
-			impClassified.show();
+			logger.error ( "This is currently not implement; please chose the Disk option" );
+			/*
+			ImageStack stack = ImageStack.create(
+					trainingImage.getWidth(),
+					trainingImage.getHeight(),
+					trainingImage.getNSlices() * trainingImage.getNFrames(),
+					8
+			);
+
+			ImagePlus classifiedImage = new ImagePlus("classification_result", stack);
+			classifiedImage.setDimensions(1, trainingImage.getNSlices(), trainingImage.getNFrames());
+			classifiedImage.setOpenAsHyperStack( true );
+			//classifiedImage.show();
+			this.classifiedImage = classifiedImage;
+			overlayButton.setEnabled( true );
+			wekaSegmentation.setResultImage( classifiedImage );
+
+			logger.info( "Created memory-resident classification result image." );
+			*/
+
 		}
 
 	}
@@ -1954,22 +1889,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 	}
 
 	/**
-	 * Update the result image
-	 *
-	 * @param classifiedImage new result image
-	 */
-	public void updateClassifiedImage( ImagePlus classifiedImage )
-	{
-		this.classifiedImage = classifiedImage;
-	}
-
-	/**
 	 * Update the result image overlay with the corresponding slice
 	 */
 	public void updateResultOverlay()
 	{
-		int n = classifiedImage.getStackIndex( 0, displayImage.getZ(), displayImage.getFrame() );
-		ImageProcessor overlay = classifiedImage.getImageStack().getProcessor( n );
+		ImageProcessor overlay = wekaSegmentation.getResultImage().getSlice( displayImage.getZ(), displayImage.getT() );
 
 		overlay = overlay.convertToByte( false );
 		overlay.setColorModel(overlayLUT);
@@ -2295,17 +2219,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 			return;
 		}
 
-		if ( classifiedImage == null )
+		if ( wekaSegmentation.getResultImage() == null )
 		{
 			logger.error("Classification result image yet assigned.\n" +
 					"Please [Assign result image].");
 			return;
-		}
-
-		if ( classifiedImage.isVisible() )
-		{
-			classifiedImage.hide();
-			wekaSegmentation.setResultImage( classifiedImage );
 		}
 
 		FinalInterval interval = getIntervalFromGUI( );
@@ -2319,10 +2237,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			{
 
 				wekaSegmentation.stopCurrentThreads = false;
-				wekaSegmentation.setInputImage( displayImage );
-				wekaSegmentation.setResultImage( classifiedImage );
 				wekaSegmentation.resetUncertaintyRegions();
-
 				wekaSegmentation.applyClassifier( interval );
 
 				applyButton.setText("Apply classifier");

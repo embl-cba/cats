@@ -5701,3 +5701,86 @@
 
 								}*/
 
+
+
+private static Runnable setClassificationResult(
+			ImagePlus classifiedImage,
+			FinalInterval singleSlice,
+			byte[] classifiedSlice
+	)
+	{
+
+		if (Thread.currentThread().isInterrupted())
+			return null;
+
+		return () -> {
+
+			if ( classifiedImage.getStack() instanceof VirtualStackOfStacks )
+			{
+				VirtualStackOfStacks classifiedImageStack = (VirtualStackOfStacks) classifiedImage.getStack();
+				try
+				{
+					Region5D region5D = ImageUtils.convertIntervalToRegion5D( singleSlice );
+					classifiedImageStack.setAndSaveBytePixels( classifiedSlice, region5D );
+				}
+				catch (IOException e)
+				{
+					logger.warning("WekaSegmentation.setSliceInterval: " + e.toString());
+				}
+			}
+			else
+			{
+				int z = (int)singleSlice.min( ImageUtils.Z );
+				int t = (int)singleSlice.min( ImageUtils.T );
+
+				int n = classifiedImage.getStackIndex( 1, z+1, t+1 );
+				ImageProcessor ip = classifiedImage.getStack().getProcessor( n );
+
+				int i = 0;
+				for ( int y = (int) singleSlice.min( ImageUtils.Y ); y <= singleSlice.max( ImageUtils.Y ); ++y )
+					for ( int x = (int) singleSlice.min( ImageUtils.X ); x <= singleSlice.max( ImageUtils.X ); ++x )
+						ip.set(x, y, classifiedSlice[i++]);
+			}
+
+		};
+
+	}
+
+
+
+	private void storeClassificationResults( int numThreads,
+											 ArrayList< byte [] > classificationResults,
+											 FinalInterval tileInterval,
+											 boolean isLogging )
+	{
+
+		long startTime = System.currentTimeMillis();
+
+		exe = Executors.newFixedThreadPool( numThreads );
+		ArrayList<Future> savingFutures = new ArrayList<>();
+
+		for( int iSlice = 0; iSlice < classificationResults.size(); ++iSlice )
+		{
+			long z = iSlice + tileInterval.min( ImageUtils.Z );
+			FinalInterval sliceInterval = IntervalUtils.fixDimension( tileInterval, ImageUtils.Z, z);
+
+			savingFutures.add(
+					exe.submit(
+							setClassificationResult(
+									classifiedImage,
+									sliceInterval,
+									classificationResults.get(iSlice)
+							)
+					)
+			);
+		}
+
+		ThreadUtils.joinThreads(savingFutures,logger );
+		exe.shutdown();
+
+		if( isLogging )
+		{
+			logger.info("Saved classification results in [ms]: " + (System.currentTimeMillis() - startTime) );
+		}
+
+	}
