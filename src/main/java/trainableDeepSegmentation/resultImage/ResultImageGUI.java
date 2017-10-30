@@ -1,9 +1,8 @@
-package trainableDeepSegmentation;
+package trainableDeepSegmentation.resultImage;
 
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.gui.GenericDialog;
-import ij.gui.NonBlockingGenericDialog;
 
 import java.util.ArrayList;
 

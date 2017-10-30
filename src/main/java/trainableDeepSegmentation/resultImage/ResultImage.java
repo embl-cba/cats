@@ -1,0 +1,17 @@
+package trainableDeepSegmentation.resultImage;
+
+import ij.process.ImageProcessor;
+import net.imglib2.FinalInterval;
+
+import java.util.ArrayList;
+
+public interface ResultImage {
+
+    void saveAsSeparateImarisChannels( String directory,
+                                       ArrayList< Boolean > saveClass );
+
+    ImageProcessor getSlice( int slice, int frame );
+
+    ResultImageFrameSetter getSetter( FinalInterval interval );
+
+}

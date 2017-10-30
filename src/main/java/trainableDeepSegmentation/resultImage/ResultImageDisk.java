@@ -1,4 +1,4 @@
-package trainableDeepSegmentation;
+package trainableDeepSegmentation.resultImage;
 
 import bigDataTools.*;
 import bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
@@ -12,14 +12,14 @@ import ij.io.FileSaver;
 import ij.plugin.Duplicator;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
+import trainableDeepSegmentation.WekaSegmentation;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import static trainableDeepSegmentation.ImageUtils.*;
 
-public class ResultImage {
+public class ResultImageDisk implements ResultImage {
 
     public static final int CLASS_LUT_WIDTH = 10;
 
@@ -28,9 +28,9 @@ public class ResultImage {
     Logger logger;
     long[] dimensions;
 
-    public ResultImage( WekaSegmentation wekaSegmentation,
-                        String directory,
-                        long[] dimensions)
+    public ResultImageDisk( WekaSegmentation wekaSegmentation,
+                            String directory,
+                            long[] dimensions)
     {
         this.wekaSegmentation = wekaSegmentation;
         this.logger = wekaSegmentation.getLogger();
@@ -90,18 +90,7 @@ public class ResultImage {
     }
 
 
-    private void createImarisMetaFile( String directory )
-    {
-        // create imaris meta file
-        ArrayList < File > imarisFiles = ImarisUtils.getImarisFiles( directory );
-        if ( imarisFiles.size() > 1 )
-        {
-            ImarisWriter.writeCombinedHeader( imarisFiles, "meta.ims" );
-        }
-
-        logger.info( "Created Imaris Meta Header" );
-    }
-
+    @Override
     public void saveAsSeparateImarisChannels( String directory,
                                               ArrayList< Boolean > saveClass )
     {
@@ -114,10 +103,12 @@ public class ResultImage {
             }
         }
 
-        createImarisMetaFile( directory );
+        ImarisUtils.createImarisMetaFile( directory );
+        logger.info( "Created Imaris Meta Header" );
 
     }
 
+    @Override
     public ImageProcessor getSlice( int slice, int frame )
     {
         int stackIndex = result.getStackIndex(  0, slice, frame );
@@ -125,9 +116,10 @@ public class ResultImage {
         return ( ip );
     }
 
-    public Setter getSetter( FinalInterval interval )
+    @Override
+    public ResultImageFrameSetter getSetter( FinalInterval interval )
     {
-        return ( new Setter( interval ) );
+        return ( new ResultImageFrameSetterDisk( this, interval ) );
     }
 
     private ImagePlus createStream( String directory, long[] dimensions )
@@ -175,7 +167,7 @@ public class ResultImage {
         return ( result );
     }
 
-    private void write3dResultChunk(
+    public void write3dResultChunk(
             FinalInterval interval,
             byte[][][] resultChunk )
     {
@@ -192,37 +184,4 @@ public class ResultImage {
     }
 
 
-    public class Setter
-    {
-
-        FinalInterval interval;
-        byte[][][] resultChunk;
-
-        public Setter ( FinalInterval interval )
-        {
-            this.interval = interval;
-            resultChunk = new byte[ (int) interval.dimension( Z ) ]
-                    [ (int) interval.dimension( Y ) ]
-                    [ (int) interval.dimension( X ) ];
-        }
-
-        public void set( long x, long y, long z, int classId, double certainty)
-        {
-            int lutCertainty = (int) ( certainty * ( CLASS_LUT_WIDTH - 1.0 ) );
-
-            int classOffset = classId * CLASS_LUT_WIDTH + 1;
-
-            resultChunk[ (int) (z - interval.min( Z )) ]
-                    [ (int) (y - interval.min ( Y )) ]
-                    [ (int) (x - interval.min ( X )) ]
-                    = (byte) ( classOffset + lutCertainty );
-
-        }
-
-        public void close( )
-        {
-            write3dResultChunk( interval, resultChunk );
-        }
-
-    }
 }

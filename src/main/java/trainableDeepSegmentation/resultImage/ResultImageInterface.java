@@ -1,4 +1,4 @@
-package trainableDeepSegmentation;
+package trainableDeepSegmentation.resultImage;
 
 import ij.ImagePlus;
 import ij.process.ImageProcessor;

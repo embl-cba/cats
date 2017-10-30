@@ -39,6 +39,10 @@ import java.util.zip.GZIPOutputStream;
 import javax.swing.*;
 
 import net.imglib2.FinalInterval;
+import trainableDeepSegmentation.resultImage.ResultImage;
+import trainableDeepSegmentation.resultImage.ResultImageDisk;
+import trainableDeepSegmentation.resultImage.ResultImageGUI;
+import trainableDeepSegmentation.resultImage.ResultImageRAM;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
@@ -116,7 +120,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private JButton assignResultImageButton = null;
 
-	private JCheckBox resultOnDiskCheckBox = null;
+	private JComboBox resultImageComboBox = null;
 
 	private JButton exportResultImageButton = null;
 
@@ -130,6 +134,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private JButton applyButton = null;
 	/** apply classifier button */
 	private JButton postProcessButton = null;
+
 
 	private JTextField classificationRangeTextField = null;
 	private JTextField objectSizeRangeTextField = null;
@@ -243,6 +248,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** boolean flag set to true while training */
 	private boolean trainingFlag = false;
 
+	public static final String RESULT_IMAGE_DISK_SINGLE_TIFF = "Disk";
+	public static final String RESULT_IMAGE_RAM = "RAM";
+
+
 	private boolean isFirstTime = true;
 
 	private Logger logger;
@@ -284,12 +293,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// assign colors to classes
 		for(int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 		{
-			int offset = iClass * ResultImage.CLASS_LUT_WIDTH;
-			for( int i = 1; i <= ResultImage.CLASS_LUT_WIDTH; i++ )
+			int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
+			for( int i = 1; i <= ResultImageDisk.CLASS_LUT_WIDTH; i++ )
 			{
-				red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / ( ResultImage.CLASS_LUT_WIDTH - 1));
-				green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / ( ResultImage.CLASS_LUT_WIDTH - 1));
-				blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue()*i / ( ResultImage.CLASS_LUT_WIDTH - 1));
+				red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / ( ResultImageDisk.CLASS_LUT_WIDTH - 1));
+				green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / ( ResultImageDisk.CLASS_LUT_WIDTH - 1));
+				blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue()*i / ( ResultImageDisk.CLASS_LUT_WIDTH - 1));
 			}
 		}
 		overlayLUT = new LUT(red, green, blue);
@@ -325,7 +334,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		assignResultImageButton.setToolTipText("Assign result image");
 		assignResultImageButton.setEnabled(true);
 
-		resultOnDiskCheckBox = new JCheckBox("Disk", true);
+		resultImageComboBox = new JComboBox( new String[]{ RESULT_IMAGE_DISK_SINGLE_TIFF ,
+										RESULT_IMAGE_RAM} );
 
 		exportResultImageButton = new JButton("Export results");
 		exportResultImageButton.setToolTipText("Export results");
@@ -430,7 +440,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					}*/
 					else if(e.getSource() == assignResultImageButton )
 					{
-						assignResultImage( resultOnDiskCheckBox );
+						assignResultImage( (String) resultImageComboBox.getSelectedItem() );
 
 						if ( wekaSegmentation.hasResultImage() )
 						{
@@ -1075,7 +1085,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			JPanel assignResultImagePanel = new JPanel();
 			assignResultImagePanel.add( assignResultImageButton );
-			assignResultImagePanel.add( resultOnDiskCheckBox );
+			assignResultImagePanel.add( resultImageComboBox );
 			trainingJPanel.add(assignResultImagePanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
@@ -1613,8 +1623,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				// assign colors to classes
 				for (int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
-					int offset = iClass * ResultImage.CLASS_LUT_WIDTH;
-					for ( int i = 1; i <= ResultImage.CLASS_LUT_WIDTH; i++)
+					int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
+					for ( int i = 1; i <= ResultImageDisk.CLASS_LUT_WIDTH; i++)
 					{
 						red[offset + i] = (byte) ( colors[iClass].getRed() );
 						green[offset + i] = (byte) ( colors[iClass].getGreen() );
@@ -1630,12 +1640,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 				// assign colors to classes
 				for (int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
-					int offset = iClass * ResultImage.CLASS_LUT_WIDTH;
-					for ( int i = 1; i <= ResultImage.CLASS_LUT_WIDTH; i++)
+					int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
+					for ( int i = 1; i <= ResultImageDisk.CLASS_LUT_WIDTH; i++)
 					{
-						red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / ( ResultImage.CLASS_LUT_WIDTH - 1));
-						green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / ( ResultImage.CLASS_LUT_WIDTH - 1));
-						blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue() * i / ( ResultImage.CLASS_LUT_WIDTH - 1));
+						red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / ( ResultImageDisk.CLASS_LUT_WIDTH - 1));
+						green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / ( ResultImageDisk.CLASS_LUT_WIDTH - 1));
+						blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue() * i / ( ResultImageDisk.CLASS_LUT_WIDTH - 1));
 					}
 				}
 				overlayLUT = new LUT(red, green, blue);
@@ -1646,8 +1656,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				// assign colors to classes
 				for (int iClass = 0; iClass < WekaSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
-					int offset = iClass * ResultImage.CLASS_LUT_WIDTH;
-					for ( int i = 1; i <= ResultImage.CLASS_LUT_WIDTH; i++)
+					int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
+					for ( int i = 1; i <= ResultImageDisk.CLASS_LUT_WIDTH; i++)
 					{
 						// TODO:
 						// - check whether this is correct
@@ -1796,14 +1806,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
-	private void assignResultImage( JCheckBox resultOnDiskCheckBox )
+	private void assignResultImage( String resultImageType )
 	{
-		if ( resultOnDiskCheckBox.isSelected() )
+		if ( resultImageType.equals( RESULT_IMAGE_DISK_SINGLE_TIFF ) )
 		{
-
 			String directory = IJ.getDirectory("Select a directory");
 
-			ResultImage resultImage = new ResultImage( wekaSegmentation, directory,
+			ResultImage resultImage = new ResultImageDisk( wekaSegmentation, directory,
 					wekaSegmentation.getInputImageDimensions() );
 
 			wekaSegmentation.setResultImage( resultImage );
@@ -1814,27 +1823,15 @@ public class Weka_Deep_Segmentation implements PlugIn
 					directory);
 
 		}
-		else // create in RAM
+		else if ( resultImageType.equals( RESULT_IMAGE_RAM ))
 		{
-			logger.error ( "This is currently not implement; please chose the Disk option" );
-			/*
-			ImageStack stack = ImageStack.create(
-					trainingImage.getWidth(),
-					trainingImage.getHeight(),
-					trainingImage.getNSlices() * trainingImage.getNFrames(),
-					8
-			);
 
-			ImagePlus classifiedImage = new ImagePlus("classification_result", stack);
-			classifiedImage.setDimensions(1, trainingImage.getNSlices(), trainingImage.getNFrames());
-			classifiedImage.setOpenAsHyperStack( true );
-			//classifiedImage.show();
-			this.classifiedImage = classifiedImage;
-			overlayButton.setEnabled( true );
-			wekaSegmentation.setResultImage( classifiedImage );
+			ResultImage resultImage = new ResultImageRAM( wekaSegmentation,
+					wekaSegmentation.getInputImageDimensions() );
 
-			logger.info( "Created memory-resident classification result image." );
-			*/
+			wekaSegmentation.setResultImage( resultImage );
+
+			logger.info("Allocated memory for classification result image." );
 
 		}
 

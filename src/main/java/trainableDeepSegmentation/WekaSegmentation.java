@@ -18,8 +18,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import bigDataTools.Region5D;
-import bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import bigDataTools.logging.Logger;
 import bigDataTools.logging.IJLazySwingLogger;
 import ij.gui.PolygonRoi;
@@ -33,6 +31,8 @@ import ij.Prefs;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
+import trainableDeepSegmentation.resultImage.ResultImage;
+import trainableDeepSegmentation.resultImage.ResultImageFrameSetter;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -2097,7 +2097,7 @@ public class WekaSegmentation {
 			dataInfo.setClassIndex(dataInfo.numAttributes() - 1);
 
 			// get result image setter
-			final ResultImage.Setter resultSetter = resultImage.getSetter( tileInterval );
+			final ResultImageFrameSetter resultSetter = resultImage.getSetter( tileInterval );
 
 			// spawn threads
 			ExecutorService exe = Executors.newFixedThreadPool( numThreads );
@@ -2294,7 +2294,7 @@ public class WekaSegmentation {
 	 */
 	private Runnable classifyZChunk(
 			FeatureProvider featureProvider,
-			ResultImage.Setter resultSetter,
+			ResultImageFrameSetter resultSetter,
 			long zMin, long zMax,
 			//UncertaintyRegion uncertaintyRegion,
 			final Instances dataInfo,
