@@ -2073,7 +2073,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							if ( labelImageInterval == null ) return;
 							wekaSegmentation.setTrainingDataFromLabelImage(
 									labelImageInterval,
-									100 );
+									wekaSegmentation.getLabelImageInstancesPerPlaneAndClass());
 
 						}
 						else
@@ -2610,7 +2610,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		gd.addNumericField("Computation: Memory factor",
 				wekaSegmentation.memoryFactor, 1);
 		gd.addNumericField("Training: Label image: Num. instances per class",
-				wekaSegmentation.labelImageNumInstancesPerClass, 0);
+				wekaSegmentation.getLabelImageInstancesPerPlaneAndClass(), 0);
 
 		/*
 		if(wekaSegmentation.getLoadedTrainingData() != null)
@@ -2724,8 +2724,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.settings.maxDeepConvolutionLevel = (int) gd.getNextNumber();
 		wekaSegmentation.settings.anisotropy = gd.getNextNumber();
 		wekaSegmentation.memoryFactor = gd.getNextNumber();
-		wekaSegmentation.labelImageNumInstancesPerClass = (int) gd.getNextNumber();
-
+		wekaSegmentation.setLabelImageInstancesPerPlaneAndClass( (int) gd.getNextNumber());
 
 		// Set classifier and options
 		wekaSegmentation.setNumTrees((int) gd.getNextNumber());

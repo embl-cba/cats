@@ -991,7 +991,7 @@ public class FeatureProvider
 
     private boolean isLogging = false;
 
-    public void setLogging( boolean isLogging )
+    public void isLogging( boolean isLogging )
     {
         this.isLogging = isLogging;
     }

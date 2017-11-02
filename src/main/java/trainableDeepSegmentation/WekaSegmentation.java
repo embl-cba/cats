@@ -215,6 +215,18 @@ public class WekaSegmentation {
 
 	private AtomicInteger rfStatsMaximumTreesUsed = new AtomicInteger(0);
 
+	public int getLabelImageInstancesPerPlaneAndClass()
+	{
+		return labelImageInstancesPerPlaneAndClass;
+	}
+
+	public void setLabelImageInstancesPerPlaneAndClass( int labelImageInstancesPerPlaneAndClass )
+	{
+		this.labelImageInstancesPerPlaneAndClass = labelImageInstancesPerPlaneAndClass;
+	}
+
+	private int labelImageInstancesPerPlaneAndClass = 100;
+
 	/**
 	 * flag to set the resampling of the training data in order to guarantee
 	 * the same number of instances per class (class balance)
@@ -1423,16 +1435,21 @@ public class WekaSegmentation {
 	 */
 	public void addTrainingDataFromLabelImageRegion(
 			FinalInterval interval,
-			int numInstancesPerClass,
+			int numInstancesPerClassAndPlane,
 			boolean isUpdateFeatureList)
 	{
 
 		logger.info( "Computing features for label image region...");
+		logInterval( interval );
+		logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
+
 
 		long startTime = System.currentTimeMillis();
 
 		// Compute features
 		FeatureProvider featureProvider = new FeatureProvider();
+		featureProvider.setLogger( logger );
+		featureProvider.isLogging( true );
 		featureProvider.setInputImage(inputImage);
 		featureProvider.setWekaSegmentation(this);
 		featureProvider.setInterval(interval);
@@ -1470,10 +1487,11 @@ public class WekaSegmentation {
 		double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
 
 		// Collect instances per plane
-		for ( int z = (int) interval.min( ImageUtils.Z); z <= interval.max( ImageUtils.Z); ++z)
+		for ( int z = (int) interval.min( ImageUtils.Z ); z <= interval.max( ImageUtils.Z ); ++z)
 		{
 
-			logger.progress("Z-plane ", "" + z);
+			logLabelImageTrainingProgress( z, interval,
+					"Determining class coordinates...");
 
 			// Create lists of coordinates of pixels of each class
 			//
@@ -1497,13 +1515,20 @@ public class WekaSegmentation {
 			// Select random samples from each class
 			Random rand = new Random();
 
+			logLabelImageTrainingProgress( z, interval,
+					"Preparing feature slice...");
+
 			featureProvider.setFeatureSliceValues( z, featureSlice );
+
+			logLabelImageTrainingProgress( z, interval,
+					"Collecting " + numInstancesPerClassAndPlane + " " +
+							"random instance samples for each class...");
 
 			for (int iClass = 0; iClass < nClasses; ++iClass)
 			{
-				if (!classCoordinates[iClass].isEmpty())
+				if ( !classCoordinates[iClass].isEmpty() )
 				{
-					for (int i = 0; i < numInstancesPerClass; ++i)
+					for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
 					{
 						int randomSample = rand.nextInt(classCoordinates[iClass].size());
 
@@ -1534,7 +1559,7 @@ public class WekaSegmentation {
 		}
 
 
-		logger.info ( "...extracted instances in [ms]: " +
+		logger.info ( "...computes instance values in [ms]: " +
 				( System.currentTimeMillis() - startTime ) );
 
 
@@ -1558,6 +1583,17 @@ public class WekaSegmentation {
 		return;
 
 	}
+
+	private static final void logLabelImageTrainingProgress( int z, FinalInterval interval, String currentTask )
+	{
+		logger.progress("Z-plane (current, min, max): ",
+				"" + z
+						+ ", " + interval.min( ImageUtils.Z )
+						+ ", " + interval.max( ImageUtils.Z )
+						+ "; " + currentTask);
+
+	}
+
 
 	private synchronized void addInstanceToLabelImageTrainingData(Instance instance)
 	{
@@ -2086,7 +2122,7 @@ public class WekaSegmentation {
 			featureProvider.setWekaSegmentation( this );
 			featureProvider.setActiveChannels( settings.activeChannels );
 			featureProvider.setInterval( tileInterval );
-			featureProvider.setLogging( isLogging );
+			featureProvider.isLogging( isLogging );
 			featureProvider.computeFeatures( numThreads, false );
 
 			// determine chunking
