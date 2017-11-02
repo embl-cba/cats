@@ -33,6 +33,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import bigDataTools.logging.IJLazySwingLogger;
+import bigDataTools.logging.Logger;
 import weka.classifiers.Classifier;
 import weka.classifiers.RandomizableIteratedSingleClassifierEnhancer;
 import weka.core.AdditionalMeasureProducer;
@@ -182,9 +184,18 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
       }
 
+      // Tischi
+      Logger logger = new IJLazySwingLogger();
+      long start = System.currentTimeMillis();
+
       // make sure all trees have been trained before proceeding
       for (int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++) {
+        long current = System.currentTimeMillis();
         futures.get(treeIdx).get();
+        logger.progress( "Built tree",
+                "" + (treeIdx + 1) + "/" + m_Classifiers.length
+                        + "; <time/tree> [s]: " + ( current - start ) / ( 1000 * (treeIdx+1) )
+        );
       }
 
       // calc OOB error?
