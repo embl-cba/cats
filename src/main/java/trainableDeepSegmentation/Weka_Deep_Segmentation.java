@@ -42,7 +42,7 @@ import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.resultImage.ResultImage;
 import trainableDeepSegmentation.resultImage.ResultImageDisk;
 import trainableDeepSegmentation.resultImage.ResultImageGUI;
-import trainableDeepSegmentation.resultImage.ResultImageRAM;
+import trainableDeepSegmentation.resultImage.ResultImageMemory;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
@@ -571,19 +571,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private void loadLabelImage()
 	{
-		OpenDialog od = new OpenDialog("Choose label image",
-				OpenDialog.getLastDirectory());
 
-		if ( od.getFileName()==null )
-			return;
+		ImagePlus labelImage = IJ.openImage();;
 
-		logger.info("Loading label image " + od.getDirectory() + od.getFileName() + "...");
-
-		ImagePlus labelImage = new ImagePlus(od.getDirectory() + od.getFileName());
-
-		wekaSegmentation.setLabelImage( labelImage );
-
-		logger.info("...done.");
+		if ( labelImage != null )
+		{
+			wekaSegmentation.setLabelImage( labelImage );
+			logger.info( "...done." );
+		}
 	}
 
 	/**
@@ -1826,7 +1821,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		else if ( resultImageType.equals( RESULT_IMAGE_RAM ))
 		{
 
-			ResultImage resultImage = new ResultImageRAM( wekaSegmentation,
+			ResultImage resultImage = new ResultImageMemory( wekaSegmentation,
 					wekaSegmentation.getInputImageDimensions() );
 
 			wekaSegmentation.setResultImage( resultImage );

@@ -12,6 +12,6 @@ public interface ResultImage {
 
     ImageProcessor getSlice( int slice, int frame );
 
-    ResultImageFrameSetter getSetter( FinalInterval interval );
+    ResultImageFrameSetter getFrameSetter( FinalInterval interval );
 
 }

@@ -2,9 +2,7 @@ package trainableDeepSegmentation.resultImage;
 
 import net.imglib2.FinalInterval;
 
-import static trainableDeepSegmentation.ImageUtils.X;
-import static trainableDeepSegmentation.ImageUtils.Y;
-import static trainableDeepSegmentation.ImageUtils.Z;
+import static trainableDeepSegmentation.ImageUtils.*;
 
 public class ResultImageFrameSetterDisk implements ResultImageFrameSetter {
 
@@ -14,6 +12,8 @@ public class ResultImageFrameSetterDisk implements ResultImageFrameSetter {
 
     public ResultImageFrameSetterDisk( ResultImage resultImage, FinalInterval interval )
     {
+        assert interval.min( T ) == interval.max( T );
+
         this.interval = interval;
         this.resultImage = (ResultImageDisk) resultImage;
         resultChunk = new byte[ (int) interval.dimension( Z ) ]

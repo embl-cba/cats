@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import static trainableDeepSegmentation.ImageUtils.*;
+import static trainableDeepSegmentation.resultImage.Utils.saveImagePlusAsSeparateImarisChannels;
 
 public class ResultImageDisk implements ResultImage {
 
@@ -38,73 +39,20 @@ public class ResultImageDisk implements ResultImage {
         this.dimensions = dimensions;
     }
 
-    private void saveClassAsImaris( int classId, String directory )
-    {
-
-        String className = wekaSegmentation.getClassName( classId );
-
-        ImarisDataSet imarisDataSet = new ImarisDataSet();
-
-        imarisDataSet.setFromImagePlus( result,
-                new int[]{1,1,1},
-                directory,
-                className,
-                "/");
-
-        ImarisWriter.writeHeader( imarisDataSet,
-                directory,
-                className + ".ims"
-        );
-
-
-        Hdf5DataCubeWriter writer = new Hdf5DataCubeWriter();
-
-        for ( int t = 0; t < dimensions[ T ]; ++t )
-        {
-
-            ImagePlus impClass = getClassImage( classId, t );
-
-            writer.writeImarisCompatibleResolutionPyramid(
-                    impClass,
-                    imarisDataSet,
-                    0, t );
-
-            logger.progress( "Wrote " + className+ " time-point:",
-                     (t+1) + "/" + dimensions[ T ] );
-        }
-    }
-
-    private ImagePlus getClassImage( int classId, int t )
-    {
-        ImagePlus impClass;
-
-        Duplicator duplicator = new Duplicator();
-        impClass = duplicator.run( result, 1, 1, 1, result.getNSlices(), t+1, t+1 );
-
-        int[] intensityGate = new int[]
-                { classId * CLASS_LUT_WIDTH + 1, (classId + 1 ) * CLASS_LUT_WIDTH };
-        Utils.applyIntensityGate( impClass, intensityGate );
-
-        return ( impClass );
-
-    }
-
 
     @Override
     public void saveAsSeparateImarisChannels( String directory,
                                               ArrayList< Boolean > saveClass )
     {
 
-        for ( int i = 0; i < saveClass.size(); ++i )
-        {
-            if ( saveClass.get( i ) )
-            {
-                saveClassAsImaris( i, directory );
-            }
-        }
-
-        ImarisUtils.createImarisMetaFile( directory );
-        logger.info( "Created Imaris Meta Header" );
+        saveImagePlusAsSeparateImarisChannels(
+                directory,
+                saveClass,
+                result,
+                logger,
+                wekaSegmentation.getClassNames(),
+                CLASS_LUT_WIDTH
+        );
 
     }
 
@@ -117,7 +65,7 @@ public class ResultImageDisk implements ResultImage {
     }
 
     @Override
-    public ResultImageFrameSetter getSetter( FinalInterval interval )
+    public ResultImageFrameSetter getFrameSetter( FinalInterval interval )
     {
         return ( new ResultImageFrameSetterDisk( this, interval ) );
     }
@@ -171,6 +119,8 @@ public class ResultImageDisk implements ResultImage {
             FinalInterval interval,
             byte[][][] resultChunk )
     {
+        assert interval.min( T ) == interval.max( T );
+
         VirtualStackOfStacks stack = ( VirtualStackOfStacks ) result.getStack();
         try
         {

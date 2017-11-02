@@ -4,15 +4,17 @@ import net.imglib2.FinalInterval;
 
 import static trainableDeepSegmentation.ImageUtils.*;
 
-public class ResultImageFrameSetterRAM implements ResultImageFrameSetter {
+public class ResultImageFrameSetterMemory implements ResultImageFrameSetter {
 
     FinalInterval interval;
-    ResultImageRAM resultImage;
+    ResultImageMemory resultImage;
 
-    public ResultImageFrameSetterRAM( ResultImage resultImage, FinalInterval interval )
+    public ResultImageFrameSetterMemory( ResultImage resultImage, FinalInterval interval )
     {
+        assert interval.min( T ) == interval.max( T );
+        
         this.interval = interval;
-        this.resultImage = ( ResultImageRAM ) resultImage;
+        this.resultImage = ( ResultImageMemory ) resultImage;
     }
 
     @Override

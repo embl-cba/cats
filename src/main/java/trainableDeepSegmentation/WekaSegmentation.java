@@ -2097,7 +2097,7 @@ public class WekaSegmentation {
 			dataInfo.setClassIndex(dataInfo.numAttributes() - 1);
 
 			// get result image setter
-			final ResultImageFrameSetter resultSetter = resultImage.getSetter( tileInterval );
+			final ResultImageFrameSetter resultSetter = resultImage.getFrameSetter( tileInterval );
 
 			// spawn threads
 			ExecutorService exe = Executors.newFixedThreadPool( numThreads );
