@@ -408,7 +408,9 @@ public class FeatureProvider
      * @param zGlobal
      * @param featureSlice
      */
-    public boolean setFeatureSliceValues(final int zGlobal, double[][][] featureSlice )
+    public boolean setFeatureSlicesValues( final int zGlobal,
+                                           double[][][] featureSlice,
+                                           int numThreads )
     {
 
 
@@ -426,7 +428,6 @@ public class FeatureProvider
         int z = zGlobal - (int) interval.min( Z );
         int nf = getNumFeatures();
 
-
         // The feature images in multiResolutionFeatureImageArray
         // are larger than the requested interval, because of border
         // issues during feature computation.
@@ -440,30 +441,52 @@ public class FeatureProvider
         ye += featureImageBorderSizes[ Y ];
         z += featureImageBorderSizes[ Z ];
 
-        double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
-        double vAA0,vAA1,vAAA;
-        double xCal, yCal, zCal, xHalfWidth, yHalfWidth, zHalfWidth;
-        double xTmp, xBaseDist, xBaseDist2;
-        double zTmp, zBaseDist, zBaseDist2;
-        double yTmp, yBaseDist, yBaseDist2;
-
-        int xBase, yBase, zBase, yBaseOffset, yAboveOffset, xAbove, x, y;
-        int nxFeatureImage;
-        Calibration calibration = null;
-        ImagePlus imp = null;
-
-        // get feature values as doubles
-        float[] pixelsBase = null;
-        float[] pixelsAbove = null;
+        ExecutorService exe = Executors.newFixedThreadPool( numThreads );
+        ArrayList<Future> futures = new ArrayList<>();
 
         for ( int f = 0; f < nf; f++ )
         {
-            //if ( ! featureList.get( f + c*nf ).isActive )
-            //{
-            //    continue; // don't upsample if not needed
-            //}
+            futures.add(
+                    exe.submit(
+                        setFeatureSliceValues(
+                            featureSlice,
+                            f,
+                            xs, xe, ys, ye, z)
+                )
+            );
+        }
 
-            imp = multiResolutionFeatureImageArray.get(f);
+        ThreadUtils.joinThreads( futures, logger );
+        exe.shutdown();
+
+        return ( true );
+    }
+
+
+    private Runnable setFeatureSliceValues( double[][][] featureSlice,
+                                            int f,
+                                            int xs, int xe, int ys, int ye, int z )
+    {
+        return () ->
+        {
+            if ( wekaSegmentation.stopCurrentThreads ) return;
+
+            double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
+            double vAA0,vAA1,vAAA;
+            double xCal, yCal, zCal, xHalfWidth, yHalfWidth, zHalfWidth;
+            double xTmp, xBaseDist, xBaseDist2;
+            double zTmp, zBaseDist, zBaseDist2;
+            double yTmp, yBaseDist, yBaseDist2;
+
+            int xBase, yBase, zBase, yBaseOffset, yAboveOffset, xAbove, x, y;
+            int nxFeatureImage;
+            Calibration calibration = null;
+
+            // get feature values as doubles
+            float[] pixelsBase = null;
+            float[] pixelsAbove = null;
+
+            ImagePlus imp = multiResolutionFeatureImageArray.get(f);
             calibration = imp.getCalibration();
             xCal = calibration.pixelWidth;
             yCal = calibration.pixelHeight;
@@ -605,11 +628,9 @@ public class FeatureProvider
 
                 }
             }
-        }
+        };
 
-        return ( true );
     }
-
 
     public ImagePlus interpolateFast(ImagePlus imp)
     {
@@ -1395,7 +1416,8 @@ public class FeatureProvider
                 {
                     logger.info("Image features at level " + level +
                             " computed in [ms]: " +
-                            (System.currentTimeMillis() - start) );
+                            (System.currentTimeMillis() - start)
+                            + ", using " + numThreads + " threads." );
                 }
 
 

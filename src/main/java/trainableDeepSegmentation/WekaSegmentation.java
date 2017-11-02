@@ -1073,7 +1073,7 @@ public class WekaSegmentation {
 
 				int z = example.z;
 
-				featureProvider.setFeatureSliceValues( z, featureSlice );
+				featureProvider.setFeatureSlicesValues( z, featureSlice, 1 );
 
 				for ( Point point : getPointsFromExample(example) )
 				{
@@ -1438,6 +1438,7 @@ public class WekaSegmentation {
 	public void addTrainingDataFromLabelImageRegion(
 			FinalInterval interval,
 			int numInstancesPerClassAndPlane,
+			int numThreads,
 			boolean isUpdateFeatureList)
 	{
 
@@ -1456,7 +1457,7 @@ public class WekaSegmentation {
 		featureProvider.setWekaSegmentation(this);
 		featureProvider.setInterval(interval);
 		featureProvider.setActiveChannels(settings.activeChannels);
-		featureProvider.computeFeatures(threadsPerRegion, maximumMultithreadedLevel, true);
+		featureProvider.computeFeatures(numThreads, maximumMultithreadedLevel, true);
 
 		logger.info ( "...computed features  in [ms]: " +
 				( System.currentTimeMillis() - startTime ) );
@@ -1520,7 +1521,7 @@ public class WekaSegmentation {
 			logLabelImageTrainingProgress( z, interval,
 					"Preparing feature slice...");
 
-			featureProvider.setFeatureSliceValues( z, featureSlice );
+			featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
 
 			logLabelImageTrainingProgress( z, interval,
 					"Collecting " + numInstancesPerClassAndPlane + " " +
@@ -1644,6 +1645,7 @@ public class WekaSegmentation {
 		addTrainingDataFromLabelImageRegion(
 				labelImageInterval,
 				labelImageNumInstancesPerClass,
+				Prefs.getThreads(),
 				isUpdateFeatureList);
 		final long end = System.currentTimeMillis();
 		logger.info("...created training data from label image in " + (end - start) + " ms");
@@ -2371,7 +2373,7 @@ public class WekaSegmentation {
 				for ( long z = zMin; z <= zMax; ++z )
 				{
 
-					if ( ! featureProvider.setFeatureSliceValues( (int) z, featureSlice ) )
+					if ( ! featureProvider.setFeatureSlicesValues( (int) z, featureSlice, 1 ) )
 					{
 						logger.error("Feature slice " + z +" could not be set." );
 						stopCurrentThreads = true;
