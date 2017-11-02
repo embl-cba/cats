@@ -174,6 +174,8 @@ public class WekaSegmentation {
 
 	public boolean isTrainingCompleted = true;
 
+	private int maximumMultithreadedLevel = 10;
+
 	public Logger getLogger()
 	{
 		return logger;
@@ -1043,7 +1045,7 @@ public class WekaSegmentation {
 			featureProvider.setWekaSegmentation(this);
 			featureProvider.setActiveChannels(settings.activeChannels);
 			featureProvider.setInterval(exampleListBoundingInterval);
-			featureProvider.computeFeatures(threadsPerRegion, true);
+			featureProvider.computeFeatures(threadsPerRegion, maximumMultithreadedLevel,true);
 
 			/* update feature list, which might have been changed during
 			this training, because the user might have altered the
@@ -1454,7 +1456,7 @@ public class WekaSegmentation {
 		featureProvider.setWekaSegmentation(this);
 		featureProvider.setInterval(interval);
 		featureProvider.setActiveChannels(settings.activeChannels);
-		featureProvider.computeFeatures(threadsPerRegion, true);
+		featureProvider.computeFeatures(threadsPerRegion, maximumMultithreadedLevel, true);
 
 		logger.info ( "...computed features  in [ms]: " +
 				( System.currentTimeMillis() - startTime ) );
@@ -2123,7 +2125,7 @@ public class WekaSegmentation {
 			featureProvider.setActiveChannels( settings.activeChannels );
 			featureProvider.setInterval( tileInterval );
 			featureProvider.isLogging( isLogging );
-			featureProvider.computeFeatures( numThreads, false );
+			featureProvider.computeFeatures( numThreads, maximumMultithreadedLevel, false );
 
 			// determine chunking
 			ArrayList< long[] > zChunks = getZChunks( numThreads, tileInterval );

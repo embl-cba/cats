@@ -996,7 +996,7 @@ public class FeatureProvider
         this.isLogging = isLogging;
     }
 
-    public boolean computeFeatures( int numThreads, boolean computeAllFeatures )
+    public boolean computeFeatures( int numThreads, int maximumMultithreadedLevel, boolean computeAllFeatures )
     {
 
         long start = System.currentTimeMillis();
@@ -1010,6 +1010,7 @@ public class FeatureProvider
                 boolean success = computeFeatureImages(
                         intervalOneChannel,
                         numThreads,
+                        maximumMultithreadedLevel,
                         computeAllFeatures);
 
                 if ( ! success )
@@ -1124,6 +1125,7 @@ public class FeatureProvider
     public boolean computeFeatureImages(
             FinalInterval interval,
             int numThreads,
+            int maximumMultithreadedLevel,
             boolean computeAllFeatures )
     {
         // TODO:
@@ -1301,7 +1303,7 @@ public class FeatureProvider
                 boolean hessianAbsoluteValues = false;
 
                 // Multi-threaded
-                ExecutorService exe = Executors.newFixedThreadPool(numThreads);
+                ExecutorService exe = Executors.newFixedThreadPool( numThreads );
                 ArrayList<Future<ArrayList<ImagePlus>>> futures = new ArrayList<>();
 
                 // Single threaded
@@ -1332,7 +1334,7 @@ public class FeatureProvider
                     if ( ! featureImage.getTitle().contains(
                             CONV_DEPTH + wekaSegmentation.settings.maxDeepConvolutionLevel) )
                     {
-                        if (level <= 1) // multi-threaded
+                        if (level <= maximumMultithreadedLevel) // multi-threaded
                         {
                             if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "He_" + featureImage.getTitle()) )
@@ -1357,7 +1359,7 @@ public class FeatureProvider
 
                 }
 
-                if ( level <= 1 ) // multi-threaded
+                if ( level <= maximumMultithreadedLevel ) // multi-threaded
                 {
                     for (Future<ArrayList<ImagePlus>> f : futures)
                     {
@@ -1393,7 +1395,7 @@ public class FeatureProvider
                 {
                     logger.info("Image features at level " + level +
                             " computed in [ms]: " +
-                            (System.currentTimeMillis() - start));
+                            (System.currentTimeMillis() - start) );
                 }
 
 
