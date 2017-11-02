@@ -104,11 +104,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** train classifier button */
 	private JButton trainButton = null;
 	private JCheckBox trainingRecomputeFeaturesCheckBox = null;
-	private JCheckBox trainingFromLabelImageCheckBox = null;
+	private JComboBox trainingDataSource = null;
 
 	private int X = 0, Y = 1, C = 2, Z = 3, T = 4;
 	private int[] XYZ = new int[]{ X, Y, Z};
-
 
 	/** toggle overlay button */
 	private JButton overlayButton = null;
@@ -251,6 +250,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String RESULT_IMAGE_DISK_SINGLE_TIFF = "Disk";
 	public static final String RESULT_IMAGE_RAM = "RAM";
 
+	public static final String TRAINING_DATA_TRACES = "Traces";
+	public static final String TRAINING_DATA_LABEL_IMAGE = "Label image";
+
 
 	private boolean isFirstTime = true;
 
@@ -311,7 +313,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		trainButton = new JButton("Train classifier");
 		trainButton.setToolTipText("Start training the classifier");
 		trainingRecomputeFeaturesCheckBox = new JCheckBox("ReComp", false);
-		trainingFromLabelImageCheckBox = new JCheckBox("LabelIm", false);
+		trainingDataSource = new JComboBox( new String[]{
+				TRAINING_DATA_TRACES, TRAINING_DATA_LABEL_IMAGE });
 
 		overlayButton = new JButton("Toggle overlay [r][p][u]");
 		overlayButton.setToolTipText("Toggle between current segmentation and original image");
@@ -1056,8 +1059,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			JPanel trainClassifierPanel = new JPanel();
 			trainClassifierPanel.add(trainButton);
+			trainClassifierPanel.add(trainingDataSource);
 			trainClassifierPanel.add(trainingRecomputeFeaturesCheckBox);
-			trainClassifierPanel.add(trainingFromLabelImageCheckBox);
 			trainingJPanel.add(trainClassifierPanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
@@ -2001,6 +2004,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	}
 
 
+	private FinalInterval previousLabelImageInterval = null;
 
 	/**
 	 * Run/stop the classifier training
@@ -2061,7 +2065,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 						FinalInterval labelImageInterval = null;
 
-						if ( trainingFromLabelImageCheckBox.isSelected() )
+						if ( trainingDataSource.getSelectedItem().equals(
+								TRAINING_DATA_LABEL_IMAGE ) )
 						{
 							if ( wekaSegmentation.getLabelImage() == null )
 							{
@@ -2070,15 +2075,38 @@ public class Weka_Deep_Segmentation implements PlugIn
 							}
 
 							labelImageInterval = getIntervalFromGUI();
+
 							if ( labelImageInterval == null ) return;
-							wekaSegmentation.setTrainingDataFromLabelImage(
-									labelImageInterval,
-									wekaSegmentation.getLabelImageInstancesPerPlaneAndClass());
+
+							if ( (previousLabelImageInterval == null)
+									|| trainingRecomputeFeaturesCheckBox.isSelected()
+									|| !labelImageInterval.equals( previousLabelImageInterval ))
+							{
+								previousLabelImageInterval = new FinalInterval( labelImageInterval );
+
+								wekaSegmentation.setTrainingDataFromLabelImage(
+										labelImageInterval,
+										wekaSegmentation.getLabelImageInstancesPerPlaneAndClass());
+							}
+							else
+							{
+								wekaSegmentation.setTrainingData(
+										wekaSegmentation.getTrainingDataCopy(
+												wekaSegmentation.trainingDataLabelImageAllFeatures ) );
+							}
+
+							if ( ! wekaSegmentation.hasTrainingData() ) {
+
+								logger.error( "Cannot train without training data." );
+								return;
+							}
 
 						}
-						else
+						else if ( trainingDataSource.getSelectedItem().equals(
+								TRAINING_DATA_TRACES ))
 						{
-							wekaSegmentation.updateExamples( trainingRecomputeFeaturesCheckBox.isSelected() );
+							wekaSegmentation.updateExamples(
+									trainingRecomputeFeaturesCheckBox.isSelected() );
 							wekaSegmentation.setTrainingDataFromExamples();
 						}
 
@@ -2609,7 +2637,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.settings.anisotropy, 2);
 		gd.addNumericField("Computation: Memory factor",
 				wekaSegmentation.memoryFactor, 1);
-		gd.addNumericField("Training: Label image: Num. instances per class",
+		gd.addNumericField("Training: Label image: Num. instances per class and plane",
 				wekaSegmentation.getLabelImageInstancesPerPlaneAndClass(), 0);
 
 		/*

@@ -229,6 +229,18 @@ public class WekaSegmentation {
 
 	private int labelImageInstancesPerPlaneAndClass = 100;
 
+	public boolean hasTrainingData()
+	{
+		if ( trainingData != null )
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	/**
 	 * flag to set the resampling of the training data in order to guarantee
 	 * the same number of instances per class (class balance)
@@ -483,10 +495,12 @@ public class WekaSegmentation {
 		if ( settings.featureList == null )
 			return;
 
-		for (Feature feature : settings.featureList)
+		for ( Feature feature : settings.featureList )
 		{
 			feature.isActive = true;
 		}
+
+
 	}
 
 	public void deactivateRarelyUsedFeatures()
@@ -1026,6 +1040,24 @@ public class WekaSegmentation {
 	}
 
 
+	public Instances getTrainingDataCopy( Instances instances )
+	{
+		if ( instances  ==  null)
+		{
+			return null;
+		}
+
+		Instances instancesCopy = getEmptyTrainingData();
+
+		for ( Instance instance : instances )
+		{
+			Instance instanceCopy = new DenseInstance( 1.0, instance.toDoubleArray() );
+			instancesCopy.add( instanceCopy );
+		}
+
+		return ( instancesCopy );
+	}
+
 	private Runnable setExamplesInstanceValues(ArrayList<Example> examples,
 											   int counter,
 											   int counterMax )
@@ -1430,6 +1462,8 @@ public class WekaSegmentation {
 	 * @return false if error
 	 */
 
+	public Instances trainingDataLabelImageAllFeatures = null;
+
 	/**
 	 * Questions:
 	 * - how many of the label image pixels did you use and why?
@@ -1442,6 +1476,7 @@ public class WekaSegmentation {
 			boolean isUpdateFeatureList)
 	{
 
+
 		logger.info( "Computing features for label image region...");
 		logInterval( interval );
 		logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
@@ -1453,11 +1488,11 @@ public class WekaSegmentation {
 		FeatureProvider featureProvider = new FeatureProvider();
 		featureProvider.setLogger( logger );
 		featureProvider.isLogging( true );
-		featureProvider.setInputImage(inputImage);
-		featureProvider.setWekaSegmentation(this);
+		featureProvider.setInputImage( inputImage );
+		featureProvider.setWekaSegmentation( this );
 		featureProvider.setInterval(interval);
-		featureProvider.setActiveChannels(settings.activeChannels);
-		featureProvider.computeFeatures(numThreads, maximumMultithreadedLevel, true);
+		featureProvider.setActiveChannels( settings.activeChannels );
+		featureProvider.computeFeatures( numThreads, maximumMultithreadedLevel, true );
 
 		logger.info ( "...computed features  in [ms]: " +
 				( System.currentTimeMillis() - startTime ) );
@@ -1551,7 +1586,7 @@ public class WekaSegmentation {
 								1.0,
 								featureValuesWithClassNum);
 
-						addInstanceToLabelImageTrainingData(denseInstance);
+						addInstanceToLabelImageTrainingData( denseInstance );
 
 						pixelsPerClass[iClass]++;
 
@@ -1583,9 +1618,14 @@ public class WekaSegmentation {
 			}
 		}
 
+		// save copy of the training data
+		trainingDataLabelImageAllFeatures = getTrainingDataCopy( trainingData );
+
 		return;
 
 	}
+
+
 
 	private static final void logLabelImageTrainingProgress( int z, FinalInterval interval, String currentTask )
 	{
@@ -1631,6 +1671,11 @@ public class WekaSegmentation {
 
 		return ( newTrainingData );
 
+	}
+
+	public void setTrainingData( Instances instances )
+	{
+		this.trainingData = instances;
 	}
 
 	public void setTrainingDataFromLabelImage(
@@ -1771,22 +1816,20 @@ public class WekaSegmentation {
 					"; Name: " + feature.name);
 		}
 
-		logger.info("Number of decision nodes in RF: "
-				+ numDecisionNodes +
-				";     debug info: total feature usage in RF: " + totalFeatureUsage);
-		logger.info(String.format("Random feature usage: numDecisionNodes " +
-				"/ numUsedFeatures = %.2f", randomFeatureUsage));
 		logger.info("Average number of decision nodes per tree: " +
 				avgRfTreeSize);
 		logger.info("Average tree depth: log2(numDecisionNodes) + 1 = " +
 				avgTreeDepth);
+		logger.info("Total number of decision nodes: " + numDecisionNodes +
+				" = Total feature usage = " + totalFeatureUsage);
+		logger.info("Number of active features: " + getNumActiveFeatures());
+		logger.info(String.format("Random feature usage: numDecisionNodes " +
+				"/ numActiveFeatures = %.2f", randomFeatureUsage));
 		logger.info("Minimum feature usage factor: " +
 				minFeatureUsageFactor);
 		logger.info("Minimum feature usage: " +
 				"ceil ( minFeatureUsageFactor * " +
 				"randomFeatureUsage ) = " + minFeatureUsage);
-
-
 	}
 
 
@@ -2145,6 +2188,8 @@ public class WekaSegmentation {
 			//ArrayList< UncertaintyRegion > uncertaintyRegions = new ArrayList<>();
 
 			long start = System.currentTimeMillis();
+
+			if ( isLogging ) logger.info("Classifying pixels...");
 
 			for (long[] zChunk : zChunks)
 			{

@@ -1248,6 +1248,10 @@ public class FeatureProvider
                     // the (anisotropic) binning
                     anisotropy /= 1.0 * binning[0] / binning[2];
 
+                    // Multi-threaded
+                    ExecutorService exe = Executors.newFixedThreadPool( numThreads );
+                    ArrayList<Future<ImagePlus>> futures = new ArrayList<>();
+
                     for (ImagePlus featureImage : featureImagesPreviousResolution)
                     {
                         if ( level == wekaSegmentation.settings.maxResolutionLevel )
@@ -1281,25 +1285,44 @@ public class FeatureProvider
                              */
 
                             int filterRadius = 2;
-                            featureImagesThisResolution.add( filter3d( featureImage,
-                                    filterRadius ) );
+                            futures.add( exe.submit(
+                                    filter3d( featureImage, filterRadius ) ) );
 
-                            //featureImagesThisResolution.add( bin(featureImage, binning, "AVERAGE").call());
+                            //featureImagesThisResolution.add(filter3d( featureImage,
+                            //       filterRadius ).call()   );
+
                         }
                         else
                         {
 
-                            if ( computeAllFeatures || wekaSegmentation.isFeatureOrChildrenNeeded(
+                            if ( computeAllFeatures ||
+                                    wekaSegmentation.isFeatureOrChildrenNeeded(
                                     binningTitle + "_" +
                                             featureImage.getTitle()) )
                             {
-                                featureImagesThisResolution.add(
-                                        bin( featureImage,
-                                                binning,
-                                                binningTitle, "AVERAGE").call() );
+
+                                futures.add( exe.submit(
+                                        bin( featureImage, binning,
+                                                binningTitle, "AVERAGE")
+                                        )
+                                );
+
+                                //featureImagesThisResolution.add(
+                                //        bin( featureImage,
+                                //                binning,
+                                //                binningTitle, "AVERAGE").call() );
                             }
                         }
                     }
+
+                    for ( Future<ImagePlus> f : futures )
+                    {
+                        // get feature images
+                        featureImagesThisResolution.add( f.get() );
+                    }
+                    futures = null;
+                    exe.shutdown();
+                    System.gc();
 
                 }
 
@@ -1359,7 +1382,7 @@ public class FeatureProvider
                         {
                             if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "He_" + featureImage.getTitle()) )
-                                futures.add(exe.submit(getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
+                                futures.add(exe.submit( getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
 
                             if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "St_" + featureImage.getTitle()) )
@@ -1391,6 +1414,7 @@ public class FeatureProvider
                 }
                 futures = null;
                 exe.shutdown();
+                System.gc();
 
 
                 for (ArrayList<ImagePlus> featureImages : featureImagesList )
@@ -1485,17 +1509,19 @@ public class FeatureProvider
 
     }
 
-    public ImagePlus filter3d(ImagePlus imp, int r)
+    public Callable<ImagePlus> filter3d(ImagePlus imp, int r)
     {
-        ImageStack result = ImageStack.create(imp.getWidth(), imp.getHeight(), imp.getNSlices(), 32);
-        StackProcessor stackProcessor = new StackProcessor( imp.getStack() );
-        int rz = r;
-        stackProcessor.filter3D( result, (float) r, (float) r, (float) rz,
-                0, result.size(), StackProcessor.FILTER_MEAN );
-        String title = imp.getTitle();
-        ImagePlus impResult = new ImagePlus("Mean"+r+"x"+r+"x"+r+"_" + title, result);
-        impResult.setCalibration( imp.getCalibration().copy() );
-        return ( impResult );
+        return () -> {
+            ImageStack result = ImageStack.create( imp.getWidth(), imp.getHeight(), imp.getNSlices(), 32 );
+            StackProcessor stackProcessor = new StackProcessor( imp.getStack() );
+            int rz = r;
+            stackProcessor.filter3D( result, ( float ) r, ( float ) r, ( float ) rz,
+                    0, result.size(), StackProcessor.FILTER_MEAN );
+            String title = imp.getTitle();
+            ImagePlus impResult = new ImagePlus( "Mean" + r + "x" + r + "x" + r + "_" + title, result );
+            impResult.setCalibration( imp.getCalibration().copy() );
+            return ( impResult );
+        };
     }
 
     public ImagePlus getStackCT (ImagePlus imp, int c, int t)

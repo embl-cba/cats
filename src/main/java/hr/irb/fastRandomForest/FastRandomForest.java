@@ -390,8 +390,6 @@ public class FastRandomForest
     m_computeImportances = computeImportances;
   }
 
-  
-
   /**
    * Gets the out of bag error that was calculated as the classifier was built.
    *
