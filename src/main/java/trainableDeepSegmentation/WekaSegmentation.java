@@ -532,7 +532,7 @@ public class WekaSegmentation {
 
 		for (Example example : examples)
 		{
-			classNums.add(example.classNum);
+			classNums.add( example.classNum );
 		}
 		return classNums.size();
 	}
@@ -959,13 +959,19 @@ public class WekaSegmentation {
 	 *
 	 * @return set of instances (feature vectors in Weka format)
 	 */
-	public void setTrainingDataFromExamples( )
+	public boolean setTrainingDataFromExamples( )
 	{
 		logger.info("Creating training data... ");
 		final long start = System.currentTimeMillis();
 
 		setAllFeaturesActive();
 		trainingData = getEmptyTrainingData();
+
+		if ( getNumClasses() != getNumClassesInExamples() )
+		{
+			logger.error("Cannot train: Not all classes have labels yet.");
+			return false;
+		}
 
 		// add and report training values
 		int[] numExamplesPerClass = new int[getNumClassesInExamples()];
@@ -985,6 +991,7 @@ public class WekaSegmentation {
 			numExamplePixelsPerClass[example.classNum] += example.instanceValuesArray.size();
 		}
 
+
 		logger.info("## Annotation information: ");
 		for (int iClass = 0; iClass < getNumClassesInExamples(); iClass++)
 		{
@@ -993,15 +1000,19 @@ public class WekaSegmentation {
 					+ numExamplePixelsPerClass[iClass] + " pixels");
 		}
 
-		if (trainingData.numInstances() == 0)
-			return;
+		if ( trainingData.numInstances() == 0 )
+		{
+			logger.error("Cannot train: No training instances available.");
+			return false;
+		}
 
 		logger.info("Memory usage [MB]: " + IJ.currentMemory() / 1000000L + "/" + IJ.maxMemory() / 1000000L);
 
 		final long end = System.currentTimeMillis();
 		logger.info("...created training data from ROIs in " + (end - start) + " ms");
 
-		this.trainingData = trainingData;
+		return true;
+
 	}
 
 

@@ -11,6 +11,7 @@ import ij.measure.Calibration;
 import ij.plugin.MacroInstaller;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.Recorder;
+import ij.plugin.frame.RoiManager;
 import ij.process.*;
 
 import java.awt.*;
@@ -122,6 +123,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private JComboBox resultImageComboBox = null;
 
 	private JButton exportResultImageButton = null;
+
+	private JButton reviewLabelsButton = null;
+
+	private JComboBox reviewLabelsClassComboBox = null;
 
 	private JButton printProjectInfoButton = null;
 
@@ -247,6 +252,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** boolean flag set to true while training */
 	private boolean trainingFlag = false;
 
+
+	static final String REVIEW_START = "Review labels";
+	static final String REVIEW_END = "Done";
+
+	private boolean reviewLabelsFlag = false;
+
 	public static final String RESULT_IMAGE_DISK_SINGLE_TIFF = "Disk";
 	public static final String RESULT_IMAGE_RAM = "RAM";
 
@@ -343,6 +354,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 		exportResultImageButton = new JButton("Export results");
 		exportResultImageButton.setToolTipText("Export results");
 		exportResultImageButton.setEnabled(false);
+
+		reviewLabelsClassComboBox = new JComboBox( new String[]{ "1" ,
+				"2"} );
+
+		reviewLabelsButton = new JButton(REVIEW_START);
+		reviewLabelsButton.setEnabled(true);
 
 		probabilityButton = new JButton("Get probability");
 		probabilityButton.setToolTipText("Generate current probability maps");
@@ -457,6 +474,24 @@ public class Weka_Deep_Segmentation implements PlugIn
 								wekaSegmentation.getResultImage(),
 								wekaSegmentation.getClassNames() );
 					}
+					else if(e.getSource() == reviewLabelsButton )
+					{
+						if ( reviewLabelsButton.getText().equals( REVIEW_START ) )
+						{
+							reviewLabelsFlag = true;
+							reviewLabelsButton.setText( REVIEW_END );
+							win.updateButtonsEnabling();
+							reviewLabels( reviewLabelsClassComboBox.getSelectedIndex() );
+						}
+						else
+						{
+							RoiManager.getInstance().close();
+							reviewLabelsFlag = false;
+							reviewLabelsButton.setText( REVIEW_START );
+							win.updateButtonsEnabling();
+						}
+					}
+
 					else if( e.getSource() == probabilityButton )
 					{
 						// Macro recording
@@ -601,6 +636,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 			}).start();
 		}
 	};
+
+	private void reviewLabels( int classNum )
+	{
+		LabelManager labelManager = new LabelManager( displayImage );
+		labelManager.setExamples( wekaSegmentation.getExamples() );
+		labelManager.showExamplesInRoiManager( classNum );
+	};
+
 
 	/**
 	 * Custom canvas to deal with zooming an panning
@@ -798,6 +841,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			//setResultButton.addActionListener(listener);
 			assignResultImageButton.addActionListener(listener);
 			exportResultImageButton.addActionListener(listener);
+			reviewLabelsButton.addActionListener( listener );
 			probabilityButton.addActionListener(listener);
 			plotButton.addActionListener(listener);
 			printProjectInfoButton.addActionListener(listener);
@@ -1087,8 +1131,16 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingJPanel.add(assignResultImagePanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
+			JPanel reviewLabelsPanel = new JPanel();
+			reviewLabelsPanel.add( reviewLabelsButton );
+			reviewLabelsPanel.add( reviewLabelsClassComboBox );
+			trainingJPanel.add(reviewLabelsPanel, trainingConstraints);
+			trainingConstraints.gridy++;
+
+
 			trainingJPanel.add( exportResultImageButton, trainingConstraints );
 			trainingConstraints.gridy++;
+
 
 			//trainingJPanel.add(probabilityButton, trainingConstraints);
 			//trainingConstraints.gridy++;
@@ -1257,6 +1309,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					//setResultButton.removeActionListener(listener);
 					assignResultImageButton.removeActionListener(listener);
 					exportResultImageButton.removeActionListener( listener );
+					reviewLabelsButton.removeActionListener( listener );
 					probabilityButton.removeActionListener(listener);
 					plotButton.removeActionListener(listener);
 					//newImageButton.removeActionListener(listener);
@@ -1521,8 +1574,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 			overlayButton.setEnabled(s);
 			//getResultButton.setEnabled(s);
 			//setResultButton.setEnabled(s);
-			assignResultImageButton.setEnabled(s);
+			assignResultImageButton.setEnabled( s );
 			exportResultImageButton.setEnabled( s );
+			reviewLabelsButton.setEnabled( s );
 			probabilityButton.setEnabled(s);
 			probabilityButton.setEnabled(s);
 			printProjectInfoButton.setEnabled(s);
@@ -1553,14 +1607,21 @@ public class Weka_Deep_Segmentation implements PlugIn
 			if( trainingFlag )
 			{
 				setButtonsEnabled( false );
-				trainButton.setEnabled(true);
+				trainButton.setEnabled( true );
+			}
+			else if ( reviewLabelsFlag )
+			{
+				setButtonsEnabled( false );
+				reviewLabelsButton.setEnabled( true );
 			}
 			else // If the training is not going on
 			{
 				final boolean classifierExists =  null != wekaSegmentation.getClassifier();
 
 				trainButton.setEnabled( classifierExists );
-				applyButton.setEnabled( win.trainingComplete );
+				applyButton.setEnabled( win.trainingComplete
+										&& wekaSegmentation.hasResultImage() );
+
 				postProcessButton.setEnabled( win.trainingComplete );
 				final boolean resultExists = null != wekaSegmentation.getResultImage();
 
@@ -1568,7 +1629,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				//getResultButton.setEnabled(win.trainingComplete);
 				//setResultButton.setEnabled( true) ;
 				assignResultImageButton.setEnabled( true );
-				exportResultImageButton.setEnabled( wekaSegmentation.getResultImage() != null );
+				exportResultImageButton.setEnabled( wekaSegmentation.hasResultImage());
+				reviewLabelsButton.setEnabled( true );
 
 				plotButton.setEnabled( win.trainingComplete );
 				probabilityButton.setEnabled( win.trainingComplete );
@@ -2015,10 +2077,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 	void runStopTraining( final String command )
 	{
 		// If the training is not going on, we start it
-		if (command.equals("Train classifier"))
+		if ( command.equals("Train classifier") )
 		{
-
-
 
 			trainingFlag = true;
 			trainButton.setText("STOP");
@@ -2097,7 +2157,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 							}
 
 							if ( ! wekaSegmentation.hasTrainingData() ) {
-
 								logger.error( "Cannot train without training data." );
 								return;
 							}
@@ -2108,7 +2167,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 						{
 							wekaSegmentation.updateExamples(
 									trainingRecomputeFeaturesCheckBox.isSelected() );
-							wekaSegmentation.setTrainingDataFromExamples();
+
+							if ( ! wekaSegmentation.setTrainingDataFromExamples() )
+							{
+								return;
+							}
+
 						}
 
 						if( wekaSegmentation.trainClassifier() )
