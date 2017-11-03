@@ -41,6 +41,8 @@ import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
 
+import static trainableDeepSegmentation.ImageUtils.*;
+
 
 /**
  *
@@ -278,11 +280,11 @@ public class WekaSegmentation {
 
 	private void setInputImageDimensions()
 	{
-		imgDims[ ImageUtils.X ] = inputImage.getWidth();
-		imgDims[ ImageUtils.Y ] = inputImage.getHeight();
-		imgDims[ ImageUtils.C ] = inputImage.getNChannels();
-		imgDims[ ImageUtils.Z ] = inputImage.getNSlices();
-		imgDims[ ImageUtils.T ] = inputImage.getNFrames();
+		imgDims[ X ] = inputImage.getWidth();
+		imgDims[ Y ] = inputImage.getHeight();
+		imgDims[ C ] = inputImage.getNChannels();
+		imgDims[ Z ] = inputImage.getNSlices();
+		imgDims[ T ] = inputImage.getNFrames();
 	}
 
 	public long[] getInputImageDimensions()
@@ -1213,7 +1215,7 @@ public class WekaSegmentation {
 		// remove borders, which go into the memory
 		// considerations, but should not be explicitely
 		// asked for
-		maxNumRegionWidth -= 2 * getFeatureBorderSizes()[ ImageUtils.X];
+		maxNumRegionWidth -= 2 * getFeatureBorderSizes()[ X];
 		return maxNumRegionWidth;
 	}
 
@@ -1304,32 +1306,32 @@ public class WekaSegmentation {
 		long[] min = new long[5];
 		long[] max = new long[5];
 
-		min[ ImageUtils.X] = (int) rectangle.getMinX();
-		max[ ImageUtils.X] = (int) rectangle.getMaxX();
+		min[ X] = (int) rectangle.getMinX();
+		max[ X] = (int) rectangle.getMaxX();
 
-		min[ ImageUtils.Y] = (int) rectangle.getMinY();
-		max[ ImageUtils.Y] = (int) rectangle.getMaxY();
+		min[ Y] = (int) rectangle.getMinY();
+		max[ Y] = (int) rectangle.getMaxY();
 
-		min[ ImageUtils.Z] = examples.get(0).z;
-		max[ ImageUtils.Z] = examples.get(0).z;
+		min[ Z] = examples.get(0).z;
+		max[ Z] = examples.get(0).z;
 
-		min[ ImageUtils.T] = examples.get(0).t;
-		max[ ImageUtils.T] = examples.get(0).t;
+		min[ T] = examples.get(0).t;
+		max[ T] = examples.get(0).t;
 
 		for ( Example example : examples )
 		{
 			rectangle = getExampleRectangleBounds( example );
 
-			min[ ImageUtils.X] = (int) rectangle.getMinX() < min[ ImageUtils.X] ? (int) rectangle.getMinX() : min[ ImageUtils.X];
-			max[ ImageUtils.X] = (int) rectangle.getMaxX() > max[ ImageUtils.X] ? (int) rectangle.getMaxX() : max[ ImageUtils.X];
+			min[ X] = (int) rectangle.getMinX() < min[ X] ? (int) rectangle.getMinX() : min[ X];
+			max[ X] = (int) rectangle.getMaxX() > max[ X] ? (int) rectangle.getMaxX() : max[ X];
 
 
-			min[ ImageUtils.Y] = (int) rectangle.getMinY() < min[ ImageUtils.Y] ? (int) rectangle.getMinY() : min[
-					ImageUtils.Y];
-			max[ ImageUtils.Y] = (int) rectangle.getMaxY() > max[ ImageUtils.Y] ? (int) rectangle.getMaxY() : max[ ImageUtils.Y];
+			min[ Y] = (int) rectangle.getMinY() < min[ Y] ? (int) rectangle.getMinY() : min[
+					Y];
+			max[ Y] = (int) rectangle.getMaxY() > max[ Y] ? (int) rectangle.getMaxY() : max[ Y];
 
-			min[ ImageUtils.Z] = example.z < min[ ImageUtils.Z] ? example.z : min[ ImageUtils.Z];
-			max[ ImageUtils.Z] = example.z > max[ ImageUtils.Z] ? example.z : max[ ImageUtils.Z];
+			min[ Z] = example.z < min[ Z] ? example.z : min[ Z];
+			max[ Z] = example.z > max[ Z] ? example.z : max[ Z];
 		}
 
 
@@ -1362,16 +1364,16 @@ public class WekaSegmentation {
 		// - check whether this is too conservative
 		int[] borderSize = new int[5];
 
-		borderSize[ ImageUtils.X] = borderSize[ ImageUtils.Y] = getFeatureVoxelSizeAtMaximumScale();
+		borderSize[ X] = borderSize[ Y] = getFeatureVoxelSizeAtMaximumScale();
 
 		// Z: deal with 2-D case and anisotropy
-		if (imgDims[ ImageUtils.Z] == 1)
+		if (imgDims[ Z] == 1)
 		{
-			borderSize[ ImageUtils.Z] = 0;
+			borderSize[ Z] = 0;
 		}
 		else
 		{
-			borderSize[ ImageUtils.Z] = (int) (1.0 * getFeatureVoxelSizeAtMaximumScale() / settings.anisotropy);
+			borderSize[ Z] = (int) (1.0 * getFeatureVoxelSizeAtMaximumScale() / settings.anisotropy);
 		}
 
 		return (borderSize);
@@ -1525,7 +1527,7 @@ public class WekaSegmentation {
 		double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
 
 		// Collect instances per plane
-		for ( int z = (int) interval.min( ImageUtils.Z ); z <= interval.max( ImageUtils.Z ); ++z)
+		for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
 		{
 
 			logLabelImageTrainingProgress( z, interval,
@@ -1541,9 +1543,9 @@ public class WekaSegmentation {
 
 			ImageProcessor ip = labelImage.getStack().getProcessor(z + 1);
 
-			for ( int y = (int) interval.min( ImageUtils.Y); y <= interval.max( ImageUtils.Y); ++y)
+			for ( int y = (int) interval.min( Y); y <= interval.max( Y); ++y)
 			{
-				for ( int x = (int) interval.min( ImageUtils.X); x <= interval.max( ImageUtils.X); ++x)
+				for ( int x = (int) interval.min( X); x <= interval.max( X); ++x)
 				{
 					int classIndex = ip.get(x, y);
 					classCoordinates[classIndex].add(new Point3D(x, y, z));
@@ -1631,8 +1633,8 @@ public class WekaSegmentation {
 	{
 		logger.progress("Z-plane (current, min, max): ",
 				"" + z
-						+ ", " + interval.min( ImageUtils.Z )
-						+ ", " + interval.max( ImageUtils.Z )
+						+ ", " + interval.min( Z )
+						+ ", " + interval.max( Z )
 						+ "; " + currentTask);
 
 	}
@@ -1838,9 +1840,9 @@ public class WekaSegmentation {
 	{
 		logger.info("Interval: ");
 
-		for ( int d : ImageUtils.XYZT )
+		for ( int d : XYZT )
 		{
-			logger.info( ImageUtils.dimNames[d] + ": " + interval.min(d) + ", " + interval.max(d));
+			logger.info( dimNames[d] + ": " + interval.min(d) + ", " + interval.max(d));
 		}
 
 	}
@@ -1856,7 +1858,7 @@ public class WekaSegmentation {
 		long[] imgDims = getInputImageDimensions();
 		long[] tileSizes = new long[5];
 
-		for (int d : ImageUtils.XYZ)
+		for (int d : XYZ)
 		{
 			if ( interval.dimension(d) <= getMaximalRegionSize() )
 			{
@@ -1875,33 +1877,39 @@ public class WekaSegmentation {
 			tileSizes[d] = Math.min( tileSizes[d], imgDims[d] );
 		}
 
-		tileSizes[ ImageUtils.T] = 1;
+		tileSizes[ T] = 1;
 
 		logger.info("Tile sizes [x,y,z]: "
-				+ tileSizes[ ImageUtils.X]
-				+ ", " + tileSizes[ ImageUtils.Y]
-				+ ", " + tileSizes[ ImageUtils.Z]);
+				+ tileSizes[ X]
+				+ ", " + tileSizes[ Y]
+				+ ", " + tileSizes[ Z]);
 
 
-		for ( int t = (int) interval.min( ImageUtils.T); t <= interval.max( ImageUtils.T); t += 1)
+		for ( int t = (int) interval.min( T); t <= interval.max( T); t += 1)
 		{
-			for ( int z = (int) interval.min( ImageUtils.Z); z <= interval.max( ImageUtils.Z); z += tileSizes[ ImageUtils.Z])
+			for ( int z = (int) interval.min( Z); z <= interval.max( Z); z += tileSizes[ Z])
 			{
-				for ( int y = (int) interval.min( ImageUtils.Y); y <= interval.max( ImageUtils.Y); y += tileSizes[ ImageUtils.Y])
+				for ( int y = (int) interval.min( Y); y <= interval.max( Y); y += tileSizes[ Y])
 				{
-					for ( int x = (int) interval.min( ImageUtils.X); x <= interval.max( ImageUtils.X); x += tileSizes[ ImageUtils.X])
+					for ( int x = (int) interval.min( X); x <= interval.max( X); x += tileSizes[ X])
 					{
 						long[] min = new long[5];
-						min[ ImageUtils.X] = x;
-						min[ ImageUtils.Y] = y;
-						min[ ImageUtils.Z] = z;
-						min[ ImageUtils.T] = t;
+						min[ X ] = x;
+						min[ Y ] = y;
+						min[ Z ] = z;
+						min[ T ] = t;
 
 						long[] max = new long[5];
-						max[ ImageUtils.X] = x + tileSizes[ ImageUtils.X] - 1;
-						max[ ImageUtils.Y] = y + tileSizes[ ImageUtils.Y] - 1;
-						max[ ImageUtils.Z] = z + tileSizes[ ImageUtils.Z] - 1;
-						max[ ImageUtils.T] = t + tileSizes[ ImageUtils.T] - 1;
+						max[ X ] = x + tileSizes[ X ] - 1;
+						max[ Y ] = y + tileSizes[ Y ] - 1;
+						max[ Z ] = z + tileSizes[ Z ] - 1;
+						max[ T ] = t + tileSizes[ T ] - 1;
+
+						// make sure to stay within image bounds
+						for ( int d : XYZT )
+						{
+							max[ d ] = Math.min( interval.max( d ), max[ d ] );
+						}
 
 						tiles.add( new FinalInterval(min, max) );
 
@@ -2239,29 +2247,29 @@ public class WekaSegmentation {
 
 		int sliceChunk;
 
-		if ( tileInterval.dimension( ImageUtils.Z ) < numThreads )
+		if ( tileInterval.dimension( Z ) < numThreads )
 		{
 			sliceChunk = 1;
 		}
 		else
 		{
-			sliceChunk = (int) Math.ceil ( 1.0 * tileInterval.dimension( ImageUtils.Z ) / numThreads );
+			sliceChunk = (int) Math.ceil ( 1.0 * tileInterval.dimension( Z ) / numThreads );
 		}
 
 		new ArrayList<>();
 
-		for ( long zSlice = tileInterval.min( ImageUtils.Z );
-			  zSlice <= tileInterval.max( ImageUtils.Z );
+		for ( long zSlice = tileInterval.min( Z );
+			  zSlice <= tileInterval.max( Z );
 			  zSlice += sliceChunk )
 		{
 
 			long[] zChunk = new long[2];
 
-			if ( zSlice + sliceChunk >= tileInterval.max( ImageUtils.Z ) )
+			if ( zSlice + sliceChunk >= tileInterval.max( Z ) )
 			{
 				// last chunk can be smaller
 				zChunk[0] = zSlice;
-				zChunk[1] = tileInterval.max( ImageUtils.Z );
+				zChunk[1] = tileInterval.max( Z );
 				zChunks.add( zChunk );
 				break;
 			}
@@ -2395,7 +2403,7 @@ public class WekaSegmentation {
 
 			// plane-wise array to hold the classifications results
 			final byte[][] classificationResult = new byte[ (int) (zMax - zMin + 1) ]
-					[ (int) interval.dimension( ImageUtils.X ) * (int) interval.dimension( ImageUtils.Y) ];
+					[ (int) interval.dimension( X ) * (int) interval.dimension( Y) ];
 
 			// reusable array to be filled for each instance
 			// +1 for (unused) class value
@@ -2427,9 +2435,9 @@ public class WekaSegmentation {
 
 					int iInstanceThisSlice = 0;
 
-					for ( long y = interval.min( ImageUtils.Y ); y <= interval.max( ImageUtils.Y ); ++y )
+					for ( long y = interval.min( Y ); y <= interval.max( Y ); ++y )
 					{
-						for ( long x = interval.min( ImageUtils.X ); x <= interval.max( ImageUtils.X ); ++x )
+						for ( long x = interval.min( X ); x <= interval.max( X ); ++x )
 						{
 							// set reusable instance values
 							featureValues = featureProvider.getValuesFromFeatureSlice(

@@ -190,12 +190,8 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
       // make sure all trees have been trained before proceeding
       for (int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++) {
-        long current = System.currentTimeMillis();
         futures.get(treeIdx).get();
-        logger.progress( "Built tree",
-                "" + (treeIdx + 1) + "/" + m_Classifiers.length
-                        + "; <time/tree> [s]: " + ( current - start ) / ( 1000 * (treeIdx+1) )
-        );
+        logger.progress( "Built tree", null, start, treeIdx+1, m_Classifiers.length); // Tischi
       }
 
       // calc OOB error?

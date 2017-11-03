@@ -64,9 +64,9 @@ public class ResultImageMemory implements ResultImage {
 
         int classOffset = classId * CLASS_LUT_WIDTH + 1;
 
-        int n = result.getStackIndex( 0, (int)z+1, (int) t+1 );
+        int n = result.getStackIndex( 1, (int) z+1, (int) t+1 );
         result.getStack().getProcessor( n ).set(
-                (int)x, (int)y,
+                (int) x, (int) y,
                 (byte) ( classOffset + lutCertainty ));
     }
 
