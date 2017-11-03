@@ -1382,15 +1382,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 			final int frame = displayImage.getT();
 			final int slice = displayImage.getZ();
 
-			for(int iClass = 0; iClass < wekaSegmentation.getNumClasses(); iClass++)
+			int numClasses = wekaSegmentation.getNumClasses();
+			for(int iClass = 0; iClass < numClasses; iClass++)
 			{
-				roiOverlay[iClass].setColor(colors[iClass]);
+				roiOverlay[iClass].setColor( colors[iClass] );
 
-				//roisThisClass = ;
-				//final ArrayList< Roi > rois = new ArrayList<Roi>();
-				//for (Roi r : roisThisClass ) rois.add( r );
 				roiOverlay[iClass].setRoi(
-						(ArrayList<Roi>) wekaSegmentation.getExampleRois(
+						wekaSegmentation.getExampleRois(
 								iClass, slice-1, frame-1));
 			}
 
@@ -1410,8 +1408,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 				exampleList[i].removeAll();
 				exampleList[i].addActionListener(listener);
 				exampleList[i].addItemListener(itemListener);
-				for(int j = 0; j < wekaSegmentation.getExampleRois(i, slice-1, frame-1).size(); j++)
-					exampleList[i].add("trace " + j + " (Z=" + slice+" T="+frame+")");
+				int numExamples = wekaSegmentation.getExampleRois(i, slice-1, frame-1).size();
+				for(int j = 0; j < numExamples; j++)
+				{
+					exampleList[ i ].add( "trace " + j + " (Z=" + slice + " T=" + frame + ")" );
+				}
 			}
 
 		}
@@ -1982,14 +1983,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 					return;
 
 				// delete item from the list of ROIs of that class and slice
-				wekaSegmentation.deleteExample(
+				wekaSegmentation.removeExample(
 						iClass,
 						displayImage.getZ()-1,
 						displayImage.getT()-1,
 						index);
 
 				//delete item from GUI list
-				exampleList[iClass].remove(index);
+				exampleList[iClass].remove( index );
 
 				// Record
 				String[] arg = new String[] {
@@ -1999,8 +2000,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				record(DELETE_TRACE, arg);
 			}
 
-		win.drawExamples();
 		win.updateExampleLists();
+		win.drawExamples();
 	}
 
 

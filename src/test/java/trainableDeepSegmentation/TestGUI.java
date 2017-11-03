@@ -84,23 +84,23 @@ public class TestGUI {
 		*/
 
 
-		/*
+
 		DataStreamingTools dst = new DataStreamingTools();
 		dst.openFromDirectory(
-				"/Users/tischi/Desktop/Ashna-Seg-Test/ashna-tmp/imaris-input-raw/",
+				"/Volumes/almf/tischer/Processed_25_8bit_3-3_Imaris/",
 				"None",
-				".*",
-				"Data",
+				"raw--C.*",
+				"ResolutionLevel 0/Data",
 				null,
 				3,
 				true,
 				false);
-				*/
+
 
 		//IJ.open("/Users/tischi/Desktop/mitosis.tif");
 		//IJ.open( "/Users/tischi/Desktop/mri-stack-big-2d-movie.tif" );
 
-		IJ.open( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train-input/train-input-clahe.tif" );
+		//IJ.open( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train-input/train-input-clahe.tif" );
 		//IJ.open( "/Users/tischi/Desktop/Nils.tif" );
 
 		//IJ.open("/Users/tischi/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");

@@ -365,7 +365,7 @@ public class WekaSegmentation {
 	 * @param nSlice   the slice number
 	 * @param index    the index of the example list to remove
 	 */
-	public void deleteExample(int classNum, int z, int t, int index)
+	public void removeExample( int classNum, int z, int t, int index )
 	{
 		int i = 0;
 		for (int iExample = 0; iExample < examples.size(); iExample++)
@@ -375,9 +375,9 @@ public class WekaSegmentation {
 					&& (example.t == t)
 					&& (example.classNum == classNum))
 			{
-				if (index == i++)
+				if ( index == i++ ) // i'th example for this z,t,class
 				{
-					examples.remove(iExample);
+					examples.remove( iExample );
 					return;
 				}
 			}
