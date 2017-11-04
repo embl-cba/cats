@@ -1,4 +1,6 @@
-package trainableDeepSegmentation;
+package trainableDeepSegmentation.examples;
+
+import trainableDeepSegmentation.Feature;
 
 import java.io.Serializable;
 import java.util.ArrayList;

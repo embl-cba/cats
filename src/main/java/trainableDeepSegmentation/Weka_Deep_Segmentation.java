@@ -39,13 +39,17 @@ import java.util.zip.GZIPOutputStream;
 import javax.swing.*;
 
 import net.imglib2.FinalInterval;
+import trainableDeepSegmentation.examples.Example;
+import trainableDeepSegmentation.examples.ExamplesUtils;
 import trainableDeepSegmentation.labels.LabelManager;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageDisk;
 import trainableDeepSegmentation.results.ResultImageGUI;
 import trainableDeepSegmentation.results.ResultImageMemory;
+import trainableDeepSegmentation.training.InstancesCreator;
 import trainableDeepSegmentation.training.TrainingData;
 import weka.classifiers.AbstractClassifier;
+import weka.classifiers.Classifier;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.gui.GUIChooserApp;
@@ -196,7 +200,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** name of the macro method to delete the current trace */
 	public static final String DELETE_TRACE = "deleteTrace";
 	/** name of the macro method to train the current classifier */
-	public static final String TRAIN_CLASSIFIER = "trainClassifier";
+	public static final String TRAIN_CLASSIFIER = "createFastRandomForest";
 	/** name of the macro method to toggle the overlay image */
 	public static final String TOGGLE_OVERLAY = "toggleOverlay";
 	/** name of the macro method to get the binary result */
@@ -438,7 +442,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				{
 					if( e.getSource() == trainButton )
 					{
-						runStopTraining( command );
+						runStopTrainClassifier( command );
 					}
 					else if(e.getSource() == overlayButton){
 						// Macro recording
@@ -1946,7 +1950,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		record(ADD_TRACE, arg);
 
 		String numLabelsPerClassString = "";
-		int[] numLabelsPerClass = wekaSegmentation.getNumExamplesPerClass();
+		int[] numLabelsPerClass = ExamplesUtils.getNumExamplesPerClass( wekaSegmentation );
 		for ( int i = 0 ; i <  numLabelsPerClass.length; i++ )
 		{
 			numLabelsPerClassString += " "+(i+1)+":"+numLabelsPerClass[i];
@@ -2075,113 +2079,74 @@ public class Weka_Deep_Segmentation implements PlugIn
 		win.drawExamples();
 	}
 
+	private String experiment = "abc";
 
 	private FinalInterval previousLabelImageInterval = null;
 
 	void updateTrainingData()
 	{
-		// Thread to run the training
 		Thread newTask = new Thread() {
-
 			public void run()
 			{
-				// Wait for the old task to finish
-				if ( null != oldTask )
+				Instances instances = null;
+
+				if ( wekaSegmentation.hasLabelImage() )
 				{
-					try
+					FinalInterval labelImageInterval = getIntervalFromGUI();
+
+					if ( labelImageInterval == null ) return;
+
+					// check if there really is something to be updated..
+					if ( ( previousLabelImageInterval == null )
+							|| trainingRecomputeFeaturesCheckBox.isSelected()
+							|| ! labelImageInterval.equals( previousLabelImageInterval ) )
 					{
-						IJ.log( "Waiting for old task to finish..." );
-						oldTask.join();
-					} catch ( InterruptedException ie )
-					{ /*IJ.log("interrupted");*/ }
-				}
+						// ..seems like there is => do it!
+						instances = wekaSegmentation.getInstancesFromLabelImage(
+								experiment,
+								labelImageInterval,
+								wekaSegmentation.getNumLabelImageInstancesPerPlaneAndClass() );
 
-				try
-				{
-					// Macro recording
-					String[] arg = new String[]{};
-					record( TRAIN_CLASSIFIER, arg );
-
-					wekaSegmentation.setAllFeaturesActive();
-
-					FinalInterval labelImageInterval = null;
-
-					if ( trainingDataSource.getSelectedItem().equals(
-							TRAINING_DATA_LABEL_IMAGE ) )
-					{
-						if ( wekaSegmentation.getLabelImage() == null )
-						{
-							logger.error( "Please first [Load label image]." );
-							return;
-						}
-
-						labelImageInterval = getIntervalFromGUI();
-
-						if ( labelImageInterval == null ) return;
-
-						if ( ( previousLabelImageInterval == null )
-								|| trainingRecomputeFeaturesCheckBox.isSelected()
-								|| !labelImageInterval.equals( previousLabelImageInterval ) )
-						{
-							previousLabelImageInterval = new FinalInterval( labelImageInterval );
-
-							wekaSegmentation.setTrainingDataFromLabelImage(
-									labelImageInterval,
-									wekaSegmentation.getLabelImageInstancesPerPlaneAndClass() );
-						}
-						else
-						{
-							wekaSegmentation.setTrainingData(
-									wekaSegmentation.getTrainingDataCopy(
-											wekaSegmentation.trainingDataLabelImageAllFeatures ) );
-						}
-
-						if ( !wekaSegmentation.hasTrainingData() )
-						{
-							logger.error( "Cannot train without training data." );
-							return;
-						}
+						previousLabelImageInterval = new FinalInterval( labelImageInterval );
 
 					}
-					else if ( trainingDataSource.getSelectedItem().equals(
-							TRAINING_DATA_TRACES ) )
+					else
 					{
-
-						// update the training data
-						// which might have changed due to
-						// new labels added by the user
-
-						wekaSegmentation.updateExamples(
-								trainingRecomputeFeaturesCheckBox.isSelected() );
-
-						TrainingData trainingData = wekaSegmentation.getTrainingDataFromExamples();
-
-						wekaSegmentation.setTrainingDataFromExamples()
-						if ( !wekaSegmentation.setTrainingDataFromExamples() )
-						{
-							return;
-						}
-
+						return;
 					}
 
+				}
+				else
+				{
+
+					// compute training data for new labels
+					wekaSegmentation.updateExamples( trainingRecomputeFeaturesCheckBox.isSelected() );
+
+					instances = InstancesCreator.createInstancesFromExamples(
+							wekaSegmentation.getExamples(),
+							experiment,
+							wekaSegmentation.getAllFeatureNames(),
+							wekaSegmentation.getClassNames() );
 
 				}
+
+				wekaSegmentation.getInstancesManager().setInstances( instances );
+
 			}
-		}
+		};
 	}
 
+	JComboBox trainingDataSets = new JComboBox( new String[] { experiment } );
 
 	/**
 	 * Run/stop the classifier training
 	 *
 	 * @param command current text of the training button ("Train classifier" or "STOP")
 	 */
-	void runStopTraining( final String command )
+	void runStopTrainClassifier( final String command )
 	{
-		// If the training is not going on, we start it
 		if ( command.equals("Train classifier") )
 		{
-
 			trainingFlag = true;
 			trainButton.setText("STOP");
 			final Thread oldTask = trainingTask;
@@ -2219,79 +2184,25 @@ public class Weka_Deep_Segmentation implements PlugIn
 						catch (InterruptedException ie)	{ /*IJ.log("interrupted");*/ }
 					}
 
+					win.trainingComplete = false;
+
 					try{
-						// Macro recording
-						String[] arg = new String[] {};
-						record(TRAIN_CLASSIFIER, arg);
 
-						wekaSegmentation.setAllFeaturesActive();
+						Instances instances = wekaSegmentation.
+								getInstancesManager().getInstances(
+										(String) trainingDataSets.getSelectedItem() );
 
-						FinalInterval labelImageInterval = null;
+						if ( instances == null ||  this.isInterrupted() ) return;
 
-						if ( trainingDataSource.getSelectedItem().equals(
-								TRAINING_DATA_LABEL_IMAGE ) )
-						{
-							if ( wekaSegmentation.getLabelImage() == null )
-							{
-								logger.error("Please first [Load label image]." );
-								return;
-							}
+						Classifier classifier = wekaSegmentation.createFastRandomForest(
+								instances );
 
-							labelImageInterval = getIntervalFromGUI();
+						if ( classifier == null ||  this.isInterrupted() ) return;
 
-							if ( labelImageInterval == null ) return;
+						// if wished for, train a second time
+						// only with important features
+						
 
-							if ( (previousLabelImageInterval == null)
-									|| trainingRecomputeFeaturesCheckBox.isSelected()
-									|| !labelImageInterval.equals( previousLabelImageInterval ))
-							{
-								previousLabelImageInterval = new FinalInterval( labelImageInterval );
-
-								wekaSegmentation.setTrainingDataFromLabelImage(
-										labelImageInterval,
-										wekaSegmentation.getLabelImageInstancesPerPlaneAndClass());
-							}
-							else
-							{
-								wekaSegmentation.setTrainingData(
-										wekaSegmentation.getTrainingDataCopy(
-												wekaSegmentation.trainingDataLabelImageAllFeatures ) );
-							}
-
-							if ( ! wekaSegmentation.hasTrainingData() ) {
-								logger.error( "Cannot train without training data." );
-								return;
-							}
-
-						}
-						else if ( trainingDataSource.getSelectedItem().equals(
-								TRAINING_DATA_TRACES ))
-						{
-
-							// update the training data
-							// which might have changed due to
-							// new labels added by the user
-
-							wekaSegmentation.updateExamples(
-									trainingRecomputeFeaturesCheckBox.isSelected() );
-
-							TrainingData trainingData = wekaSegmentation.getTrainingDataFromExamples();
-
-							wekaSegmentation.setTrainingDataFromExamples()
-							if ( ! wekaSegmentation.setTrainingDataFromExamples() )
-							{
-								return;
-							}
-
-						}
-
-						if( wekaSegmentation.trainClassifier() )
-						{
-							if( this.isInterrupted() )
-							{
-								win.trainingComplete = false;
-								return;
-							}
 
 							if ( wekaSegmentation.minFeatureUsage > 0 )
 							{
@@ -2301,7 +2212,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 								wekaSegmentation.deactivateRarelyUsedFeatures();
 								wekaSegmentation.removeInactiveFeaturesFromTrainingData();
-								wekaSegmentation.trainClassifier();
+								wekaSegmentation.createFastRandomForest();
 
 							}
 
@@ -2820,7 +2731,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		gd.addNumericField("Computation: Memory factor",
 				wekaSegmentation.memoryFactor, 1);
 		gd.addNumericField("Training: Label image: Num. instances per class and plane",
-				wekaSegmentation.getLabelImageInstancesPerPlaneAndClass(), 0);
+				wekaSegmentation.getNumLabelImageInstancesPerPlaneAndClass(), 0);
 
 		/*
 		if(wekaSegmentation.getLoadedTrainingData() != null)

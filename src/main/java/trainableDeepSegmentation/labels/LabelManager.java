@@ -4,7 +4,7 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.plugin.frame.RoiManager;
-import trainableDeepSegmentation.Example;
+import trainableDeepSegmentation.examples.Example;
 
 import java.util.*;
 
