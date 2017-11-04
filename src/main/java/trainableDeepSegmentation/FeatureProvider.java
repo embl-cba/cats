@@ -66,6 +66,9 @@ public class FeatureProvider
     /** names of feature images */
     private ArrayList<String> featureNames = new ArrayList<>();
 
+    /** names of feature images */
+    private ArrayList<String> activeFeatures = null;
+
     /** image width */
     private int width = 0;
     /** image height */
@@ -169,6 +172,11 @@ public class FeatureProvider
     {
         this.wekaSegmentation = wekaSegmentation;
         setLogger( wekaSegmentation.getLogger() );
+    }
+
+    public void setActiveFeatures( ArrayList< String > activeFeatures )
+    {
+        this.activeFeatures = activeFeatures;
     }
 
     public void setLogger( Logger logger )

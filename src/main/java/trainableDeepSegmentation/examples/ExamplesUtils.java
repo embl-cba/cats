@@ -2,7 +2,6 @@ package trainableDeepSegmentation.examples;
 
 import bigDataTools.logging.Logger;
 import ij.IJ;
-import trainableDeepSegmentation.training.TrainingData;
 import weka.core.DenseInstance;
 import weka.core.Instances;
 
@@ -41,7 +40,6 @@ public abstract class ExamplesUtils {
                                  Logger logger )
     {
 
-
         // add and report training values
         int[] numExamplesPerClass = new int[classNames.size()];
         int[] numExamplePixelsPerClass = new int[classNames.size()];
@@ -53,16 +51,12 @@ public abstract class ExamplesUtils {
         }
 
         logger.info("## Annotation information: ");
-        for (int iClass = 0; iClass < getNumClassesInExamples(); iClass++)
+        for (int iClass = 0; iClass < getNumClassesInExamples( examples ); iClass++)
         {
             logger.info(classNames.get(iClass) + ": "
                     + numExamplesPerClass[iClass] + " labels; "
                     + numExamplePixelsPerClass[iClass] + " pixels");
         }
-
-
-        TrainingData trainingData = new TrainingData( instances, getCurrentMetaData() );
-        return trainingData;
 
     }
 

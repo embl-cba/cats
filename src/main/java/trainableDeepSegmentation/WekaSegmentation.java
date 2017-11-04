@@ -31,12 +31,13 @@ import ij.Prefs;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
+import trainableDeepSegmentation.classification.AttributeSelector;
+import trainableDeepSegmentation.classification.ClassifiersManager;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.examples.ExamplesUtils;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageFrameSetter;
 import trainableDeepSegmentation.training.InstancesCreator;
-import trainableDeepSegmentation.training.TrainingData;
 import trainableDeepSegmentation.training.InstancesManager;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
@@ -72,7 +73,7 @@ import static trainableDeepSegmentation.ImageUtils.*;
 
 /**
  * This class contains all the library methods to perform image segmentation
- * based on the Weka classifiers.
+ * based on the Weka classifiersComboBox.
  */
 public class WekaSegmentation {
 
@@ -95,7 +96,7 @@ public class WekaSegmentation {
 	/** features to be used in the training */
 	//private FeatureImagesMultiResolution  featureImages = null;
 	/**
-	 * set of instances from the user's traces
+	 * set of instancesComboBox from the user's traces
 	 */
 	private Instances trainingData = null;
 	/**
@@ -246,7 +247,7 @@ public class WekaSegmentation {
 
 	/**
 	 * flag to set the resampling of the training data in order to guarantee
-	 * the same number of instances per class (class balance)
+	 * the same number of instancesComboBox per class (class balance)
 	 */
 	private boolean balanceClasses = false;
 
@@ -268,7 +269,15 @@ public class WekaSegmentation {
 
 	private ImagePlus labelImage = null;
 
-	private InstancesManager trainingDataManager = null;
+	private InstancesManager instancesManager = new InstancesManager();
+
+	public ClassifiersManager getClassifiersManager()
+	{
+		return classifiersManager;
+	}
+
+	private ClassifiersManager classifiersManager = new ClassifiersManager();
+
 
 	/**
 	 * Default constructor.
@@ -324,7 +333,6 @@ public class WekaSegmentation {
 		rf.setComputeImportances(true);
 		classifier = rf;
 
-		trainingDataManager = new InstancesManager();
 
 		// initialize the examples
 		examples = new ArrayList<Example>();
@@ -477,6 +485,14 @@ public class WekaSegmentation {
 		return examples;
 	}
 
+	public int getNumExamples()
+	{
+		if ( examples == null ) return 0;
+		else return examples.size();
+	}
+
+
+
 	public void setExamples( ArrayList<Example> examples )
 	{
 		this.examples = examples;
@@ -485,53 +501,6 @@ public class WekaSegmentation {
 	public void setLabelROIs(ArrayList<Example> examples)
 	{
 		this.examples = examples;
-	}
-
-	public int getNumExamples(int classNum)
-	{
-		int n = 0;
-		for (Example example : examples)
-		{
-			if (example.classNum == classNum)
-			{
-				n++;
-			}
-		}
-		return n;
-	}
-
-	public void setAllFeaturesActive()
-	{
-		if ( settings.featureList == null )
-			return;
-
-		for ( Feature feature : settings.featureList )
-		{
-			feature.isActive = true;
-		}
-
-
-	}
-
-	public void deactivateRarelyUsedFeatures()
-	{
-		//settings.activeFeatureNames = new ArrayList<>();
-
-		for ( Feature feature : settings.featureList )
-		{
-			feature.isActive = true;
-
-			if ( feature.usageInRF < minFeatureUsage )
-			{
-				feature.isActive = false;
-			}
-		}
-
-		logger.info("Feature usage threshold: " + minFeatureUsage);
-		logger.info("Resulting active features: "
-				+ getNumActiveFeatures()
-				+ "/" + getNumAllFeatures());
-
 	}
 
 	/**
@@ -739,10 +708,10 @@ public class WekaSegmentation {
 
 
 	/**
-	 * Homogenize number of instances per class
+	 * Homogenize number of instancesComboBox per class
 	 *
-	 * @param data input set of instances
-	 * @return resampled set of instances
+	 * @param data input set of instancesComboBox
+	 * @return resampled set of instancesComboBox
 	 * @deprecated use balanceTrainingData
 	 */
 	public static Instances homogenizeTrainingData(Instances data)
@@ -751,10 +720,10 @@ public class WekaSegmentation {
 	}
 
 	/**
-	 * Balance number of instances per class
+	 * Balance number of instancesComboBox per class
 	 *
-	 * @param data input set of instances
-	 * @return resampled set of instances
+	 * @param data input set of instancesComboBox
+	 * @return resampled set of instancesComboBox
 	 */
 	public static Instances balanceTrainingData(Instances data)
 	{
@@ -778,7 +747,7 @@ public class WekaSegmentation {
 	}
 
 	/**
-	 * Homogenize number of instances per class (in the loaded training data)
+	 * Homogenize number of instancesComboBox per class (in the loaded training data)
 	 *
 	 * @deprecated use balanceTrainingData
 	 */
@@ -790,7 +759,7 @@ public class WekaSegmentation {
 	private boolean isUpdatedFeatureList = false;
 
 	/**
-	 * Balance number of instances per class (in the loaded training data)
+	 * Balance number of instancesComboBox per class (in the loaded training data)
 	 */
 	public void balanceTrainingData()
 	{
@@ -920,9 +889,9 @@ public class WekaSegmentation {
 	}
 
 	/**
-	 * Create training instances out of the user markings
+	 * Create training instancesComboBox out of the user markings
 	 *
-	 * @return set of instances (feature vectors in Weka format)
+	 * @return set of instancesComboBox (feature vectors in Weka format)
 	 */
 	public void removeInactiveFeaturesFromTrainingData( )
 	{
@@ -1259,11 +1228,11 @@ public class WekaSegmentation {
 	/**
 	 * Add training samples from a FreeRoi with thickness of 1 pixel
 	 *
-	 * @param trainingData set of instances to add to
+	 * @param trainingData set of instancesComboBox to add to
 	 * @param classIndex   class index value
 	 * @param sliceNum     number of 2d slice being processed
 	 * @param r            thin free line roi
-	 * @return number of instances added
+	 * @return number of instancesComboBox added
 	 */
 	public int getFeatureVoxelSizeAtMaximumScale()
 	{
@@ -1367,7 +1336,7 @@ public class WekaSegmentation {
 
 
 	/**
-	 * Add instances from a labeled image in a random and balanced way.
+	 * Add instancesComboBox from a labeled image in a random and balanced way.
 	 * For convention, the label zero is used to define pixels with no class
 	 * assigned. The rest of integer values correspond to the order of the
 	 * classes (1 for the first class, 2 for the second class, etc.).
@@ -1436,7 +1405,7 @@ public class WekaSegmentation {
 				featureProvider.getFeatureNames(),
 				getClassNames());
 
-		// Collect instances per plane
+		// Collect instancesComboBox per plane
 		for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
 		{
 
@@ -1513,11 +1482,11 @@ public class WekaSegmentation {
 				getMinutes( System.currentTimeMillis(), startTime ) );
 
 		//for( int j = 0; j < numOfClasses ; j ++ )
-		//	IJ.log("Added " + numSamples + " instances of '" + loadedClassNames.get( j ) +"'.");
+		//	IJ.log("Added " + numSamples + " instancesComboBox of '" + loadedClassNames.get( j ) +"'.");
 
 		logger.info("Label image training data added " +
 				"(" + instances.numInstances() +
-						" instances, " + instances.numAttributes() +
+						" instancesComboBox, " + instances.numAttributes() +
 						" attributes, " + instances.numClasses() + " classes).");
 
 		for ( int iClass = 0; iClass < nClasses; ++iClass )
@@ -1574,7 +1543,7 @@ public class WekaSegmentation {
 		}
 		attributes.add(new Attribute("class", getClassNamesAsArrayList()));
 
-		// initialize set of instances
+		// initialize set of instancesComboBox
 		Instances newTrainingData = new Instances("segment", attributes, 1);
 		// Set the index of the class attribute
 		newTrainingData.setClassIndex(numActiveFeatures);
@@ -1598,7 +1567,7 @@ public class WekaSegmentation {
 			FinalInterval labelImageInterval,
 			int labelImageNumInstancesPerClass )
 	{
-		logger.info("Creating instances from label image... ");
+		logger.info("Creating instancesComboBox from label image... ");
 
 		final long start = System.currentTimeMillis();
 
@@ -1616,70 +1585,9 @@ public class WekaSegmentation {
 
 	public InstancesManager getInstancesManager()
 	{
-		return trainingDataManager;
+		return instancesManager;
 	}
 
-	/**
-	 * Create training instances out of the user markings
-	 *
-	 * @return set of instances (feature vectors in Weka format)
-	 */
-	public TrainingData getTrainingDataFromExamples( )
-	{
-		logger.info("Creating training data... ");
-		final long start = System.currentTimeMillis();
-
-		setAllFeaturesActive();
-		Instances instances = getEmptyTrainingData();
-
-		if ( getNumClasses() != ExamplesUtils.getNumClassesInExamples( examples ) )
-		{
-			logger.error("Cannot create training data: Not all classes have labels yet.");
-			return null;
-		}
-
-		// add and report training values
-		int[] numExamplesPerClass = new int[ ExamplesUtils.getNumClassesInExamples( examples )];
-		int[] numExamplePixelsPerClass = new int[ ExamplesUtils.getNumClassesInExamples( examples )];
-
-		int numFeatures = getNumAllFeatures();
-		for ( Example example : examples )
-		{
-			// loop over all pixels of the example
-			// and add the feature values for each pixel to the trainingData
-			// note: subsetting of active features happens in another function
-			for ( double[] values : example.instanceValuesArray )
-			{
-				instances.add( new DenseInstance(1.0, values) );
-			}
-			numExamplesPerClass[example.classNum] += 1;
-			numExamplePixelsPerClass[example.classNum] += example.instanceValuesArray.size();
-		}
-
-
-		logger.info("## Annotation information: ");
-		for ( int iClass = 0; iClass < ExamplesUtils.getNumClassesInExamples( examples ); iClass++)
-		{
-			logger.info(getClassNames().get(iClass) + ": "
-					+ numExamplesPerClass[iClass] + " labels; "
-					+ numExamplePixelsPerClass[iClass] + " pixels");
-		}
-
-		if ( instances.numInstances() == 0 )
-		{
-			logger.error("Cannot train: No training instances available.");
-			return null;
-		}
-
-		logger.info("Memory usage [MB]: " + IJ.currentMemory() / 1000000L + "/" + IJ.maxMemory() / 1000000L);
-
-		final long end = System.currentTimeMillis();
-		logger.info("...created training data from ROIs in " + (end - start) + " ms");
-
-		TrainingData trainingData = new TrainingData( instances, getCurrentMetaData() );
-		return trainingData;
-
-	}
 
 	private HashMap< String, String > getCurrentMetaData()
 	{
@@ -1699,7 +1607,7 @@ public class WekaSegmentation {
 	}
 
 	/**
-	 * Train classifier with the current instances
+	 * Train classifier with the current instancesComboBox
 	 * and current classifier settings
 	 * and current active features
 	 */
@@ -1859,60 +1767,32 @@ public class WekaSegmentation {
 
 		int[] attributeUsages = ((FastRandomForest) classifier).getAttributeUsages();
 
-		logger.info("Features considered for training: "
-				+ getNumActiveFeatures() +
-				"/" + getNumAllFeatures() +
-				";     debug info: attributeUsages.length: " + attributeUsages.length);
-
-
-		// Compute characteristics about the RF
-		int totalFeatureUsage = 0;
-
-		for (int usage : attributeUsages)
-		{
-			totalFeatureUsage += usage;
-		}
-
-		int iUsedFeature = 0;
-
-		for ( Feature feature : settings.featureList )
-		{
-			if ( feature.isActive )
-			{
-				feature.usageInRF = attributeUsages[iUsedFeature++];
-			}
-		}
-
 		double avgRfTreeSize = numDecisionNodes / getNumTrees();
 		double avgTreeDepth = 1.0 + Math.log(avgRfTreeSize) / Math.log(2.0);
 		double randomFeatureUsage = 1.0 * numDecisionNodes / getNumActiveFeatures();
 		int minFeatureUsage = (int) Math.ceil( minFeatureUsageFactor * randomFeatureUsage );
 
-		ArrayList<Feature> sortedFeatureList = new ArrayList<>(settings.featureList);
-		sortedFeatureList.sort(Comparator.comparing(Feature::getUsageInRF).reversed());
+		ArrayList< Attribute > sortedAttributes =
+				 Collections.list( instances.enumerateAttributes() );
 
-		logger.info("# Most used features: ");
+		sortedAttributes.sort( Comparator.comparing(Arrays.asList(attributeUsages)::indexOf).reversed() );
+
+		logger.info("# Most used: ");
 		for (int f = 9; f >= 0; f--)
 		{
-			Feature feature = sortedFeatureList.get(f);
-			int featureID = settings.featureList.indexOf(feature);
-			logger.info("Usage: " + feature.usageInRF + "; ID: " + featureID +
-					"; Name: " + feature.name);
+			Attribute attribute = sortedAttributes.get(f);
+			logger.info("Usage: " + "" +
+					"; ID: " + "" +
+					"; Name: " + attribute.name());
 		}
+
 
 		logger.info("Average number of decision nodes per tree: " +
 				avgRfTreeSize);
 		logger.info("Average tree depth: log2(numDecisionNodes) + 1 = " +
 				avgTreeDepth);
-		logger.info("Total number of decision nodes: " + numDecisionNodes +
-				" = Total feature usage = " + totalFeatureUsage);
-		logger.info("Number of active features: " + getNumActiveFeatures());
-		logger.info(String.format("Random feature usage: numDecisionNodes " +
-				"/ numActiveFeatures = %.2f", randomFeatureUsage));
-		logger.info("Minimum feature usage factor: " + minFeatureUsageFactor);
-		logger.info("Minimum feature usage: " +
-				"ceil ( minFeatureUsageFactor * " +
-				"randomFeatureUsage ) = " + minFeatureUsage);
+		logger.info("Number of features: " + instances.numAttributes() );
+
 	}
 
 
@@ -2175,7 +2055,7 @@ public class WekaSegmentation {
 			// determine chunking
 			ArrayList< long[] > zChunks = getZChunks( numThreads, tileInterval );
 
-			// create instances information (each instance needs a pointer to this)
+			// create instancesComboBox information (each instance needs a pointer to this)
 			Instances dataInfo = new Instances("segment", getAttributes(), 1);
 			dataInfo.setClassIndex(dataInfo.numAttributes() - 1);
 
@@ -2379,12 +2259,12 @@ public class WekaSegmentation {
 	}
 
 	/**
-	 * Classify instances concurrently
+	 * Classify instancesComboBox concurrently
 	 *
 	 * @param featureImages feature stack array with the feature vectors
-	 * @param dataInfo empty set of instances containing the data structure (attributes and classes)
+	 * @param dataInfo empty set of instancesComboBox containing the data structure (attributes and classes)
 	 * @param first index of the first instance to classify (considering the feature stack array as a 1D array)
-	 * @param numInstances number of instances to classify in this thread
+	 * @param numInstances number of instancesComboBox to classify in this thread
 	 * @param classifier current classifier
 	 * @param counter auxiliary counter to be able to update the progress bar
 	 * @param probabilityMaps if true return a probability map for each class instead of a classified image
@@ -2796,7 +2676,7 @@ public class WekaSegmentation {
 	}
 
 	/**
-	 * Merge two datasets of Weka instances in place
+	 * Merge two datasets of Weka instancesComboBox in place
 	 * @param first first (and destination) dataset
 	 * @param second second dataset
 	 */

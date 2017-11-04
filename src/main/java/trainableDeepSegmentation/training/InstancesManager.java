@@ -4,27 +4,30 @@ import weka.core.Instances;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class InstancesManager {
 
-    Map< String, Instances > instancesMap = null;
+    Map< String, Instances > instances = null;
 
     public InstancesManager()
     {
-        instancesMap = new HashMap<>();
+        instances = new HashMap<>();
     }
 
     public void setInstances( Instances instances )
     {
-        instancesMap.put( instances.relationName(), instances );
+        this.instances.put( instances.relationName(), instances );
     }
 
     public Instances getInstances( String key )
     {
-        return ( instancesMap.get( key ) );
+        return ( instances.get( key ) );
     }
 
-
-
+    public Set< String > getNames()
+    {
+        return ( instances.keySet() );
+    }
 
 }

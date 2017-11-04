@@ -3,6 +3,7 @@ package trainableDeepSegmentation.training;
 import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
 import ij.IJ;
+import trainableDeepSegmentation.Feature;
 import trainableDeepSegmentation.examples.Example;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -77,5 +78,24 @@ public class InstancesCreator {
         return ( instances );
 
     }
+
+
+
+    public static Instances removeAttributes( Instances instances,
+                                              ArrayList< Integer > goners )
+    {
+
+
+        Instances attributeSubset = new Instances( instances );
+
+        for( int j = goners.size() - 1; j >= 0; j-- )
+        {
+            int id = goners.get( j );
+            attributeSubset.deleteAttributeAt( id );
+        }
+
+        return ( attributeSubset );
+    }
+
 
 }
