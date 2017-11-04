@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.resultImage;
+package trainableDeepSegmentation.results;
 
 import bigDataTools.logging.Logger;
 import ij.ImagePlus;
@@ -10,7 +10,7 @@ import trainableDeepSegmentation.WekaSegmentation;
 import java.util.ArrayList;
 
 import static trainableDeepSegmentation.ImageUtils.*;
-import static trainableDeepSegmentation.resultImage.Utils.saveImagePlusAsSeparateImarisChannels;
+import static trainableDeepSegmentation.results.Utils.saveImagePlusAsSeparateImarisChannels;
 
 public class ResultImageMemory implements ResultImage {
 
@@ -78,7 +78,7 @@ public class ResultImageMemory implements ResultImage {
                 (int) (dimensions[ Z ] * dimensions[ T ]),
                 8);
 
-        result = new ImagePlus( "resultImage", stack  );
+        result = new ImagePlus( "results", stack  );
 
         result.setDimensions(
                 1,
@@ -86,7 +86,7 @@ public class ResultImageMemory implements ResultImage {
                 (int) dimensions[ T ]);
 
         result.setOpenAsHyperStack(true);
-        result.setTitle("resultImage");
+        result.setTitle("results");
 
         return ( result );
     }

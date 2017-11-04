@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.resultImage;
+package trainableDeepSegmentation.results;
 
 import bigDataTools.Hdf5DataCubeWriter;
 import bigDataTools.ImarisDataSet;
@@ -9,8 +9,6 @@ import ij.ImagePlus;
 import ij.plugin.Duplicator;
 
 import java.util.ArrayList;
-
-import static trainableDeepSegmentation.ImageUtils.T;
 
 public abstract class Utils {
 

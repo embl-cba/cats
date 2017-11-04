@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.resultImage;
+package trainableDeepSegmentation.results;
 
 public interface ResultImageFrameSetter {
     void set( long x, long y, long z, int classId, double certainty );

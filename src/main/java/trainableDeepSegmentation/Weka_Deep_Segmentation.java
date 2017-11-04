@@ -39,10 +39,12 @@ import java.util.zip.GZIPOutputStream;
 import javax.swing.*;
 
 import net.imglib2.FinalInterval;
-import trainableDeepSegmentation.resultImage.ResultImage;
-import trainableDeepSegmentation.resultImage.ResultImageDisk;
-import trainableDeepSegmentation.resultImage.ResultImageGUI;
-import trainableDeepSegmentation.resultImage.ResultImageMemory;
+import trainableDeepSegmentation.labels.LabelManager;
+import trainableDeepSegmentation.results.ResultImage;
+import trainableDeepSegmentation.results.ResultImageDisk;
+import trainableDeepSegmentation.results.ResultImageGUI;
+import trainableDeepSegmentation.results.ResultImageMemory;
+import trainableDeepSegmentation.training.TrainingData;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
@@ -2076,6 +2078,99 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private FinalInterval previousLabelImageInterval = null;
 
+	void updateTrainingData()
+	{
+		// Thread to run the training
+		Thread newTask = new Thread() {
+
+			public void run()
+			{
+				// Wait for the old task to finish
+				if ( null != oldTask )
+				{
+					try
+					{
+						IJ.log( "Waiting for old task to finish..." );
+						oldTask.join();
+					} catch ( InterruptedException ie )
+					{ /*IJ.log("interrupted");*/ }
+				}
+
+				try
+				{
+					// Macro recording
+					String[] arg = new String[]{};
+					record( TRAIN_CLASSIFIER, arg );
+
+					wekaSegmentation.setAllFeaturesActive();
+
+					FinalInterval labelImageInterval = null;
+
+					if ( trainingDataSource.getSelectedItem().equals(
+							TRAINING_DATA_LABEL_IMAGE ) )
+					{
+						if ( wekaSegmentation.getLabelImage() == null )
+						{
+							logger.error( "Please first [Load label image]." );
+							return;
+						}
+
+						labelImageInterval = getIntervalFromGUI();
+
+						if ( labelImageInterval == null ) return;
+
+						if ( ( previousLabelImageInterval == null )
+								|| trainingRecomputeFeaturesCheckBox.isSelected()
+								|| !labelImageInterval.equals( previousLabelImageInterval ) )
+						{
+							previousLabelImageInterval = new FinalInterval( labelImageInterval );
+
+							wekaSegmentation.setTrainingDataFromLabelImage(
+									labelImageInterval,
+									wekaSegmentation.getLabelImageInstancesPerPlaneAndClass() );
+						}
+						else
+						{
+							wekaSegmentation.setTrainingData(
+									wekaSegmentation.getTrainingDataCopy(
+											wekaSegmentation.trainingDataLabelImageAllFeatures ) );
+						}
+
+						if ( !wekaSegmentation.hasTrainingData() )
+						{
+							logger.error( "Cannot train without training data." );
+							return;
+						}
+
+					}
+					else if ( trainingDataSource.getSelectedItem().equals(
+							TRAINING_DATA_TRACES ) )
+					{
+
+						// update the training data
+						// which might have changed due to
+						// new labels added by the user
+
+						wekaSegmentation.updateExamples(
+								trainingRecomputeFeaturesCheckBox.isSelected() );
+
+						TrainingData trainingData = wekaSegmentation.getTrainingDataFromExamples();
+
+						wekaSegmentation.setTrainingDataFromExamples()
+						if ( !wekaSegmentation.setTrainingDataFromExamples() )
+						{
+							return;
+						}
+
+					}
+
+
+				}
+			}
+		}
+	}
+
+
 	/**
 	 * Run/stop the classifier training
 	 *
@@ -2172,9 +2267,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 						else if ( trainingDataSource.getSelectedItem().equals(
 								TRAINING_DATA_TRACES ))
 						{
+
+							// update the training data
+							// which might have changed due to
+							// new labels added by the user
+
 							wekaSegmentation.updateExamples(
 									trainingRecomputeFeaturesCheckBox.isSelected() );
 
+							TrainingData trainingData = wekaSegmentation.getTrainingDataFromExamples();
+
+							wekaSegmentation.setTrainingDataFromExamples()
 							if ( ! wekaSegmentation.setTrainingDataFromExamples() )
 							{
 								return;
@@ -2197,7 +2300,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 										"but now only with useful features.");
 
 								wekaSegmentation.deactivateRarelyUsedFeatures();
-
 								wekaSegmentation.removeInactiveFeaturesFromTrainingData();
 								wekaSegmentation.trainClassifier();
 

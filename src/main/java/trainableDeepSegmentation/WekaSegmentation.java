@@ -31,8 +31,10 @@ import ij.Prefs;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
-import trainableDeepSegmentation.resultImage.ResultImage;
-import trainableDeepSegmentation.resultImage.ResultImageFrameSetter;
+import trainableDeepSegmentation.results.ResultImage;
+import trainableDeepSegmentation.results.ResultImageFrameSetter;
+import trainableDeepSegmentation.training.TrainingData;
+import trainableDeepSegmentation.training.TrainingDataManager;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -267,6 +269,8 @@ public class WekaSegmentation {
 
 	private ImagePlus labelImage = null;
 
+	private TrainingDataManager trainingDataManager = null;
+
 	/**
 	 * Default constructor.
 	 *
@@ -321,6 +325,7 @@ public class WekaSegmentation {
 		rf.setComputeImportances(true);
 		classifier = rf;
 
+		trainingDataManager = new TrainingDataManager();
 
 		// initialize the examples
 		examples = new ArrayList<Example>();
@@ -957,68 +962,6 @@ public class WekaSegmentation {
 		}
 
 	}
-
-	/**
-	 * Create training instances out of the user markings
-	 *
-	 * @return set of instances (feature vectors in Weka format)
-	 */
-	public boolean setTrainingDataFromExamples( )
-	{
-		logger.info("Creating training data... ");
-		final long start = System.currentTimeMillis();
-
-		setAllFeaturesActive();
-		trainingData = getEmptyTrainingData();
-
-		if ( getNumClasses() != getNumClassesInExamples() )
-		{
-			logger.error("Cannot train: Not all classes have labels yet.");
-			return false;
-		}
-
-		// add and report training values
-		int[] numExamplesPerClass = new int[getNumClassesInExamples()];
-		int[] numExamplePixelsPerClass = new int[getNumClassesInExamples()];
-
-		int numFeatures = getNumAllFeatures();
-		for ( Example example : examples )
-		{
-			// loop over all pixels of the example
-			// and add the feature values for each pixel to the trainingData
-			// note: subsetting of active features happens in another function
-			for ( double[] values : example.instanceValuesArray )
-			{
-				trainingData.add( new DenseInstance(1.0, values) );
-			}
-			numExamplesPerClass[example.classNum] += 1;
-			numExamplePixelsPerClass[example.classNum] += example.instanceValuesArray.size();
-		}
-
-
-		logger.info("## Annotation information: ");
-		for (int iClass = 0; iClass < getNumClassesInExamples(); iClass++)
-		{
-			logger.info(getClassNames().get(iClass) + ": "
-					+ numExamplesPerClass[iClass] + " labels; "
-					+ numExamplePixelsPerClass[iClass] + " pixels");
-		}
-
-		if ( trainingData.numInstances() == 0 )
-		{
-			logger.error("Cannot train: No training instances available.");
-			return false;
-		}
-
-		logger.info("Memory usage [MB]: " + IJ.currentMemory() / 1000000L + "/" + IJ.maxMemory() / 1000000L);
-
-		final long end = System.currentTimeMillis();
-		logger.info("...created training data from ROIs in " + (end - start) + " ms");
-
-		return true;
-
-	}
-
 
 	/**
 	 * Create training instances out of the user markings
@@ -1719,6 +1662,81 @@ public class WekaSegmentation {
 
 	}
 
+	public TrainingDataManager getTrainingDataManager()
+	{
+		return trainingDataManager;
+	}
+
+	/**
+	 * Create training instances out of the user markings
+	 *
+	 * @return set of instances (feature vectors in Weka format)
+	 */
+	public TrainingData getTrainingDataFromExamples( )
+	{
+		logger.info("Creating training data... ");
+		final long start = System.currentTimeMillis();
+
+		setAllFeaturesActive();
+		Instances instances = getEmptyTrainingData();
+
+		if ( getNumClasses() != getNumClassesInExamples() )
+		{
+			logger.error("Cannot create training data: Not all classes have labels yet.");
+			return null;
+		}
+
+		// add and report training values
+		int[] numExamplesPerClass = new int[getNumClassesInExamples()];
+		int[] numExamplePixelsPerClass = new int[getNumClassesInExamples()];
+
+		int numFeatures = getNumAllFeatures();
+		for ( Example example : examples )
+		{
+			// loop over all pixels of the example
+			// and add the feature values for each pixel to the trainingData
+			// note: subsetting of active features happens in another function
+			for ( double[] values : example.instanceValuesArray )
+			{
+				instances.add( new DenseInstance(1.0, values) );
+			}
+			numExamplesPerClass[example.classNum] += 1;
+			numExamplePixelsPerClass[example.classNum] += example.instanceValuesArray.size();
+		}
+
+
+		logger.info("## Annotation information: ");
+		for (int iClass = 0; iClass < getNumClassesInExamples(); iClass++)
+		{
+			logger.info(getClassNames().get(iClass) + ": "
+					+ numExamplesPerClass[iClass] + " labels; "
+					+ numExamplePixelsPerClass[iClass] + " pixels");
+		}
+
+		if ( instances.numInstances() == 0 )
+		{
+			logger.error("Cannot train: No training instances available.");
+			return null;
+		}
+
+		logger.info("Memory usage [MB]: " + IJ.currentMemory() / 1000000L + "/" + IJ.maxMemory() / 1000000L);
+
+		final long end = System.currentTimeMillis();
+		logger.info("...created training data from ROIs in " + (end - start) + " ms");
+
+		TrainingData trainingData = new TrainingData( instances, getCurrentMetaData() );
+		return trainingData;
+
+	}
+
+	private HashMap< String, String > getCurrentMetaData()
+	{
+		HashMap< String, String > metaData = new HashMap<>();
+
+		return metaData;
+	}
+
+
 	public void balanceTrainingData2() // TODO
 	{
 		final long start = System.currentTimeMillis();
@@ -1729,14 +1747,16 @@ public class WekaSegmentation {
 	}
 
 
-
 	/**
 	 * Train classifier with the current instances
 	 * and current classifier settings
 	 * and current active features
 	 */
-	public boolean trainClassifier( )
+	public boolean trainClassifier( String trainingDataKey )
 	{
+
+		Instances trainingData = trainingDataManager.getInstances(
+				trainingDataKey );
 
 		isTrainingCompleted = false;
 
@@ -1764,7 +1784,7 @@ public class WekaSegmentation {
 
 		try
 		{
-			classifier.buildClassifier(trainingData);
+			classifier.buildClassifier( trainingData );
 			this.totalThreadsExecuted.addAndGet(numRfTrainingThreads);
 		} catch (InterruptedException ie)
 		{
@@ -1786,161 +1806,6 @@ public class WekaSegmentation {
 		isTrainingCompleted = true;
 
 		return true;
-	}
-
-	public void reportClassifierCharacteristics()
-	{
-		// Print classifier information
-		logger.info( classifier.toString() );
-
-		int numDecisionNodes = ((FastRandomForest) classifier).getDecisionNodes();
-
-		int[] attributeUsages = ((FastRandomForest) classifier).getAttributeUsages();
-
-		logger.info("Features considered for training: "
-				+ getNumActiveFeatures() +
-				"/" + getNumAllFeatures() +
-				";     debug info: attributeUsages.length: " + attributeUsages.length);
-
-
-		// Compute characteristics about the RF
-		int totalFeatureUsage = 0;
-
-		for (int usage : attributeUsages)
-		{
-			totalFeatureUsage += usage;
-		}
-
-		int iUsedFeature = 0;
-
-		for ( Feature feature : settings.featureList )
-		{
-			if ( feature.isActive )
-			{
-				feature.usageInRF = attributeUsages[iUsedFeature++];
-			}
-		}
-
-		avgRfTreeSize = numDecisionNodes / getNumTrees();
-		double avgTreeDepth = 1.0 + Math.log(avgRfTreeSize) / Math.log(2.0);
-		double randomFeatureUsage = 1.0 * numDecisionNodes / getNumActiveFeatures();
-		minFeatureUsage = (int) Math.ceil( minFeatureUsageFactor * randomFeatureUsage );
-
-		ArrayList<Feature> sortedFeatureList = new ArrayList<>(settings.featureList);
-		sortedFeatureList.sort(Comparator.comparing(Feature::getUsageInRF).reversed());
-
-		logger.info("# Most used features: ");
-		for (int f = 9; f >= 0; f--)
-		{
-			Feature feature = sortedFeatureList.get(f);
-			int featureID = settings.featureList.indexOf(feature);
-			logger.info("Usage: " + feature.usageInRF + "; ID: " + featureID +
-					"; Name: " + feature.name);
-		}
-
-		logger.info("Average number of decision nodes per tree: " +
-				avgRfTreeSize);
-		logger.info("Average tree depth: log2(numDecisionNodes) + 1 = " +
-				avgTreeDepth);
-		logger.info("Total number of decision nodes: " + numDecisionNodes +
-				" = Total feature usage = " + totalFeatureUsage);
-		logger.info("Number of active features: " + getNumActiveFeatures());
-		logger.info(String.format("Random feature usage: numDecisionNodes " +
-				"/ numActiveFeatures = %.2f", randomFeatureUsage));
-		logger.info("Minimum feature usage factor: " +
-				minFeatureUsageFactor);
-		logger.info("Minimum feature usage: " +
-				"ceil ( minFeatureUsageFactor * " +
-				"randomFeatureUsage ) = " + minFeatureUsage);
-	}
-
-
-	public static void logInterval( FinalInterval interval )
-
-	{
-		logger.info("Interval: ");
-
-		for ( int d : XYZT )
-		{
-			logger.info( dimNames[d] + ": " + interval.min(d) + ", " + interval.max(d));
-		}
-
-	}
-
-
-	private ArrayList<FinalInterval> createTiles( FinalInterval interval )
-	{
-
-		logInterval( interval );
-
-		ArrayList<FinalInterval> tiles = new ArrayList<>();
-
-		long[] imgDims = getInputImageDimensions();
-		long[] tileSizes = new long[5];
-
-		for (int d : XYZ)
-		{
-			if ( interval.dimension(d) <= getMaximalRegionSize() )
-			{
-				// everything can be computed at once
-				tileSizes[d] = interval.dimension(d);
-			}
-			else
-			{
-				// we need to tile
-				int n = (int) Math.ceil( (1.0 * interval.dimension(d)) / getMaximalRegionSize());
-				tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / n );
-				int a = 1;
-			}
-
-			// make sure sizes fit into image
-			tileSizes[d] = Math.min( tileSizes[d], imgDims[d] );
-		}
-
-		tileSizes[ T] = 1;
-
-		logger.info("Tile sizes [x,y,z]: "
-				+ tileSizes[ X]
-				+ ", " + tileSizes[ Y]
-				+ ", " + tileSizes[ Z]);
-
-
-		for ( int t = (int) interval.min( T); t <= interval.max( T); t += 1)
-		{
-			for ( int z = (int) interval.min( Z); z <= interval.max( Z); z += tileSizes[ Z])
-			{
-				for ( int y = (int) interval.min( Y); y <= interval.max( Y); y += tileSizes[ Y])
-				{
-					for ( int x = (int) interval.min( X); x <= interval.max( X); x += tileSizes[ X])
-					{
-						long[] min = new long[5];
-						min[ X ] = x;
-						min[ Y ] = y;
-						min[ Z ] = z;
-						min[ T ] = t;
-
-						long[] max = new long[5];
-						max[ X ] = x + tileSizes[ X ] - 1;
-						max[ Y ] = y + tileSizes[ Y ] - 1;
-						max[ Z ] = z + tileSizes[ Z ] - 1;
-						max[ T ] = t + tileSizes[ T ] - 1;
-
-						// make sure to stay within image bounds
-						for ( int d : XYZT )
-						{
-							max[ d ] = Math.min( interval.max( d ), max[ d ] );
-						}
-
-						tiles.add( new FinalInterval(min, max) );
-
-					}
-				}
-			}
-		}
-
-		logger.info("Number of tiles: " + tiles.size());
-
-		return (tiles);
 	}
 
 
@@ -2031,6 +1896,162 @@ public class WekaSegmentation {
 		exe.shutdown();
 
 	}
+
+
+	public void reportClassifierCharacteristics()
+	{
+		// Print classifier information
+		logger.info( classifier.toString() );
+
+		int numDecisionNodes = ((FastRandomForest) classifier).getDecisionNodes();
+
+		int[] attributeUsages = ((FastRandomForest) classifier).getAttributeUsages();
+
+		logger.info("Features considered for training: "
+				+ getNumActiveFeatures() +
+				"/" + getNumAllFeatures() +
+				";     debug info: attributeUsages.length: " + attributeUsages.length);
+
+
+		// Compute characteristics about the RF
+		int totalFeatureUsage = 0;
+
+		for (int usage : attributeUsages)
+		{
+			totalFeatureUsage += usage;
+		}
+
+		int iUsedFeature = 0;
+
+		for ( Feature feature : settings.featureList )
+		{
+			if ( feature.isActive )
+			{
+				feature.usageInRF = attributeUsages[iUsedFeature++];
+			}
+		}
+
+		avgRfTreeSize = numDecisionNodes / getNumTrees();
+		double avgTreeDepth = 1.0 + Math.log(avgRfTreeSize) / Math.log(2.0);
+		double randomFeatureUsage = 1.0 * numDecisionNodes / getNumActiveFeatures();
+		minFeatureUsage = (int) Math.ceil( minFeatureUsageFactor * randomFeatureUsage );
+
+		ArrayList<Feature> sortedFeatureList = new ArrayList<>(settings.featureList);
+		sortedFeatureList.sort(Comparator.comparing(Feature::getUsageInRF).reversed());
+
+		logger.info("# Most used features: ");
+		for (int f = 9; f >= 0; f--)
+		{
+			Feature feature = sortedFeatureList.get(f);
+			int featureID = settings.featureList.indexOf(feature);
+			logger.info("Usage: " + feature.usageInRF + "; ID: " + featureID +
+					"; Name: " + feature.name);
+		}
+
+		logger.info("Average number of decision nodes per tree: " +
+				avgRfTreeSize);
+		logger.info("Average tree depth: log2(numDecisionNodes) + 1 = " +
+				avgTreeDepth);
+		logger.info("Total number of decision nodes: " + numDecisionNodes +
+				" = Total feature usage = " + totalFeatureUsage);
+		logger.info("Number of active features: " + getNumActiveFeatures());
+		logger.info(String.format("Random feature usage: numDecisionNodes " +
+				"/ numActiveFeatures = %.2f", randomFeatureUsage));
+		logger.info("Minimum feature usage factor: " +
+				minFeatureUsageFactor);
+		logger.info("Minimum feature usage: " +
+				"ceil ( minFeatureUsageFactor * " +
+				"randomFeatureUsage ) = " + minFeatureUsage);
+	}
+
+
+	public static void logInterval( FinalInterval interval )
+	{
+		logger.info("Interval: ");
+
+		for ( int d : XYZT )
+		{
+			logger.info( dimNames[d] + ": " + interval.min(d) + ", " + interval.max(d));
+		}
+
+	}
+
+
+	private ArrayList<FinalInterval> createTiles( FinalInterval interval )
+	{
+
+		logInterval( interval );
+
+		ArrayList<FinalInterval> tiles = new ArrayList<>();
+
+		long[] imgDims = getInputImageDimensions();
+		long[] tileSizes = new long[5];
+
+		for (int d : XYZ)
+		{
+			if ( interval.dimension(d) <= getMaximalRegionSize() )
+			{
+				// everything can be computed at once
+				tileSizes[d] = interval.dimension(d);
+			}
+			else
+			{
+				// we need to tile
+				int n = (int) Math.ceil( (1.0 * interval.dimension(d)) / getMaximalRegionSize());
+				tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / n );
+				int a = 1;
+			}
+
+			// make sure sizes fit into image
+			tileSizes[d] = Math.min( tileSizes[d], imgDims[d] );
+		}
+
+		tileSizes[ T] = 1;
+
+		logger.info("Tile sizes [x,y,z]: "
+				+ tileSizes[ X]
+				+ ", " + tileSizes[ Y]
+				+ ", " + tileSizes[ Z]);
+
+
+		for ( int t = (int) interval.min( T); t <= interval.max( T); t += 1)
+		{
+			for ( int z = (int) interval.min( Z); z <= interval.max( Z); z += tileSizes[ Z])
+			{
+				for ( int y = (int) interval.min( Y); y <= interval.max( Y); y += tileSizes[ Y])
+				{
+					for ( int x = (int) interval.min( X); x <= interval.max( X); x += tileSizes[ X])
+					{
+						long[] min = new long[5];
+						min[ X ] = x;
+						min[ Y ] = y;
+						min[ Z ] = z;
+						min[ T ] = t;
+
+						long[] max = new long[5];
+						max[ X ] = x + tileSizes[ X ] - 1;
+						max[ Y ] = y + tileSizes[ Y ] - 1;
+						max[ Z ] = z + tileSizes[ Z ] - 1;
+						max[ T ] = t + tileSizes[ T ] - 1;
+
+						// make sure to stay within image bounds
+						for ( int d : XYZT )
+						{
+							max[ d ] = Math.min( interval.max( d ), max[ d ] );
+						}
+
+						tiles.add( new FinalInterval(min, max) );
+
+					}
+				}
+			}
+		}
+
+		logger.info("Number of tiles: " + tiles.size());
+
+		return (tiles);
+	}
+
 
 	private void errorHandler( String moduleName, Exception e )
 	{

@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.resultImage;
+package trainableDeepSegmentation.results;
 
 import net.imglib2.FinalInterval;
 

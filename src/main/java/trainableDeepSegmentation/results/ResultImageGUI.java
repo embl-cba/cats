@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.resultImage;
+package trainableDeepSegmentation.results;
 
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;

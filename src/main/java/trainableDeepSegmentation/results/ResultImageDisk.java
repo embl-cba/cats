@@ -1,15 +1,12 @@
-package trainableDeepSegmentation.resultImage;
+package trainableDeepSegmentation.results;
 
-import bigDataTools.*;
 import bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import bigDataTools.dataStreamingTools.DataStreamingTools;
 import bigDataTools.logging.Logger;
 import bigDataTools.utils.ImageDataInfo;
-import bigDataTools.utils.Utils;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileSaver;
-import ij.plugin.Duplicator;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.WekaSegmentation;
@@ -18,7 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import static trainableDeepSegmentation.ImageUtils.*;
-import static trainableDeepSegmentation.resultImage.Utils.saveImagePlusAsSeparateImarisChannels;
+import static trainableDeepSegmentation.results.Utils.saveImagePlusAsSeparateImarisChannels;
 
 public class ResultImageDisk implements ResultImage {
 
