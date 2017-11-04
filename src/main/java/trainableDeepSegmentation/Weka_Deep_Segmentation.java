@@ -11,7 +11,6 @@ import ij.measure.Calibration;
 import ij.plugin.MacroInstaller;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.Recorder;
-import ij.plugin.frame.RoiManager;
 import ij.process.*;
 
 import java.awt.*;
@@ -254,7 +253,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 
 	static final String REVIEW_START = "Review labels";
-	static final String REVIEW_END = "Done";
+	static final String REVIEW_END = "Done reviewing";
 
 	private boolean reviewLabelsFlag = false;
 
@@ -264,6 +263,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String TRAINING_DATA_TRACES = "Traces";
 	public static final String TRAINING_DATA_LABEL_IMAGE = "Label image";
 
+	private LabelManager labelManager = null;
 
 	private boolean isFirstTime = true;
 
@@ -485,9 +485,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 						}
 						else
 						{
-							RoiManager.getInstance().close();
+							labelManager.updateExamples();
+							ArrayList< Example > approvedExamples = labelManager.getExamples();
+							wekaSegmentation.setExamples( approvedExamples );
+							labelManager.close();
 							reviewLabelsFlag = false;
 							reviewLabelsButton.setText( REVIEW_START );
+							win.updateExampleLists();
 							win.updateButtonsEnabling();
 						}
 					}
@@ -639,9 +643,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private void reviewLabels( int classNum )
 	{
-		LabelManager labelManager = new LabelManager( displayImage );
+		labelManager = new LabelManager( displayImage );
 		labelManager.setExamples( wekaSegmentation.getExamples() );
-		labelManager.showExamplesInRoiManager( classNum );
+		labelManager.reviewLabelsInRoiManager( classNum );
 	};
 
 
@@ -1855,6 +1859,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		ij.gui.Toolbar.getInstance().setTool(ij.gui.Toolbar.FREELINE);
 
+		reviewLabelsClassComboBox = new JComboBox( wekaSegmentation.getClassNames().toArray() );
+
+
 		//Build GUI
 		SwingUtilities.invokeLater(
 				new Runnable() {
@@ -2580,6 +2587,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				win.trainingComplete = true;
 			}
 
+			updateReviewLabelComboBox();
 			repaintWindow();
 			win.updateExampleLists();
 
@@ -2624,6 +2632,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		// Add new name to the list of labels
 		wekaSegmentation.addClass( inputName );
+		updateReviewLabelComboBox();
 
 		// Add new class label and list
 		win.addClass();
@@ -2633,6 +2642,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// Macro recording
 		String[] arg = new String[] { inputName };
 		record(CREATE_CLASS, arg);
+	}
+
+	private void updateReviewLabelComboBox()
+	{
+		reviewLabelsClassComboBox.setModel(
+				new DefaultComboBoxModel( wekaSegmentation.getClassNames().toArray() ) );
 	}
 
 	/**
@@ -2898,6 +2913,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			}
 		}
 
+		// adapt to changes in class names
+		updateReviewLabelComboBox();
 
 		// wekaSegmentation.setComputeFeatureImportance(gd.getNextBoolean());
 
@@ -3052,6 +3069,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			win.updateAddClassButtons();
 			win.pack();
 		}
+
 	}
 
 	/**

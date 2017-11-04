@@ -338,7 +338,6 @@ public class WekaSegmentation {
 		setInputImageDimensions();
 	}
 
-
 	/**
 	 * Adds a ROI to the list of examples for a certain class
 	 * and slice.
@@ -472,6 +471,11 @@ public class WekaSegmentation {
 	public ArrayList<Example> getExamples()
 	{
 		return examples;
+	}
+
+	public void setExamples( ArrayList<Example> examples )
+	{
+		this.examples = examples;
 	}
 
 	public void setLabelROIs(ArrayList<Example> examples)
@@ -1610,9 +1614,8 @@ public class WekaSegmentation {
 		}
 
 
-		logger.info ( "...computes instance values in [ms]: " +
-				( System.currentTimeMillis() - startTime ) );
-
+		logger.info ( "...computed instance values in [min]: " +
+				getMinutes( System.currentTimeMillis(), startTime ) );
 
 		//for( int j = 0; j < numOfClasses ; j ++ )
 		//	IJ.log("Added " + numSamples + " instances of '" + loadedClassNames.get( j ) +"'.");
@@ -1639,6 +1642,12 @@ public class WekaSegmentation {
 	}
 
 
+	private String getMinutes( long now, long begin )
+	{
+		double minutes = 1.0 * ( now - begin ) / ( 1000.0 * 60 );
+		String minutesS = String.format( "%.1f", minutes );
+		return ( minutesS );
+	}
 
 	private static final void logLabelImageTrainingProgress( int z, FinalInterval interval, String currentTask )
 	{

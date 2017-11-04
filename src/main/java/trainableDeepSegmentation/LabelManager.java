@@ -5,19 +5,18 @@ import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.plugin.frame.RoiManager;
 
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class LabelManager {
 
     ImagePlus imp;
 
-    ArrayList< Example > examples;
-    Map < String, Example > exampleMap;
+    Map < String, Example > examples;
+    ArrayList < String > underReview;
 
+    RoiManager manager = null;
+
+    private final static String KEY = "key";
 
     public LabelManager ( ImagePlus imp )
     {
@@ -27,9 +26,7 @@ public class LabelManager {
     public void setExamples( ArrayList< Example > examples )
     {
 
-        this.examples = examples;
-
-        exampleMap = new HashMap<>();
+        this.examples = new HashMap<>();
 
         for ( int i = 0; i < examples.size(); ++i )
         {
@@ -38,37 +35,96 @@ public class LabelManager {
                     + "-t" + (example.t+1)
                     + "-z" + (example.z+1)
                     + "-i" + i;
-            exampleMap.put( key, example );
+            this.examples.put( key, example );
         }
     }
 
-    public void showExamplesInRoiManager( int classNum )
+    public void updateExamples()
+    {
+
+        ArrayList< String > approved = getKeysFromRoiManager( manager );
+        ArrayList< String > rejected = getRejectedKeys( underReview, approved );
+        removeRejectedExamples ( rejected );
+    }
+    
+    public ArrayList< Example > getExamples()
+    {
+        ArrayList< Example > exampleArrayList = new ArrayList<>(  examples.values() );
+
+        return ( exampleArrayList );
+    }
+
+    public void reviewLabelsInRoiManager( int classNum )
     {
         ArrayList< Roi > rois = getRoisFromExamples( classNum );
-
-        RoiManager manager = new RoiManager();
+        manager = new RoiManager();
+        underReview = new ArrayList<>();
 
         for ( Roi roi : rois )
         {
             int n = imp.getStackIndex(  roi.getCPosition(), roi.getZPosition(), roi.getTPosition());
             imp.setSliceWithoutUpdate( n );
             manager.addRoi( roi );
+            underReview.add ( roi.getProperty( KEY ) ) ;
+        }
+    }
+
+
+    private void removeRejectedExamples ( ArrayList< String > rejected )
+    {
+        for ( String key : rejected )
+        {
+            examples.remove( key );
+        }
+    }
+
+    private static ArrayList< String > getRejectedKeys( ArrayList< String > underReview,
+                                                              ArrayList< String > approved )
+    {
+        ArrayList< String > rejected = new ArrayList<>();
+
+        for ( String key : underReview )
+        {
+            if ( ! ( approved.contains( key )))
+            {
+                rejected.add( key );
+            }
         }
 
+        return ( rejected );
+    }
+
+    private static ArrayList< String > getKeysFromRoiManager( RoiManager manager )
+    {
+        Roi[] approvedRois = manager.getRoisAsArray();
+        ArrayList< String > approved = getKeyListFromRois( approvedRois );
+        return ( approved );
+    }
+
+    private static ArrayList< String > getKeyListFromRois( Roi[] rois )
+    {
+        ArrayList< String > keys = new ArrayList<>();
+
+        for ( Roi roi : rois )
+        {
+            keys.add( roi.getProperty( KEY ) );
+        }
+
+        return ( keys );
     }
 
     private ArrayList< Roi > getRoisFromExamples( int classNum )
     {
         ArrayList< Roi > rois = new ArrayList<>();
 
-        final Set< String > strings = exampleMap.keySet();
+        final Set< String > strings = examples.keySet();
 
         for ( String key : strings )
         {
             if ( key.contains( "c"+ classNum + "-" ) )
             {
-                Roi roi = getRoiFromExample( exampleMap.get( key ) );
-                roi.setProperty( "key", key );
+                Roi roi = getRoiFromExample( examples.get( key ) );
+                roi.setProperty( KEY, key );
                 roi.setName( key );
                 rois.add( roi );
             }
@@ -93,6 +149,11 @@ public class LabelManager {
         roi.setProperty( "classNum", "" + example.classNum );
 
         return ( roi );
+    }
+
+    public void close()
+    {
+        manager.close();
     }
 
 }
