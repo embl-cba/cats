@@ -46,7 +46,7 @@ public class LabelManager {
         ArrayList< String > rejected = getRejectedKeys( underReview, approved );
         removeRejectedExamples ( rejected );
     }
-    
+
     public ArrayList< Example > getExamples()
     {
         ArrayList< Example > exampleArrayList = new ArrayList<>(  examples.values() );

@@ -682,8 +682,10 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
     double[] currentProbs = new double[instance.numClasses()];
     double diffSquared;
     double semSquared;
-    double significance;
+    double significanceSquared;
     int c0 = 0, c1 = 0;
+
+    double requiredSignificanceSquared = requiredSignificance * requiredSignificance;
 
     for (int i = 0; i < m_NumIterations; i++) {
       if (instance.classAttribute().isNumeric()) {
@@ -696,10 +698,10 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
         }
       }
 
-      if ( ( (i > 0) && ( (i % 10) == 0 ) ) || (i == m_NumIterations - 1) )
+      if ( ((requiredSignificance > 0) && ( (i > 0) && ( (i % 10) == 0 ) ))
+              || (i == m_NumIterations - 1) )
       {
-        // Evaluate statistical significance of difference
-        // between most and second-most likely class
+
 
         // normalise current probabilities to sum up to 1
         // - and also determine the two most likely probabilities
@@ -736,20 +738,37 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
           }
         }
 
-        // compute sort of an statistical significance:
-        // significance = diff / sem
-        diffSquared = ( p0 - p1 ) * ( p0 - p1 );
-        semSquared = p0 * ( 1 - p0 ) / ( i + 1) ;
-
-        significance = diffSquared / semSquared;
-
-        if ( ( significance > requiredSignificance ) )
+        if ( requiredSignificance > 0 )
         {
-          return ( new double[] { c0, c1, p0, p1, i+1 } );
+
+          // Evaluate statistical significance of difference
+          // between most and second-most likely class.
+          // Return result is significance is reached, even
+          // before all trees have been evaluated.
+
+          if ( p0 == 1.0 )
+          {
+            // all trees agree
+            return ( new double[]{ c0, c1, p0, p1, i + 1 } );
+          }
+          else
+          {// Evaluate statistical significance of difference
+            // between most and second-most likely class.
+            // Minimally evaluate 10 tress.
+            // compute sort of a statistical significance:
+            // significance = diff / sem
+            diffSquared = ( p0 - p1 ) * ( p0 - p1 );
+            semSquared = p0 * ( 1.0 - p0 ) / ( i + 1 );
+
+            significanceSquared = diffSquared / semSquared;
+
+            if ( ( significanceSquared > requiredSignificanceSquared ) )
+            {
+              return ( new double[]{ c0, c1, p0, p1, i + 1 } );
+            }
+          }
         }
-
       }
-
     }
 
     // all trees were evaluated without the required significance being reached

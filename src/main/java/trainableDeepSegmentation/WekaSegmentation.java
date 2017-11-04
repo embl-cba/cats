@@ -2465,7 +2465,7 @@ public class WekaSegmentation {
 
 							ins.setValues( 1.0, featureValues );
 
-							result = classifier.distributionForInstance( ins,true, accuracy );
+							result = classifier.distributionForInstance( ins, accuracy );
 
 							double certainty = ( result[ FIRST_CLASS_PROB ] - result [ SECOND_CLASS_PROB ] );
 
