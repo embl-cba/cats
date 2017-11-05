@@ -332,6 +332,7 @@ public class FeatureProvider
                         channel.getImageStack().addSlice("pad-back", channels[ch].getImageStack().getProcessor(channels[ch].getImageStackSize()));
                         channel.getImageStack().addSlice("pad-front", channels[ch].getImageStack().getProcessor(1), 1);
                     }
+
                     final ArrayList<ImagePlus> result = ImageScience.computeHessianImages(sigma, absolute, channel);
                     final ImageStack largest = result.get(0).getImageStack();
                     final ImageStack middle = result.get(1).getImageStack();
@@ -1361,13 +1362,13 @@ public class FeatureProvider
                 // Single threaded
                 ArrayList<ArrayList<ImagePlus>> featureImagesList = new ArrayList<>();
 
-                // Generate calibration for feature computation
-                // to account for current settingAnisotropy
+                // Generate a calibration
+                // to account for current anisotropy
                 Calibration calibrationFeatureComp = new Calibration();
                 calibrationFeatureComp.pixelWidth = 1.0;
                 calibrationFeatureComp.pixelHeight = 1.0;
                 calibrationFeatureComp.pixelDepth = 1.0 * anisotropy;
-                calibrationFeatureComp.setUnit("um");
+                calibrationFeatureComp.setUnit("micrometer");
 
                 for ( ImagePlus featureImage : featureImagesThisResolution )
                 {
@@ -1390,7 +1391,7 @@ public class FeatureProvider
                         {
                             if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "He_" + featureImage.getTitle()) )
-                                futures.add(exe.submit( getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
+                                futures.add( exe.submit( getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
 
                             if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
                                     "St_" + featureImage.getTitle()) )
