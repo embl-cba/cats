@@ -63,11 +63,38 @@ public class LabelManager {
 
         for ( Roi roi : rois )
         {
-            int n = imp.getStackIndex(  roi.getCPosition(), roi.getZPosition(), roi.getTPosition());
-            imp.setSliceWithoutUpdate( n );
-            manager.addRoi( roi );
+            addRoiToManager( manager, imp, roi );
             underReview.add ( roi.getProperty( KEY ) ) ;
         }
+    }
+
+    private static void addRoiToManager( RoiManager manager, ImagePlus imp, Roi roi )
+    {
+
+
+        int nSave = imp.getSlice();
+        int n = imp.getStackIndex(  roi.getCPosition(), roi.getZPosition(), roi.getTPosition());
+        imp.setSliceWithoutUpdate( n );
+
+        int tSave = 0, zSave = 0, cSave = 0;
+        if ( imp.isHyperStack() )
+        {
+            tSave = imp.getT();
+            zSave = imp.getZ();
+            cSave = imp.getC();
+            imp.setPositionWithoutUpdate( roi.getCPosition(), roi.getZPosition(), roi.getTPosition() );
+        }
+
+        manager.addRoi( roi );
+
+        if ( imp.isHyperStack() )
+        {
+            imp.setPositionWithoutUpdate( cSave, zSave, tSave );
+        }
+
+        imp.setSliceWithoutUpdate( nSave );
+
+
     }
 
 
