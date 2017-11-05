@@ -62,8 +62,15 @@ public class LabelManager {
 
         for ( Roi roi : rois )
         {
+
             int n = imp.getStackIndex(  roi.getCPosition(), roi.getZPosition(), roi.getTPosition());
             imp.setSliceWithoutUpdate( n );
+            if ( imp.isHyperStack() )
+            {
+                imp.setPositionWithoutUpdate( roi.getCPosition(), roi.getZPosition(), roi.getTPosition());
+
+            }
+
             manager.addRoi( roi );
             underReview.add ( roi.getProperty( KEY ) ) ;
         }
