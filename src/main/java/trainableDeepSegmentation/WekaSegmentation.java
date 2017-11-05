@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -1765,25 +1766,30 @@ public class WekaSegmentation {
 
 		int numDecisionNodes = ((FastRandomForest) classifier).getDecisionNodes();
 
-		int[] attributeUsages = ((FastRandomForest) classifier).getAttributeUsages();
+		int[] tmp = classifier.getAttributeUsages();
+		List<Integer> attributeUsages = Arrays.stream(tmp).boxed().collect( Collectors.toList());
 
 		double avgRfTreeSize = numDecisionNodes / getNumTrees();
 		double avgTreeDepth = 1.0 + Math.log(avgRfTreeSize) / Math.log(2.0);
-		double randomFeatureUsage = 1.0 * numDecisionNodes / getNumActiveFeatures();
-		int minFeatureUsage = (int) Math.ceil( minFeatureUsageFactor * randomFeatureUsage );
+		double randomUsage = 1.0 * numDecisionNodes / getNumActiveFeatures();
+		int minFeatureUsage = (int) Math.ceil( minFeatureUsageFactor * randomUsage );
 
 		ArrayList< Attribute > sortedAttributes =
 				 Collections.list( instances.enumerateAttributes() );
 
-		sortedAttributes.sort( Comparator.comparing(Arrays.asList(attributeUsages)::indexOf).reversed() );
+		sortedAttributes.sort( Comparator.comparing( attributeUsages::indexOf ).reversed() );
+
+		Collections.sort( attributeUsages );
+		Collections.reverse( attributeUsages );
 
 		logger.info("# Most used: ");
 		for (int f = 9; f >= 0; f--)
 		{
 			Attribute attribute = sortedAttributes.get(f);
-			logger.info("Usage: " + "" +
-					"; ID: " + "" +
-					"; Name: " + attribute.name());
+			logger.info(
+					String.format("Relative usage: %.1f", attributeUsages.get( f ) / randomUsage ) +
+							"Absolute usage: " + attributeUsages.get( f ) +
+							"; ID: " + "" + "; Name: " + attribute.name());
 		}
 
 
