@@ -1729,10 +1729,10 @@ public class WekaSegmentation {
 
 			// create instances information (each instance needs a pointer to this)
 			Instances dataInfo = new Instances("segment",
-					classifierManager.getClassifierAttributes( classifierKey ),
+					classifierManager.getClassifierAttributesIncludingClass( classifierKey ),
 					1);
 
-			dataInfo.setClassIndex( dataInfo.numAttributes() );
+			dataInfo.setClassIndex( dataInfo.numAttributes() - 1 );
 
 			// get result image setter
 			final ResultImageFrameSetter resultSetter = resultImage.getFrameSetter( tileInterval );

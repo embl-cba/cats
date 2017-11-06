@@ -36,6 +36,13 @@ public class ClassifierManager {
         return ( Collections.list( classifiers.get(key).instances.enumerateAttributes() ) );
     }
 
+    public ArrayList< Attribute > getClassifierAttributesIncludingClass( String key )
+    {
+
+        ArrayList< Attribute > attributes = Collections.list( classifiers.get(key).instances.enumerateAttributes() );
+        attributes.add ( classifiers.get(key).instances.classAttribute() );
+        return ( attributes );
+    }
 
     public ArrayList< String > getClassifierAttributeNames( String key )
     {
