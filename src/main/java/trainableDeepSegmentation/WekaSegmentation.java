@@ -32,9 +32,6 @@ import ij.Prefs;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
-import net.imglib2.algorithm.region.localneighborhood.RectangleNeighborhoodGPL;
-import net.imglib2.img.Img;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import trainableDeepSegmentation.classification.ClassifierManager;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.results.ResultImage;
@@ -180,7 +177,7 @@ public class WekaSegmentation {
 
 	public boolean isTrainingCompleted = true;
 
-	private int maximumMultithreadedLevel = 10;
+	public int maximumMultithreadedLevel = 10;
 
 	public Logger getLogger()
 	{
@@ -1335,178 +1332,12 @@ public class WekaSegmentation {
 
 	public Instances trainingDataLabelImageAllFeatures = null;
 
-	/**
-	 * Questions:
-	 * - how many of the label image pixels did you use and why?
-	 * - can you give an example of why balancing is important?
-	 */
-	private Instances getInstancesFromLabelImageRegion(
-			String instancesName,
-			FinalInterval interval,
-			int numInstancesPerClassAndPlane,
-			int numThreads )
-	{
-
-
-		/*
-		Img img = ImageJFunctions.wrap( labelImage );
-		RectangleNeighborhoodGPL neighborhood = new RectangleNeighborhoodGPL<>( img );
-		neighborhood.setPosition( 1,1 );
-		neighborhood.setSpan( span );
-		*/
-
-		logger.info( "Computing features for label image region...");
-		logInterval( interval );
-		logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
-
-		long startTime = System.currentTimeMillis();
-
-		// Compute features
-		FeatureProvider featureProvider = new FeatureProvider();
-		featureProvider.setLogger( logger );
-		featureProvider.isLogging( true );
-		featureProvider.setInputImage( inputImage );
-		featureProvider.setWekaSegmentation( this );
-		featureProvider.setInterval( interval );
-		featureProvider.setActiveChannels( settings.activeChannels );
-		featureProvider.computeFeatures( numThreads, maximumMultithreadedLevel, true );
-
-		logger.info ( "...computed features  in [ms]: " +
-				( System.currentTimeMillis() - startTime ) );
-
-
-		// TODO: is this needed?
-		updateFeatureList( featureProvider.getFeatureNames() );
-
-		logger.info( "Getting instance values...");
-		startTime = System.currentTimeMillis();
-
-		// TODO: determine numClasses from labelImage!
-		settings.classNames = new ArrayList<>();
-		settings.classNames.add("label_im_class_0");
-		settings.classNames.add("label_im_class_1");
-
-		int nClasses = getNumClasses();
-		int nf = getNumAllFeatures();
-
-		int[] pixelsPerClass = new int[nClasses];
-
-		double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
-
-
-		Instances instances = InstancesCreator.createInstancesHeader(
-				instancesName,
-				featureProvider.getFeatureNames(),
-				getClassNames());
-
-		// Collect instances per plane
-		for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
-		{
-
-			logLabelImageTrainingProgress( z, interval, "...");
-
-			// Create lists of coordinates of pixels of each class
-			//
-			ArrayList<Point3D>[] classCoordinates = new ArrayList[getNumClasses()];
-			for (int i = 0; i < getNumClasses(); i++)
-			{
-				classCoordinates[i] = new ArrayList<>();
-			}
-
-			ImageProcessor ip = labelImage.getStack().getProcessor(z + 1);
-
-			for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
-			{
-				for ( int x = (int) interval.min( X ); x <= interval.max( X ); ++x)
-				{
-					int classIndex = ip.get(x, y);
-					classCoordinates[classIndex].add(new Point3D(x, y, z));
-				}
-			}
-
-			// Select random samples from each class
-			Random rand = new Random();
-
-			featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
-
-			for (int iClass = 0; iClass < nClasses; ++iClass)
-			{
-				if ( ! classCoordinates[iClass].isEmpty() )
-				{
-					for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
-					{
-						int randomSample = rand.nextInt(classCoordinates[iClass].size());
-
-						// We have to put the featureSlice for this z-plane into
-						// an ArrayList, because there could be multiple channels,
-						// and this is what 'setFeatureValuesAndClassIndex' expects as input
-						double[] featureValuesWithClassNum = new double[nf + 1];
-
-						featureProvider.setFeatureValuesAndClassIndex(
-								featureValuesWithClassNum,
-								(int) classCoordinates[iClass].get(randomSample).getX(),
-								(int) classCoordinates[iClass].get(randomSample).getY(),
-								featureSlice,
-								iClass);
-
-						DenseInstance denseInstance = new DenseInstance(
-								1.0,
-								featureValuesWithClassNum);
-
-						instances.add( denseInstance );
-
-						pixelsPerClass[iClass]++;
-
-					}
-				}
-			}
-
-		}
-
-
-		logger.info ( "...computed instance values in [min]: " +
-				getMinutes( System.currentTimeMillis(), startTime ) );
-
-		//for( int j = 0; j < numOfClasses ; j ++ )
-		//	IJ.log("Added " + numSamples + " instancesComboBox of '" + loadedClassNames.get( j ) +"'.");
-
-		logger.info("Label image training data added " +
-				"(" + instances.numInstances() +
-						" instancesComboBox, " + instances.numAttributes() +
-						" attributes, " + instances.numClasses() + " classes).");
-
-		for ( int iClass = 0; iClass < nClasses; ++iClass )
-		{
-			logger.info( "Class " + iClass + " [pixels]: " + pixelsPerClass[ iClass ]);
-			if( pixelsPerClass[iClass] == 0 )
-			{
-				logger.error("No labels of class found: " + iClass);
-			}
-		}
-
-		return ( instances );
-
-	}
-
-
-	private String getMinutes( long now, long begin )
+	public String getMinutes( long now, long begin )
 	{
 		double minutes = 1.0 * ( now - begin ) / ( 1000.0 * 60 );
 		String minutesS = String.format( "%.1f", minutes );
 		return ( minutesS );
 	}
-
-	private static final void logLabelImageTrainingProgress( int z, FinalInterval interval, String currentTask )
-	{
-		logger.progress("z (current, min, max): ",
-				"" + z
-						+ ", " + interval.min( Z )
-						+ ", " + interval.max( Z )
-						+ "; " + currentTask);
-
-	}
-
-
 
 	public void setLabelImage(ImagePlus labelImage)
 	{
@@ -1550,18 +1381,25 @@ public class WekaSegmentation {
 
 	public Instances getInstancesFromLabelImage(
 			String instancesName,
-			FinalInterval labelImageInterval,
+			FinalInterval interval,
 			int labelImageNumInstancesPerClass )
 	{
 		logger.info("Creating instancesComboBox from label image... ");
 
 		final long start = System.currentTimeMillis();
 
-		Instances instances = getInstancesFromLabelImageRegion(
-				instancesName,
-				labelImageInterval,
-				labelImageNumInstancesPerClass,
-				Prefs.getThreads());
+		Instances instances =
+				InstancesCreator.
+				createInstancesFromLabelImageRegion(
+						this,
+						inputImage,
+						labelImage,
+						resultImage,
+						instancesName,
+						interval,
+						labelImageNumInstancesPerClass,
+						Prefs.getThreads(),
+						logger);
 
 		final long end = System.currentTimeMillis();
 		logger.info("...created training data from label image in " + (end - start) + " ms");
@@ -1788,22 +1626,10 @@ public class WekaSegmentation {
 	}
 
 
-	public static void logInterval( FinalInterval interval )
-	{
-		logger.info("Interval: ");
-
-		for ( int d : XYZT )
-		{
-			logger.info( dimNames[d] + ": " + interval.min(d) + ", " + interval.max(d));
-		}
-
-	}
-
-
 	private ArrayList<FinalInterval> createTiles( FinalInterval interval )
 	{
 
-		logInterval( interval );
+		IntervalUtils.logInterval( interval );
 
 		ArrayList<FinalInterval> tiles = new ArrayList<>();
 

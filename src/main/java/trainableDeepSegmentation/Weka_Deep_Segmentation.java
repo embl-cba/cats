@@ -1143,7 +1143,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingConstraints.gridy++;
 
 			JPanel experimentPanel = new JPanel();
-			experimentPanel.add( new JLabel("Experiment:") );
+			experimentPanel.add( new JLabel("Session name:") );
 			experimentTextField = new JTextField("image001", 10);
 			experimentPanel.add( experimentTextField );
 			trainingJPanel.add( experimentPanel, trainingConstraints );

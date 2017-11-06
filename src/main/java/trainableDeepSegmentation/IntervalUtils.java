@@ -3,6 +3,9 @@ package trainableDeepSegmentation;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 
+import static trainableDeepSegmentation.ImageUtils.XYZT;
+import static trainableDeepSegmentation.ImageUtils.dimNames;
+
 public abstract class IntervalUtils {
 
 
@@ -22,4 +25,14 @@ public abstract class IntervalUtils {
         return new FinalInterval(min, max);
     }
 
+    public static void logInterval( FinalInterval interval )
+    {
+        WekaSegmentation.logger.info("Interval: ");
+
+        for ( int d : XYZT )
+        {
+            WekaSegmentation.logger.info( dimNames[d] + ": " + interval.min(d) + ", " + interval.max(d));
+        }
+
+    }
 }

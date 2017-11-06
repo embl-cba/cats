@@ -3,24 +3,33 @@ package trainableDeepSegmentation.training;
 import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
 import ij.IJ;
+import ij.ImagePlus;
+import ij.process.ImageProcessor;
+import javafx.geometry.Point3D;
+import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.Feature;
+import trainableDeepSegmentation.FeatureProvider;
+import trainableDeepSegmentation.IntervalUtils;
+import trainableDeepSegmentation.WekaSegmentation;
 import trainableDeepSegmentation.examples.Example;
+import trainableDeepSegmentation.results.ResultImage;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
+import static trainableDeepSegmentation.ImageUtils.X;
+import static trainableDeepSegmentation.ImageUtils.Y;
+import static trainableDeepSegmentation.ImageUtils.Z;
 import static trainableDeepSegmentation.examples.ExamplesUtils.getNumClassesInExamples;
 
 public class InstancesCreator {
 
-    Logger logger = new IJLazySwingLogger();
-
-    public InstancesCreator( Logger logger )
+    public InstancesCreator( )
     {
-        this.logger = logger;
     }
 
     /**
@@ -55,6 +64,385 @@ public class InstancesCreator {
         return instances;
 
     }
+
+
+    // TODO: improve separation from WekaSegmentation
+    public static Instances createInstancesFromLabelImageRegion(
+            WekaSegmentation wekaSegmentation,
+            ImagePlus inputImage,
+            ImagePlus labelImage,
+            ResultImage result,
+            String instancesName,
+            FinalInterval interval,
+            int numInstancesPerClassAndPlane,
+            int numThreads,
+            Logger logger )
+    {
+
+        if ( logger == null ) logger = new IJLazySwingLogger();
+
+		/*
+		Img img = ImageJFunctions.wrap( labelImage );
+		RectangleNeighborhoodGPL neighborhood = new RectangleNeighborhoodGPL<>( img );
+		neighborhood.setPosition( 1,1 );
+		neighborhood.setSpan( span );
+		*/
+
+
+        logger.info( "Computing features for label image region...");
+        IntervalUtils.logInterval( interval );
+        logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
+
+        long startTime = System.currentTimeMillis();
+
+        // Compute features
+        FeatureProvider featureProvider = new FeatureProvider();
+        featureProvider.setLogger( logger );
+        featureProvider.isLogging( true );
+        featureProvider.setInputImage( inputImage );
+        featureProvider.setWekaSegmentation( wekaSegmentation );
+        featureProvider.setInterval( interval );
+        featureProvider.setActiveChannels( wekaSegmentation.settings.activeChannels );
+        featureProvider.computeFeatures( numThreads,
+                wekaSegmentation.maximumMultithreadedLevel,
+                true );
+
+        logger.info ( "...computed features  in [ms]: " +
+                ( System.currentTimeMillis() - startTime ) );
+
+        logger.info( "Computing instance values...");
+        startTime = System.currentTimeMillis();
+
+        // TODO: determine numClasses from labelImage!
+        wekaSegmentation.settings.classNames = new ArrayList<>();
+        wekaSegmentation.settings.classNames.add("label_im_class_0");
+        wekaSegmentation.settings.classNames.add("label_im_class_1");
+
+        int nClasses = wekaSegmentation.getNumClasses();
+        int nf = wekaSegmentation.getNumAllFeatures();
+
+        int[] pixelsPerClass = new int[nClasses];
+
+        double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
+
+        Instances instances = InstancesCreator.createInstancesHeader(
+                instancesName,
+                featureProvider.getFeatureNames(),
+                wekaSegmentation.getClassNames());
+
+        // Collect instances per plane
+        for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
+        {
+
+            logLabelImageTrainingProgress( z, interval, "...");
+
+            // Create lists of coordinates of pixels of each class
+            //
+            ArrayList<Point3D >[] classCoordinates = new ArrayList[getNumClasses()];
+            for (int i = 0; i < wekaSegmentation.getNumClasses(); i++)
+            {
+                classCoordinates[i] = new ArrayList<>();
+            }
+
+            ImageProcessor ip = labelImage.getStack().getProcessor(z + 1);
+
+            for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
+            {
+                for ( int x = (int) interval.min( X ); x <= interval.max( X ); ++x)
+                {
+                    int classIndex = ip.get(x, y);
+                    classCoordinates[classIndex].add(new Point3D(x, y, z));
+                }
+            }
+
+            // Select random samples from each class
+            Random rand = new Random();
+
+            featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
+
+            for (int iClass = 0; iClass < nClasses; ++iClass)
+            {
+                if ( ! classCoordinates[iClass].isEmpty() )
+                {
+                    for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
+                    {
+                        int randomSample = rand.nextInt(classCoordinates[iClass].size());
+
+                        // We have to put the featureSlice for this z-plane into
+                        // an ArrayList, because there could be multiple channels,
+                        // and this is what 'setFeatureValuesAndClassIndex' expects as input
+                        double[] featureValuesWithClassNum = new double[nf + 1];
+
+                        featureProvider.setFeatureValuesAndClassIndex(
+                                featureValuesWithClassNum,
+                                (int) classCoordinates[iClass].get(randomSample).getX(),
+                                (int) classCoordinates[iClass].get(randomSample).getY(),
+                                featureSlice,
+                                iClass);
+
+                        DenseInstance denseInstance = new DenseInstance(
+                                1.0,
+                                featureValuesWithClassNum);
+
+                        instances.add( denseInstance );
+
+                        pixelsPerClass[iClass]++;
+
+                    }
+                }
+            }
+
+        }
+
+
+        logger.info ( "...computed instance values in [min]: " +
+                wekaSegmentation.getMinutes( System.currentTimeMillis(), startTime ) );
+
+        //for( int j = 0; j < numOfClasses ; j ++ )
+        //	IJ.log("Added " + numSamples + " instancesComboBox of '" + loadedClassNames.get( j ) +"'.");
+
+        logger.info("Label image training data added " +
+                "(" + instances.numInstances() +
+                " instancesComboBox, " + instances.numAttributes() +
+                " attributes, " + instances.numClasses() + " classes).");
+
+        for ( int iClass = 0; iClass < nClasses; ++iClass )
+        {
+            logger.info( "Class " + iClass + " [pixels]: " + pixelsPerClass[ iClass ]);
+            if( pixelsPerClass[iClass] == 0 )
+            {
+                logger.error("No labels of class found: " + iClass);
+            }
+        }
+
+        return ( instances );
+
+    }
+
+
+
+    // TODO: improve separation from WekaSegmentation
+    public static Instances createBetterInstancesFromLabelImageRegion(
+            WekaSegmentation wekaSegmentation,
+            ImagePlus inputImage,
+            ImagePlus labelImage,
+            ResultImage result,
+            String instancesName,
+            FinalInterval interval,
+            int numInstancesPerClassAndPlane,
+            int numThreads,
+            Logger logger )
+    {
+
+        if ( logger == null ) logger = new IJLazySwingLogger();
+
+		/*
+		Img img = ImageJFunctions.wrap( labelImage );
+		RectangleNeighborhoodGPL neighborhood = new RectangleNeighborhoodGPL<>( img );
+		neighborhood.setPosition( 1,1 );
+		neighborhood.setSpan( span );
+		*/
+
+
+        logger.info( "Computing features for label image region...");
+        IntervalUtils.logInterval( interval );
+        logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
+
+        long startTime = System.currentTimeMillis();
+
+        // Compute features
+        FeatureProvider featureProvider = new FeatureProvider();
+        featureProvider.setLogger( logger );
+        featureProvider.isLogging( true );
+        featureProvider.setInputImage( inputImage );
+        featureProvider.setWekaSegmentation( wekaSegmentation );
+        featureProvider.setInterval( interval );
+        featureProvider.setActiveChannels( wekaSegmentation.settings.activeChannels );
+        featureProvider.computeFeatures( numThreads,
+                wekaSegmentation.maximumMultithreadedLevel,
+                true );
+
+        logger.info ( "...computed features  in [ms]: " +
+                ( System.currentTimeMillis() - startTime ) );
+
+        logger.info( "Computing instance values...");
+        startTime = System.currentTimeMillis();
+
+        // TODO: determine numClasses from labelImage!
+        wekaSegmentation.settings.classNames = new ArrayList<>();
+        wekaSegmentation.settings.classNames.add("label_im_class_0");
+        wekaSegmentation.settings.classNames.add("label_im_class_1");
+
+        int nClasses = wekaSegmentation.getNumClasses();
+        int nf = wekaSegmentation.getNumAllFeatures();
+
+        int[] pixelsPerClass = new int[nClasses];
+
+        double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
+
+        Instances instances = InstancesCreator.createInstancesHeader(
+                instancesName,
+                featureProvider.getFeatureNames(),
+                wekaSegmentation.getClassNames());
+
+        // Select random samples from each class
+        Random rand = new Random();
+
+        // Collect instances per plane
+        for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
+        {
+
+            logLabelImageTrainingProgress( z, interval, "...");
+
+            // Create lists of coordinates of pixels of each class
+            //
+            ArrayList< int[] >[] classCoordinates = new ArrayList[wekaSegmentation.getNumClasses()];
+
+            for (int i = 0; i < wekaSegmentation.getNumClasses(); i++)
+            {
+                classCoordinates[i] = new ArrayList<>();
+            }
+
+            ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
+
+            for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
+            {
+                for ( int x = (int) interval.min( X ); x <= interval.max( X ); ++x)
+                {
+                    int classIndex = labelImageSlice.get(x, y);
+                    classCoordinates[classIndex].add( new int[]{ x, y });
+                }
+            }
+
+            featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
+
+            for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
+            {
+                for (int iClass = 0; iClass < nClasses; ++iClass)
+                {
+                    if ( ! classCoordinates[iClass].isEmpty() )
+                    {
+                        int[] xySeed = getRandomCoordinate( iClass, classCoordinates, rand );
+
+                        for (int jClass = 0; jClass < nClasses; ++jClass)
+                        {
+                            int radius = 10;
+
+                            int[] xy = getLocalRandomCoordinate( jClass,
+                                    xySeed,
+                                    radius,
+                                    labelImageSlice,
+                                    rand );
+
+
+                            addInstance( instances, featureProvider, xy, featureSlice, iClass );
+                            
+                            pixelsPerClass[iClass]++;
+
+                        }
+
+
+                    }
+                }
+            }
+
+        }
+
+
+        logger.info ( "...computed instance values in [min]: " +
+                wekaSegmentation.getMinutes( System.currentTimeMillis(), startTime ) );
+
+        //for( int j = 0; j < numOfClasses ; j ++ )
+        //	IJ.log("Added " + numSamples + " instancesComboBox of '" + loadedClassNames.get( j ) +"'.");
+
+        logger.info("Label image training data added " +
+                "(" + instances.numInstances() +
+                " instancesComboBox, " + instances.numAttributes() +
+                " attributes, " + instances.numClasses() + " classes).");
+
+        for ( int iClass = 0; iClass < nClasses; ++iClass )
+        {
+            logger.info( "Class " + iClass + " [pixels]: " + pixelsPerClass[ iClass ]);
+            if( pixelsPerClass[iClass] == 0 )
+            {
+                logger.error("No labels of class found: " + iClass);
+            }
+        }
+
+        return ( instances );
+
+    }
+
+    private static void addInstance( Instances instances,
+                                     FeatureProvider featureProvider,
+                                     int[] xy,
+                                     double[][][] featureSlice,
+                                     int iClass)
+    {
+        double[] featureValuesWithClassNum = new double[nf + 1];
+
+        featureProvider.setFeatureValuesAndClassIndex(
+                featureValuesWithClassNum,
+                xy[0], xy[1],
+                featureSlice,
+                iClass);
+
+        DenseInstance denseInstance = new DenseInstance(
+                1.0,
+                featureValuesWithClassNum);
+
+        instances.add( denseInstance );
+    }
+
+
+    private static int[] getRandomCoordinate( int iClass,
+                                              ArrayList< int[] >[] classCoordinates,
+                                              Random random )
+    {
+
+        int randomSample = random.nextInt( classCoordinates[ iClass ].size() );
+
+
+        int[] xy = new int[2];
+        for ( int d = 0; d < 2; ++d )
+        {
+            xy[ d ] = classCoordinates[ iClass ].get( randomSample )[ d ];
+        }
+
+        return ( xy );
+    }
+
+
+    private static int[] getLocalRandomCoordinate( int iClass,
+                                                   int[] xy,
+                                                   int radius,
+                                                   ImageProcessor labelImageSlice,
+                                                   Random random )
+    {
+        /*
+        int randomSample = random.nextInt( classCoordinates[ iClass ].size() );
+
+
+        int[] xy = new int[2];
+        for ( int d = 0; d < 2; ++d )
+        {
+            xy[ d ] = classCoordinates[ iClass ].get( randomSample )[ d ];
+        }
+
+        return ( xy );
+        */
+    }
+
+    private static final void logLabelImageTrainingProgress( int z, FinalInterval interval, String currentTask )
+    {
+        logger.progress("z (current, min, max): ",
+                "" + z
+                        + ", " + interval.min( Z )
+                        + ", " + interval.max( Z )
+                        + "; " + currentTask);
+
+    }
+
 
 
     public static Instances createInstancesHeader(
