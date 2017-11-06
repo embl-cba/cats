@@ -6,12 +6,12 @@ import weka.core.Instances;
 
 import java.util.*;
 
-public class ClassifiersManager {
+public class ClassifierManager {
 
     HashMap< String, ClassInst > classifiers;
 
 
-    public ClassifiersManager( )
+    public ClassifierManager( )
     {
         this.classifiers = new HashMap< String, ClassInst >();
     }
@@ -33,6 +33,25 @@ public class ClassifiersManager {
     {
         return ( Collections.list( classifiers.get(key).instances.enumerateAttributes() ) );
     }
+
+
+    public ArrayList< String > getClassifierAttributeNames( String key )
+    {
+
+        List< Attribute > attributes = getClassifierAttributes( key );
+
+        ArrayList< String > attributeNames = new ArrayList<>();
+
+        for ( Attribute attribute : attributes )
+        {
+            attributeNames.add( attribute.name() );
+        }
+
+        return ( attributeNames );
+    }
+
+
+
 
     public Set< String > getNames()
     {

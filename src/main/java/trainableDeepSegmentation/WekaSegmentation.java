@@ -32,10 +32,11 @@ import ij.Prefs;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
-import trainableDeepSegmentation.classification.AttributeSelector;
-import trainableDeepSegmentation.classification.ClassifiersManager;
+import net.imglib2.algorithm.region.localneighborhood.RectangleNeighborhoodGPL;
+import net.imglib2.img.Img;
+import net.imglib2.img.display.imagej.ImageJFunctions;
+import trainableDeepSegmentation.classification.ClassifierManager;
 import trainableDeepSegmentation.examples.Example;
-import trainableDeepSegmentation.examples.ExamplesUtils;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageFrameSetter;
 import trainableDeepSegmentation.training.InstancesCreator;
@@ -272,12 +273,12 @@ public class WekaSegmentation {
 
 	private InstancesManager instancesManager = new InstancesManager();
 
-	public ClassifiersManager getClassifiersManager()
+	public ClassifierManager getClassifierManager()
 	{
-		return classifiersManager;
+		return classifierManager;
 	}
 
-	private ClassifiersManager classifiersManager = new ClassifiersManager();
+	private ClassifierManager classifierManager = new ClassifierManager();
 
 
 	/**
@@ -1362,6 +1363,12 @@ public class WekaSegmentation {
 			int numThreads )
 	{
 
+		Img img = ImageJFunctions.wrap( labelImage );
+
+		RectangleNeighborhoodGPL neighborhood = new RectangleNeighborhoodGPL<>( img );
+		neighborhood.setPosition( 1,1 );
+		neighborhood.setSpan( span );
+
 		logger.info( "Computing features for label image region...");
 		logInterval( interval );
 		logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
@@ -1406,12 +1413,11 @@ public class WekaSegmentation {
 				featureProvider.getFeatureNames(),
 				getClassNames());
 
-		// Collect instancesComboBox per plane
+		// Collect instances per plane
 		for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
 		{
 
-			logLabelImageTrainingProgress( z, interval,
-					"Determining class coordinates...");
+			logLabelImageTrainingProgress( z, interval, "...");
 
 			// Create lists of coordinates of pixels of each class
 			//
@@ -1423,9 +1429,9 @@ public class WekaSegmentation {
 
 			ImageProcessor ip = labelImage.getStack().getProcessor(z + 1);
 
-			for ( int y = (int) interval.min( Y); y <= interval.max( Y); ++y)
+			for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
 			{
-				for ( int x = (int) interval.min( X); x <= interval.max( X); ++x)
+				for ( int x = (int) interval.min( X ); x <= interval.max( X ); ++x)
 				{
 					int classIndex = ip.get(x, y);
 					classCoordinates[classIndex].add(new Point3D(x, y, z));
@@ -1435,18 +1441,11 @@ public class WekaSegmentation {
 			// Select random samples from each class
 			Random rand = new Random();
 
-			logLabelImageTrainingProgress( z, interval,
-					"Preparing feature slice...");
-
 			featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
-
-			logLabelImageTrainingProgress( z, interval,
-					"Collecting " + numInstancesPerClassAndPlane + " " +
-							"random instance samples for each class...");
 
 			for (int iClass = 0; iClass < nClasses; ++iClass)
 			{
-				if ( !classCoordinates[iClass].isEmpty() )
+				if ( ! classCoordinates[iClass].isEmpty() )
 				{
 					for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
 					{
@@ -1513,7 +1512,7 @@ public class WekaSegmentation {
 
 	private static final void logLabelImageTrainingProgress( int z, FinalInterval interval, String currentTask )
 	{
-		logger.progress("Z-plane (current, min, max): ",
+		logger.progress("z (current, min, max): ",
 				"" + z
 						+ ", " + interval.min( Z )
 						+ ", " + interval.max( Z )
@@ -1667,7 +1666,7 @@ public class WekaSegmentation {
 	}
 
 
-	public void applyClassifier( FinalInterval interval )
+	public void applyClassifier( String classifierKey, FinalInterval interval )
 	{
 
 		// set up tiling
@@ -1706,6 +1705,7 @@ public class WekaSegmentation {
 			futures.add(
 					exe.submit(
 							computeFeaturesAndApplyClassifierToTile(
+									classifierKey,
 									tile,
 									adaptedThreadsPerRegion,
 									++tileCounter,
@@ -2011,6 +2011,7 @@ public class WekaSegmentation {
 	 * @return result image containing the probability maps or the binary classification
 	 */
 	public Runnable computeFeaturesAndApplyClassifierToTile(
+			String classifierKey,
 			final FinalInterval tileInterval,
 			final int numThreads,
 			final int tileCounter,
@@ -2049,6 +2050,7 @@ public class WekaSegmentation {
 				}
 			}*/
 
+
 			// compute image features
 			FeatureProvider featureProvider = new FeatureProvider();
 			featureProvider.setInputImage( inputImage );
@@ -2056,6 +2058,8 @@ public class WekaSegmentation {
 			featureProvider.setActiveChannels( settings.activeChannels );
 			featureProvider.setInterval( tileInterval );
 			featureProvider.isLogging( isLogging );
+			featureProvider.setFeatureList(
+					classifierManager.getClassifierAttributeNames( classifierKey )  );
 			featureProvider.computeFeatures( numThreads, maximumMultithreadedLevel, false );
 
 			// determine chunking
@@ -2527,45 +2531,6 @@ public class WekaSegmentation {
 		}
 	}
 
-	public boolean isFeatureNeeded( String featureImageTitle )
-	{
-		if ( ! isTrainingCompleted )
-		{
-			// during training always all features are needed,
-			// because we do not know yet which are going to be
-			// useful enough
-			return true;
-		}
-
-		for ( Feature feature : settings.featureList )
-		{
-			if ( feature.isActive && feature.name.equals( featureImageTitle ) )
-			{
-				return ( true );
-			}
-		}
-		return ( false );
-	}
-
-	public boolean isFeatureOrChildrenNeeded( String featureImageTitle )
-	{
-		if ( ! isTrainingCompleted )
-		{
-			// during training always all features are needed,
-			// because we do not know yet which are going to be
-			// useful enough
-			return true;
-		}
-
-		for ( Feature feature : settings.featureList )
-		{
-			if ( feature.isActive && feature.name.contains( featureImageTitle ) )
-			{
-				return ( true );
-			}
-		}
-		return ( false );
-	}
 
 	public String getActiveChannelsAsString()
 	{

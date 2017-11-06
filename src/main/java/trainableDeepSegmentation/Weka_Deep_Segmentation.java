@@ -1689,7 +1689,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 						wekaSegmentation.getInstancesManager().getNames().size() > 0 );
 
 				applyButton.setEnabled(
-						wekaSegmentation.getClassifiersManager().getNames().size() > 0
+						wekaSegmentation.getClassifierManager().getNames().size() > 0
 						&& wekaSegmentation.hasResultImage() );
 
 				postProcessButton.setEnabled( win.trainingComplete );
@@ -2317,12 +2317,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 						classifier = wekaSegmentation.createFastRandomForest( instances2 );
 
-						wekaSegmentation.getClassifiersManager().setClassifier(
+						wekaSegmentation.getClassifierManager().setClassifier(
 								classifier, instances2);
 					}
 					else
 					{
-						wekaSegmentation.getClassifiersManager().setClassifier(
+						wekaSegmentation.getClassifierManager().setClassifier(
 								classifier, instances);
 					}
 
@@ -2342,7 +2342,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				classifiersComboBox.setModel(
 						new DefaultComboBoxModel(
 							wekaSegmentation.
-								getClassifiersManager().getNames().toArray()
+									getClassifierManager().getNames().toArray()
 						));
 
 

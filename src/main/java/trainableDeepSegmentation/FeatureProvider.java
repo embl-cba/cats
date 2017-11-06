@@ -1026,6 +1026,43 @@ public class FeatureProvider
         this.isLogging = isLogging;
     }
 
+    ArrayList< String > featureList = null;
+
+    public void setFeatureList( ArrayList< String > featureList )
+    {
+        this.featureList = featureList;
+    }
+
+    public boolean isFeatureNeeded( String featureImageTitle )
+    {
+        if ( featureList == null ) return true;
+
+        if ( featureList.contains( featureImageTitle ) )
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public boolean isFeatureOrChildrenNeeded( String featureImageTitle )
+    {
+        if ( featureList == null ) return true;
+        
+        for ( String feature : featureList )
+        {
+            if ( feature.contains( featureImageTitle ) )
+            {
+                return ( true );
+            }
+        }
+
+        return false;
+
+    }
+
     public boolean computeFeatures( int numThreads, int maximumMultithreadedLevel, boolean computeAllFeatures )
     {
 
@@ -1304,9 +1341,7 @@ public class FeatureProvider
                         else
                         {
 
-                            if ( computeAllFeatures ||
-                                    wekaSegmentation.isFeatureOrChildrenNeeded(
-                                    binningTitle + "_" +
+                            if ( isFeatureOrChildrenNeeded( binningTitle + "_" +
                                             featureImage.getTitle()) )
                             {
 
@@ -1389,22 +1424,18 @@ public class FeatureProvider
                     {
                         if (level <= maximumMultithreadedLevel) // multi-threaded
                         {
-                            if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
-                                    "He_" + featureImage.getTitle()) )
+                            if ( isFeatureOrChildrenNeeded( "He_" + featureImage.getTitle()) )
                                 futures.add( exe.submit( getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
 
-                            if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
-                                    "St_" + featureImage.getTitle()) )
+                            if ( isFeatureOrChildrenNeeded( "St_" + featureImage.getTitle()) )
                                 futures.add( exe.submit( getStructure(featureImage, smoothingScale, integrationScale)));
                         }
                         else // single-threaded
                         {
-                            if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
-                                    "He_" + featureImage.getTitle()) )
+                            if ( isFeatureOrChildrenNeeded( "He_" + featureImage.getTitle()) )
                                 featureImagesList.add( getHessian(featureImage, smoothingScale, hessianAbsoluteValues).call());
 
-                            if ( computeAllFeatures ||  wekaSegmentation.isFeatureOrChildrenNeeded(
-                                    "St_" + featureImage.getTitle()) )
+                            if ( isFeatureOrChildrenNeeded( "St_" + featureImage.getTitle()) )
                                 featureImagesList.add( getStructure(featureImage, smoothingScale, integrationScale).call());
                         }
                     }
@@ -1478,7 +1509,7 @@ public class FeatureProvider
                         }
                     }*/
 
-                    if ( computeAllFeatures || wekaSegmentation.isFeatureNeeded( featureImage.getTitle() ) )
+                    if ( isFeatureNeeded( featureImage.getTitle() ) )
                     {
                         multiResolutionFeatureImageArray.add ( featureImage );
                         featureNames.add( featureImage.getTitle() );
