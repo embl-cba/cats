@@ -738,6 +738,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 	}
 
+	public WekaSegmentation getWekaSegmentation()
+	{
+		return wekaSegmentation;
+	}
+
 	private void testThreads()
 	{
 		logger.info("Testing maximum number of threads...");

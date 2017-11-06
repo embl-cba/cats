@@ -78,7 +78,7 @@ public class InstancesCreator {
             int numThreads,
             Logger logger )
     {
-
+        final int numClasses = wekaSegmentation.getNumClasses();
         if ( logger == null ) logger = new IJLazySwingLogger();
 
 		/*
@@ -134,11 +134,11 @@ public class InstancesCreator {
         for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
         {
 
-            logLabelImageTrainingProgress( z, interval, "...");
+            logLabelImageTrainingProgress( logger, z, interval, "...");
 
             // Create lists of coordinates of pixels of each class
             //
-            ArrayList<Point3D >[] classCoordinates = new ArrayList[getNumClasses()];
+            ArrayList<Point3D >[] classCoordinates = new ArrayList[numClasses];
             for (int i = 0; i < wekaSegmentation.getNumClasses(); i++)
             {
                 classCoordinates[i] = new ArrayList<>();
@@ -234,6 +234,10 @@ public class InstancesCreator {
             Logger logger )
     {
 
+        final int numClasses = wekaSegmentation.getNumClasses();
+        int nf = wekaSegmentation.getNumAllFeatures();
+        int radius = 10;
+        Random rand = new Random();
         if ( logger == null ) logger = new IJLazySwingLogger();
 
 		/*
@@ -273,10 +277,8 @@ public class InstancesCreator {
         wekaSegmentation.settings.classNames.add("label_im_class_0");
         wekaSegmentation.settings.classNames.add("label_im_class_1");
 
-        int nClasses = wekaSegmentation.getNumClasses();
-        int nf = wekaSegmentation.getNumAllFeatures();
 
-        int[] pixelsPerClass = new int[nClasses];
+        int[] pixelsPerClass = new int[ numClasses ];
 
         double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
 
@@ -285,20 +287,18 @@ public class InstancesCreator {
                 featureProvider.getFeatureNames(),
                 wekaSegmentation.getClassNames());
 
-        // Select random samples from each class
-        Random rand = new Random();
 
         // Collect instances per plane
         for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
         {
 
-            logLabelImageTrainingProgress( z, interval, "...");
+            logLabelImageTrainingProgress( logger, z, interval, "...");
 
             // Create lists of coordinates of pixels of each class
             //
-            ArrayList< int[] >[] classCoordinates = new ArrayList[wekaSegmentation.getNumClasses()];
+            ArrayList< int[] >[] classCoordinates = new ArrayList[ numClasses ];
 
-            for (int i = 0; i < wekaSegmentation.getNumClasses(); i++)
+            for ( int i = 0; i < numClasses; i++)
             {
                 classCoordinates[i] = new ArrayList<>();
             }
@@ -318,22 +318,30 @@ public class InstancesCreator {
 
             for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
             {
-                for (int iClass = 0; iClass < nClasses; ++iClass)
+                for (int iClass = 0; iClass < numClasses; ++iClass)
                 {
                     if ( ! classCoordinates[iClass].isEmpty() )
                     {
-                        int[] xySeed = getRandomCoordinate( iClass, classCoordinates, rand );
+                        int[] center = getRandomCoordinate( iClass, classCoordinates, rand );
 
-                        for (int jClass = 0; jClass < nClasses; ++jClass)
+                        ArrayList< int[] >[] localClassCoordinates =
+                                getLocalClassCoordinates( numClasses,
+                                        labelImageSlice,
+                                        interval,
+                                        center,
+                                        radius );
+
+                        for (int jClass = 0; jClass < numClasses; ++jClass)
                         {
-                            int radius = 10;
 
-                            int[] xy = getLocalRandomCoordinate( jClass,
-                                    xySeed,
-                                    radius,
-                                    labelImageSlice,
-                                    rand );
+                            int[] xy = getRandomCoordinate( jClass, localClassCoordinates, rand );
 
+                            if ( xy == null )
+                            {
+                                // no local coordinate has been found
+                                // thus we take a global one
+                                xy = getRandomCoordinate( iClass, classCoordinates, rand );
+                            }
 
                             addInstance( instances, featureProvider, xy, featureSlice, iClass );
                             
@@ -360,7 +368,7 @@ public class InstancesCreator {
                 " instancesComboBox, " + instances.numAttributes() +
                 " attributes, " + instances.numClasses() + " classes).");
 
-        for ( int iClass = 0; iClass < nClasses; ++iClass )
+        for ( int iClass = 0; iClass < numClasses; ++iClass )
         {
             logger.info( "Class " + iClass + " [pixels]: " + pixelsPerClass[ iClass ]);
             if( pixelsPerClass[iClass] == 0 )
@@ -373,13 +381,54 @@ public class InstancesCreator {
 
     }
 
+
+    private static ArrayList< int[] >[] getLocalClassCoordinates(
+            int numClasses,
+            ImageProcessor labelImageSlice,
+            FinalInterval interval,
+            int[] center,
+            int radius )
+    {
+        int nd = 2;
+        int[] dims = new int[]{0,1};
+        int[] min = new int[nd];
+        int[] max = new int[nd];
+
+
+        for ( int d : dims )
+        {
+            min[d] = Math.max( center[d] - radius, (int) interval.min(d));
+            max[d] = Math.min( center[d] + radius, (int) interval.max(d) );
+        }
+
+        ArrayList< int[] >[] localClassCoordinates =
+                new ArrayList[ numClasses ];
+
+        for ( int iClass = 0; iClass < numClasses; ++iClass )
+        {
+            localClassCoordinates[iClass] = new ArrayList<>();
+        }
+
+        for ( int x = min[0]; x <= max[0]; ++x )
+        {
+            for ( int y = min[1]; y <= max[1]; ++y )
+            {
+                int iClass = labelImageSlice.get(x , y);
+                localClassCoordinates[iClass].add( new int[]{x, y} );
+            }
+        }
+
+        return ( localClassCoordinates );
+
+    }
+
     private static void addInstance( Instances instances,
                                      FeatureProvider featureProvider,
                                      int[] xy,
                                      double[][][] featureSlice,
                                      int iClass)
     {
-        double[] featureValuesWithClassNum = new double[nf + 1];
+        double[] featureValuesWithClassNum = new double[featureProvider.getNumFeatures() + 1];
 
         featureProvider.setFeatureValuesAndClassIndex(
                 featureValuesWithClassNum,
@@ -400,40 +449,24 @@ public class InstancesCreator {
                                               Random random )
     {
 
-        int randomSample = random.nextInt( classCoordinates[ iClass ].size() );
+        if ( classCoordinates[ iClass ].size() == 0 ) return null;
 
+        int randomSample = random.nextInt( classCoordinates[ iClass ].size() );
 
         int[] xy = new int[2];
         for ( int d = 0; d < 2; ++d )
         {
             xy[ d ] = classCoordinates[ iClass ].get( randomSample )[ d ];
         }
-
         return ( xy );
     }
 
 
-    private static int[] getLocalRandomCoordinate( int iClass,
-                                                   int[] xy,
-                                                   int radius,
-                                                   ImageProcessor labelImageSlice,
-                                                   Random random )
-    {
-        /*
-        int randomSample = random.nextInt( classCoordinates[ iClass ].size() );
-
-
-        int[] xy = new int[2];
-        for ( int d = 0; d < 2; ++d )
-        {
-            xy[ d ] = classCoordinates[ iClass ].get( randomSample )[ d ];
-        }
-
-        return ( xy );
-        */
-    }
-
-    private static final void logLabelImageTrainingProgress( int z, FinalInterval interval, String currentTask )
+    private static final void logLabelImageTrainingProgress(
+            Logger logger,
+            int z,
+            FinalInterval interval,
+            String currentTask )
     {
         logger.progress("z (current, min, max): ",
                 "" + z

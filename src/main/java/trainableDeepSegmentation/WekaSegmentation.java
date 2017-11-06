@@ -1390,7 +1390,7 @@ public class WekaSegmentation {
 
 		Instances instances =
 				InstancesCreator.
-				createInstancesFromLabelImageRegion(
+				createBetterInstancesFromLabelImageRegion(
 						this,
 						inputImage,
 						labelImage,
