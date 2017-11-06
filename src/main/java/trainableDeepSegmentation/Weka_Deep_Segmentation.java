@@ -169,7 +169,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private JComboBox trainingDataComboBox = new JComboBox( new String[] { } );
 
-	private JComboBox classifiersComboBox = new JComboBox( new String[] { } );
+	private JComboBox classifierComboBox = new JComboBox( new String[] { } );
 
 
 	/** Weka button */
@@ -1165,7 +1165,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			JPanel applyPanel = new JPanel();
 			applyPanel.add( applyButton, trainingConstraints );
-			applyPanel.add( classifiersComboBox, trainingConstraints );
+			applyPanel.add( classifierComboBox, trainingConstraints );
 			trainingJPanel.add(applyPanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
@@ -2339,7 +2339,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				win.classificationComplete = true;
 
 				// update comboBox
-				classifiersComboBox.setModel(
+				classifierComboBox.setModel(
 						new DefaultComboBoxModel(
 							wekaSegmentation.
 									getClassifierManager().getNames().toArray()
@@ -2396,8 +2396,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	public void applyClassifierToSelectedRegion( String command )
 	{
-		// TODO
-		// move all of this into wekaSegmentation class
 
 		if ( command.equals("STOP") )
 		{
@@ -2407,18 +2405,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			return;
 		}
 
-		if ( isFirstTime )
-		{
-			Thread thread = new Thread(new Runnable() {
-				//exec.submit(new Runnable() {
-
-				public void run()
-				{
-					IJ.run("Monitor Memory...", "");
-					isFirstTime = false;
-				}
-			}); thread.start();
-		}
+		showMemoryMonitor();
 
 		if ( ! wekaSegmentation.isTrainingCompleted )
 		{
@@ -2446,7 +2433,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 				wekaSegmentation.stopCurrentThreads = false;
 				wekaSegmentation.resetUncertaintyRegions();
-				wekaSegmentation.applyClassifier( interval );
+				wekaSegmentation.applyClassifier(
+						(String) classifierComboBox.getSelectedItem(),
+						interval );
 
 				applyButton.setText("Apply classifier");
 				if (showColorOverlay)
@@ -3085,7 +3074,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	}
 
 	// Quite of a hack from Johannes Schindelin:
-	// use reflection to insert classifiersComboBox, since there is no other method to do that...
+	// use reflection to insert classifierComboBox, since there is no other method to do that...
 	// TODO: what is that good for??
 	/*
 	static {
@@ -3095,17 +3084,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 			Field field = GenericObjectEditor.class.getDeclaredField("EDITOR_PROPERTIES");
 			field.setAccessible(true);
 			Properties editorProperties = (Properties)field.get(null);
-			String key = "weka.classifiersComboBox.Classifier";
+			String key = "weka.classifierComboBox.Classifier";
 			String value = editorProperties.getProperty(key);
 			value += ",hr.irb.fastRandomForest.FastRandomForest";
 			editorProperties.setProperty(key, value);
 			//new Exception("insert").printStackTrace();
 			//System.err.println("value: " + value);
 
-			// add classifiersComboBox from properties (needed after upgrade to WEKA version 3.7.11)
+			// add classifierComboBox from properties (needed after upgrade to WEKA version 3.7.11)
 			PluginManager.addFromProperties(editorProperties);
 		} catch (Exception e) {
-			IJ.error("Could not insert my own cool classifiersComboBox!");
+			IJ.error("Could not insert my own cool classifierComboBox!");
 		}
 	}*/
 

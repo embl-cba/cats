@@ -1050,7 +1050,7 @@ public class FeatureProvider
     public boolean isFeatureOrChildrenNeeded( String featureImageTitle )
     {
         if ( featureList == null ) return true;
-        
+
         for ( String feature : featureList )
         {
             if ( feature.contains( featureImageTitle ) )

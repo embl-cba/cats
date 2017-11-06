@@ -1264,22 +1264,6 @@ public class WekaSegmentation {
 		return (borderSize);
 	}
 
-	/*
-	public int[][] getClassifiableImageBorders()
-	{
-		int[] borderSizes = getFeatureBorderSizes();
-
-		int[][] borders = new int[3][2];
-
-		borders[0][0] = borderSizes[0];
-		borders[1][0] = borderSizes[1];
-		borders[2][0] = borderSizes[2];
-		borders[0][1] = inputImage.getWidth() - borderSizes[0] - 1;
-		borders[1][1] = inputImage.getHeight() - borderSizes[1] - 1;
-		borders[2][1] = inputImage.getNSlices() - borderSizes[2] - 1;
-
-		return( borders );
-	}*/
 
 	public ArrayList<String> getClassNamesAsArrayList()
 	{
@@ -1363,11 +1347,13 @@ public class WekaSegmentation {
 			int numThreads )
 	{
 
-		Img img = ImageJFunctions.wrap( labelImage );
 
+		/*
+		Img img = ImageJFunctions.wrap( labelImage );
 		RectangleNeighborhoodGPL neighborhood = new RectangleNeighborhoodGPL<>( img );
 		neighborhood.setPosition( 1,1 );
 		neighborhood.setSpan( span );
+		*/
 
 		logger.info( "Computing features for label image region...");
 		logInterval( interval );
@@ -2096,7 +2082,8 @@ public class WekaSegmentation {
 										resultSetter,
 										zChunk[0], zChunk[1],
 										//uncertaintyRegion,
-										dataInfo, classifier
+										dataInfo,
+										classifierManager.getClassifier( classifierKey )
 								)
 						)
 				);

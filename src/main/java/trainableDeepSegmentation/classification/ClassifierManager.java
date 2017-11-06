@@ -1,5 +1,6 @@
 package trainableDeepSegmentation.classification;
 
+import hr.irb.fastRandomForest.FastRandomForest;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instances;
@@ -23,9 +24,9 @@ public class ClassifierManager {
         classifiers.put( instancesHeader.relationName(), classInst );
     }
 
-    public Classifier getClassifier( String key )
+    public FastRandomForest getClassifier( String key )
     {
-        return ( classifiers.get(key).classifier );
+        return ( ( FastRandomForest) classifiers.get(key).classifier );
     }
 
 
