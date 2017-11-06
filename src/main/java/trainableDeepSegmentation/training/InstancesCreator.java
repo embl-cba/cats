@@ -235,16 +235,9 @@ public class InstancesCreator {
     {
 
         final int numClasses = wekaSegmentation.getNumClasses();
-        int radius = 10;
+        int radius = 5;
         Random rand = new Random();
         if ( logger == null ) logger = new IJLazySwingLogger();
-
-		/*
-		Img img = ImageJFunctions.wrap( labelImage );
-		RectangleNeighborhoodGPL neighborhood = new RectangleNeighborhoodGPL<>( img );
-		neighborhood.setPosition( 1,1 );
-		neighborhood.setSpan( span );
-		*/
 
 
         logger.info( "Computing features for label image region...");
@@ -331,21 +324,26 @@ public class InstancesCreator {
                                         center,
                                         radius );
 
-                        for (int jClass = 0; jClass < numClasses; ++jClass)
+                        for (int localClass = 0; localClass < numClasses; ++localClass)
                         {
 
-                            int[] xy = getRandomCoordinate( jClass, localClassCoordinates, rand );
-
-                            if ( xy == null )
+                            for (int k = 0; k < 1; k++ )
                             {
-                                // no local coordinate has been found
-                                // thus we take a global one
-                                xy = getRandomCoordinate( iClass, classCoordinates, rand );
-                            }
 
-                            addInstance( instances, featureProvider, xy, featureSlice, jClass );
-                            
-                            pixelsPerClass[iClass]++;
+                                int[] xy = getRandomCoordinate( localClass, localClassCoordinates, rand );
+
+                                if ( xy == null )
+                                {
+                                    // no local coordinate has been found
+                                    // thus we take a global one
+                                    xy = getRandomCoordinate( localClass, classCoordinates, rand );
+                                }
+
+                                addInstance( instances, featureProvider, xy, featureSlice, localClass );
+
+                                pixelsPerClass[ localClass ]++;
+
+                            }
 
                         }
 
@@ -393,7 +391,6 @@ public class InstancesCreator {
         int[] dims = new int[]{0,1};
         int[] min = new int[nd];
         int[] max = new int[nd];
-
 
         for ( int d : dims )
         {

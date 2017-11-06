@@ -2826,7 +2826,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.settings.anisotropy, 2);
 		gd.addNumericField("Computation: Memory factor",
 				wekaSegmentation.memoryFactor, 1);
-		gd.addNumericField("Training: Label image: Num. trainingDataComboBox per class and plane",
+		gd.addNumericField("Training: Label image instance sets per plane",
 				wekaSegmentation.getNumLabelImageInstancesPerPlaneAndClass(), 0);
 
 		/*

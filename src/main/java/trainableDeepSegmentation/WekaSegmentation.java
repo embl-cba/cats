@@ -150,7 +150,7 @@ public class WekaSegmentation {
 
 	public Settings settings = new Settings();
 
-	public double minFeatureUsageFactor = 0.0;
+	public double minFeatureUsageFactor = 1.0;
 
 	private boolean computeFeatureImportance = false;
 
@@ -164,7 +164,7 @@ public class WekaSegmentation {
 
 	public double uncertaintyLUTdecay = 0.5;
 
-	public double accuracy = 3.0;
+	public double accuracy = 4.0;
 
 	public double memoryFactor = 1.0;
 
@@ -1134,11 +1134,11 @@ public class WekaSegmentation {
 	/**
 	 * Add training samples from a FreeRoi with thickness of 1 pixel
 	 *
-	 * @param trainingData set of instancesComboBox to add to
+	 * @param trainingData set of instances to add to
 	 * @param classIndex   class index value
 	 * @param sliceNum     number of 2d slice being processed
 	 * @param r            thin free line roi
-	 * @return number of instancesComboBox added
+	 * @return number of instances added
 	 */
 	public int getFeatureVoxelSizeAtMaximumScale()
 	{
@@ -1237,7 +1237,7 @@ public class WekaSegmentation {
 			FinalInterval interval,
 			int labelImageNumInstancesPerClass )
 	{
-		logger.info("Creating instancesComboBox from label image... ");
+		logger.info("Creating instances from label image... ");
 
 		final long start = System.currentTimeMillis();
 
@@ -1284,7 +1284,7 @@ public class WekaSegmentation {
 	}
 
 	/**
-	 * Train classifier with the current instancesComboBox
+	 * Train classifier with the current instances
 	 * and current classifier settings
 	 * and current active features
 	 */
@@ -1896,12 +1896,12 @@ public class WekaSegmentation {
 
 
 	/**
-	 * Classify instancesComboBox concurrently
+	 * Classify instances concurrently
 	 *
 	 * @param featureImages feature stack array with the feature vectors
-	 * @param dataInfo empty set of instancesComboBox containing the data structure (attributes and classes)
+	 * @param dataInfo empty set of instances containing the data structure (attributes and classes)
 	 * @param first index of the first instance to classify (considering the feature stack array as a 1D array)
-	 * @param numInstances number of instancesComboBox to classify in this thread
+	 * @param numInstances number of instances to classify in this thread
 	 * @param classifier current classifier
 	 * @param counter auxiliary counter to be able to update the progress bar
 	 * @param probabilityMaps if true return a probability map for each class instead of a classified image
