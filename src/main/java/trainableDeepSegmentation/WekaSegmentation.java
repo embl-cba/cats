@@ -197,7 +197,7 @@ public class WekaSegmentation {
 				format(new Date());
 		String logFileName = "log-" + timeStamp + ".txt";
 
-		logger.setLogFileNameAndDirectory( logFileDirectory,  logFileName );
+		logger.setLogFileNameAndDirectory( logFileName, logFileDirectory );
 		return (true);
 	}
 
