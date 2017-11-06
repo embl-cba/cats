@@ -1727,12 +1727,12 @@ public class WekaSegmentation {
 			// determine chunking
 			ArrayList< long[] > zChunks = getZChunks( numThreads, tileInterval );
 
-			// create instancesComboBox information (each instance needs a pointer to this)
+			// create instances information (each instance needs a pointer to this)
 			Instances dataInfo = new Instances("segment",
 					classifierManager.getClassifierAttributes( classifierKey ),
 					1);
 
-			dataInfo.setClassIndex( dataInfo.numAttributes() - 1 );
+			dataInfo.setClassIndex( dataInfo.numAttributes() );
 
 			// get result image setter
 			final ResultImageFrameSetter resultSetter = resultImage.getFrameSetter( tileInterval );
