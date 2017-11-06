@@ -100,7 +100,7 @@ public class TestGUI {
 		//IJ.open("/Users/tischi/Desktop/mitosis.tif");
 		//IJ.open( "/Users/tischi/Desktop/mri-stack-big-2d-movie.tif" );
 
-		IJ.open( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/combined.tif" );
+		IJ.open( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/combined-crop.tif" );
 		//IJ.open( "/Users/tischi/Desktop/Nils.tif" );
 
 		//IJ.open("/Users/tischi/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
@@ -109,10 +109,10 @@ public class TestGUI {
 		Weka_Deep_Segmentation weka_segmentation = new Weka_Deep_Segmentation();
 		weka_segmentation.run("");
 
-		ImagePlus imp = IJ.openImage( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train" +
-				"-labels/train-labels-binary-larger-borders.tif" );
+		//ImagePlus imp = IJ.openImage( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train" +
+		//		"-labels/train-labels-binary-larger-borders.tif" );
 
-		weka_segmentation.getWekaSegmentation().setLabelImage( imp );
+		//weka_segmentation.getWekaSegmentation().setLabelImage( imp );
 
 
 		/*

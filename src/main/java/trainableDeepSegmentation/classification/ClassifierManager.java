@@ -21,7 +21,8 @@ public class ClassifierManager {
     {
         Instances instancesHeader = new Instances( instances, 0, 1 );
         ClassInst classInst = new ClassInst( classifier, instancesHeader );
-        classifiers.put( instancesHeader.relationName(), classInst );
+        String key = instancesHeader.relationName();
+        classifiers.put( key , classInst );
     }
 
     public FastRandomForest getClassifier( String key )
@@ -30,7 +31,7 @@ public class ClassifierManager {
     }
 
 
-    public List< Attribute > getClassifierAttributes( String key )
+    public ArrayList< Attribute > getClassifierAttributes( String key )
     {
         return ( Collections.list( classifiers.get(key).instances.enumerateAttributes() ) );
     }

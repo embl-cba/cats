@@ -30,7 +30,6 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.Prefs;
 import ij.gui.Roi;
-import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.classification.ClassifierManager;
 import trainableDeepSegmentation.examples.Example;
@@ -151,7 +150,7 @@ public class WekaSegmentation {
 
 	public Settings settings = new Settings();
 
-	public double minFeatureUsageFactor = 2.0;
+	public double minFeatureUsageFactor = 0.0;
 
 	private boolean computeFeatureImportance = false;
 
@@ -198,7 +197,7 @@ public class WekaSegmentation {
 				format(new Date());
 		String logFileName = "log-" + timeStamp + ".txt";
 
-		logger.setLogFileNameAndDirectory( logFileDirectory,  logFileName );
+		logger.setLogFileNameAndDirectory( logFileName, logFileDirectory );
 		return (true);
 	}
 
@@ -785,9 +784,9 @@ public class WekaSegmentation {
 
 		ArrayList<Example> examplesWithoutFeatures = new ArrayList<>();
 
-		for (Example example : examples)
+		for ( Example example : examples )
 		{
-			if (recomputeFeatures)
+			if ( recomputeFeatures )
 			{
 				// add all examples to the list
 				examplesWithoutFeatures.add( example );
@@ -823,7 +822,7 @@ public class WekaSegmentation {
 					examplesWithoutFeatures.get(iExampleWithoutFeatures).z
 			);
 
-			neighboringExamples.add(examplesWithoutFeatures.get(iExampleWithoutFeatures));
+			neighboringExamples.add( examplesWithoutFeatures.get(iExampleWithoutFeatures) );
 
 			Boolean includeNextExample = true;
 
@@ -838,7 +837,7 @@ public class WekaSegmentation {
 						examplesWithoutFeatures.get(iExampleWithoutFeatures).z
 				);
 
-				if (exampleLocation.distance(nextExampleLocation) < getFeatureVoxelSizeAtMaximumScale())
+				if ( exampleLocation.distance(nextExampleLocation) < getFeatureVoxelSizeAtMaximumScale())
 				{
 					neighboringExamples.add(examplesWithoutFeatures.get(iExampleWithoutFeatures));
 					iExampleWithoutFeatures++;
@@ -887,60 +886,8 @@ public class WekaSegmentation {
 
 	}
 
-	/**
-	 * Create training instancesComboBox out of the user markings
-	 *
-	 * @return set of instancesComboBox (feature vectors in Weka format)
-	 */
-	public void removeInactiveFeaturesFromTrainingData( )
-	{
-		logger.info("Removing inactive features from training data... ");
-		final long start = System.currentTimeMillis();
+	public ArrayList< String > latestFeatureNames = null;
 
-		Instances newTrainingData = getEmptyTrainingData();
-
-		int numAllFeatures = getNumAllFeatures();
-		int numActiveFeatures = getNumActiveFeatures();
-		for ( Instance instance : trainingData )
-		{
-			double[] activeValues = new double[ numActiveFeatures + 1 ]; // +1 for class value
-			int iActiveValue = 0;
-			for ( int f = 0; f < numAllFeatures; ++f )
-			{
-				if ( settings.featureList.get( f ).isActive )
-				{
-					activeValues[ iActiveValue++ ] = instance.value( f );
-				}
-			}
-			// set the class num
-			activeValues[ numActiveFeatures ] = instance.value( numAllFeatures );
-			newTrainingData.add( new DenseInstance(1.0, activeValues) );
-		}
-
-		final long end = System.currentTimeMillis();
-		logger.info("...removed inactive features from training data in " + (end - start) + " ms");
-
-		this.trainingData = newTrainingData;
-	}
-
-
-	public Instances getTrainingDataCopy( Instances instances )
-	{
-		if ( instances  ==  null)
-		{
-			return null;
-		}
-
-		Instances instancesCopy = getEmptyTrainingData();
-
-		for ( Instance instance : instances )
-		{
-			Instance instanceCopy = new DenseInstance( 1.0, instance.toDoubleArray() );
-			instancesCopy.add( instanceCopy );
-		}
-
-		return ( instancesCopy );
-	}
 
 	private Runnable setExamplesInstanceValues(ArrayList<Example> examples,
 											   int counter,
@@ -963,21 +910,9 @@ public class WekaSegmentation {
 			featureProvider.setInterval(exampleListBoundingInterval);
 			featureProvider.computeFeatures(threadsPerRegion, maximumMultithreadedLevel,true);
 
-			/* update feature list, which might have been changed during
-			this training, because the user might have altered the
-			feature computation settings. this is only need for one of the
-			new examples, thus the isUpdatedFeatureList
-			*/
-			synchronized ( this )
-			{
-				if ( ! isUpdatedFeatureList )
-				{
-					updateFeatureList( featureProvider.getFeatureNames() );
-					isUpdatedFeatureList = true;
-				}
-			}
+			int nf = featureProvider.getNumFeatures();
 
-			int nf = getNumAllFeatures();
+			this.latestFeatureNames = featureProvider.getFeatureNames();
 
 			double[][][] featureSlice  = featureProvider.getReusableFeatureSlice();;
 
@@ -1048,16 +983,6 @@ public class WekaSegmentation {
 		};
 	}
 
-	private synchronized void updateFeatureList(ArrayList<String> featureNames)
-	{
-		settings.featureList = new ArrayList<>();
-
-		for (String featureName : featureNames)
-		{
-			settings.featureList.add( new Feature( featureName, 0, true) );
-		}
-	}
-
 	public long getNeededBytesPerVoxel()
 	{
 		long oneByte = 8;
@@ -1101,7 +1026,6 @@ public class WekaSegmentation {
 		return maxNumRegionWidth;
 	}
 
-
 	private int[] point3DToInt(Point3D point3D)
 	{
 		int[] xyz = new int[3];
@@ -1110,23 +1034,6 @@ public class WekaSegmentation {
 		xyz[2] = (int) point3D.getZ();
 		return (xyz);
 	}
-
-	/*
-	public Point3D shiftOffsetToStayInBounds( Point3D pOffset, Point3D pSizes )
-	{
-		// ensure to stay within image bounds
-		int[] offset = point3DToInt( pOffset );
-		int[] sizes = point3DToInt( pSizes );
-
-		for (int i = 0; i < 3; ++i)
-		{
-			offset[i] = offset[i] + sizes[i] > imgDims[i] ? imgDims[i] - sizes[i] : offset[i];
-			offset[i] = offset[i] < 0 ? 0 : offset[i];
-		}
-
-		Point3D pOffsetShifted = new Point3D(offset[0], offset[1], offset[2]);
-		return ( pOffsetShifted );
-	}*/
 
 	private Point[] getPointsFromExample( Example example )
 	{
@@ -1261,7 +1168,6 @@ public class WekaSegmentation {
 		return (borderSize);
 	}
 
-
 	public ArrayList<String> getClassNamesAsArrayList()
 	{
 		ArrayList<String> classes = new ArrayList<>();
@@ -1284,38 +1190,6 @@ public class WekaSegmentation {
 	 the feature computation itself is altered, because only
 	 the necessary features are computed!
 	*/
-	public int getNumActiveFeatures()
-	{
-		int numActiveFeatures = 0;
-
-		if ( settings.featureList != null )
-		{
-			for (Feature feature : settings.featureList)
-			{
-				if (feature.isActive)
-				{
-					numActiveFeatures++;
-				}
-			}
-			return (numActiveFeatures);
-		}
-		else
-		{
-			return (0);
-		}
-	}
-
-	public int getNumAllFeatures()
-	{
-		if (settings.featureList == null)
-		{
-			return (0);
-		}
-		else
-		{
-			return (settings.featureList.size());
-		}
-	}
 
 
 	/**
@@ -1330,7 +1204,6 @@ public class WekaSegmentation {
 	 * @return false if error
 	 */
 
-	public Instances trainingDataLabelImageAllFeatures = null;
 
 	public String getMinutes( long now, long begin )
 	{
@@ -1347,26 +1220,6 @@ public class WekaSegmentation {
 	public ImagePlus getLabelImage( )
 	{
 		return ( labelImage );
-	}
-
-	private Instances getEmptyTrainingData()
-	{
-		// prepare training data
-		int numActiveFeatures = getNumActiveFeatures();
-		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-		for (int f = 0; f < numActiveFeatures; f++)
-		{
-			attributes.add(new Attribute("feat_" + f));
-		}
-		attributes.add(new Attribute("class", getClassNamesAsArrayList()));
-
-		// initialize set of instancesComboBox
-		Instances newTrainingData = new Instances("segment", attributes, 1);
-		// Set the index of the class attribute
-		newTrainingData.setClassIndex(numActiveFeatures);
-
-		return ( newTrainingData );
-
 	}
 
 	public boolean hasLabelImage()
@@ -1451,8 +1304,7 @@ public class WekaSegmentation {
 		}
 
 		// Set up the classifier
-		numRandomFeatures = (int) Math.ceil(1.0 * getNumActiveFeatures()
-				* fractionRandomFeatures);
+		numRandomFeatures = (int) Math.ceil(1.0 * instances.numAttributes() * fractionRandomFeatures);
 
 		FastRandomForest classifier = new FastRandomForest();
 		classifier.setSeed((new Random()).nextInt());
@@ -1509,7 +1361,6 @@ public class WekaSegmentation {
 
 		logger.info("Tile threads: " + adaptedRegionThreads);
 		logger.info("Threads per tile: " + adaptedThreadsPerRegion);
-
 
 		// submit tiles to executor service
 
@@ -1579,15 +1430,11 @@ public class WekaSegmentation {
 
 	}
 
-
 	// TODO: make static!
 	public void reportClassifierCharacteristics(
 			FastRandomForest classifier,
 			Instances instances)
 	{
-		// Print classifier information
-		logger.info( classifier.toString() );
-
 		int numDecisionNodes = ((FastRandomForest) classifier).getDecisionNodes();
 
 		int[] tmp = classifier.getAttributeUsages();
@@ -1595,7 +1442,7 @@ public class WekaSegmentation {
 
 		double avgRfTreeSize = numDecisionNodes / getNumTrees();
 		double avgTreeDepth = 1.0 + Math.log(avgRfTreeSize) / Math.log(2.0);
-		double randomUsage = 1.0 * numDecisionNodes / getNumActiveFeatures();
+		double randomUsage = 1.0 * numDecisionNodes / instances.numAttributes();
 		int minFeatureUsage = (int) Math.ceil( minFeatureUsageFactor * randomUsage );
 
 		ArrayList< Attribute > sortedAttributes =
@@ -1607,12 +1454,12 @@ public class WekaSegmentation {
 		Collections.reverse( attributeUsages );
 
 		logger.info("# Most used: ");
-		for (int f = 9; f >= 0; f--)
+		for (int f = Math.min( 9, attributeUsages.size()- 1) ; f >= 0; f--)
 		{
 			Attribute attribute = sortedAttributes.get(f);
 			logger.info(
 					String.format("Relative usage: %.1f", attributeUsages.get( f ) / randomUsage ) +
-							"Absolute usage: " + attributeUsages.get( f ) +
+							"; Absolute usage: " + attributeUsages.get( f ) +
 							"; ID: " + "" + "; Name: " + attribute.name());
 		}
 
@@ -1622,6 +1469,9 @@ public class WekaSegmentation {
 		logger.info("Average tree depth: log2(numDecisionNodes) + 1 = " +
 				avgTreeDepth);
 		logger.info("Number of features: " + instances.numAttributes() );
+
+		// Print classifier information
+		logger.info( classifier.toString() );
 
 	}
 
@@ -1870,7 +1720,7 @@ public class WekaSegmentation {
 			featureProvider.setActiveChannels( settings.activeChannels );
 			featureProvider.setInterval( tileInterval );
 			featureProvider.isLogging( isLogging );
-			featureProvider.setFeatureList(
+			featureProvider.setFeatureListSubset(
 					classifierManager.getClassifierAttributeNames( classifierKey )  );
 			featureProvider.computeFeatures( numThreads, maximumMultithreadedLevel, false );
 
@@ -1878,8 +1728,11 @@ public class WekaSegmentation {
 			ArrayList< long[] > zChunks = getZChunks( numThreads, tileInterval );
 
 			// create instancesComboBox information (each instance needs a pointer to this)
-			Instances dataInfo = new Instances("segment", getAttributes(), 1);
-			dataInfo.setClassIndex(dataInfo.numAttributes() - 1);
+			Instances dataInfo = new Instances("segment",
+					classifierManager.getClassifierAttributes( classifierKey ),
+					1);
+
+			dataInfo.setClassIndex( dataInfo.numAttributes() - 1 );
 
 			// get result image setter
 			final ResultImageFrameSetter resultSetter = resultImage.getFrameSetter( tileInterval );
@@ -1909,7 +1762,8 @@ public class WekaSegmentation {
 										zChunk[0], zChunk[1],
 										//uncertaintyRegion,
 										dataInfo,
-										classifierManager.getClassifier( classifierKey )
+										classifierManager.getClassifier( classifierKey ),
+										accuracy
 								)
 						)
 				);
@@ -2041,46 +1895,6 @@ public class WekaSegmentation {
 	}
 
 
-	public ArrayList<String> getSettingActiveFeatureNames()
-	{
-		ArrayList<String> names = new ArrayList<>();
-
-		for (Feature feature : settings.featureList)
-		{
-			if ( feature.isActive )
-				names.add( feature.name);
-		}
-
-		return names;
-	}
-
-
-	public ArrayList<String> getAllFeatureNames()
-	{
-		ArrayList<String> names = new ArrayList<>();
-
-		for ( Feature feature : settings.featureList )
-		{
-				names.add( feature.name);
-		}
-
-		return names;
-	}
-
-	public ArrayList<Attribute> getAttributes()
-	{
-		ArrayList<Attribute> attributes = new ArrayList<>();
-
-		for ( Feature feature : settings.featureList )
-		{
-			attributes.add( new Attribute( feature.name) );
-		}
-
-		attributes.add( new Attribute("class", getClassNamesAsArrayList()) );
-
-		return attributes;
-	}
-
 	/**
 	 * Classify instancesComboBox concurrently
 	 *
@@ -2099,8 +1913,13 @@ public class WekaSegmentation {
 			long zMin, long zMax,
 			//UncertaintyRegion uncertaintyRegion,
 			final Instances dataInfo,
-			final FastRandomForest classifier)
+			final FastRandomForest classifier,
+			double accuracy)
 	{
+
+		final int FIRST_CLASS_ID = 0, SECOND_CLASS_ID = 1, FIRST_CLASS_PROB = 2,
+				SECOND_CLASS_PROB = 3, NUM_TREES_EVALUATED = 4;
+
 		if ( Thread.currentThread().isInterrupted() )
 			return null;
 
@@ -2109,27 +1928,19 @@ public class WekaSegmentation {
 			// interval is the same for all channels, thus simply take from 0th
 			FinalInterval interval = featureProvider.getInterval();
 
-			// plane-wise array to hold the classifications results
-			final byte[][] classificationResult = new byte[ (int) (zMax - zMin + 1) ]
-					[ (int) interval.dimension( X ) * (int) interval.dimension( Y) ];
-
-			// reusable array to be filled for each instance
-			// +1 for (unused) class value
-			double[] featureValues = null;
-
 			// create empty reusable instance
-			final ReusableDenseInstance ins =
-					new ReusableDenseInstance( 1.0, featureValues );
+			double[] featureValues = new double[ featureProvider.getNumFeatures() + 1];
+			final ReusableDenseInstance ins = new ReusableDenseInstance( 1.0, featureValues );
 			ins.setDataset( dataInfo );
 
 			// create empty reusable feature slice
 			double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
 
+			// create empty, reusable results array
+			double[] result = new double[5];
+
 			try
 			{
-				final int FIRST_CLASS_ID = 0, SECOND_CLASS_ID = 1, FIRST_CLASS_PROB = 2,
-				SECOND_CLASS_PROB = 3, NUM_TREES_EVALUATED = 4;
-				double[] result;
 
 				for ( long z = zMin; z <= zMax; ++z )
 				{
@@ -2141,16 +1952,14 @@ public class WekaSegmentation {
 						return;
 					}
 
-					int iInstanceThisSlice = 0;
 
 					for ( long y = interval.min( Y ); y <= interval.max( Y ); ++y )
 					{
 						for ( long x = interval.min( X ); x <= interval.max( X ); ++x )
 						{
-							// set reusable instance values
-							featureValues = featureProvider.getValuesFromFeatureSlice(
-									(int) x, (int) y, featureSlice );
 
+							// set instance values
+							featureValues = featureProvider.getValuesFromFeatureSlice( (int) x, (int) y, featureSlice );
 							ins.setValues( 1.0, featureValues );
 
 							result = classifier.distributionForInstance( ins, accuracy );
@@ -2168,18 +1977,6 @@ public class WekaSegmentation {
 							{
 								rfStatsMaximumTreesUsed.set( (int) result[ NUM_TREES_EVALUATED ] );
 							}
-
-							// todo: record uncertainties in global coordinates
-							/*
-							uncertaintyRegion.sumUncertainty += uncertainty;
-							uncertaintyRegion.xyzt[0] += x * uncertainty;
-							uncertaintyRegion.xyzt[1] += y * uncertainty;
-							uncertaintyRegion.xyzt[2] += z * uncertainty;
-
-							if ( uncertainty > uncertaintyRegion.maxUncertainty )
-							{
-								uncertaintyRegion.maxUncertainty = uncertainty;
-							}*/
 
 						}
 					}

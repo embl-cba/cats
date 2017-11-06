@@ -2218,7 +2218,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							instances = InstancesCreator.createInstancesFromExamples(
 									wekaSegmentation.getExamples(),
 									experimentTextField.getText(),
-									wekaSegmentation.getAllFeatureNames(),
+									wekaSegmentation.latestFeatureNames,
 									wekaSegmentation.getClassNames() );
 						}
 						else
@@ -2322,8 +2322,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 						classifier = wekaSegmentation.createFastRandomForest( instances2 );
 
-						wekaSegmentation.getClassifierManager().setClassifier(
-								classifier, instances2);
+						wekaSegmentation.getClassifierManager().setClassifier( classifier, instances2);
 					}
 					else
 					{

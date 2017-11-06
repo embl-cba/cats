@@ -5439,7 +5439,7 @@
     			{
     				if ( onlyActiveFeatures )
     				{
-    					if ( featureList.get(iFeature++).isActive )
+    					if ( featureListSubset.get(iFeature++).isActive )
     					{
     						values[iActiveFeature++] = featureValues[c][x][y][i];
     					}

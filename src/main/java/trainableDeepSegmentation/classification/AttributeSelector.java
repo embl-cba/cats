@@ -44,6 +44,8 @@ public abstract class AttributeSelector {
             logger.info("Random usage = nodes / attributes: " + randomUsage);
             logger.info("Usage threshold = random * factor: " + usageThreshold);
             logger.info("Resulting number of removed attributes: " + goners.size());
+            logger.info("Resulting number of kept attributes: " + (instances.numAttributes() - goners.size()));
+
         }
 
         return ( goners );

@@ -40,7 +40,7 @@ public class InstancesCreator {
     public static Instances createInstancesFromExamples( ArrayList< Example > examples,
                                                          String relationName,
                                                          ArrayList< String > featureNames,
-                                                  ArrayList< String > classNames )
+                                                         ArrayList< String > classNames )
     {
 
         Instances instances = createInstancesHeader(
@@ -119,7 +119,7 @@ public class InstancesCreator {
         wekaSegmentation.settings.classNames.add("label_im_class_1");
 
         int nClasses = wekaSegmentation.getNumClasses();
-        int nf = wekaSegmentation.getNumAllFeatures();
+        int nf = featureProvider.getNumFeatures();
 
         int[] pixelsPerClass = new int[nClasses];
 
@@ -235,7 +235,6 @@ public class InstancesCreator {
     {
 
         final int numClasses = wekaSegmentation.getNumClasses();
-        int nf = wekaSegmentation.getNumAllFeatures();
         int radius = 10;
         Random rand = new Random();
         if ( logger == null ) logger = new IJLazySwingLogger();
@@ -266,6 +265,8 @@ public class InstancesCreator {
                 wekaSegmentation.maximumMultithreadedLevel,
                 true );
 
+        int nf = featureProvider.getNumFeatures();
+
         logger.info ( "...computed features  in [ms]: " +
                 ( System.currentTimeMillis() - startTime ) );
 
@@ -276,7 +277,6 @@ public class InstancesCreator {
         wekaSegmentation.settings.classNames = new ArrayList<>();
         wekaSegmentation.settings.classNames.add("label_im_class_0");
         wekaSegmentation.settings.classNames.add("label_im_class_1");
-
 
         int[] pixelsPerClass = new int[ numClasses ];
 
@@ -343,7 +343,7 @@ public class InstancesCreator {
                                 xy = getRandomCoordinate( iClass, classCoordinates, rand );
                             }
 
-                            addInstance( instances, featureProvider, xy, featureSlice, iClass );
+                            addInstance( instances, featureProvider, xy, featureSlice, jClass );
                             
                             pixelsPerClass[iClass]++;
 

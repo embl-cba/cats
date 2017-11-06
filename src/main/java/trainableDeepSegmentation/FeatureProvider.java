@@ -1026,18 +1026,18 @@ public class FeatureProvider
         this.isLogging = isLogging;
     }
 
-    ArrayList< String > featureList = null;
+    ArrayList< String > featureListSubset = null;
 
-    public void setFeatureList( ArrayList< String > featureList )
+    public void setFeatureListSubset( ArrayList< String > featureListSubset )
     {
-        this.featureList = featureList;
+        this.featureListSubset = featureListSubset;
     }
 
     public boolean isFeatureNeeded( String featureImageTitle )
     {
-        if ( featureList == null ) return true;
+        if ( featureListSubset == null ) return true;
 
-        if ( featureList.contains( featureImageTitle ) )
+        if ( featureListSubset.contains( featureImageTitle ) )
         {
             return true;
         }
@@ -1049,9 +1049,9 @@ public class FeatureProvider
 
     public boolean isFeatureOrChildrenNeeded( String featureImageTitle )
     {
-        if ( featureList == null ) return true;
+        if ( featureListSubset == null ) return true;
 
-        for ( String feature : featureList )
+        for ( String feature : featureListSubset )
         {
             if ( feature.contains( featureImageTitle ) )
             {
@@ -1512,6 +1512,7 @@ public class FeatureProvider
                     if ( isFeatureNeeded( featureImage.getTitle() ) )
                     {
                         multiResolutionFeatureImageArray.add ( featureImage );
+
                         featureNames.add( featureImage.getTitle() );
                     }
                 }

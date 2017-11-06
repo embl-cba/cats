@@ -9,7 +9,7 @@ public class Settings implements Serializable {
 
     public double anisotropy = 1.0;
 
-    public int maxResolutionLevel = 3; // 3
+    public int maxResolutionLevel = 0; // 3
 
     public int downSamplingFactor = 3; // 3
 
