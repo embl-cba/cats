@@ -267,6 +267,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private boolean trainClassifierFlag = false;
 	private boolean updateTrainingDataFlag = false;
 
+	// TODO: make an "I am busy flag"
 
 	static final String REVIEW_START = "Review labels";
 	static final String REVIEW_END = "Done reviewing";
@@ -620,7 +621,18 @@ public class Weka_Deep_Segmentation implements PlugIn
 							}
 							if(e.getSource() == addAnnotationButton[i])
 							{
-								addAnnotation(i);
+								if ( !savingProjectFlag
+										&& !trainingFlag
+										&& !reviewLabelsFlag
+										)
+								{
+									addAnnotation( i );
+								}
+								else
+								{
+									logger.error( "I am busy, cannot add a " +
+											"new label right now...");
+								}
 								break;
 							}
 						}
@@ -1663,6 +1675,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			setSliceSelectorEnabled(s);
 		}
 
+
+
 		/**
 		 * Update buttons enabling depending on the current status of the plugin
 		 */
@@ -1679,6 +1693,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 			{
 				setButtonsEnabled( false );
 				updateTrainingDataButton.setEnabled( true );
+			}
+			else if ( savingProjectFlag )
+			{
+				setButtonsEnabled( false );
+			//	reviewLabelsButton.setEnabled( true );
 			}
 			else if ( reviewLabelsFlag )
 			{
@@ -2522,11 +2541,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
+	private boolean savingProjectFlag = false;
+
 	/**
 	 * Save current classifier into a file
 	 */
 	public void saveProject()
 	{
+
+		savingProjectFlag = true;
+		win.updateButtonsEnabling();
+
 		SaveDialog sd = new SaveDialog("Save project as...",
 				"project",
 				".tsp");
@@ -2540,9 +2565,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		if( ! wekaSegmentation.saveProject( sd.getDirectory() + sd.getFileName()) )
 		{
-			IJ.error("Error while writing classifier into a file");
-			return;
+			IJ.error("Error while writing project to file");
 		}
+
+		savingProjectFlag = false;
+		win.updateButtonsEnabling();
+
 	}
 
 	/**
@@ -2642,7 +2670,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		displayImage = new ImagePlus();
 		displayImage.setProcessor( Weka_Deep_Segmentation.PLUGIN_NAME + " "
 									+ Weka_Deep_Segmentation.PLUGIN_VERSION,
-									trainingImage.getProcessor().duplicate());
+									trainingImage.getProcessor().duplicate() );
 
 		// Remove current classification result image
 		win.resultOverlay.setImage(null);
@@ -3146,6 +3174,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 */
 	public void saveProject( String projectPathName )
 	{
+
+
+		win.updateButtonsEnabling();
 		final ImageWindow iw = WindowManager.getCurrentImage().getWindow();
 		if( iw instanceof CustomWindow )
 		{
@@ -3157,6 +3188,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				return;
 			}
 		}
+
+
 	}
 
 	/**
