@@ -4,6 +4,7 @@ import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.plugin.filter.MaximumFinder;
 import ij.process.ImageProcessor;
 import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
@@ -17,13 +18,12 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-import static trainableDeepSegmentation.ImageUtils.X;
-import static trainableDeepSegmentation.ImageUtils.Y;
-import static trainableDeepSegmentation.ImageUtils.Z;
+import static trainableDeepSegmentation.ImageUtils.*;
 import static trainableDeepSegmentation.examples.ExamplesUtils.getNumClassesInExamples;
 
 public class InstancesCreator {
@@ -327,7 +327,7 @@ public class InstancesCreator {
                         for (int localClass = 0; localClass < numClasses; ++localClass)
                         {
 
-                            for (int k = 0; k < 1; k++ )
+                            for (int k = 0; k < 3; k++ )
                             {
 
                                 int[] xy = getRandomCoordinate( localClass, localClassCoordinates, rand );
@@ -377,6 +377,235 @@ public class InstancesCreator {
 
         return ( instances );
 
+    }
+
+
+    // TODO: improve separation from WekaSegmentation
+    public static Instances createInstancesFromLabelImageRegion2(
+            WekaSegmentation wekaSegmentation,
+            ImagePlus inputImage,
+            ImagePlus labelImage,
+            ResultImage result,
+            String instancesName,
+            FinalInterval interval,
+            int numInstancesPerClassAndPlane,
+            int numThreads,
+            Logger logger )
+    {
+
+        final int numClasses = wekaSegmentation.getNumClasses();
+        int radius = 5;
+        Random rand = new Random();
+        if ( logger == null ) logger = new IJLazySwingLogger();
+
+
+        logger.info( "Computing features for label image region...");
+        IntervalUtils.logInterval( interval );
+        logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
+
+        long startTime = System.currentTimeMillis();
+
+        // Compute features
+        FeatureProvider featureProvider = new FeatureProvider();
+        featureProvider.setLogger( logger );
+        featureProvider.isLogging( true );
+        featureProvider.setInputImage( inputImage );
+        featureProvider.setWekaSegmentation( wekaSegmentation );
+        featureProvider.setInterval( interval );
+        featureProvider.setActiveChannels( wekaSegmentation.settings.activeChannels );
+        featureProvider.computeFeatures( numThreads,
+                wekaSegmentation.maximumMultithreadedLevel,
+                true );
+
+        int nf = featureProvider.getNumFeatures();
+
+        logger.info ( "...computed features  in [ms]: " +
+                ( System.currentTimeMillis() - startTime ) );
+
+        logger.info( "Computing instance values...");
+        startTime = System.currentTimeMillis();
+
+        // TODO: determine numClasses from labelImage!
+        wekaSegmentation.settings.classNames = new ArrayList<>();
+        wekaSegmentation.settings.classNames.add("label_im_class_0");
+        wekaSegmentation.settings.classNames.add("label_im_class_1");
+
+        int[] pixelsPerClass = new int[ numClasses ];
+
+        double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
+
+        Instances instances = InstancesCreator.createInstancesHeader(
+                instancesName,
+                featureProvider.getFeatureNames(),
+                wekaSegmentation.getClassNames());
+
+
+        // Collect instances per plane
+        for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
+        {
+
+            logLabelImageTrainingProgress( logger, z, interval, "...");
+
+            // Create lists of coordinates of pixels of each class
+            //
+            ArrayList< int[] >[] classCoordinates = new ArrayList[ numClasses ];
+
+            for ( int i = 0; i < numClasses; i++)
+            {
+                classCoordinates[i] = new ArrayList<>();
+            }
+
+            ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
+
+            for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
+            {
+                for ( int x = (int) interval.min( X ); x <= interval.max( X ); ++x)
+                {
+                    int classIndex = labelImageSlice.get(x, y);
+                    classCoordinates[classIndex].add( new int[]{ x, y });
+                }
+            }
+
+            featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
+
+            for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
+            {
+                for (int iClass = 0; iClass < numClasses; ++iClass)
+                {
+                    if ( ! classCoordinates[iClass].isEmpty() )
+                    {
+                        int[] center = getRandomCoordinate( iClass, classCoordinates, rand );
+
+                        ArrayList< int[] >[] localClassCoordinates =
+                                getLocalClassCoordinates( numClasses,
+                                        labelImageSlice,
+                                        interval,
+                                        center,
+                                        radius );
+
+                        for (int localClass = 0; localClass < numClasses; ++localClass)
+                        {
+
+                            for (int k = 0; k < 3; k++ )
+                            {
+
+                                int[] xy = getRandomCoordinate( localClass, localClassCoordinates, rand );
+
+                                if ( xy == null )
+                                {
+                                    // no local coordinate has been found
+                                    // thus we take a global one
+                                    xy = getRandomCoordinate( localClass, classCoordinates, rand );
+                                }
+
+                                addInstance( instances, featureProvider, xy, featureSlice, localClass );
+
+                                pixelsPerClass[ localClass ]++;
+
+                            }
+
+                        }
+
+
+                    }
+                }
+            }
+
+        }
+
+
+        logger.info ( "...computed instance values in [min]: " +
+                wekaSegmentation.getMinutes( System.currentTimeMillis(), startTime ) );
+
+        //for( int j = 0; j < numOfClasses ; j ++ )
+        //	IJ.log("Added " + numSamples + " instancesComboBox of '" + loadedClassNames.get( j ) +"'.");
+
+        logger.info("Label image training data added " +
+                "(" + instances.numInstances() +
+                " instancesComboBox, " + instances.numAttributes() +
+                " attributes, " + instances.numClasses() + " classes).");
+
+        for ( int iClass = 0; iClass < numClasses; ++iClass )
+        {
+            logger.info( "Class " + iClass + " [pixels]: " + pixelsPerClass[ iClass ]);
+            if( pixelsPerClass[iClass] == 0 )
+            {
+                logger.error("No labels of class found: " + iClass);
+            }
+        }
+
+        return ( instances );
+
+    }
+
+
+    private ArrayList < int[] > [][] generateEmptyClassCoordinates(
+            int numClasses,
+            int numAccuracies )
+
+    {
+
+        ArrayList < int[] >[][] classCoordinates;
+        classCoordinates = new ArrayList[numClasses][numAccuracies];
+
+        for ( int iClass = 0; iClass < numClasses; iClass++)
+        {
+            for ( int a = 0; a < numAccuracies; ++a )
+            {
+                classCoordinates[iClass][a] = new ArrayList<>();
+            }
+        }
+
+        return classCoordinates;
+    }
+
+    final static int TOTAL = 0, CORRECT = 1, FP = 2, FN = 3;
+
+    private void addClassCoordinatesAndAccuracies(
+                                    ArrayList < int[] >[][] classCoordinates,
+                                    int[][] accuracies,
+                                    int z, int t,
+                                    ImagePlus labelImage,
+                                    ResultImage resultImage,
+                                    FinalInterval interval,
+                                    int numClasses)
+    {
+        int maxProbability = resultImage.getProbabilityRange();
+
+        ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
+
+        for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
+        {
+            for ( int x = ( int ) interval.min( X ); x <= interval.max( X ); ++x )
+            {
+                int[] classifiedClassAndProbability =
+                        resultImage.getClassAndProbability( x, y, z, t );
+
+                int realClass = labelImageSlice.get( x, y );
+                int classifiedClass = classifiedClassAndProbability[ 0 ];
+                int correctness = classifiedClassAndProbability[ 1 ];
+
+                if ( realClass == classifiedClass )
+                {
+                    accuracies[ realClass ][ TOTAL ]++;
+                    accuracies[ realClass ][ CORRECT ]++;
+
+                }
+                else
+                {
+                    correctness *= -1;
+                    accuracies[ realClass ][ TOTAL ]++;
+                    accuracies[ realClass ][ FN ]++;
+                    accuracies[ classifiedClass ][ FP ]++;
+                }
+
+                // shift such that it becomes a positive index
+                correctness += maxProbability;
+
+                classCoordinates[realClass][correctness].add( new int[]{ x, y } );
+
+            }
+        }
     }
 
 
@@ -514,6 +743,25 @@ public class InstancesCreator {
 
         return ( attributeSubset );
     }
+
+
+
+    private ImageProcessor createWrongnessImage()
+    {
+        ImageProcessor ip = null;
+
+        return ( ip );
+    }
+
+    private ArrayList< int[] > getCoordinatesOfLocalMaxima(
+            ImageProcessor ip,
+            int tolerance )
+    {
+        MaximumFinder mf = new MaximumFinder();
+        Polygon maxima = mf.getMaxima(ip, tolerance, false);
+        //print("count="+maxima.npoints);
+    }
+
 
 
 }

@@ -91,5 +91,10 @@ public class ResultImageMemory implements ResultImage {
         return ( result );
     }
 
+    @Override
+    public int getProbabilityRange()
+    {
+        return CLASS_LUT_WIDTH;
+    }
 
 }

@@ -67,6 +67,13 @@ public class ResultImageDisk implements ResultImage {
         return ( new ResultImageFrameSetterDisk( this, interval ) );
     }
 
+    @Override
+    public int getProbabilityRange()
+    {
+        return CLASS_LUT_WIDTH;
+    }
+
+
     private ImagePlus createStream( String directory, long[] dimensions )
     {
         // TODO: check for cancel!

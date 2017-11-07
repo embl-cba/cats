@@ -1944,7 +1944,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
-	private void assignResultImage( String resultImageType )
+	public void assignResultImage( String resultImageType )
 	{
 		if ( resultImageType.equals( RESULT_IMAGE_DISK_SINGLE_TIFF ) )
 		{
