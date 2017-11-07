@@ -164,7 +164,7 @@ public class WekaSegmentation {
 
 	private double avgRfTreeSize = 0.0;
 
-	public double accuracy = 3.0;
+	public double accuracy = 4.0;
 
 	public double memoryFactor = 1.0;
 

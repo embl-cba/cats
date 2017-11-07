@@ -393,7 +393,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		loadLabelImageButton.setEnabled(true);
 
 		saveProjectButton = new JButton ("Save project");
-		saveProjectButton.setEnabled(false);
+		saveProjectButton.setEnabled( true );
 
 		addClassButton = new JButton ("Create new class");
 		addClassButton.setToolTipText("Add one more label to mark different areas");
@@ -482,6 +482,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 							reviewLabelsFlag = true;
 							reviewLabelsButton.setText( REVIEW_END );
 							win.updateButtonsEnabling();
+
+							// remove all drawing elements
+							displayImage.killRoi();
+							removeAllRoiOverlays();
+							win.resultOverlay.setImage(null);
+							displayImage.updateAndDraw();
+
 							reviewLabels( reviewLabelsClassComboBox.getSelectedIndex() );
 						}
 						else
@@ -598,18 +605,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 							}
 							if(e.getSource() == addAnnotationButton[i])
 							{
-								if ( !savingProjectFlag
-										&& !trainingFlag
-										&& !reviewLabelsFlag
-										)
-								{
-									addAnnotation( i );
-								}
-								else
-								{
-									logger.error( "I am busy, cannot add a " +
-											"new label right now...");
-								}
+
+								addAnnotation( i );
+
 								break;
 							}
 						}
@@ -655,6 +653,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private void reviewLabels( int classNum )
 	{
+
 		labelManager = new LabelManager( displayImage );
 		labelManager.setExamples( wekaSegmentation.getExamples() );
 		labelManager.reviewLabelsInRoiManager( classNum );
@@ -1588,6 +1587,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		{
 			trainButton.setEnabled(s);
 			overlayButton.setEnabled(s);
+			loadProjectButton.setEnabled( s );
 			//getResultButton.setEnabled(s);
 			//setResultButton.setEnabled(s);
 			assignResultImageButton.setEnabled( s );
@@ -1627,7 +1627,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				setButtonsEnabled( false );
 				trainButton.setEnabled( true );
 			}
-			else if ( savingProjectFlag )
+			else if ( projectIOFlag )
 			{
 				setButtonsEnabled( false );
 			//	reviewLabelsButton.setEnabled( true );
@@ -1649,6 +1649,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 				final boolean resultExists = null != wekaSegmentation.getResultImage();
 
 				overlayButton.setEnabled(resultExists);
+
+				saveProjectButton.setEnabled( true );
+				loadProjectButton.setEnabled( true );
+
 				//getResultButton.setEnabled(win.trainingComplete);
 				//setResultButton.setEnabled( true) ;
 				assignResultImageButton.setEnabled( true );
@@ -1674,7 +1678,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 								examplesEmpty = false;
 								break;
 							}
-				saveProjectButton.setEnabled( wekaSegmentation.isTrainingCompleted );
 
 				for(int i = 0 ; i < wekaSegmentation.getNumClasses(); i++)
 				{
@@ -1932,9 +1935,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 */
 	private void addAnnotation( int classNum )
 	{
-		if ( (classNum >= numOfClasses) || (classNum < 0))
+
+		if ( projectIOFlag
+				|| trainingFlag
+				|| reviewLabelsFlag )
 		{
-			logger.error( " Class " + ( classNum + 1) + " does not exist." );
+			logger.error( "Sorry, but I am busy, cannot add a " +
+					"new label right now...");
 			return;
 		}
 
@@ -2432,15 +2439,15 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
-	private boolean savingProjectFlag = false;
+	private boolean projectIOFlag = false;
 
 	/**
-	 * Save current classifier into a file
+	 * Save current project into a file
 	 */
 	public void saveProject()
 	{
 
-		savingProjectFlag = true;
+		projectIOFlag = true;
 		win.updateButtonsEnabling();
 
 		SaveDialog sd = new SaveDialog("Save project as...",
@@ -2448,7 +2455,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 				".tsp");
 
 		if (sd.getFileName()==null)
+		{
+			projectIOFlag = false;
+			win.updateButtonsEnabling();
 			return;
+		}
 
 		// Record
 		String[] arg = new String[] { sd.getDirectory() + sd.getFileName() };
@@ -2459,54 +2470,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 			IJ.error("Error while writing project to file");
 		}
 
-		savingProjectFlag = false;
+		projectIOFlag = false;
 		win.updateButtonsEnabling();
 
-	}
-
-	/**
-	 * Write classifier into a file
-	 *
-	 * @param classifier classifier
-	 * @param trainHeader train header containing attribute and class information
-	 * @param filename name (with complete path) of the destination file
-	 * @return false if error
-	 */
-	public static boolean saveProject(
-			AbstractClassifier classifier,
-			Instances trainHeader,
-			String filename)
-	{
-		File sFile = null;
-		boolean saveOK = true;
-
-
-		IJ.log("Saving model to file...");
-
-		try {
-			sFile = new File(filename);
-			OutputStream os = new FileOutputStream(sFile);
-			if (sFile.getName().endsWith(".gz"))
-			{
-				os = new GZIPOutputStream(os);
-			}
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(os);
-			objectOutputStream.writeObject(classifier);
-			if (trainHeader != null)
-				objectOutputStream.writeObject(trainHeader);
-			objectOutputStream.flush();
-			objectOutputStream.close();
-		}
-		catch (Exception e)
-		{
-			IJ.error("Save Failed", "Error when saving classifier into a file");
-			saveOK = false;
-			e.printStackTrace();
-		}
-		if (saveOK)
-			IJ.log("Saved model into the file " + filename);
-
-		return saveOK;
 	}
 
 	/**
@@ -2576,18 +2542,34 @@ public class Weka_Deep_Segmentation implements PlugIn
 		win.updateButtonsEnabling();
 	}
 
+
+	private void removeAllRoiOverlays()
+	{
+		for ( int i = 0; i < roiOverlay.length; ++i )
+		{
+			roiOverlay[ i ].setRoi( null );
+		}
+	}
+
 	/**
 	 * Load annotations from a file
 	 */
 	public void loadProject( String directory, String fileName )
 	{
 
+		projectIOFlag = true;
+		win.updateButtonsEnabling();
+
 		if ( directory == null || fileName == null )
 		{
 			OpenDialog od = new OpenDialog("Choose project file",
 					OpenDialog.getLastDirectory(), "myProject.tsproj");
 			if (od.getFileName() == null)
+			{
+				projectIOFlag = false;
+				win.updateButtonsEnabling();
 				return;
+			}
 			directory = od.getDirectory();
 			fileName = od.getFileName();
 		}
@@ -2596,7 +2578,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		String[] arg = new String[] { directory + fileName };
 		record(SAVE_ANNOTATIONS, arg);
 
-		win.setButtonsEnabled(false);
 
 		try
 		{
@@ -2625,10 +2606,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 			IJ.showMessage(e.toString());
 		}
 
-
-
+		projectIOFlag = false;
 		win.updateButtonsEnabling();
+
 	}
+
 
 
 	/**
@@ -3058,30 +3040,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 	}
 
-	/**
-	 * Save current project to disk
-	 *
-	 * @param projectPathName complete path name for the project file
-	 */
-	public void saveProject( String projectPathName )
-	{
-
-
-		win.updateButtonsEnabling();
-		final ImageWindow iw = WindowManager.getCurrentImage().getWindow();
-		if( iw instanceof CustomWindow )
-		{
-			final CustomWindow win = (CustomWindow) iw;
-			final WekaSegmentation wekaSegmentation = win.getWekaSegmentation();
-			if( ! wekaSegmentation.saveProject( projectPathName ) )
-			{
-				logger.error("Error while writing project to disk");
-				return;
-			}
-		}
-
-
-	}
 
 	/**
 	 * Change a class name

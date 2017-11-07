@@ -45,6 +45,8 @@ public class ResultImageDisk implements ResultImage {
                                               ArrayList< Boolean > saveClass )
     {
 
+        logger.info("Saving results as separate imaris channels.." );
+
         saveImagePlusAsSeparateImarisChannels(
                 directory,
                 saveClass,
