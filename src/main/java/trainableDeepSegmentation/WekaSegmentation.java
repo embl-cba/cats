@@ -638,7 +638,6 @@ public class WekaSegmentation {
 
 		logger.info("Saving project to disk...");
 
-
 		try
 		{
 			sFile = new File(filename);
@@ -653,7 +652,8 @@ public class WekaSegmentation {
 			objectOutputStream.writeObject(getExamples());
 			objectOutputStream.flush();
 			objectOutputStream.close();
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
 			IJ.error("Save Failed", "Error when saving project to disk");
 			logger.info(e.toString());
@@ -666,7 +666,6 @@ public class WekaSegmentation {
 
 		return saveOK;
 	}
-
 
 	/**
 	 * Read header classifier from a .model file
