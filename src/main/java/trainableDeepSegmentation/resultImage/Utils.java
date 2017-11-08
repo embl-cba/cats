@@ -6,6 +6,7 @@ import bigDataTools.ImarisUtils;
 import bigDataTools.ImarisWriter;
 import bigDataTools.logging.Logger;
 import ij.ImagePlus;
+import ij.plugin.Binner;
 import ij.plugin.Duplicator;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ public abstract class Utils {
     private static void saveClassAsImaris( int classId,
                                            String directory,
                                            ImagePlus result,
+                                           int[] binning,
                                            Logger logger,
                                            ArrayList< String > classNames,
                                            int CLASS_LUT_WIDTH)
@@ -28,7 +30,7 @@ public abstract class Utils {
         ImarisDataSet imarisDataSet = new ImarisDataSet();
 
         imarisDataSet.setFromImagePlus( result,
-                new int[]{1,1,1},
+                binning,
                 directory,
                 className,
                 "/");
@@ -44,8 +46,14 @@ public abstract class Utils {
         for ( int t = 0; t < result.getNFrames(); ++t )
         {
 
-            ImagePlus impClass = getClassImage( classId,
-                    t, result, CLASS_LUT_WIDTH );
+            ImagePlus impClass = getClassImage( classId, t, result, CLASS_LUT_WIDTH );
+
+            if ( binning[0]*binning[1]*binning[2] > 1 )
+            {
+                Binner binner = new Binner();
+                impClass = binner.shrink( impClass, binning[ 0 ],
+                        binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
+            }
 
             writer.writeImarisCompatibleResolutionPyramid(
                     impClass,
@@ -79,16 +87,30 @@ public abstract class Utils {
             String directory,
             ArrayList< Boolean > saveClass,
             ImagePlus result,
+            int[] binning,
             Logger logger,
             ArrayList< String > classNames,
             int CLASS_LUT_WIDTH)
     {
 
+        long volume = (long) 1.0 *
+                result.getWidth() / binning[0] *
+                result.getHeight() / binning[1] *
+                result.getNSlices() / binning[2];
+
+        if ( volume > Integer.MAX_VALUE - 10 )
+        {
+            logger.error( "Your image (after binning) is too large [voxels]: " + volume
+                    + "\nDue to java indexing issues the maximum currently is around " + Integer.MAX_VALUE +
+                    "\nPlease use more binning.");
+            return;
+        }
+
         for ( int i = 0; i < saveClass.size(); ++i )
         {
             if ( saveClass.get( i ) )
             {
-                saveClassAsImaris( i, directory, result, logger, classNames, CLASS_LUT_WIDTH );
+                saveClassAsImaris( i, directory, result, binning, logger, classNames, CLASS_LUT_WIDTH );
             }
         }
 

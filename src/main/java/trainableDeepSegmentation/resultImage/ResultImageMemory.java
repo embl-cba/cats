@@ -32,12 +32,14 @@ public class ResultImageMemory implements ResultImage {
 
     @Override
     public void saveAsSeparateImarisChannels( String directory,
-                                              ArrayList< Boolean > saveClass )
+                                              ArrayList< Boolean > saveClass,
+                                              int[] binning)
     {
         saveImagePlusAsSeparateImarisChannels(
                 directory,
                 saveClass,
                 result,
+                binning,
                 logger,
                 wekaSegmentation.getClassNames(),
                 CLASS_LUT_WIDTH
