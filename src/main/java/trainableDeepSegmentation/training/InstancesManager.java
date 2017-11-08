@@ -2,27 +2,28 @@ package trainableDeepSegmentation.training;
 
 import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
+import weka.core.Instance;
 import weka.core.Instances;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class InstancesManager {
 
     Logger logger = new IJLazySwingLogger();
 
-    Map< String, Instances > instancesMap = null;
+    SortedMap< String, Instances > instancesMap = null;
 
     public InstancesManager()
     {
-        instancesMap = new HashMap<>();
+        instancesMap = new TreeMap<>();
     }
 
     public void putInstances( Instances instances )
     {
-        instancesMap.put( instances.relationName(), instances );
+        String key = instances.relationName().split( "--" )[0];
+
+        instancesMap.put( key, instances );
     }
 
     public Instances getInstances( String key )
@@ -41,8 +42,8 @@ public class InstancesManager {
      * @param filename ARFF file name
      */
     private boolean saveInstancesToARFF( Instances instances,
-                                        String directory,
-                                        String filename)
+                                         String directory,
+                                         String filename)
     {
 
         BufferedWriter out = null;
@@ -53,7 +54,7 @@ public class InstancesManager {
                                     + File.separator + filename ) ) );
 
             final Instances header = new Instances(instances, 0);
-            out.write(header.toString());
+            out.write( header.toString() );
 
             for(int i = 0; i < instances.numInstances(); i++)
             {
@@ -80,12 +81,33 @@ public class InstancesManager {
 
 
     public boolean saveInstancesToARFF( String key,
-                                         String directory,
-                                         String filename)
+                                        String directory,
+                                        String filename)
     {
         boolean status = saveInstancesToARFF( instancesMap.get( key ),
                 directory, filename );
         return status;
+    }
+
+
+    public Instances getCombinedInstances( List< String > keys )
+    {
+
+        Instances combined = new Instances( getInstances( keys.get( 0 ) ), 0 );;
+
+        for ( int i = 0; i < keys.size(); ++i )
+        {
+            Instances nextInstances = getInstances( keys.get(i) );
+
+            for( Instance instance : nextInstances )
+            {
+                combined.add( instance );
+            }
+
+        }
+
+        return combined;
+
     }
 
 
@@ -113,12 +135,17 @@ public class InstancesManager {
         Instances instances = loadInstancesFromARFF( directory, filename );
         if ( instances == null ) return null;
 
-
-
-        String key = filename.substring(0, filename.lastIndexOf('.'));
+        String key = getName( instances );
         instancesMap.put( key, instances );
 
         return key;
+    }
+
+    private String getName( Instances instances )
+    {
+        String name = instances.relationName().split( "--" )[0];
+
+        return name;
     }
 
     /**
@@ -155,5 +182,15 @@ public class InstancesManager {
         return null;
     }
 
+
+    public static void logInstancesInformation( Instances instances, Logger logger )
+    {
+        logger.info( "\n# Instances information" );
+        logger.info( "Number of instances: " + instances.size() );
+        logger.info( "Number of attributes: " + instances.numAttributes() );
+
+        // TODO: output per class a.s.o
+
+    }
 
 }

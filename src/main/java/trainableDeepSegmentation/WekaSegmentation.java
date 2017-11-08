@@ -277,6 +277,10 @@ public class WekaSegmentation {
 
 	private ClassifierManager classifierManager = new ClassifierManager();
 
+	public String getInputImageTitle()
+	{
+		return ( inputImage.getTitle() );
+	}
 
 	/**
 	 * Default constructor.
@@ -1142,8 +1146,8 @@ public class WekaSegmentation {
 	 */
 	public int getFeatureVoxelSizeAtMaximumScale()
 	{
-		int maxFeatureVoxelSize = (int) Math.pow(settings.downSamplingFactor,
-				settings.maxResolutionLevel);
+		int maxFeatureVoxelSize = (int) Math.pow(settings.binFactor,
+				settings.maxBinLevel );
 		return maxFeatureVoxelSize;
 	}
 
@@ -1435,7 +1439,9 @@ public class WekaSegmentation {
 			FastRandomForest classifier,
 			Instances instances)
 	{
-		int numDecisionNodes = ((FastRandomForest) classifier).getDecisionNodes();
+
+
+		int numDecisionNodes = classifier.getDecisionNodes();
 
 		int[] tmp = classifier.getAttributeUsages();
 		List<Integer> attributeUsages = Arrays.stream(tmp).boxed().collect( Collectors.toList());

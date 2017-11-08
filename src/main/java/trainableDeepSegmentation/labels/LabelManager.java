@@ -66,6 +66,7 @@ public class LabelManager {
             addRoiToManager( manager, imp, roi );
             underReview.add ( roi.getProperty( KEY ) ) ;
         }
+
     }
 
     private static void addRoiToManager( RoiManager manager, ImagePlus imp, Roi roi )

@@ -144,7 +144,6 @@ public class FeatureProvider
         width = imp.getWidth();
         height = imp.getHeight();
         inputImage = imp;
-        inputImage.setTitle("Orig");
     }
 
     public void setActiveChannels( ArrayList<Integer> activeChannels )
@@ -1211,14 +1210,13 @@ public class FeatureProvider
         long start = System.currentTimeMillis();
 
         ImagePlus inputImageCrop = getDataCube( inputImage, expandedInterval, "mirror" );
+        inputImageCrop.setTitle( "Orig" );
 
         if ( isLogging )
         {
             logger.info("Image data cube loaded in [ms]: " +
                     (System.currentTimeMillis() - start));
         }
-
-
 
         // Set a calibration that can be changed during the binning
         Calibration calibration = new Calibration();
@@ -1241,7 +1239,7 @@ public class FeatureProvider
 
             ArrayList< int[] > binnings = new ArrayList<>();
 
-            for (int level = 0; level <= wekaSegmentation.settings.maxResolutionLevel; level++)
+            for ( int level = 0; level <= wekaSegmentation.settings.maxBinLevel; level++)
             {
 
                 start = System.currentTimeMillis();
@@ -1275,7 +1273,7 @@ public class FeatureProvider
                     int[] binning = getBinning(
                             featureImagesPreviousResolution.get(0),
                             anisotropy,
-                            wekaSegmentation.settings.downSamplingFactor);
+                            wekaSegmentation.settings.binFactor );
 
                     int[] combinedBinning = new int[3];
                     for ( int i = 0; i < 3; i++ )
@@ -1300,7 +1298,7 @@ public class FeatureProvider
 
                     for (ImagePlus featureImage : featureImagesPreviousResolution)
                     {
-                        if ( level == wekaSegmentation.settings.maxResolutionLevel )
+                        if ( level == wekaSegmentation.settings.maxBinLevel )
                         {
                             /*
                             don't bin but smooth last scale to better preserve
@@ -1308,8 +1306,8 @@ public class FeatureProvider
                             smoothing radius of 3 is the largest that will not
                             cause boundary effects,
                             because the ignored border during classification is
-                            3 pixel at settings.maxResolutionLevel - 1
-                            (i.e. 1 pixel at settings.maxResolutionLevel)
+                            3 pixel at settings.maxBinLevel - 1
+                            (i.e. 1 pixel at settings.maxBinLevel)
                             */
 
                             // TODO:
@@ -1380,7 +1378,7 @@ public class FeatureProvider
                 double smoothingScale = 1.0;
                 double integrationScale = smoothingScale;
 
-                if ( level == wekaSegmentation.settings.maxResolutionLevel )
+                if ( level == wekaSegmentation.settings.maxBinLevel )
                 {
                     // for the last scale we do not bin but only smooth (s.a.),
                     // thus we need to look for features over a wider range
@@ -1420,7 +1418,7 @@ public class FeatureProvider
                      at bay.
                     */
                     if ( ! featureImage.getTitle().contains(
-                            CONV_DEPTH + wekaSegmentation.settings.maxDeepConvolutionLevel) )
+                            CONV_DEPTH + wekaSegmentation.settings.maxDeepConvLevel ) )
                     {
                         if (level <= maximumMultithreadedLevel) // multi-threaded
                         {
@@ -1535,7 +1533,6 @@ public class FeatureProvider
 
         return true;
     }
-
 
     private void putDeepConvFeatLevelIntoTitle(ImagePlus imp)
     {

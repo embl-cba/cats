@@ -7,13 +7,18 @@ import static trainableDeepSegmentation.WekaSegmentation.MAX_NUM_CLASSES;
 
 public class Settings implements Serializable {
 
+    public final static String ANISOTROPY = "anisotropy";
+    public final static String BIN_FACTOR = "binFactor";
+    public final static String MAX_BIN_LEVEL = "maxBinLevel";
+    public final static String MAX_DEEP_CONV_LEVEL = "maxDeepConvLevel";
+
     public double anisotropy = 1.0;
 
-    public int maxResolutionLevel = 3; // 3
+    public int maxBinLevel = 3; // 3
 
-    public int downSamplingFactor = 3; // 3
+    public int binFactor = 3; // 3
 
-    public int maxDeepConvolutionLevel = 3; // 3
+    public int maxDeepConvLevel = 3; // 3
 
     public int backgroundThreshold = 0; // gray-values
 

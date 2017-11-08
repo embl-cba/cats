@@ -1,6 +1,5 @@
 package trainableDeepSegmentation;
 
-import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
 import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
@@ -34,6 +33,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.GZIPOutputStream;
@@ -50,6 +50,7 @@ import trainableDeepSegmentation.results.ResultImageDisk;
 import trainableDeepSegmentation.results.ResultImageGUI;
 import trainableDeepSegmentation.results.ResultImageMemory;
 import trainableDeepSegmentation.training.InstancesCreator;
+import trainableDeepSegmentation.training.InstancesManager;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
@@ -164,7 +165,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	// TODO: how to know the settings associated with training data
 	// ??
-	private JButton ioButton = null;
+	private JButton executeIoButton = null;
 	private JComboBox ioComboBox = new JComboBox(
 			new String[] {
 					IO_LOAD_PROJECT,
@@ -180,7 +181,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private JTextField uncertaintyTextField = new JTextField();
 
-	private JComboBox trainingDataComboBox = new JComboBox( new String[] { } );
+	private JList instancesList = null;
 
 	/** Weka button */
 	private JButton wekaButton = null;
@@ -274,15 +275,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** name of the macro method to set the overlay opacity */
 	public static final String SET_OPACITY = "setOpacity";
 	/** boolean flag set to true while training */
-	private boolean trainClassifierFlag = false;
-	private boolean updateTrainingDataFlag = false;
 
 	// TODO: make an "I am busy flag"
 
 	static final String REVIEW_START = "Review labels";
 	static final String REVIEW_END = "Done reviewing";
-
-	private boolean reviewLabelsFlag = false;
 
 	public static final String RESULT_IMAGE_DISK_SINGLE_TIFF = "Disk";
 	public static final String RESULT_IMAGE_RAM = "RAM";
@@ -395,10 +392,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 		plotButton.setToolTipText("Plot result based on different metrics");
 		plotButton.setEnabled(false);
 
+		/*
 		printProjectInfoButton = new JButton("Log project information");
 		printProjectInfoButton.setToolTipText("Prints information " +
 				"about the project into the Log window");
 		printProjectInfoButton.setEnabled(true);
+		*/
 
 		applyButton = new JButton ("Apply classifier");
 		applyButton.setToolTipText("Apply classifier");
@@ -411,8 +410,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		classificationRangeTextField = new JTextField("None", 15);
 		objectSizeRangeTextField     = new JTextField("300,100000");
 
-		ioButton = new JButton ("Execute I/O");
-		ioButton.setEnabled(true);
+		executeIoButton = new JButton (" Do it! ");
+		executeIoButton.setEnabled(true);
 
 		addClassButton = new JButton ("Create new class");
 		addClassButton.setToolTipText("Add one more label to mark different areas");
@@ -456,7 +455,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				{
 					if( e.getSource() == trainClassifierButton )
 					{
-						trainClassifier( command );
+						trainClassifier();
 					}
 					else if( e.getSource() == overlayButton){
 						// Macro recording
@@ -466,7 +465,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					}
 					else if( e.getSource() == updateTrainingDataButton )
 					{
-						updateTrainingData( command );
+						updateTrainingData();
 					}
 					else if( e.getSource() == stopButton )
 					{
@@ -500,9 +499,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 					{
 						if ( reviewLabelsButton.getText().equals( REVIEW_START ) )
 						{
-							reviewLabelsFlag = true;
+							win.setButtonsEnabled( false );
+							reviewLabelsButton.setEnabled( true );
 							reviewLabelsButton.setText( REVIEW_END );
-							win.updateButtonsEnabling();
 							reviewLabels( reviewLabelsClassComboBox.getSelectedIndex() );
 						}
 						else
@@ -511,10 +510,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 							ArrayList< Example > approvedExamples = labelManager.getExamples();
 							wekaSegmentation.setExamples( approvedExamples );
 							labelManager.close();
-							reviewLabelsFlag = false;
 							reviewLabelsButton.setText( REVIEW_START );
-							win.updateExampleLists();
-							win.updateButtonsEnabling();
+							win.setButtonsEnabled( true );
 						}
 					}
 
@@ -581,8 +578,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 								objectSizeRangeTextField.getText());
 								*/
 					}
-					else if(e.getSource() == ioButton )
+					else if(e.getSource() == executeIoButton )
 					{
+						win.setButtonsEnabled( false );
+
 						String action = (String) ioComboBox.getSelectedItem();
 
 						switch ( action )
@@ -594,10 +593,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 								saveProject();
 								break;
 							case IO_LOAD_INSTANCES:
-								loadProject(null, null);
+								loadInstances();
 								break;
 							case IO_SAVE_INSTANCES:
-								saveProject();
+								saveInstances( (String) instancesList.getModel().getElementAt( 0 ) );
 								break;
 							case IO_LOAD_LABEL_IMAGE:
 								loadLabelImage();
@@ -608,13 +607,15 @@ public class Weka_Deep_Segmentation implements PlugIn
 										wekaSegmentation.getClassNames() );
 								break;
 						}
+
+						win.setButtonsEnabled( true );
+
 					}
 					else if(e.getSource() == addClassButton){
 						addNewClass();
 					}
 					else if(e.getSource() == settingsButton){
 						showSettingsDialog();
-						win.updateButtonsEnabling();
 					}
 					else if(e.getSource() == testThreadsButton){
 						testThreads();
@@ -635,8 +636,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							}
 							if(e.getSource() == addAnnotationButton[i])
 							{
-								if ( !savingProjectFlag
-										&& !reviewLabelsFlag )
+								if ( ! wekaSegmentation.isBusy )
 								{
 									addAnnotation( i );
 								}
@@ -648,7 +648,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 								break;
 							}
 						}
-						win.updateButtonsEnabling();
 					}
 
 				}
@@ -684,7 +683,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		win.setButtonsEnabled( true );
 
 	}
-
 
 	private void loadLabelImage()
 	{
@@ -722,7 +720,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		labelManager.setExamples( wekaSegmentation.getExamples() );
 		labelManager.reviewLabelsInRoiManager( classNum );
 	};
-
 
 	/**
 	 * Custom canvas to deal with zooming an panning
@@ -935,10 +932,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 			reviewLabelsButton.addActionListener( listener );
 			probabilityButton.addActionListener(listener);
 			plotButton.addActionListener(listener);
-			printProjectInfoButton.addActionListener(listener);
+			//printProjectInfoButton.addActionListener(listener);
 			applyButton.addActionListener(listener);
 			postProcessButton.addActionListener(listener);
-			ioButton.addActionListener(listener);
+			executeIoButton.addActionListener(listener);
 			addClassButton.addActionListener(listener);
 			settingsButton.addActionListener(listener);
 			testThreadsButton.addActionListener(listener);
@@ -1196,12 +1193,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingJPanel.add(assignResultImagePanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
+			/*
 			JPanel experimentPanel = new JPanel();
 			experimentPanel.add( new JLabel("Session name:") );
 			experimentTextField = new JTextField("image001", 10);
 			experimentPanel.add( experimentTextField );
 			trainingJPanel.add( experimentPanel, trainingConstraints );
 			trainingConstraints.gridy++;
+			*/
 
 			JPanel trainClassifierPanel = new JPanel();
 			trainClassifierPanel.add( updateTrainingDataButton );
@@ -1213,12 +1212,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 			JPanel trainingDataPanel = new JPanel();
 			trainingDataPanel.add( trainClassifierButton );
 			trainingDataPanel.add( new JLabel("with") );
-			trainingDataPanel.add( trainingDataComboBox );
+			DefaultListModel listModel = new DefaultListModel();
+			listModel.addElement( "None" );
+			instancesList = new JList( listModel );
+			instancesList.setVisibleRowCount(3);
+			JScrollPane listScrollPane = new JScrollPane(instancesList);
+			listScrollPane.setPreferredSize( new Dimension( 150,50 ) );
+			trainingDataPanel.add( listScrollPane );
 			trainingJPanel.add(trainingDataPanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
 			JPanel applyPanel = new JPanel();
 			applyPanel.add( applyButton, trainingConstraints );
+			trainingJPanel.add( applyPanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
 			JPanel panelZTRange = new JPanel();
@@ -1301,7 +1307,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			*/
 
 			JPanel ioPanel = new JPanel();
-			ioPanel.add( ioButton, trainingConstraints);
+			ioPanel.add( executeIoButton, trainingConstraints);
 			ioPanel.add( ioComboBox, trainingConstraints );
 			trainingJPanel.add( ioPanel, trainingConstraints );
 			trainingConstraints.gridy++;
@@ -1309,11 +1315,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 			//trainingJPanel.add(saveProjectButton, trainingConstraints);
 			//trainingConstraints.gridy++;
 
-			trainingJPanel.add(printProjectInfoButton, trainingConstraints);
-			trainingConstraints.gridy++;
+			//trainingJPanel.add(printProjectInfoButton, trainingConstraints);
+			//trainingConstraints.gridy++;
 
-			trainingJPanel.add(wekaButton, trainingConstraints);
-			trainingConstraints.gridy++;
+			//trainingJPanel.add(wekaButton, trainingConstraints);
+			//trainingConstraints.gridy++;
 
 			//trainingConstraints.gridy++;
 
@@ -1423,7 +1429,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					applyButton.removeActionListener(listener);
 					postProcessButton.removeActionListener(listener);
 
-					ioButton.removeActionListener(listener);
+					executeIoButton.removeActionListener(listener);
 					addClassButton.removeActionListener(listener);
 					settingsButton.removeActionListener(listener);
 					wekaButton.removeActionListener(listener);
@@ -1685,7 +1691,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			reviewLabelsButton.setEnabled(s);
 			probabilityButton.setEnabled(s);
 			probabilityButton.setEnabled(s);
-			printProjectInfoButton.setEnabled(s);
+			executeIoButton.setEnabled( s );
+			//printProjectInfoButton.setEnabled(s);
 			plotButton.setEnabled(s);
 			applyButton.setEnabled(s);
 			postProcessButton.setEnabled(s);
@@ -1700,83 +1707,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 			}
 			setSliceSelectorEnabled(s);
 		}
-
-
-		/**
-		 * Update buttons enabling depending on the current status of the plugin
-		 */
-		protected void updateButtonsEnabling()
-		{
-			// While training, set disable all buttons except the train buttons,
-			// which will be used to stop the training by the user.
-			if( trainClassifierFlag )
-			{
-				setButtonsEnabled( false );
-				trainClassifierButton.setEnabled( true );
-			}
-			else if( updateTrainingDataFlag )
-			{
-				setButtonsEnabled( false );
-				updateTrainingDataButton.setEnabled( true );
-			}
-			else if ( savingProjectFlag )
-			{
-				setButtonsEnabled( false );
-			//	reviewLabelsButton.setEnabled( true );
-			}
-			else if ( reviewLabelsFlag )
-			{
-				setButtonsEnabled( false );
-				reviewLabelsButton.setEnabled( true );
-			}
-			else // If the training is not going on
-			{
-
-				updateTrainingDataButton.setEnabled( true );
-
-				trainClassifierButton.setEnabled(
-						wekaSegmentation.getInstancesManager().getKeys().size() > 0 );
-
-				applyButton.setEnabled(
-						wekaSegmentation.getClassifierManager().getNames().size() > 0
-						&& wekaSegmentation.hasResultImage() );
-
-				postProcessButton.setEnabled( win.trainingComplete );
-				overlayButton.setEnabled(wekaSegmentation.hasResultImage());
-				//getResultButton.setEnabled(win.trainingComplete);
-				//setResultButton.setEnabled( true) ;
-
-				reviewLabelsButton.setEnabled( true );
-
-				plotButton.setEnabled( win.trainingComplete );
-				probabilityButton.setEnabled( win.trainingComplete );
-				printProjectInfoButton.setEnabled( true );
-
-				addClassButton.setEnabled(wekaSegmentation.getNumClasses() < WekaSegmentation.MAX_NUM_CLASSES);
-				settingsButton.setEnabled(true);
-				testThreadsButton.setEnabled(true);
-				wekaButton.setEnabled(true);
-
-				// Check if there are samples in any slice
-				boolean examplesEmpty = true;
-				for ( int t = 1; t <= displayImage.getNFrames(); t++)
-					for( int z = 1; z <= displayImage.getNSlices(); z++)
-						for(int i = 0; i < wekaSegmentation.getNumClasses(); i ++)
-							if( wekaSegmentation.getExampleRois(i, z-1, t-1).size() > 0)
-							{
-								examplesEmpty = false;
-								break;
-							}
-
-				for(int i = 0 ; i < wekaSegmentation.getNumClasses(); i++)
-				{
-					exampleList[i].setEnabled(true);
-					addAnnotationButton[i].setEnabled(true);
-				}
-				setSliceSelectorEnabled(true);
-			}
-		}
-
 
 		synchronized void toggleOverlay()
 		{
@@ -1863,12 +1793,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 		public void updateAddClassButtons()
 		{
 			int wekaNumOfClasses = wekaSegmentation.getNumClasses();
+
 			while (numOfClasses < wekaNumOfClasses)
 				win.addClass();
 			for (int i = 0; i < numOfClasses; i++)
 				addAnnotationButton[i].setText(wekaSegmentation.getClassName(i) + " [" + (i+1) + "]");
 
-			win.updateButtonsEnabling();
 			repaintWindow();
 		}
 
@@ -1891,7 +1821,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 			return trainingImage;
 		}
 	}// end class CustomWindow
-
 
 	private boolean checkImageProperties()
 	{
@@ -2191,99 +2120,74 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private FinalInterval previousLabelImageInterval = null;
 
-	void updateTrainingData( String command )
+	void updateTrainingData()
 	{
+		// Disable rest of buttons until the training has finished
+		win.setButtonsEnabled( false );
 
-
-		if ( command.equals( "STOP" ) )
-		{
-			try
+		Thread newTask = new Thread() {
+			public void run()
 			{
-				updateTrainingDataFlag = false;
-				win.setButtonsEnabled( false );
-				updateTrainingDataButton.setText( "Update training data" );
-				win.updateButtonsEnabling();
-			}
-			catch ( Exception ex )
-			{
-				ex.printStackTrace();
-			}
-		}
-		else
-		{
-			updateTrainingDataFlag = true;
-			updateTrainingDataButton.setText( "STOP" );
+				Instances instances = null;
 
-			// Disable rest of buttons until the training has finished
-			win.updateButtonsEnabling();
-
-			Thread newTask = new Thread() {
-				public void run()
+				if ( wekaSegmentation.hasLabelImage() )
 				{
-					Instances instances = null;
+					FinalInterval labelImageInterval = getIntervalFromGUI();
 
-					if ( wekaSegmentation.hasLabelImage() )
+					if ( labelImageInterval == null ) return;
+
+					// check if there really is something to be updated..
+					if ( ( previousLabelImageInterval == null )
+							|| trainingRecomputeFeaturesCheckBox.isSelected()
+							|| !labelImageInterval.equals( previousLabelImageInterval ) )
 					{
-						FinalInterval labelImageInterval = getIntervalFromGUI();
+						// ..seems like there is => do it!
+						instances = wekaSegmentation.getInstancesFromLabelImage(
+								experimentTextField.getText(),
+								labelImageInterval,
+								wekaSegmentation.getNumLabelImageInstancesPerPlaneAndClass() );
 
-						if ( labelImageInterval == null ) return;
-
-						// check if there really is something to be updated..
-						if ( ( previousLabelImageInterval == null )
-								|| trainingRecomputeFeaturesCheckBox.isSelected()
-								|| !labelImageInterval.equals( previousLabelImageInterval ) )
-						{
-							// ..seems like there is => do it!
-							instances = wekaSegmentation.getInstancesFromLabelImage(
-									experimentTextField.getText(),
-									labelImageInterval,
-									wekaSegmentation.getNumLabelImageInstancesPerPlaneAndClass() );
-
-							previousLabelImageInterval = new FinalInterval( labelImageInterval );
-
-						}
-						else
-						{
-							return;
-						}
+						previousLabelImageInterval = new FinalInterval( labelImageInterval );
 
 					}
 					else
 					{
-
-						// compute training data for new labels
-						wekaSegmentation.updateExamples( trainingRecomputeFeaturesCheckBox.isSelected() );
-
-						if ( wekaSegmentation.getNumExamples() > 0 )
-						{
-							instances = InstancesCreator.createInstancesFromExamples(
-									wekaSegmentation.getExamples(),
-									experimentTextField.getText(),
-									wekaSegmentation.latestFeatureNames,
-									wekaSegmentation.getClassNames() );
-						}
-						else
-						{
-							return;
-						}
-
+						return;
 					}
 
-					wekaSegmentation.getInstancesManager().putInstances( instances );
+				}
+				else
+				{
 
-					updateComboBoxes();
-					// switch on buttons
-					updateTrainingDataFlag = false;
-					win.setButtonsEnabled( false );
-					updateTrainingDataButton.setText( "Update training data" );
-					win.updateButtonsEnabling();
+					// compute training data for new labels
+					wekaSegmentation.updateExamples( trainingRecomputeFeaturesCheckBox.isSelected() );
+
+					if ( wekaSegmentation.getNumExamples() > 0 )
+					{
+
+						instances = InstancesCreator.createInstancesFromLabels(
+								wekaSegmentation.getExamples(),
+								wekaSegmentation.getInputImageTitle(),
+								wekaSegmentation.settings,
+								wekaSegmentation.latestFeatureNames,
+								wekaSegmentation.getClassNames() );
+					}
+					else
+					{
+						return;
+					}
+
 				}
 
-			}; newTask.start();
+				wekaSegmentation.getInstancesManager().putInstances( instances );
 
-		}
+				updateComboBoxes();
+				win.setButtonsEnabled( true );
+			}
+
+		}; newTask.start();
+
 	}
-
 
 	private static void showMemoryMonitor()
 	{
@@ -2299,119 +2203,87 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
-
 	/**
 	 * Run/stop the classifier training
 	 *
 	 * @param command current text of the training button ("Train classifier" or "STOP")
 	 */
-	void trainClassifier( final String command )
+	void trainClassifier()
 	{
-		if ( command.equals("Train classifier") )
-		{
-			trainClassifierFlag = true;
-			trainClassifierButton.setText("STOP");
-			final Thread oldTask = trainingTask;
 
-			// Disable rest of buttons until the training has finished
-			win.updateButtonsEnabling();
+		win.setButtonsEnabled( false );
 
-			showMemoryMonitor();
+		// Thread to run the training
+		Thread newTask = new Thread() {
 
-			// Thread to run the training
-			Thread newTask = new Thread() {
-
-				public void run()
-				{
-
-				try
-				{
-
-					FastRandomForest classifier = null;
-
-					Instances instances = wekaSegmentation.
-							getInstancesManager().getInstances(
-							( String ) Weka_Deep_Segmentation.this.trainingDataComboBox.getSelectedItem() );
-
-					if ( instances == null || this.isInterrupted() ) return;
-
-					classifier = wekaSegmentation.createFastRandomForest( instances );
-
-					if ( classifier == null || this.isInterrupted() ) return;
-
-					// if wished for, train a second time
-					// only with important features
-					if ( wekaSegmentation.minFeatureUsageFactor > 0 )
-					{
-
-						ArrayList< Integer > goners = AttributeSelector.getGoners(
-								classifier,
-								instances,
-								wekaSegmentation.minFeatureUsageFactor,
-								wekaSegmentation.getLogger() );
-
-						Instances instances2 = InstancesCreator.removeAttributes(
-								instances, goners );
-
-						logger.info ("\n# Second Training");
-
-						classifier = wekaSegmentation.createFastRandomForest( instances2 );
-
-						wekaSegmentation.getClassifierManager().setClassifier( classifier, instances2);
-					}
-					else
-					{
-						wekaSegmentation.getClassifierManager().setClassifier(
-								classifier, instances);
-					}
-
-				}
-				catch( Exception e )
-				{
-					e.printStackTrace();
-				}
-				catch( OutOfMemoryError err )
-				{
-					err.printStackTrace();
-				}
-
-				win.classificationComplete = true;
-
-				// update comboBox
-				ioComboBox.setModel(
-						new DefaultComboBoxModel(
-							wekaSegmentation.
-									getClassifierManager().getNames().toArray()
-						));
-
-
-				trainClassifierFlag = false;
-				trainClassifierButton.setText("Train classifier");
-				win.updateButtonsEnabling();
-				}
-			}; newTask.start();
-		}
-		else if ( command.equals("STOP") )
-		{
-			try{
-				trainClassifierFlag = false;
-				win.trainingComplete = false;
-				IJ.log("Training was stopped by the user!");
-				win.setButtonsEnabled( false );
-				trainClassifierButton.setText("Train classifier");
-
-				if(null != trainingTask)
-					trainingTask.interrupt();
-				else
-					IJ.log("Error: interrupting training failed becaused the thread is null!");
-
-				win.updateButtonsEnabling();
-			}
-			catch(Exception ex)
+			public void run()
 			{
-				ex.printStackTrace();
+
+			try
+			{
+
+				FastRandomForest classifier = null;
+
+				// get training instances
+				List selectedInstances = (List< String >) instancesList.getSelectedValuesList();
+
+				if ( selectedInstances.size() == 0 ) return;
+
+				Instances instances = wekaSegmentation.
+						getInstancesManager().getCombinedInstances( selectedInstances );
+
+				InstancesManager.logInstancesInformation( instances, logger );
+
+
+				if ( instances == null || this.isInterrupted() ) return;
+
+				classifier = wekaSegmentation.createFastRandomForest( instances );
+
+				if ( classifier == null || this.isInterrupted() ) return;
+
+				// if wished for, train a second time
+				// only with important features
+				if ( wekaSegmentation.minFeatureUsageFactor > 0 )
+				{
+
+					ArrayList< Integer > goners = AttributeSelector.getGoners(
+							classifier,
+							instances,
+							wekaSegmentation.minFeatureUsageFactor,
+							wekaSegmentation.getLogger() );
+
+					Instances instances2 = InstancesCreator.removeAttributes(
+							instances, goners );
+
+					logger.info ("\n# Second Training");
+
+					classifier = wekaSegmentation.createFastRandomForest( instances2 );
+
+					wekaSegmentation.getClassifierManager().setClassifier( classifier, instances2);
+				}
+				else
+				{
+					wekaSegmentation.getClassifierManager().setClassifier(
+							classifier, instances);
+				}
+
 			}
-		}
+			catch( Exception e )
+			{
+				e.printStackTrace();
+			}
+			catch( OutOfMemoryError err )
+			{
+				err.printStackTrace();
+			}
+
+			win.classificationComplete = true;
+			trainClassifierButton.setText("Train classifier");
+			win.setButtonsEnabled( true );
+
+			}
+		}; newTask.start();
+
 	}
 
 	/**
@@ -2564,10 +2436,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 */
 	public void saveProject()
 	{
-
-		savingProjectFlag = true;
-		win.updateButtonsEnabling();
-
 		SaveDialog sd = new SaveDialog("Save project as...",
 				"project",
 				".tsp");
@@ -2583,9 +2451,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		{
 			IJ.error("Error while writing project to file");
 		}
-
-		savingProjectFlag = false;
-		win.updateButtonsEnabling();
 
 	}
 
@@ -2654,60 +2519,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 	}
 
 	/**
-	 * Load a new image to segment
-	 */
-	public void loadNewImage()
-	{
-		OpenDialog od = new OpenDialog("Choose new image", OpenDialog.getLastDirectory());
-		if (od.getFileName()==null)
-			return;
-
-		win.setButtonsEnabled(false);
-
-		IJ.log("Loading image " + od.getDirectory() + od.getFileName() + "...");
-
-		ImagePlus newImage = new ImagePlus(od.getDirectory() + od.getFileName());
-		/*
-		if( !wekaSegmentation.loadNewImage( newImage ) )
-		{
-			IJ.error("Error while loading new image!");
-			win.updateButtonsEnabling();
-			return;
-		}*/
-
-		// Remove traces from the lists and ROI overlays
-		for(int i = 0; i < wekaSegmentation.getNumClasses(); i ++)
-		{
-			exampleList[i].removeAll();
-			roiOverlay[i].setRoi(null);
-		}
-
-		// Updating image
-		displayImage = new ImagePlus();
-		displayImage.setProcessor( Weka_Deep_Segmentation.PLUGIN_NAME + " "
-									+ Weka_Deep_Segmentation.PLUGIN_VERSION,
-									trainingImage.getProcessor().duplicate() );
-
-		// Remove current classification result image
-		win.resultOverlay.setImage(null);
-
-		win.toggleOverlay();
-
-		// Update GUI
-		win.setImagePlus(displayImage);
-		displayImage.updateAndDraw();
-		win.pack();
-
-		win.updateButtonsEnabling();
-	}
-
-	/**
 	 * Save instances to a file
 	 */
 	public void saveInstances( String key )
 	{
-
-		win.setButtonsEnabled( false );
 
 		String[] dirFile =
 				getSaveDirFile(
@@ -2716,7 +2531,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		boolean status = wekaSegmentation.getInstancesManager().
 					saveInstancesToARFF( key, dirFile[0], dirFile[1] );
 
-		win.updateButtonsEnabling();
 	}
 
 	private String[] getSaveDirFile( String title, String extension )
@@ -2760,9 +2574,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 */
 	public void loadInstances()
 	{
-
-		win.setButtonsEnabled( false );
-
 		String[] dirFile =
 				getOpenDirFile(
 						"Please choose instance file" );
@@ -2770,7 +2581,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		String key = wekaSegmentation.getInstancesManager().
 				putInstancesFromARFF( dirFile[0], dirFile[1] );
 
-		win.updateButtonsEnabling();
+		updateComboBoxes();
 	}
 
 
@@ -2823,11 +2634,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			IJ.showMessage(e.toString());
 		}
 
-
-
-		win.updateButtonsEnabling();
 	}
-
 
 	/**
 	 * Add new class in the panel (up to MAX_NUM_CLASSES)
@@ -2876,13 +2683,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 				new DefaultComboBoxModel(
 						wekaSegmentation.getClassNames().toArray() ) );
 
+		DefaultListModel listModel = new DefaultListModel();
 
-		trainingDataComboBox.setModel(
-				new DefaultComboBoxModel(
-						wekaSegmentation.
-								getInstancesManager().getKeys().toArray()
-				) );
-
+		for ( String instancesKey : wekaSegmentation.getInstancesManager().getKeys() )
+		{
+			listModel.addElement( instancesKey );
+		}
+		instancesList.setModel( listModel );
 
 	}
 
@@ -2944,11 +2751,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 		*/
 
 		gd.addNumericField("Feature computation: Downsampling factor",
-				wekaSegmentation.settings.downSamplingFactor, 0);
+				wekaSegmentation.settings.binFactor, 0);
 		gd.addNumericField("Feature computation: Maximum downsampling level",
-				wekaSegmentation.settings.maxResolutionLevel, 0);
+				wekaSegmentation.settings.maxBinLevel, 0);
 		gd.addNumericField("Feature computation: Maximal convolution depth",
-				wekaSegmentation.settings.maxDeepConvolutionLevel, 0);
+				wekaSegmentation.settings.maxDeepConvLevel, 0);
 		gd.addNumericField("Feature computation: z/xy settings.anisotropy",
 				wekaSegmentation.settings.anisotropy, 2);
 		gd.addNumericField("Computation: Memory factor",
@@ -3063,9 +2870,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 		*/
 
-		wekaSegmentation.settings.downSamplingFactor = (int) gd.getNextNumber();
-		wekaSegmentation.settings.maxResolutionLevel = (int) gd.getNextNumber();
-		wekaSegmentation.settings.maxDeepConvolutionLevel = (int) gd.getNextNumber();
+		wekaSegmentation.settings.binFactor = (int) gd.getNextNumber();
+		wekaSegmentation.settings.maxBinLevel = (int) gd.getNextNumber();
+		wekaSegmentation.settings.maxDeepConvLevel = (int) gd.getNextNumber();
 		wekaSegmentation.settings.anisotropy = gd.getNextNumber();
 		wekaSegmentation.memoryFactor = gd.getNextNumber();
 		wekaSegmentation.setLabelImageInstancesPerPlaneAndClass( (int) gd.getNextNumber());
@@ -3154,7 +2961,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		// wekaSegmentation.setComputeFeatureImportance(gd.getNextBoolean());
 
-		// Update flag to balance number of class trainingDataComboBox
+		// Update flag to balance number of class instancesList
 		/*
 		final boolean balanceClasses = gd.getNextBoolean();
 		if( wekaSegmentation.doClassBalance() != balanceClasses )
@@ -3181,7 +2988,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 
 		// If there is a change in the class names,
-		// the data set (trainingDataComboBox) must be updated.
+		// the data set (instancesList) must be updated.
 		if(classNameChanged)
 		{
 			// Pack window to update buttons
@@ -3264,31 +3071,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 			final CustomWindow win = (CustomWindow) iw;
 			win.toggleOverlay();
 		}
-	}
-
-	/**
-	 * Save current project to disk
-	 *
-	 * @param projectPathName complete path name for the project file
-	 */
-	public void saveProject( String projectPathName )
-	{
-
-
-		win.updateButtonsEnabling();
-		final ImageWindow iw = WindowManager.getCurrentImage().getWindow();
-		if( iw instanceof CustomWindow )
-		{
-			final CustomWindow win = (CustomWindow) iw;
-			final WekaSegmentation wekaSegmentation = win.getWekaSegmentation();
-			if( ! wekaSegmentation.saveProject( projectPathName ) )
-			{
-				logger.error("Error while writing project to disk");
-				return;
-			}
-		}
-
-
 	}
 
 	/**

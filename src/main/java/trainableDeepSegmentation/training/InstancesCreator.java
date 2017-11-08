@@ -2,29 +2,21 @@ package trainableDeepSegmentation.training;
 
 import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
-import ij.IJ;
 import ij.ImagePlus;
-import ij.plugin.filter.MaximumFinder;
 import ij.process.ImageProcessor;
 import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
-import trainableDeepSegmentation.Feature;
-import trainableDeepSegmentation.FeatureProvider;
-import trainableDeepSegmentation.IntervalUtils;
-import trainableDeepSegmentation.WekaSegmentation;
+import trainableDeepSegmentation.*;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.results.ResultImage;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
 
-import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Random;
 
 import static trainableDeepSegmentation.ImageUtils.*;
-import static trainableDeepSegmentation.examples.ExamplesUtils.getNumClassesInExamples;
 
 public class InstancesCreator {
 
@@ -37,14 +29,17 @@ public class InstancesCreator {
      *
      * @return set of instancesMap (feature vectors in Weka format)
      */
-    public static Instances createInstancesFromExamples( ArrayList< Example > examples,
-                                                         String relationName,
-                                                         ArrayList< String > featureNames,
-                                                         ArrayList< String > classNames )
+    public static Instances createInstancesFromLabels( ArrayList< Example > examples,
+                                                       String inputImageTitle,
+                                                       Settings settings,
+                                                       ArrayList< String > featureNames,
+                                                       ArrayList< String > classNames )
     {
 
+        String instancesInfo = getInfoString( inputImageTitle, settings );
+
         Instances instances = createInstancesHeader(
-                relationName,
+                instancesInfo,
                 featureNames,
                 classNames  );
 
@@ -52,16 +47,30 @@ public class InstancesCreator {
         {
             // loop over all pixels of the example
             // and add the feature values for each pixel to the trainingData
-            // note: subsetting of active features happens in another function
+            // note: sub-setting of active features happens in another function
             for ( double[] values : example.instanceValuesArray )
             {
                 instances.add( new DenseInstance(1.0, values) );
             }
         }
 
-        instances.setRelationName( relationName );
-
         return instances;
+
+    }
+
+
+
+    private static String getInfoString( String inputImageTitle, Settings settings )
+    {
+
+        String info = inputImageTitle;
+
+        info += "--" + Settings.ANISOTROPY + ":" + settings.anisotropy;
+        info += "--" + Settings.MAX_BIN_LEVEL + ":" + settings.maxBinLevel;
+        info += "--" + Settings.BIN_FACTOR + ":" + settings.binFactor;
+        info += "--" + Settings.MAX_DEEP_CONV_LEVEL + ":" + settings.maxDeepConvLevel;
+
+        return ( info );
 
     }
 
