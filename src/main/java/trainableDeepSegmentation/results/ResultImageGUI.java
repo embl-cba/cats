@@ -1,5 +1,6 @@
 package trainableDeepSegmentation.results;
 
+import bigDataTools.utils.Utils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.gui.GenericDialog;
@@ -23,6 +24,8 @@ public abstract class ResultImageGUI {
 
         GenericDialog gd = new GenericDialogPlus("Export Segmentation Results");
 
+        gd.addStringField( "Binning: ", "1,1,1", 10  );
+
         gd.addMessage( "Export class:" );
         for ( String className : classNames ) gd.addCheckbox( className, true );
         gd.addChoice( "Export as:", exportChoices, SEPARATE_IMARIS );
@@ -32,6 +35,11 @@ public abstract class ResultImageGUI {
         if ( gd.wasCanceled() )
             return;
 
+        int[] binning = Utils.delimitedStringToIntegerArray(
+                gd.getNextString().trim(), ",");
+
+
+
         for ( String className : classNames ) saveClass.add( gd.getNextBoolean() );
 
         String exportModality = gd.getNextChoice();
@@ -40,7 +48,7 @@ public abstract class ResultImageGUI {
         {
             case SEPARATE_IMARIS:
                 String directory = IJ.getDirectory("Select a directory");
-                resultImage.saveAsSeparateImarisChannels( directory, saveClass );
+                resultImage.saveAsSeparateImarisChannels( directory, saveClass, binning );
                 break;
         }
 

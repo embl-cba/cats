@@ -39,13 +39,17 @@ public class ResultImageDisk implements ResultImage {
 
     @Override
     public void saveAsSeparateImarisChannels( String directory,
-                                              ArrayList< Boolean > saveClass )
+                                              ArrayList< Boolean > saveClass,
+                                              int[] binning )
     {
+
+        logger.info("Saving results as separate imaris channels.." );
 
         saveImagePlusAsSeparateImarisChannels(
                 directory,
                 saveClass,
                 result,
+                binning,
                 logger,
                 wekaSegmentation.getClassNames(),
                 CLASS_LUT_WIDTH
