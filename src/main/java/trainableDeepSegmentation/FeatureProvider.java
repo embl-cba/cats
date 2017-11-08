@@ -478,7 +478,7 @@ public class FeatureProvider
     {
         return () ->
         {
-            if ( wekaSegmentation.stopCurrentThreads ) return;
+            if ( wekaSegmentation.stopCurrentTasks ) return;
 
             double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
             double vAA0,vAA1,vAAA;
@@ -1246,7 +1246,7 @@ public class FeatureProvider
 
                 start = System.currentTimeMillis();
 
-                if ( wekaSegmentation.stopCurrentThreads || Thread.currentThread().isInterrupted() )
+                if ( wekaSegmentation.stopCurrentTasks || Thread.currentThread().isInterrupted() )
                 {
                     return ( false );
                 }

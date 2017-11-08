@@ -39,8 +39,6 @@ import trainableDeepSegmentation.training.InstancesCreator;
 import trainableDeepSegmentation.training.InstancesManager;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
@@ -261,7 +259,10 @@ public class WekaSegmentation {
 	 */
 	private ExecutorService exe = Executors.newFixedThreadPool(threadsPerRegion);
 
-	public boolean stopCurrentThreads = false;
+	public boolean stopCurrentTasks = false;
+
+	public boolean isBusy = false;
+
 
 	private int currentUncertaintyRegion = 0;
 
@@ -1399,7 +1400,7 @@ public class WekaSegmentation {
 		{
 			try
 			{
-				if ( ! stopCurrentThreads )
+				if ( !stopCurrentTasks )
 				{
 					future.get();
 
@@ -1555,7 +1556,7 @@ public class WekaSegmentation {
 	{
 		logger.error("There was an error (see log); trying to stop all ongoing computations..." );
 		logger.info("Error in " + moduleName + "\n" + e.toString());
-		stopCurrentThreads = true;
+		stopCurrentTasks = true;
 		e.printStackTrace();
 	}
 
@@ -1682,7 +1683,7 @@ public class WekaSegmentation {
 		return () ->
 		{
 
-			if ( ThreadUtils.stopThreads( logger, stopCurrentThreads,
+			if ( ThreadUtils.stopThreads( logger, stopCurrentTasks,
 					tileCounter, tileCounterMax ) ) return;
 
 			if ( tileCounter <= regionThreads )
@@ -1747,7 +1748,7 @@ public class WekaSegmentation {
 
 			for (long[] zChunk : zChunks)
 			{
-				if ( ThreadUtils.stopThreads( logger, exe, stopCurrentThreads,
+				if ( ThreadUtils.stopThreads( logger, exe, stopCurrentTasks,
 						tileCounter, tileCounterMax ) ) return;
 
 				UncertaintyRegion uncertaintyRegion = new UncertaintyRegion();
@@ -1947,7 +1948,7 @@ public class WekaSegmentation {
 					if ( ! featureProvider.setFeatureSlicesValues( (int) z, featureSlice, 1 ) )
 					{
 						logger.error("Feature slice " + z +" could not be set." );
-						stopCurrentThreads = true;
+						stopCurrentTasks = true;
 						return;
 					}
 

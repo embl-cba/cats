@@ -33,9 +33,9 @@ public class InstancesCreator {
     }
 
     /**
-     * Create training instances out of the user markings
+     * Create training instancesMap out of the user markings
      *
-     * @return set of instances (feature vectors in Weka format)
+     * @return set of instancesMap (feature vectors in Weka format)
      */
     public static Instances createInstancesFromExamples( ArrayList< Example > examples,
                                                          String relationName,
@@ -130,7 +130,7 @@ public class InstancesCreator {
                 featureProvider.getFeatureNames(),
                 wekaSegmentation.getClassNames());
 
-        // Collect instances per plane
+        // Collect instancesMap per plane
         for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
         {
 
@@ -281,7 +281,7 @@ public class InstancesCreator {
                 wekaSegmentation.getClassNames());
 
 
-        // Collect instances per plane
+        // Collect instancesMap per plane
         for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
         {
 
@@ -440,7 +440,7 @@ public class InstancesCreator {
                 wekaSegmentation.getClassNames());
 
 
-        // Collect instances per plane
+        // Collect instancesMap per plane
         for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
         {
 
@@ -717,7 +717,7 @@ public class InstancesCreator {
         }
         attributes.add( new Attribute("class", classNames ) );
 
-        // initialize set of instances
+        // initialize set of instancesMap
         Instances instances = new Instances(instancesName, attributes, 1);
         // Set the index of the class attribute
         instances.setClassIndex( featureNames.size() );
@@ -746,12 +746,14 @@ public class InstancesCreator {
 
 
 
+    /*
     private ImageProcessor createWrongnessImage()
     {
         ImageProcessor ip = null;
 
         return ( ip );
     }
+
 
     private ArrayList< int[] > getCoordinatesOfLocalMaxima(
             ImageProcessor ip,
@@ -760,7 +762,7 @@ public class InstancesCreator {
         MaximumFinder mf = new MaximumFinder();
         Polygon maxima = mf.getMaxima(ip, tolerance, false);
         //print("count="+maxima.npoints);
-    }
+    }*/
 
 
 
