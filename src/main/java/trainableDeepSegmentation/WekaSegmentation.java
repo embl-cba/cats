@@ -147,7 +147,7 @@ public class WekaSegmentation {
 	public String tileSizeSetting = "auto";
 
 	public Settings settings = new Settings();
-
+	
 	public double minFeatureUsageFactor = 1.0;
 
 	private boolean computeFeatureImportance = false;
@@ -179,6 +179,12 @@ public class WekaSegmentation {
 	public Logger getLogger()
 	{
 		return logger;
+	}
+
+
+	public ImagePlus getInputImage()
+	{
+		return inputImage;
 	}
 
 	/**
