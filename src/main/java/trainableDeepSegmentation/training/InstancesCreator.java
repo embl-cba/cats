@@ -469,46 +469,16 @@ public class InstancesCreator {
 
             featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
 
-            for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
+            for (int iClass = 0; iClass < numClasses; ++iClass)
             {
-                for (int iClass = 0; iClass < numClasses; ++iClass)
+                for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
                 {
-                    if ( ! classCoordinates[iClass].isEmpty() )
-                    {
-                        int[] center = getRandomCoordinate( iClass, classCoordinates, rand );
+                    int[] xy = getUsefulRandomCoordinate( iClass, classCoordinates, rand );
 
-                        ArrayList< int[] >[] localClassCoordinates =
-                                getLocalClassCoordinates( numClasses,
-                                        labelImageSlice,
-                                        interval,
-                                        center,
-                                        radius );
+                    addInstance( instances, featureProvider, xy, featureSlice, iClass );
 
-                        for (int localClass = 0; localClass < numClasses; ++localClass)
-                        {
+                    pixelsPerClass[ iClass ]++;
 
-                            for (int k = 0; k < 3; k++ )
-                            {
-
-                                int[] xy = getRandomCoordinate( localClass, localClassCoordinates, rand );
-
-                                if ( xy == null )
-                                {
-                                    // no local coordinate has been found
-                                    // thus we take a global one
-                                    xy = getRandomCoordinate( localClass, classCoordinates, rand );
-                                }
-
-                                addInstance( instances, featureProvider, xy, featureSlice, localClass );
-
-                                pixelsPerClass[ localClass ]++;
-
-                            }
-
-                        }
-
-
-                    }
                 }
             }
 
@@ -687,6 +657,39 @@ public class InstancesCreator {
             xy[ d ] = classCoordinates[ iClass ].get( randomSample )[ d ];
         }
         return ( xy );
+    }
+
+
+    private static int[] getUsefulRandomCoordinate( int iClass,
+                                                    ArrayList< int[] >[][] classCoordinates,
+                                                    Random random )
+    {
+
+        // - find one that is not too close to the old one? (bad if they all cluster....)
+
+        int[] xy = null;
+
+        for ( int accuracy = 0; accuracy < classCoordinates[iClass].length; ++accuracy )
+        {
+            int numInstances = classCoordinates[iClass][accuracy].size();
+
+            if ( numInstances > 0 )
+            {
+
+                int randomSample = random.nextInt( numInstances );
+
+                xy = classCoordinates[iClass][accuracy].get( randomSample );
+
+                // remove it not to draw it again
+                classCoordinates[iClass][accuracy].remove( randomSample );
+
+                break;
+            }
+
+        }
+
+        return xy;
+
     }
 
 
