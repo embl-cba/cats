@@ -35,6 +35,11 @@ public abstract class Utils {
                 className,
                 "/");
 
+        ArrayList< String > channelNames = new ArrayList<>();
+        channelNames.add( className );
+
+        imarisDataSet.setChannelNames( channelNames  );
+
         ImarisWriter.writeHeader( imarisDataSet,
                 directory,
                 className + ".ims"

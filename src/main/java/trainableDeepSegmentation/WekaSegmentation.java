@@ -148,7 +148,7 @@ public class WekaSegmentation {
 
 	public int minFeatureUsage = 0;
 
-	public double minFeatureUsageFactor = 2.0;
+	public double minFeatureUsageFactor = 1.0;
 
 	private boolean computeFeatureImportance = false;
 
@@ -181,6 +181,12 @@ public class WekaSegmentation {
 	public Logger getLogger()
 	{
 		return logger;
+	}
+
+
+	public ImagePlus getInputImage()
+	{
+		return inputImage;
 	}
 
 	/**

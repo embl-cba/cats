@@ -37,6 +37,7 @@ public class ResultImageDisk implements ResultImage {
         this.logger = wekaSegmentation.getLogger();
         this.result = createStream( directory, dimensions );
         this.dimensions = dimensions;
+        this.result.setCalibration( wekaSegmentation.getInputImage().getCalibration() );
     }
 
 
