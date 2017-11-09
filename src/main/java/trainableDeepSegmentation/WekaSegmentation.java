@@ -147,7 +147,7 @@ public class WekaSegmentation {
 	public String tileSizeSetting = "auto";
 
 	public Settings settings = new Settings();
-	
+
 	public double minFeatureUsageFactor = 1.0;
 
 	private boolean computeFeatureImportance = false;
@@ -175,6 +175,19 @@ public class WekaSegmentation {
 	public boolean isTrainingCompleted = true;
 
 	public int maximumMultithreadedLevel = 10;
+
+	public int getLabelImageTrainingIteration()
+	{
+		return labelImageTrainingIteration;
+	}
+
+	public void setLabelImageTrainingIteration( int labelImageTrainingIteration )
+	{
+		this.labelImageTrainingIteration = labelImageTrainingIteration;
+	}
+
+	private int labelImageTrainingIteration = 2;
+
 
 	public Logger getLogger()
 	{
@@ -1242,33 +1255,6 @@ public class WekaSegmentation {
 		this.trainingData = instances;
 	}
 
-	public Instances getInstancesFromLabelImage(
-			String instancesName,
-			FinalInterval interval,
-			int labelImageNumInstancesPerClass )
-	{
-		logger.info("Creating instances from label image... ");
-
-		final long start = System.currentTimeMillis();
-
-		Instances instances =
-				InstancesCreator.
-				createInstancesFromLabelImageRegion2(
-						this,
-						inputImage,
-						labelImage,
-						resultImage,
-						instancesName,
-						interval,
-						labelImageNumInstancesPerClass,
-						Prefs.getThreads(),
-						logger);
-
-		final long end = System.currentTimeMillis();
-		logger.info("...created training data from label image in " + (end - start) + " ms");
-
-		return ( instances );
-	}
 
 	public InstancesManager getInstancesManager()
 	{

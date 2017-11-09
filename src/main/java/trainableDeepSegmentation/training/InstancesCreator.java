@@ -113,8 +113,7 @@ public class InstancesCreator {
         featureProvider.setInterval( interval );
         featureProvider.setActiveChannels( wekaSegmentation.settings.activeChannels );
         featureProvider.computeFeatures( numThreads,
-                wekaSegmentation.maximumMultithreadedLevel,
-                true );
+                wekaSegmentation.maximumMultithreadedLevel );
 
         logger.info ( "...computed features  in [ms]: " +
                 ( System.currentTimeMillis() - startTime ) );
@@ -231,7 +230,7 @@ public class InstancesCreator {
 
 
     // TODO: improve separation from WekaSegmentation
-    public static Instances createBetterInstancesFromLabelImageRegion(
+    public static Instances getLocallyPairedInstancesFromLabelImage(
             WekaSegmentation wekaSegmentation,
             ImagePlus inputImage,
             ImagePlus labelImage,
@@ -390,11 +389,12 @@ public class InstancesCreator {
 
 
     // TODO: improve separation from WekaSegmentation
-    public static Instances createInstancesFromLabelImageRegion2(
+    public static Instances getUsefulInstancesFromLabelImage(
             WekaSegmentation wekaSegmentation,
             ImagePlus inputImage,
             ImagePlus labelImage,
-            ResultImage result,
+            ResultImage resultImage,
+            FeatureProvider featureProvider,
             String instancesName,
             FinalInterval interval,
             int numInstancesPerClassAndPlane,
@@ -404,35 +404,32 @@ public class InstancesCreator {
 
         final int numClasses = wekaSegmentation.getNumClasses();
         int radius = 5;
+        int t = (int) interval.min( T );
+
         Random rand = new Random();
+
         if ( logger == null ) logger = new IJLazySwingLogger();
-
-
         logger.info( "Computing features for label image region...");
         IntervalUtils.logInterval( interval );
         logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
 
-        long startTime = System.currentTimeMillis();
 
-        // Compute features
-        FeatureProvider featureProvider = new FeatureProvider();
-        featureProvider.setLogger( logger );
-        featureProvider.isLogging( true );
-        featureProvider.setInputImage( inputImage );
-        featureProvider.setWekaSegmentation( wekaSegmentation );
-        featureProvider.setInterval( interval );
-        featureProvider.setActiveChannels( wekaSegmentation.settings.activeChannels );
-        featureProvider.computeFeatures( numThreads,
-                wekaSegmentation.maximumMultithreadedLevel,
-                true );
+        // Compute features only if they do not exist yet
+        if ( featureProvider == null)
+        {
+            featureProvider = new FeatureProvider();
+            featureProvider.setLogger( logger );
+            featureProvider.isLogging( true );
+            featureProvider.setInputImage( inputImage );
+            featureProvider.setWekaSegmentation( wekaSegmentation );
+            featureProvider.setInterval( interval );
+            featureProvider.setActiveChannels( wekaSegmentation.settings.activeChannels );
+            featureProvider.computeFeatures( numThreads );
+        }
 
-        int nf = featureProvider.getNumFeatures();
-
-        logger.info ( "...computed features  in [ms]: " +
-                ( System.currentTimeMillis() - startTime ) );
 
         logger.info( "Computing instance values...");
-        startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
 
         // TODO: determine numClasses from labelImage!
         wekaSegmentation.settings.classNames = new ArrayList<>();
@@ -449,31 +446,26 @@ public class InstancesCreator {
                 wekaSegmentation.getClassNames());
 
 
-        // Collect instancesMap per plane
+        int numAccuracies = resultImage.getProbabilityRange();
+
+        // Collect instances per plane
         for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
         {
 
             logLabelImageTrainingProgress( logger, z, interval, "...");
 
-            // Create lists of coordinates of pixels of each class
-            //
-            ArrayList< int[] >[] classCoordinates = new ArrayList[ numClasses ];
+            ArrayList < int[] > [][] classCoordinates = getEmptyClassCoordinates(
+                    numClasses, numAccuracies );
 
-            for ( int i = 0; i < numClasses; i++)
-            {
-                classCoordinates[i] = new ArrayList<>();
-            }
+            int[][] accuracies = new int[numClasses][4]; // TOTAL, CORRECT, FP, FN
 
-            ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
-
-            for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
-            {
-                for ( int x = (int) interval.min( X ); x <= interval.max( X ); ++x)
-                {
-                    int classIndex = labelImageSlice.get(x, y);
-                    classCoordinates[classIndex].add( new int[]{ x, y });
-                }
-            }
+            setClassCoordinatesAndAccuracies(
+                    classCoordinates,
+                    accuracies,
+                    z, t,
+                    labelImage,
+                    resultImage,
+                    interval );
 
             featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
 
@@ -548,7 +540,7 @@ public class InstancesCreator {
     }
 
 
-    private ArrayList < int[] > [][] generateEmptyClassCoordinates(
+    private static ArrayList < int[] > [][] getEmptyClassCoordinates(
             int numClasses,
             int numAccuracies )
 
@@ -570,15 +562,15 @@ public class InstancesCreator {
 
     final static int TOTAL = 0, CORRECT = 1, FP = 2, FN = 3;
 
-    private void addClassCoordinatesAndAccuracies(
+    private static void setClassCoordinatesAndAccuracies(
                                     ArrayList < int[] >[][] classCoordinates,
                                     int[][] accuracies,
                                     int z, int t,
                                     ImagePlus labelImage,
                                     ResultImage resultImage,
-                                    FinalInterval interval,
-                                    int numClasses)
+                                    FinalInterval interval)
     {
+
         int maxProbability = resultImage.getProbabilityRange();
 
         ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
@@ -615,6 +607,7 @@ public class InstancesCreator {
 
             }
         }
+
     }
 
 

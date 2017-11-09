@@ -1062,7 +1062,7 @@ public class FeatureProvider
 
     }
 
-    public boolean computeFeatures( int numThreads, int maximumMultithreadedLevel, boolean computeAllFeatures )
+    public boolean computeFeatures( int numThreads )
     {
 
         long start = System.currentTimeMillis();
@@ -1076,8 +1076,7 @@ public class FeatureProvider
                 boolean success = computeFeatureImages(
                         intervalOneChannel,
                         numThreads,
-                        maximumMultithreadedLevel,
-                        computeAllFeatures);
+                        100 );
 
                 if ( ! success )
                 {
@@ -1191,8 +1190,7 @@ public class FeatureProvider
     public boolean computeFeatureImages(
             FinalInterval interval,
             int numThreads,
-            int maximumMultithreadedLevel,
-            boolean computeAllFeatures )
+            int maximumMultithreadedLevel )
     {
         // TODO:
         // - bit of a mess which variables are passed on via

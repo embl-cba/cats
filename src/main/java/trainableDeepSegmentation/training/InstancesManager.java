@@ -26,6 +26,21 @@ public class InstancesManager {
         instancesMap.put( key, instances );
     }
 
+    public void appendInstances( Instances newInstances )
+    {
+        String key = newInstances.relationName().split( "--" )[0];
+
+        Instances instances = instancesMap.get( key );
+
+        for( Instance instance : newInstances )
+        {
+            instances.add( instance );
+        }
+    }
+
+
+
+
     public Instances getInstances( String key )
     {
         return ( instancesMap.get( key ) );
