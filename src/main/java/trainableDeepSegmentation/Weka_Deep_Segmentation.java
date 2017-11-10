@@ -1714,6 +1714,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				addAnnotationButton[i].setEnabled(s);
 			}
 			setSliceSelectorEnabled(s);
+
+			repaintWindow();
 		}
 
 		synchronized void toggleOverlay()
@@ -2205,6 +2207,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			return;
 		}
 
+		win.setButtonsEnabled( false );
+
 		// Run the training
 		Thread newTask = new Thread() {
 
@@ -2213,8 +2217,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 				try
 				{
-					win.setButtonsEnabled( false );
-
 					// show dialog
 					final String NEW = "Start new training";
 					final String APPEND = "Append to previous training";
@@ -2283,7 +2285,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 						String key = wekaSegmentation.getClassifierManager().setClassifier( classifier, instances );
 
-						if ( false) // wekaSegmentation.minFeatureUsageFactor > 0 )
+						if ( wekaSegmentation.minFeatureUsageFactor > 0 )
 						{
 
 							// TODO:
@@ -2350,7 +2352,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				for ( int n : numInstancesHistory )
 				{
 					logger.info( "Total: " + n
-					+ "; Fraction: " + ( 1.0 * n / intervalVolume ) );
+					+ String.format("; Percent: %.2f" , ( 100.0 * n / intervalVolume ) ));
 				}
 
 				for ( int[][] accuracies : labelImageClassificationAccuraciesHistory )
@@ -2361,9 +2363,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 				updateComboBoxes();
 				win.classificationComplete = true;
 				win.setButtonsEnabled( true );
-
 			}
 		}; newTask.start();
+
 
 	}
 

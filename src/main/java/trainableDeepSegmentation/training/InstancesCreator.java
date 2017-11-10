@@ -398,6 +398,7 @@ public class InstancesCreator {
             int numThreads,
             Logger logger)
     {
+        int radius = 5;
 
         boolean isFirstTime = (featureProvider.getAllFeatureNames().size() == 0);
 
@@ -466,12 +467,23 @@ public class InstancesCreator {
 
             featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
 
-            for (int iClass = 0; iClass < numClasses; ++iClass)
+            for ( int i = 0; i < numInstancesPerClassAndPlane; ++i )
             {
-                for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
+                for ( int iClass = 0; iClass < numClasses; ++iClass )
                 {
 
                     int[] xy = getUsefulRandomCoordinate( iClass, classCoordinates, rand );
+
+                    if ( xy == null )
+                    {
+                        // stop, because no more example of this class are available
+                        // and we do not want to add (unbalanced)
+                        // examples of the other classes
+                        i = numInstancesPerClassAndPlane;
+                        break;
+                    }
+
+                    removeNeighbors( iClass, classCoordinates, xy, radius );
 
                     addInstance( instances, featureProvider, xy, featureSlice, iClass );
 
@@ -731,12 +743,35 @@ public class InstancesCreator {
         return ( xy );
     }
 
+    private static void removeNeighbors( int iClass,
+                                         ArrayList< int[] >[][] classCoordinates,
+                                         int[] xyRef,
+                                         int radius)
+    {
+
+        for ( int accuracy = 0; accuracy < classCoordinates[iClass].length; ++accuracy )
+        {
+            int numInstances = classCoordinates[ iClass ][ accuracy ].size();
+
+            for ( int i = numInstances - 1; i >= 0; --i )
+            {
+                int[] xy = classCoordinates[ iClass ][ accuracy ].get( i );
+
+                if ( ( Math.abs( xy[ 0 ] - xyRef[ 0 ] ) <= radius ) ||
+                        ( Math.abs( xy[ 1 ] - xyRef[ 1 ] ) <= radius ) )
+                {
+                    classCoordinates[ iClass ][ accuracy ].remove( i );
+                }
+            }
+        }
+    }
+
+
+
     private static int[] getUsefulRandomCoordinate( int iClass,
                                                     ArrayList< int[] >[][] classCoordinates,
                                                     Random random )
     {
-
-        // - find one that is not too close to the old one? maybe bad if they all cluster....
 
         int[] xy = null;
 
@@ -751,7 +786,7 @@ public class InstancesCreator {
                 xy = classCoordinates[iClass][accuracy].get( randomSample );
 
                 // remove it not to draw it again
-                //classCoordinates[iClass][accuracy].remove( randomSample );
+                classCoordinates[iClass][accuracy].remove( randomSample );
 
                 break;
             }
@@ -761,7 +796,6 @@ public class InstancesCreator {
         return xy;
 
     }
-
 
     private static final void logLabelImageTrainingProgress(
             Logger logger,

@@ -1683,8 +1683,6 @@ public class WekaSegmentation {
 		return () ->
 		{
 
-			int a = 1;
-
 			if ( ThreadUtils.stopThreads( logger, stopCurrentTasks,
 					tileCounter, tileCounterMax ) ) return;
 
@@ -1718,14 +1716,16 @@ public class WekaSegmentation {
 				featureProvider.setActiveChannels( settings.activeChannels );
 				featureProvider.setInterval( tileInterval );
 				featureProvider.isLogging( isLogging );
-				featureProvider.setFeatureListSubset(
-						classifierManager.getClassifierAttributeNames( classifierKey ) );
 				featureProvider.computeFeatures( numThreads );
 			}
 			else
 			{
 				featureProvider = externalFeatureProvider;
 			}
+
+			featureProvider.setFeatureListSubset(
+					classifierManager.getClassifierAttributeNames( classifierKey ) );
+
 
 
 			// determine chunking
