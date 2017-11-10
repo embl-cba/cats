@@ -113,7 +113,7 @@ public class TestGUI {
 
 
 		ImagePlus imp = IJ.openImage( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train" +
-				"-labels/doNotUse100-train-labels-2pixLargerBorders.tif" );
+				"-labels/train-labels-binary-larger-borders.tif" );
 
 		weka_segmentation.getWekaSegmentation().setLabelImage( imp );
 

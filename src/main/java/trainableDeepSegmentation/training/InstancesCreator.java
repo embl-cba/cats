@@ -4,6 +4,7 @@ import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
+import ij.process.ShortProcessor;
 import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.*;
@@ -391,6 +392,7 @@ public class InstancesCreator {
             ImagePlus inputImage,
             ImagePlus labelImage,
             ResultImage resultImage,
+            ImageProcessor instancesDistribution,
             FeatureProvider featureProvider,
             String instancesName,
             FinalInterval interval,
@@ -482,6 +484,14 @@ public class InstancesCreator {
                         i = numInstancesPerClassAndPlane;
                         break;
                     }
+
+
+
+                    int xx = xy[0] - (int)interval.min(X);
+                    int yy = xy[1] - (int)interval.min(Y);
+
+                    int v = instancesDistribution.get(  xx, yy ) + 1;
+                    instancesDistribution.set( xx, yy, v );
 
                     removeNeighbors( iClass, classCoordinates, xy, radius );
 
@@ -625,8 +635,10 @@ public class InstancesCreator {
     public static int[][] getAccuracies(
             ImagePlus labelImage,
             ResultImage resultImage,
+            ImageProcessor ipAccuracy,
             FinalInterval interval )
     {
+        int maxProbability = resultImage.getProbabilityRange();
 
         int numClasses = 2; // TODO: get from ResultImage
         int t = (int) interval.min( T );
@@ -642,8 +654,11 @@ public class InstancesCreator {
                 for ( int x = ( int ) interval.min( X ); x <= interval.max( X ); ++x )
                 {
                     int realClass = labelImageSlice.get( x, y );
-                    int classifiedClass =
-                            resultImage.getClassAndProbability( x, y, z, t )[ 0 ];
+                    int[] classifiedClassAndProbability =
+                            resultImage.getClassAndProbability( x, y, z, t );
+
+                    int classifiedClass = classifiedClassAndProbability[ 0 ];
+                    int correctness = classifiedClassAndProbability[ 1 ];
 
                     accuracies[ realClass ][ TOTAL ]++;
                     if ( realClass == classifiedClass )
@@ -652,9 +667,15 @@ public class InstancesCreator {
                     }
                     else
                     {
+                        correctness *= -1;
                         accuracies[ realClass ][ FN ]++;
                         accuracies[ classifiedClass ][ FP ]++;
                     }
+                    correctness += maxProbability;
+
+                    ipAccuracy.set( x - (int) interval.min(X),
+                            y - (int) interval.min(Y),
+                            correctness );
 
                 }
             }
@@ -663,6 +684,9 @@ public class InstancesCreator {
         return (accuracies);
 
     }
+
+
+
 
     private static ArrayList< int[] >[] getLocalClassCoordinates(
             int numClasses,

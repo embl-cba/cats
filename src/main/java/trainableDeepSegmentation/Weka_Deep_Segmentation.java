@@ -2191,6 +2191,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private FeatureProvider labelImageFeatureProvider = null;
 	private ArrayList< int[][] > labelImageClassificationAccuraciesHistory = null;
 	private ArrayList< Integer > numInstancesHistory = null;
+	private ImageProcessor ipLabelImageInstancesDistribution = null;
+	private ImageProcessor ipCorrectness = null;
 
 
 	/**
@@ -2242,6 +2244,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 						if ( labelImageInterval == null ) return;
 						labelImageClassificationAccuraciesHistory = new ArrayList<>();
 						numInstancesHistory = new ArrayList<>();
+						ipLabelImageInstancesDistribution = new ShortProcessor(
+								(int)labelImageInterval.dimension( X ),
+								(int)labelImageInterval.dimension( Y ));
+
 					}
 
 
@@ -2254,6 +2260,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 								wekaSegmentation.getInputImage(),
 								wekaSegmentation.getLabelImage(),
 								wekaSegmentation.getResultImage(),
+								ipLabelImageInstancesDistribution,
 								labelImageFeatureProvider,
 								instancesKey,
 								labelImageInterval,
@@ -2285,7 +2292,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 						String key = wekaSegmentation.getClassifierManager().setClassifier( classifier, instances );
 
-						if ( wekaSegmentation.minFeatureUsageFactor > 0 )
+						if ( false ) //wekaSegmentation.minFeatureUsageFactor > 0 )
 						{
 
 							// TODO:
@@ -2320,12 +2327,21 @@ public class Weka_Deep_Segmentation implements PlugIn
 								1,
 								labelImageFeatureProvider).run();
 
+						ImageProcessor ipCorrectness = new ShortProcessor(
+								(int)labelImageInterval.dimension( X ),
+								(int)labelImageInterval.dimension( Y ));
+
 						labelImageClassificationAccuraciesHistory.add(
 								InstancesCreator.getAccuracies(
 										wekaSegmentation.getLabelImage(),
 										wekaSegmentation.getResultImage(),
+										ipCorrectness,
 										labelImageInterval
 								));
+
+						ImagePlus impCorrectness = new ImagePlus( "correctness " + i , ipCorrectness );
+						impCorrectness.show();
+
 
 						logger.info( "..done.");
 
@@ -2359,6 +2375,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 				{
 					InstancesCreator.reportClassificationAccuracies( accuracies, logger );
 				}
+
+				ImagePlus impInstancesDistribution = new ImagePlus( "instance distribution" , ipLabelImageInstancesDistribution );
+				impInstancesDistribution.show();
+
+
 
 				updateComboBoxes();
 				win.classificationComplete = true;
