@@ -35,7 +35,6 @@ import trainableDeepSegmentation.classification.ClassifierManager;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageFrameSetter;
-import trainableDeepSegmentation.training.InstancesCreator;
 import trainableDeepSegmentation.training.InstancesManager;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
@@ -931,11 +930,11 @@ public class WekaSegmentation {
 			featureProvider.setWekaSegmentation(this);
 			featureProvider.setActiveChannels(settings.activeChannels);
 			featureProvider.setInterval(exampleListBoundingInterval);
-			featureProvider.computeFeatures(threadsPerRegion, maximumMultithreadedLevel,true);
+			featureProvider.computeFeatures(threadsPerRegion);
 
-			int nf = featureProvider.getNumFeatures();
+			int nf = featureProvider.getNumAllFeatures();
 
-			this.latestFeatureNames = featureProvider.getFeatureNames();
+			this.latestFeatureNames = featureProvider.getAllFeatureNames();
 
 			double[][][] featureSlice  = featureProvider.getReusableFeatureSlice();;
 
@@ -1289,7 +1288,7 @@ public class WekaSegmentation {
 		isTrainingCompleted = false;
 
 		// Train the classifier on the current data
-		logger.info("Training classifier...");
+		logger.info("\n# Train classifier");
 
 		final long start = System.currentTimeMillis();
 
@@ -1337,9 +1336,10 @@ public class WekaSegmentation {
 		return classifier;
 	}
 
-
-	public void applyClassifier( String classifierKey, FinalInterval interval )
+	public void applyClassifierWithTiling( String classifierKey, FinalInterval interval )
 	{
+
+		logger.info("\n# Apply classifier");
 
 		// set up tiling
 		ArrayList<FinalInterval> tiles = createTiles( interval );
@@ -1375,12 +1375,13 @@ public class WekaSegmentation {
 		{
 			futures.add(
 					exe.submit(
-							computeFeaturesAndApplyClassifierToTile(
+							applyClassifier(
 									classifierKey,
 									tile,
 									adaptedThreadsPerRegion,
 									++tileCounter,
-									tiles.size())
+									tiles.size(),
+									null)
 					)
 			);
 		}
@@ -1670,16 +1671,19 @@ public class WekaSegmentation {
 	 * @param probabilityMaps probability flag. Tue: probability maps are calculated, false: binary classification
 	 * @return result image containing the probability maps or the binary classification
 	 */
-	public Runnable computeFeaturesAndApplyClassifierToTile(
+	public Runnable applyClassifier(
 			String classifierKey,
 			final FinalInterval tileInterval,
 			final int numThreads,
 			final int tileCounter,
-			final int tileCounterMax)
+			final int tileCounterMax,
+			final FeatureProvider externalFeatureProvider)
 	{
 
 		return () ->
 		{
+
+			int a = 1;
 
 			if ( ThreadUtils.stopThreads( logger, stopCurrentTasks,
 					tileCounter, tileCounterMax ) ) return;
@@ -1688,14 +1692,6 @@ public class WekaSegmentation {
 				waitMilliseconds( tileCounter * tilingDelay);
 
 			boolean isLogging = (tileCounter <= regionThreads);
-
-			//log.info("Classifying region "+counter+"/"+counterMax+" at "
-			//		+ region5DToClassify.offset.getX() + ","
-			//		+ region5DToClassify.offset.getY() + ","
-			//		+ region5DToClassify.offset.getZ() + "..."
-			//);
-			//log.info("Memory usage [MB]: " + IJ.currentMemory() / 1000000L + "/" + IJ.maxMemory() / 1000000L);
-
 
 			// TODO: check whether this is a background region
 			/*
@@ -1711,16 +1707,26 @@ public class WekaSegmentation {
 			}*/
 
 
-			// compute image features
-			FeatureProvider featureProvider = new FeatureProvider();
-			featureProvider.setInputImage( inputImage );
-			featureProvider.setWekaSegmentation( this );
-			featureProvider.setActiveChannels( settings.activeChannels );
-			featureProvider.setInterval( tileInterval );
-			featureProvider.isLogging( isLogging );
-			featureProvider.setFeatureListSubset(
-					classifierManager.getClassifierAttributeNames( classifierKey )  );
-			featureProvider.computeFeatures( numThreads, maximumMultithreadedLevel, false );
+			// compute image features if necessary
+			FeatureProvider featureProvider;
+
+			if ( externalFeatureProvider == null )
+			{
+				featureProvider = new FeatureProvider();
+				featureProvider.setInputImage( inputImage );
+				featureProvider.setWekaSegmentation( this );
+				featureProvider.setActiveChannels( settings.activeChannels );
+				featureProvider.setInterval( tileInterval );
+				featureProvider.isLogging( isLogging );
+				featureProvider.setFeatureListSubset(
+						classifierManager.getClassifierAttributeNames( classifierKey ) );
+				featureProvider.computeFeatures( numThreads );
+			}
+			else
+			{
+				featureProvider = externalFeatureProvider;
+			}
+
 
 			// determine chunking
 			ArrayList< long[] > zChunks = getZChunks( numThreads, tileInterval );
@@ -1927,7 +1933,7 @@ public class WekaSegmentation {
 			FinalInterval interval = featureProvider.getInterval();
 
 			// create empty reusable instance
-			double[] featureValues = new double[ featureProvider.getNumFeatures() + 1];
+			double[] featureValues = new double[ featureProvider.getNumActiveFeatures() + 1];
 			final ReusableDenseInstance ins = new ReusableDenseInstance( 1.0, featureValues );
 			ins.setDataset( dataInfo );
 

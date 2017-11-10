@@ -364,7 +364,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
   //private String[] m_FeatureNames; 
   
   /** Available only if feature importances have been computed. */
-  //public String[] getFeatureNames() {
+  //public String[] getAllFeatureNames() {
   //  return m_FeatureNames;
   //}
   

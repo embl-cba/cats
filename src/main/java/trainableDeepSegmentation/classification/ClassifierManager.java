@@ -9,20 +9,21 @@ import java.util.*;
 
 public class ClassifierManager {
 
-    HashMap< String, ClassInst > classifiers;
+    SortedMap< String, ClassInst > classifiers;
 
 
     public ClassifierManager( )
     {
-        this.classifiers = new HashMap< String, ClassInst >();
+        this.classifiers = new TreeMap<>();
     }
 
-    public void setClassifier( Classifier classifier, Instances instances )
+    public String setClassifier( Classifier classifier, Instances instances )
     {
         Instances instancesHeader = new Instances( instances, 0, 1 );
         ClassInst classInst = new ClassInst( classifier, instancesHeader );
         String key = instancesHeader.relationName();
         classifiers.put( key , classInst );
+        return key;
     }
 
     public FastRandomForest getClassifier( String key )
@@ -30,14 +31,23 @@ public class ClassifierManager {
         return ( ( FastRandomForest) classifiers.get(key).classifier );
     }
 
+    public String getMostRecentClassifierKey( )
+    {
+        return ( classifiers.lastKey() );
+    }
+
 
     public ArrayList< Attribute > getClassifierAttributes( String key )
     {
+        if ( ! classifiers.containsKey( key ) ) return null;
+
         return ( Collections.list( classifiers.get(key).instances.enumerateAttributes() ) );
     }
 
     public ArrayList< Attribute > getClassifierAttributesIncludingClass( String key )
     {
+
+        if ( ! classifiers.containsKey( key ) ) return null;
 
         ArrayList< Attribute > attributes = Collections.list( classifiers.get(key).instances.enumerateAttributes() );
         attributes.add ( classifiers.get(key).instances.classAttribute() );
@@ -46,6 +56,7 @@ public class ClassifierManager {
 
     public ArrayList< String > getClassifierAttributeNames( String key )
     {
+        if ( ! classifiers.containsKey( key ) ) return null;
 
         List< Attribute > attributes = getClassifierAttributes( key );
 

@@ -112,8 +112,7 @@ public class InstancesCreator {
         featureProvider.setWekaSegmentation( wekaSegmentation );
         featureProvider.setInterval( interval );
         featureProvider.setActiveChannels( wekaSegmentation.settings.activeChannels );
-        featureProvider.computeFeatures( numThreads,
-                wekaSegmentation.maximumMultithreadedLevel );
+        featureProvider.computeFeatures( numThreads );
 
         logger.info ( "...computed features  in [ms]: " +
                 ( System.currentTimeMillis() - startTime ) );
@@ -127,7 +126,7 @@ public class InstancesCreator {
         wekaSegmentation.settings.classNames.add("label_im_class_1");
 
         int nClasses = wekaSegmentation.getNumClasses();
-        int nf = featureProvider.getNumFeatures();
+        int nf = featureProvider.getAllFeatureNames().size();
 
         int[] pixelsPerClass = new int[nClasses];
 
@@ -135,7 +134,7 @@ public class InstancesCreator {
 
         Instances instances = InstancesCreator.createInstancesHeader(
                 instancesName,
-                featureProvider.getFeatureNames(),
+                featureProvider.getAllFeatureNames(),
                 wekaSegmentation.getClassNames());
 
         // Collect instancesMap per plane
@@ -262,11 +261,9 @@ public class InstancesCreator {
         featureProvider.setWekaSegmentation( wekaSegmentation );
         featureProvider.setInterval( interval );
         featureProvider.setActiveChannels( wekaSegmentation.settings.activeChannels );
-        featureProvider.computeFeatures( numThreads,
-                wekaSegmentation.maximumMultithreadedLevel,
-                true );
+        featureProvider.computeFeatures( numThreads );
 
-        int nf = featureProvider.getNumFeatures();
+        int nf = featureProvider.getNumAllFeatures();
 
         logger.info ( "...computed features  in [ms]: " +
                 ( System.currentTimeMillis() - startTime ) );
@@ -285,7 +282,7 @@ public class InstancesCreator {
 
         Instances instances = InstancesCreator.createInstancesHeader(
                 instancesName,
-                featureProvider.getFeatureNames(),
+                featureProvider.getAllFeatureNames(),
                 wekaSegmentation.getClassNames());
 
 
@@ -399,25 +396,28 @@ public class InstancesCreator {
             FinalInterval interval,
             int numInstancesPerClassAndPlane,
             int numThreads,
-            Logger logger )
+            Logger logger)
     {
 
+        boolean isFirstTime = (featureProvider.getAllFeatureNames().size() == 0);
+
+        logger.info("\n# Getting instances from Label image");
+
+
         final int numClasses = wekaSegmentation.getNumClasses();
-        int radius = 5;
         int t = (int) interval.min( T );
 
         Random rand = new Random();
 
         if ( logger == null ) logger = new IJLazySwingLogger();
-        logger.info( "Computing features for label image region...");
-        IntervalUtils.logInterval( interval );
+
         logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
 
-
         // Compute features only if they do not exist yet
-        if ( featureProvider == null)
+        if ( isFirstTime )
         {
-            featureProvider = new FeatureProvider();
+            logger.info( "\n# Computing features for label image region...");
+            IntervalUtils.logInterval( interval );
             featureProvider.setLogger( logger );
             featureProvider.isLogging( true );
             featureProvider.setInputImage( inputImage );
@@ -428,7 +428,6 @@ public class InstancesCreator {
         }
 
 
-        logger.info( "Computing instance values...");
         long startTime = System.currentTimeMillis();
 
         // TODO: determine numClasses from labelImage!
@@ -442,30 +441,28 @@ public class InstancesCreator {
 
         Instances instances = InstancesCreator.createInstancesHeader(
                 instancesName,
-                featureProvider.getFeatureNames(),
+                featureProvider.getAllFeatureNames(),
                 wekaSegmentation.getClassNames());
 
 
-        int numAccuracies = resultImage.getProbabilityRange();
+        int[][] classificationAccuracies = new int[numClasses][4]; // TOTAL, CORRECT, FP, FN
 
         // Collect instances per plane
         for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
         {
-
             logLabelImageTrainingProgress( logger, z, interval, "...");
 
             ArrayList < int[] > [][] classCoordinates = getEmptyClassCoordinates(
-                    numClasses, numAccuracies );
+                    numClasses, resultImage.getProbabilityRange() );
 
-            int[][] accuracies = new int[numClasses][4]; // TOTAL, CORRECT, FP, FN
-
-            setClassCoordinatesAndAccuracies(
+            addClassCoordinatesAndAccuracies(
                     classCoordinates,
-                    accuracies,
+                    classificationAccuracies,
                     z, t,
                     labelImage,
                     resultImage,
-                    interval );
+                    interval,
+                    isFirstTime);
 
             featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
 
@@ -473,6 +470,7 @@ public class InstancesCreator {
             {
                 for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
                 {
+
                     int[] xy = getUsefulRandomCoordinate( iClass, classCoordinates, rand );
 
                     addInstance( instances, featureProvider, xy, featureSlice, iClass );
@@ -484,17 +482,11 @@ public class InstancesCreator {
 
         }
 
-
         logger.info ( "...computed instance values in [min]: " +
                 wekaSegmentation.getMinutes( System.currentTimeMillis(), startTime ) );
 
         //for( int j = 0; j < numOfClasses ; j ++ )
         //	IJ.log("Added " + numSamples + " instancesComboBox of '" + loadedClassNames.get( j ) +"'.");
-
-        logger.info("Label image training data added " +
-                "(" + instances.numInstances() +
-                " instancesComboBox, " + instances.numAttributes() +
-                " attributes, " + instances.numClasses() + " classes).");
 
         for ( int iClass = 0; iClass < numClasses; ++iClass )
         {
@@ -505,19 +497,43 @@ public class InstancesCreator {
             }
         }
 
+        if ( ! isFirstTime )
+        {
+            reportClassificationAccuracies( classificationAccuracies, logger );
+        }
+
         return ( instances );
 
     }
 
 
+    public static void reportClassificationAccuracies( int[][] classificationAccuracies,
+                                                        Logger logger)
+    {
+        logger.info( "\n# Classification accuracies");
+
+        for ( int iClass = 0; iClass < classificationAccuracies.length; ++iClass )
+        {
+            int total = classificationAccuracies[iClass][TOTAL];
+            if ( total == 0 ) total = -1; // to avoid division by zero
+
+            logger.info("Class " + iClass
+                    + "; " + "Percent correct: " + ( 100 * classificationAccuracies[iClass][CORRECT] ) / total
+                    + "; " + "True: " + total
+                    + "; " + "False positive: " + classificationAccuracies[iClass][FP]
+                    + "; " + "False negative: " + classificationAccuracies[iClass][FN]
+            );
+        }
+    }
+
     private static ArrayList < int[] > [][] getEmptyClassCoordinates(
             int numClasses,
-            int numAccuracies )
-
+            int numProbabilities )
     {
 
+        int numAccuracies = 2 * numProbabilities + 1;
         ArrayList < int[] >[][] classCoordinates;
-        classCoordinates = new ArrayList[numClasses][numAccuracies];
+        classCoordinates = new ArrayList[numClasses][ numAccuracies ];
 
         for ( int iClass = 0; iClass < numClasses; iClass++)
         {
@@ -532,13 +548,14 @@ public class InstancesCreator {
 
     final static int TOTAL = 0, CORRECT = 1, FP = 2, FN = 3;
 
-    private static void setClassCoordinatesAndAccuracies(
+    private static void addClassCoordinatesAndAccuracies(
                                     ArrayList < int[] >[][] classCoordinates,
                                     int[][] accuracies,
                                     int z, int t,
                                     ImagePlus labelImage,
                                     ResultImage resultImage,
-                                    FinalInterval interval)
+                                    FinalInterval interval,
+                                    boolean onlySetCoordinates)
     {
 
         int maxProbability = resultImage.getProbabilityRange();
@@ -549,37 +566,91 @@ public class InstancesCreator {
         {
             for ( int x = ( int ) interval.min( X ); x <= interval.max( X ); ++x )
             {
-                int[] classifiedClassAndProbability =
-                        resultImage.getClassAndProbability( x, y, z, t );
 
                 int realClass = labelImageSlice.get( x, y );
-                int classifiedClass = classifiedClassAndProbability[ 0 ];
-                int correctness = classifiedClassAndProbability[ 1 ];
 
-                if ( realClass == classifiedClass )
+                if ( onlySetCoordinates )
                 {
-                    accuracies[ realClass ][ TOTAL ]++;
-                    accuracies[ realClass ][ CORRECT ]++;
-
+                    // put all coordinates into the zero
+                    // accuracy slot, this makes sense for the
+                    // first iteration where we do not
+                    // want to use the result image yet
+                    classCoordinates[realClass][0].add( new int[]{ x, y } );
                 }
                 else
                 {
-                    correctness *= -1;
+
+                    int[] classifiedClassAndProbability =
+                            resultImage.getClassAndProbability( x, y, z, t );
+
+                    int classifiedClass = classifiedClassAndProbability[ 0 ];
+                    int correctness = classifiedClassAndProbability[ 1 ];
+
                     accuracies[ realClass ][ TOTAL ]++;
-                    accuracies[ realClass ][ FN ]++;
-                    accuracies[ classifiedClass ][ FP ]++;
+
+                    if ( realClass == classifiedClass )
+                    {
+                        accuracies[ realClass ][ CORRECT ]++;
+                    }
+                    else
+                    {
+                        correctness *= -1;
+                        accuracies[ realClass ][ FN ]++;
+                        accuracies[ classifiedClass ][ FP ]++;
+                    }
+
+                    // shift such that it becomes a positive index
+                    correctness += maxProbability;
+
+                    classCoordinates[realClass][correctness].add( new int[]{ x, y } );
                 }
-
-                // shift such that it becomes a positive index
-                correctness += maxProbability;
-
-                classCoordinates[realClass][correctness].add( new int[]{ x, y } );
 
             }
         }
 
     }
 
+    public static int[][] getAccuracies(
+            ImagePlus labelImage,
+            ResultImage resultImage,
+            FinalInterval interval )
+    {
+
+        int numClasses = 2; // TODO: get from ResultImage
+        int t = (int) interval.min( T );
+
+        int[][] accuracies = new int[numClasses][5];
+
+        for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z )
+        {
+            ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
+
+            for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
+            {
+                for ( int x = ( int ) interval.min( X ); x <= interval.max( X ); ++x )
+                {
+                    int realClass = labelImageSlice.get( x, y );
+                    int classifiedClass =
+                            resultImage.getClassAndProbability( x, y, z, t )[ 0 ];
+
+                    accuracies[ realClass ][ TOTAL ]++;
+                    if ( realClass == classifiedClass )
+                    {
+                        accuracies[ realClass ][ CORRECT ]++;
+                    }
+                    else
+                    {
+                        accuracies[ realClass ][ FN ]++;
+                        accuracies[ classifiedClass ][ FP ]++;
+                    }
+
+                }
+            }
+        }
+
+        return (accuracies);
+
+    }
 
     private static ArrayList< int[] >[] getLocalClassCoordinates(
             int numClasses,
@@ -626,7 +697,7 @@ public class InstancesCreator {
                                      double[][][] featureSlice,
                                      int iClass)
     {
-        double[] featureValuesWithClassNum = new double[featureProvider.getNumFeatures() + 1];
+        double[] featureValuesWithClassNum = new double[featureProvider.getNumAllFeatures() + 1];
 
         featureProvider.setFeatureValuesAndClassIndex(
                 featureValuesWithClassNum,
@@ -640,6 +711,7 @@ public class InstancesCreator {
 
         instances.add( denseInstance );
     }
+
 
 
     private static int[] getRandomCoordinate( int iClass,
@@ -659,13 +731,12 @@ public class InstancesCreator {
         return ( xy );
     }
 
-
     private static int[] getUsefulRandomCoordinate( int iClass,
                                                     ArrayList< int[] >[][] classCoordinates,
                                                     Random random )
     {
 
-        // - find one that is not too close to the old one? (bad if they all cluster....)
+        // - find one that is not too close to the old one? maybe bad if they all cluster....
 
         int[] xy = null;
 
@@ -675,13 +746,12 @@ public class InstancesCreator {
 
             if ( numInstances > 0 )
             {
-
                 int randomSample = random.nextInt( numInstances );
 
                 xy = classCoordinates[iClass][accuracy].get( randomSample );
 
                 // remove it not to draw it again
-                classCoordinates[iClass][accuracy].remove( randomSample );
+                //classCoordinates[iClass][accuracy].remove( randomSample );
 
                 break;
             }
@@ -699,7 +769,7 @@ public class InstancesCreator {
             FinalInterval interval,
             String currentTask )
     {
-        logger.progress("z (current, min, max): ",
+        logger.progress("Getting instances: z (current, min, max): ",
                 "" + z
                         + ", " + interval.min( Z )
                         + ", " + interval.max( Z )

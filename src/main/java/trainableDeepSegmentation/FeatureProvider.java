@@ -45,6 +45,8 @@ import net.imglib2.view.Views;
 import trainableDeepSegmentation.filters.HessianImgLib2;
 
 import java.util.ArrayList;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.*;
 
 /**
@@ -61,13 +63,7 @@ public class FeatureProvider
     private ImagePlus inputImage = null;
 
     /** the feature images */
-    private ArrayList < ImagePlus > multiResolutionFeatureImageArray = new ArrayList<>();
-
-    /** names of feature images */
-    private ArrayList<String> featureNames = new ArrayList<>();
-
-    /** names of feature images */
-    private ArrayList<String> activeFeatures = null;
+    private SortedMap< String, ImagePlus > featureImages = new TreeMap<>();
 
     /** image width */
     private int width = 0;
@@ -77,18 +73,6 @@ public class FeatureProvider
     private ArrayList<Integer> activeChannels;
 
     private final String CONV_DEPTH = "CD";
-
-    /** Hessian filter flag index */
-    public static final int HESSIAN 				=  0;
-    /** structure tensor filter flag index */
-    public static final int STRUCTURE 				=  1;
-    /** Minimum flag index */
-    public static final int MINIMUM					=  2;
-    /** Maximum flag index */
-    public static final int MAXIMUM					=  3;
-    /** Mean flag index */
-    public static final int AVERAGE                 =  4;
-    /** Median flag index */
 
     private int X = 0, Y = 1, C = 2, Z = 3, T = 4;
     private int[] XYZ = new int[]{ X, Y, Z};
@@ -171,11 +155,6 @@ public class FeatureProvider
     {
         this.wekaSegmentation = wekaSegmentation;
         setLogger( wekaSegmentation.getLogger() );
-    }
-
-    public void setActiveFeatures( ArrayList< String > activeFeatures )
-    {
-        this.activeFeatures = activeFeatures;
     }
 
     public void setLogger( Logger logger )
@@ -392,7 +371,7 @@ public class FeatureProvider
         int x = xGlobal - (int) interval.min( X );
         int y = yGlobal - (int) interval.min( Y );
 
-        int nf = getNumFeatures();
+        int nf = getNumActiveFeatures();
 
         System.arraycopy( featureSlice[x][y], 0, values, 0, nf );
         values[ nf ] = classNum;
@@ -402,10 +381,12 @@ public class FeatureProvider
     public double[][][] getReusableFeatureSlice()
     {
         // allocate memory for featureSlice
+
+
         double[][][] featureSlice = new double
                 [(int) interval.dimension(X)]
                 [(int) interval.dimension(Y)]
-                [getNumFeatures() + 1]; // last one for class ID
+                [ getNumActiveFeatures() + 1 ]; // last one for class ID
 
         return ( featureSlice );
     }
@@ -434,9 +415,10 @@ public class FeatureProvider
         int ys = 0;
         int ye = (int) (interval.dimension( Y ) - 1);
         int z = zGlobal - (int) interval.min( Z );
-        int nf = getNumFeatures();
 
-        // The feature images in multiResolutionFeatureImageArray
+        ArrayList< String > featureNames = getActiveFeatureNames();
+
+        // The feature images in featureImages
         // are larger than the requested interval, because of border
         // issues during feature computation.
         // Here we skip to the values outside the borders and
@@ -452,13 +434,14 @@ public class FeatureProvider
         ExecutorService exe = Executors.newFixedThreadPool( numThreads );
         ArrayList<Future> futures = new ArrayList<>();
 
-        for ( int f = 0; f < nf; f++ )
+
+        for ( int f = 0; f < featureNames.size(); ++f )
         {
             futures.add(
-                    exe.submit(
-                        setFeatureSliceValues(
+                exe.submit(
+                    setFeatureSliceValues(
                             featureSlice,
-                            f,
+                            f, featureNames.get( f ),
                             xs, xe, ys, ye, z)
                 )
             );
@@ -472,7 +455,7 @@ public class FeatureProvider
 
 
     private Runnable setFeatureSliceValues( double[][][] featureSlice,
-                                            int f,
+                                            int f, String feature,
                                             int xs, int xe, int ys, int ye, int z )
     {
         return () ->
@@ -494,7 +477,7 @@ public class FeatureProvider
             float[] pixelsBase = null;
             float[] pixelsAbove = null;
 
-            ImagePlus imp = multiResolutionFeatureImageArray.get(f);
+            ImagePlus imp = featureImages.get(feature);
             calibration = imp.getCalibration();
             xCal = calibration.pixelWidth;
             yCal = calibration.pixelHeight;
@@ -988,9 +971,23 @@ public class FeatureProvider
      *
      * @return number of features
      */
-    public int getNumFeatures()
+    public int getNumActiveFeatures()
     {
-        if ( multiResolutionFeatureImageArray == null )
+
+        if ( featureListSubset == null )
+        {
+            return getNumAllFeatures();
+        }
+        else
+        {
+            return featureListSubset.size();
+        }
+
+    }
+
+    public int getNumAllFeatures()
+    {
+        if ( featureImages == null )
         {
             logger.error("Something went wrong during the feature computation; " +
                     "probably a memory issue. Please try increasing your RAM " +
@@ -998,7 +995,9 @@ public class FeatureProvider
                     "'Maximum resolution level'");
             System.gc();
         }
-        return multiResolutionFeatureImageArray.size();
+
+        return featureImages.size();
+
     }
 
 
@@ -1507,9 +1506,7 @@ public class FeatureProvider
 
                     if ( isFeatureNeeded( featureImage.getTitle() ) )
                     {
-                        multiResolutionFeatureImageArray.add ( featureImage );
-
-                        featureNames.add( featureImage.getTitle() );
+                        this.featureImages.put(  featureImage.getTitle(), featureImage );
                     }
                 }
             }
@@ -1682,90 +1679,22 @@ public class FeatureProvider
     }
 
 
-    public ArrayList<String> getFeatureNames()
+    public ArrayList<String> getAllFeatureNames()
     {
-        return featureNames;
+        return new ArrayList<>( featureImages.keySet() );
     }
 
-    /**
-     * Reset the reference index (used when the are
-     * changes in the features)
-     */
-    public void resetReference()
+    public ArrayList<String> getActiveFeatureNames()
     {
-        this.referenceStackIndex = -1;
-    }
+        if ( featureListSubset == null )
+        {
+            return new ArrayList<>( featureImages.keySet() );
+        }
+        else
+        {
+            return featureListSubset;
+        }
 
-    /**
-     * Set the reference index (used when the are
-     * changes in the features)
-     */
-    public void setReference( int index )
-    {
-        this.referenceStackIndex = index;
-    }
-
-    /**
-     * Shut down the executor service
-     */
-    public void shutDownNow()
-    {
-        // TODO: implement
-    }
-
-
-    /**
-     * Check if the array has not been yet initialized
-     *
-     * @return true if the array has been initialized
-     */
-    public boolean isEmpty()
-    {
-        if ( multiResolutionFeatureImageArray == null )
-            return true;
-
-        if ( multiResolutionFeatureImageArray.size() > 1 )
-            return false;
-
-        return true;
-    }
-
-    /**
-     * Get a specific label of the reference stack
-     * @param index slice index (&gt;=1)
-     * @return label name
-     */
-    public String getLabel(int index)
-    {
-        //if(referenceStackIndex == -1)
-        //   return null;
-
-        String featureName = "feat" + index;
-
-        return featureName;
-    }
-
-    /**
-     * Get the features enabled for the reference stack
-     * @return features to be calculated on each stack
-     */
-    public boolean[] getEnabledFeatures()
-    {
-        return enabledFeatures;
-    }
-
-    /**
-     * Set the features enabled for the reference stack
-     * @param newFeatures boolean flags for the features to use
-     */
-    public void setEnabledFeatures(boolean[] enabledFeatures)
-    {
-        this.enabledFeatures = enabledFeatures;
-    }
-
-    public int getReferenceSliceIndex()
-    {
-        return referenceStackIndex;
     }
 
     public int getWidth()
@@ -1786,7 +1715,7 @@ public class FeatureProvider
     }
 
     public int getSize() {
-        return getNumFeatures();
+        return getNumActiveFeatures();
     }
 
 

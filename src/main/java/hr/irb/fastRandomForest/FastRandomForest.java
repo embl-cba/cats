@@ -721,7 +721,7 @@ public class FastRandomForest
           if ( importances[i]*100.0 > 0.5 ) // TISCHI
           {
             sb.append(String.format("%d\t%s\t%6.4f%%\n", i + 1, this.m_Info.attribute(i).name(),
-                    i == m_Info.classIndex() ? Double.NaN : importances[i] * 100.0)); //bagger.getFeatureNames()[i] );
+                    i == m_Info.classIndex() ? Double.NaN : importances[i] * 100.0)); //bagger.getAllFeatureNames()[i] );
             noImportantFeature = false;
           }
         }

@@ -6,6 +6,8 @@ import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 
+import static ij.IJ.makeRectangle;
+
 /**
  * Simple test to launch the plugin
  * 
@@ -113,9 +115,11 @@ public class TestGUI {
 		ImagePlus imp = IJ.openImage( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train" +
 				"-labels/train-labels-binary-larger-borders.tif" );
 
-		//weka_segmentation.getWekaSegmentation().setLabelImage( imp );
+		weka_segmentation.getWekaSegmentation().setLabelImage( imp );
 
-		//weka_segmentation.assignResultImage( weka_segmentation.RESULT_IMAGE_RAM );
+		weka_segmentation.assignResultImage( weka_segmentation.RESULT_IMAGE_RAM );
+
+		makeRectangle(430, 249, 95, 10);
 
 		/*
 		Thread t1 = new Thread(new Runnable() {

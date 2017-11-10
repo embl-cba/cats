@@ -20,7 +20,7 @@ public class BasicTest
 
 		assertTrue("Failed to train classifier", true == segmentator.createFastRandomForest());
 
-		segmentator.applyClassifier( false );
+		segmentator.applyClassifierWithTiling( false );
 
 		ImagePlus result = segmentator.getClassifiedImage();
 
@@ -87,7 +87,7 @@ public class BasicTest
 		rf.setSeed( 69 );
 		assertTrue( segmentator.createFastRandomForest() );
 
-		segmentator.applyClassifier( false );
+		segmentator.applyClassifierWithTiling( false );
 		ImagePlus output = segmentator.getClassifiedImage();
 		new ImageConverter( output ).convertToGray8();
 		return output;
