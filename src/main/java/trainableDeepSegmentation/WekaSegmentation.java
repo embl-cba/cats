@@ -297,7 +297,7 @@ public class WekaSegmentation {
 		for ( int i = 0; i < numIterations; ++i )
 		{
 
-			for ( int z = (int) labelImageInterval.min( Z ); z <= labelImageInterval.max( Z )); ++z )
+			for ( int z = (int) labelImageInterval.min( Z ); z <= labelImageInterval.max( Z ); ++z )
 			{
 				// create new instances
 
