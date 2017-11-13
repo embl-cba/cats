@@ -393,6 +393,18 @@ public class FeatureProvider
         return ( featureSlice );
     }
 
+    public double[][][] getCachedFeatureSlice( int z )
+    {
+        if ( featureSliceCache.containsKey( z ) )
+        {
+            return ( featureSliceCache.get( z ) );
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     /**
      * set all feature values for one z-slice
      * coordinates are relative to within the set interval
@@ -404,15 +416,18 @@ public class FeatureProvider
                                            int numThreads )
     {
 
-        if ( featureSliceCache.containsKey( zGlobal ) )
+        synchronized ( this )
         {
-            // TODO: do some security checking
-            featureSlice = featureSliceCache.get( zGlobal );
-            return ( true );
-        }
-        else
-        {
-            featureSliceCache.put( zGlobal, featureSlice );
+            if ( featureSliceCache.containsKey( zGlobal ) )
+            {
+                // TODO: do some security checking
+                featureSlice = featureSliceCache.get( zGlobal );
+                return ( true );
+            }
+            else
+            {
+                featureSliceCache.put( zGlobal, featureSlice );
+            }
         }
 
         if ( (zGlobal > interval.max(Z)) || (zGlobal < interval.min(Z)) )

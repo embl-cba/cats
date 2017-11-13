@@ -249,7 +249,7 @@ public class WekaSegmentation {
 		this.labelImageInstancesPerPlaneAndClass = labelImageInstancesPerPlaneAndClass;
 	}
 
-	private int labelImageInstancesPerPlaneAndClass = 100;
+	private int labelImageInstancesPerPlaneAndClass = 50;
 
 	public boolean hasTrainingData()
 	{
@@ -280,9 +280,22 @@ public class WekaSegmentation {
 			FinalInterval interval )
 	{
 
+		boolean isFirstTime = false;
+
 		if ( modality.equals( NEW ) )
 		{
+			IntervalUtils.logInterval( interval );
+
+			logger.info( "\n# Computing features for label image region...");
 			labelImageFeatureProvider = new FeatureProvider();
+			labelImageFeatureProvider.setLogger( logger );
+			labelImageFeatureProvider.isLogging( true );
+			labelImageFeatureProvider.setInputImage( inputImage );
+			labelImageFeatureProvider.setWekaSegmentation( this );
+			labelImageFeatureProvider.setInterval( interval );
+			labelImageFeatureProvider.setActiveChannels( settings.activeChannels );
+			labelImageFeatureProvider.computeFeatures( Prefs.getThreads() );
+
 			labelImageInterval = interval;
 			if ( labelImageInterval == null ) return;
 			labelImageClassificationAccuraciesHistory = new ArrayList<>();
@@ -291,8 +304,9 @@ public class WekaSegmentation {
 					( int ) labelImageInterval.dimension( X ),
 					( int ) labelImageInterval.dimension( Y ) );
 
-		}
+			isFirstTime = true;
 
+		}
 
 		for ( int i = 0; i < numIterations; ++i )
 		{
@@ -306,7 +320,6 @@ public class WekaSegmentation {
 
 				Instances instances = InstancesCreator.getUsefulInstancesFromLabelImage(
 						this,
-						getInputImage(),
 						getLabelImage(),
 						getResultImage(),
 						ipLabelImageInstancesDistribution,
@@ -315,7 +328,10 @@ public class WekaSegmentation {
 						newInstancesInterval,
 						getNumLabelImageInstancesPerPlaneAndClass(),
 						Prefs.getThreads(),
-						logger );
+						logger,
+						isFirstTime);
+
+				isFirstTime = false;
 
 				if ( i == 0 && modality.equals( NEW ) )
 				{
@@ -368,12 +384,12 @@ public class WekaSegmentation {
 
 
 				// record progress
-				ImageProcessor ipCorrectness = null;
+				ImageProcessor ipAccuracy = null;
 
 				if ( classificationZ == labelImageInterval.max( Z ) )
 				{
 					// record progress
-					ipCorrectness = new ShortProcessor(
+					ipAccuracy = new ShortProcessor(
 							( int ) labelImageInterval.dimension( X ),
 							( int ) labelImageInterval.dimension( Y ) );
 				}
@@ -382,14 +398,14 @@ public class WekaSegmentation {
 						InstancesCreator.getAccuracies(
 								getLabelImage(),
 								getResultImage(),
-								ipCorrectness,
+								ipAccuracy,
 								labelImageInterval
 						) );
 
 
 				if( classificationZ == labelImageInterval.max( Z ) )
 				{
-					ImagePlus impCorrectness = new ImagePlus( "correctness " + i, ipCorrectness );
+					ImagePlus impCorrectness = new ImagePlus( "correctness " + i, ipAccuracy );
 					impCorrectness.show();
 				}
 
@@ -2124,7 +2140,7 @@ public class WekaSegmentation {
 			ins.setDataset( dataInfo );
 
 			// create empty reusable feature slice
-			double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
+			double[][][] reusableFeatureSlice = featureProvider.getReusableFeatureSlice();
 
 			// create empty, reusable results array
 			double[] result = new double[5];
@@ -2135,12 +2151,14 @@ public class WekaSegmentation {
 				for ( long z = zMin; z <= zMax; ++z )
 				{
 
-					if ( ! featureProvider.setFeatureSlicesValues( (int) z, featureSlice, 1 ) )
+					double[][][] featureSlice = featureProvider.getCachedFeatureSlice( (int) z );
+					if ( featureSlice == null )
 					{
-						logger.error("Feature slice " + z +" could not be set." );
-						stopCurrentTasks = true;
-						return;
+						featureProvider.setFeatureSlicesValues( ( int ) z, reusableFeatureSlice, 1 );
+						featureSlice = reusableFeatureSlice;
 					}
+
+					int a = 1;
 
 
 					for ( long y = interval.min( Y ); y <= interval.max( Y ); ++y )

@@ -611,6 +611,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							case IO_EXPORT_RESULT_IMAGE:
 								ResultImageGUI.showExportGUI(
 										wekaSegmentation.getResultImage(),
+										wekaSegmentation.getInputImage(),
 										wekaSegmentation.getClassNames() );
 								break;
 							case TRAIN_FROM_LABEL_IMAGE:

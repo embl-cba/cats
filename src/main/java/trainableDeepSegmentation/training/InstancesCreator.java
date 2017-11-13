@@ -230,166 +230,8 @@ public class InstancesCreator {
 
 
     // TODO: improve separation from WekaSegmentation
-    public static Instances getLocallyPairedInstancesFromLabelImage(
-            WekaSegmentation wekaSegmentation,
-            ImagePlus inputImage,
-            ImagePlus labelImage,
-            ResultImage result,
-            String instancesName,
-            FinalInterval interval,
-            int numInstancesPerClassAndPlane,
-            int numThreads,
-            Logger logger )
-    {
-
-        final int numClasses = wekaSegmentation.getNumClasses();
-        int radius = 5;
-        Random rand = new Random();
-        if ( logger == null ) logger = new IJLazySwingLogger();
-
-
-        logger.info( "Computing features for label image region...");
-        IntervalUtils.logInterval( interval );
-        logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
-
-        long startTime = System.currentTimeMillis();
-
-        // Compute features
-        FeatureProvider featureProvider = new FeatureProvider();
-        featureProvider.setLogger( logger );
-        featureProvider.isLogging( true );
-        featureProvider.setInputImage( inputImage );
-        featureProvider.setWekaSegmentation( wekaSegmentation );
-        featureProvider.setInterval( interval );
-        featureProvider.setActiveChannels( wekaSegmentation.settings.activeChannels );
-        featureProvider.computeFeatures( numThreads );
-
-        int nf = featureProvider.getNumAllFeatures();
-
-        logger.info ( "...computed features  in [ms]: " +
-                ( System.currentTimeMillis() - startTime ) );
-
-        logger.info( "Computing instance values...");
-        startTime = System.currentTimeMillis();
-
-        // TODO: determine numClasses from labelImage!
-        wekaSegmentation.settings.classNames = new ArrayList<>();
-        wekaSegmentation.settings.classNames.add("label_im_class_0");
-        wekaSegmentation.settings.classNames.add("label_im_class_1");
-
-        int[] pixelsPerClass = new int[ numClasses ];
-
-        double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
-
-        Instances instances = InstancesCreator.createInstancesHeader(
-                instancesName,
-                featureProvider.getAllFeatureNames(),
-                wekaSegmentation.getClassNames());
-
-
-        // Collect instancesMap per plane
-        for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
-        {
-
-            logLabelImageTrainingProgress( logger, z, interval, "...");
-
-            // Create lists of coordinates of pixels of each class
-            //
-            ArrayList< int[] >[] classCoordinates = new ArrayList[ numClasses ];
-
-            for ( int i = 0; i < numClasses; i++)
-            {
-                classCoordinates[i] = new ArrayList<>();
-            }
-
-            ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
-
-            for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
-            {
-                for ( int x = (int) interval.min( X ); x <= interval.max( X ); ++x)
-                {
-                    int classIndex = labelImageSlice.get(x, y);
-                    classCoordinates[classIndex].add( new int[]{ x, y });
-                }
-            }
-
-            featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
-
-            for (int i = 0; i < numInstancesPerClassAndPlane; ++i)
-            {
-                for (int iClass = 0; iClass < numClasses; ++iClass)
-                {
-                    if ( ! classCoordinates[iClass].isEmpty() )
-                    {
-                        int[] center = getRandomCoordinate( iClass, classCoordinates, rand );
-
-                        ArrayList< int[] >[] localClassCoordinates =
-                                getLocalClassCoordinates( numClasses,
-                                        labelImageSlice,
-                                        interval,
-                                        center,
-                                        radius );
-
-                        for (int localClass = 0; localClass < numClasses; ++localClass)
-                        {
-
-                            for (int k = 0; k < 3; k++ )
-                            {
-
-                                int[] xy = getRandomCoordinate( localClass, localClassCoordinates, rand );
-
-                                if ( xy == null )
-                                {
-                                    // no local coordinate has been found
-                                    // thus we take a global one
-                                    xy = getRandomCoordinate( localClass, classCoordinates, rand );
-                                }
-
-                                addInstance( instances, featureProvider, xy, featureSlice, localClass );
-
-                                pixelsPerClass[ localClass ]++;
-
-                            }
-
-                        }
-
-
-                    }
-                }
-            }
-
-        }
-
-
-        logger.info ( "...computed instance values in [min]: " +
-                wekaSegmentation.getMinutes( System.currentTimeMillis(), startTime ) );
-
-        //for( int j = 0; j < numOfClasses ; j ++ )
-        //	IJ.log("Added " + numSamples + " instancesComboBox of '" + loadedClassNames.get( j ) +"'.");
-
-        logger.info("Label image training data added " +
-                "(" + instances.numInstances() +
-                " instancesComboBox, " + instances.numAttributes() +
-                " attributes, " + instances.numClasses() + " classes).");
-
-        for ( int iClass = 0; iClass < numClasses; ++iClass )
-        {
-            logger.info( "Class " + iClass + " [pixels]: " + pixelsPerClass[ iClass ]);
-            if( pixelsPerClass[iClass] == 0 )
-            {
-                logger.error("No labels of class found: " + iClass);
-            }
-        }
-
-        return ( instances );
-
-    }
-
-
-    // TODO: improve separation from WekaSegmentation
     public static Instances getUsefulInstancesFromLabelImage(
             WekaSegmentation wekaSegmentation,
-            ImagePlus inputImage,
             ImagePlus labelImage,
             ResultImage resultImage,
             ImageProcessor instancesDistribution,
@@ -398,14 +240,12 @@ public class InstancesCreator {
             FinalInterval interval,
             int numInstancesPerClassAndPlane,
             int numThreads,
-            Logger logger)
+            Logger logger,
+            boolean isFirstTime)
     {
         int radius = 5;
 
-        boolean isFirstTime = (featureProvider.getAllFeatureNames().size() == 0);
-
         logger.info("\n# Getting instances from Label image");
-
 
         final int numClasses = wekaSegmentation.getNumClasses();
         int t = (int) interval.min( T );
@@ -416,21 +256,6 @@ public class InstancesCreator {
 
         logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
 
-        // Compute features only if they do not exist yet
-        if ( isFirstTime )
-        {
-            logger.info( "\n# Computing features for label image region...");
-            IntervalUtils.logInterval( interval );
-            featureProvider.setLogger( logger );
-            featureProvider.isLogging( true );
-            featureProvider.setInputImage( inputImage );
-            featureProvider.setWekaSegmentation( wekaSegmentation );
-            featureProvider.setInterval( interval );
-            featureProvider.setActiveChannels( wekaSegmentation.settings.activeChannels );
-            featureProvider.computeFeatures( numThreads );
-        }
-
-
         long startTime = System.currentTimeMillis();
 
         // TODO: determine numClasses from labelImage!
@@ -440,7 +265,7 @@ public class InstancesCreator {
 
         int[] pixelsPerClass = new int[ numClasses ];
 
-        double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
+        double[][][] reusableFeatureSlice = featureProvider.getReusableFeatureSlice();
 
         Instances instances = InstancesCreator.createInstancesHeader(
                 instancesName,
@@ -467,7 +292,14 @@ public class InstancesCreator {
                     interval,
                     isFirstTime);
 
-            featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
+
+            double[][][] featureSlice = featureProvider.getCachedFeatureSlice( z );
+            if ( featureSlice == null )
+            {
+                featureProvider.setFeatureSlicesValues( z, reusableFeatureSlice, numThreads );
+                featureSlice = reusableFeatureSlice;
+            }
+
 
             for ( int i = 0; i < numInstancesPerClassAndPlane; ++i )
             {
@@ -485,25 +317,58 @@ public class InstancesCreator {
                         break;
                     }
 
+                    ArrayList< int[] >[] localClassCoordinates =
+                            getLocalClassCoordinates( numClasses,
+                                    labelImage, z, t,
+                                    interval,
+                                    xy,
+                                    radius );
+
+                    for (int localClass = 0; localClass < numClasses; ++localClass)
+                    {
+
+                        int[] xyLocal = null;
+
+                        if ( localClass == iClass )
+                        {
+                            xyLocal = xy;
+                        }
+                        else
+                        {
+                            xyLocal = getRandomCoordinate( localClass, localClassCoordinates, rand );
+
+                            if ( xyLocal == null )
+                            {
+                                // no local coordinate has been found
+                                // thus we take a useful global one
+                                xyLocal = getUsefulRandomCoordinate( localClass, classCoordinates, rand );
+                            }
+
+                        }
+
+                        if ( xyLocal == null )
+                        {
+                            // this class really has no more labels => stop
+                            i = numInstancesPerClassAndPlane;
+                            break;
+                        }
 
 
-                    int xx = xy[0] - (int)interval.min(X);
-                    int yy = xy[1] - (int)interval.min(Y);
+                        addToInstancesDistribution( instancesDistribution, xyLocal, interval );
 
-                    int v = instancesDistribution.get(  xx, yy ) + 1;
-                    instancesDistribution.set( xx, yy, v );
+                        removeNeighbors( iClass, classCoordinates, xyLocal, radius );
 
-                    removeNeighbors( iClass, classCoordinates, xy, radius );
+                        addInstance( instances, featureProvider, xyLocal, featureSlice, iClass );
 
-                    addInstance( instances, featureProvider, xy, featureSlice, iClass );
+                        pixelsPerClass[ iClass ]++;
 
-                    pixelsPerClass[ iClass ]++;
+                        }
+
+                    }
 
                 }
             }
-
-        }
-
+        
         logger.info ( "...computed instance values in [min]: " +
                 wekaSegmentation.getMinutes( System.currentTimeMillis(), startTime ) );
 
@@ -528,6 +393,16 @@ public class InstancesCreator {
 
     }
 
+
+    private static void addToInstancesDistribution( ImageProcessor instancesDistribution,
+                                             int[] xy,
+                                             FinalInterval interval )
+    {
+        int xx = xy[ 0 ] - ( int ) interval.min( X );
+        int yy = xy[ 1 ] - ( int ) interval.min( Y );
+        int v = instancesDistribution.get( xx, yy ) + 1;
+        instancesDistribution.set( xx, yy, v );
+    }
 
     public static void reportClassificationAccuracies( int[][] classificationAccuracies,
                                                         Logger logger)
@@ -689,11 +564,10 @@ public class InstancesCreator {
     }
 
 
-
-
     private static ArrayList< int[] >[] getLocalClassCoordinates(
             int numClasses,
-            ImageProcessor labelImageSlice,
+            ImagePlus labelImage,
+            int z, int t,
             FinalInterval interval,
             int[] center,
             int radius )
@@ -717,6 +591,8 @@ public class InstancesCreator {
             localClassCoordinates[iClass] = new ArrayList<>();
         }
 
+        ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
+
         for ( int x = min[0]; x <= max[0]; ++x )
         {
             for ( int y = min[1]; y <= max[1]; ++y )
@@ -729,6 +605,7 @@ public class InstancesCreator {
         return ( localClassCoordinates );
 
     }
+
 
     private static void addInstance( Instances instances,
                                      FeatureProvider featureProvider,

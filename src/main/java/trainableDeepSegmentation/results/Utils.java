@@ -11,6 +11,8 @@ import ij.plugin.Duplicator;
 
 import java.util.ArrayList;
 
+import static trainableDeepSegmentation.WekaSegmentation.logger;
+
 public abstract class Utils {
 
 
@@ -86,6 +88,53 @@ public abstract class Utils {
 
     }
 
+    public static void saveAsImarisChannel( ImagePlus rawData,
+                                            String name,
+                                            String directory,
+                                            int[] binning )
+    {
+        // Set everything up
+        ImarisDataSet imarisDataSet = new ImarisDataSet();
+                imarisDataSet.setFromImagePlus( rawData,
+                binning, directory, name, "/");
+
+        // Channels
+        ArrayList< String > channelNames = new ArrayList<>();
+                channelNames.add( name );
+                imarisDataSet.setChannelNames( channelNames  );
+
+        // Header
+                ImarisWriter.writeHeader( imarisDataSet,
+                        directory,
+                        name + ".ims"
+                );
+
+        Hdf5DataCubeWriter writer = new Hdf5DataCubeWriter();
+
+                for ( int t = 0; t < rawData.getNFrames(); ++t )
+        {
+
+            Duplicator duplicator = new Duplicator();
+            ImagePlus rawDataFrame = duplicator.run( rawData, 1, 1, 1, rawData.getNSlices(), t+1, t+1 );
+
+            if ( binning[0]*binning[1]*binning[2] > 1 )
+            {
+                Binner binner = new Binner();
+                rawDataFrame = binner.shrink( rawDataFrame, binning[ 0 ],
+                        binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
+            }
+
+            writer.writeImarisCompatibleResolutionPyramid(
+                    rawDataFrame,
+                    imarisDataSet,
+                    0, t );
+
+            logger.progress( "Wrote " + name + ", frame:",
+                    (t+1) + "/" + rawData.getNFrames() );
+        }
+    }
+
+
     public static void saveImagePlusAsSeparateImarisChannels(
             String directory,
             ArrayList< Boolean > saveClass,
@@ -117,8 +166,7 @@ public abstract class Utils {
             }
         }
 
-        ImarisUtils.createImarisMetaFile( directory );
-        logger.info("Created imaris meta file.");
+
     }
 
 }
