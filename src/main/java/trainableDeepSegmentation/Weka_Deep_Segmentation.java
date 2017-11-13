@@ -2747,7 +2747,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		gd.addNumericField("Classifier: Minimum feature usage factor",
 				wekaSegmentation.minFeatureUsageFactor, 1);
 
-		//gd.addNumericField("RF: Batch size per tree in percent", wekaSegmentation.getBatchSizePercent(), 0);
+		gd.addNumericField("RF: Batch size per tree in percent", wekaSegmentation.getBatchSizePercent(), 0);
 		//gd.addNumericField("RF: Maximum tree depth [0 = None]", wekaSegmentation.maxDepth, 0);
 
 		gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
@@ -2850,7 +2850,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.fractionRandomFeatures = (double) gd.getNextNumber();
 		wekaSegmentation.minFeatureUsageFactor = (double) gd.getNextNumber();
 
-		//wekaSegmentation.setBatchSizePercent((int) gd.getNextNumber());
+		wekaSegmentation.setBatchSizePercent((int) gd.getNextNumber());
 		//wekaSegmentation.maxDepth = (int) gd.getNextNumber();
 
 		wekaSegmentation.setActiveChannelsFromString(gd.getNextString());
