@@ -473,6 +473,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					{
 						ResultImageGUI.showExportGUI(
 								wekaSegmentation.getResultImage(),
+								wekaSegmentation.getInputImage(),
 								wekaSegmentation.getClassNames() );
 					}
 					else if(e.getSource() == reviewLabelsButton )
