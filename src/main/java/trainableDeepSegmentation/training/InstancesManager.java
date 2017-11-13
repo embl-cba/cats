@@ -19,14 +19,16 @@ public class InstancesManager {
         instancesMap = new TreeMap<>();
     }
 
-    public void putInstances( Instances instances )
+    public String putInstances( Instances instances )
     {
         String key = instances.relationName().split( "--" )[0];
 
         instancesMap.put( key, instances );
+
+        return key;
     }
 
-    public void appendInstances( Instances newInstances )
+    public String appendInstances( Instances newInstances )
     {
         String key = newInstances.relationName().split( "--" )[0];
 
@@ -36,6 +38,8 @@ public class InstancesManager {
         {
             instances.add( instance );
         }
+
+        return key;
     }
 
 

@@ -22,6 +22,8 @@ import java.util.zip.GZIPOutputStream;
 import bigDataTools.logging.Logger;
 import bigDataTools.logging.IJLazySwingLogger;
 import ij.gui.PolygonRoi;
+import ij.process.ImageProcessor;
+import ij.process.ShortProcessor;
 import javafx.geometry.Point3D;
 
 import hr.irb.fastRandomForest.FastRandomForest;
@@ -31,10 +33,12 @@ import ij.ImageStack;
 import ij.Prefs;
 import ij.gui.Roi;
 import net.imglib2.FinalInterval;
+import trainableDeepSegmentation.classification.AttributeSelector;
 import trainableDeepSegmentation.classification.ClassifierManager;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageFrameSetter;
+import trainableDeepSegmentation.training.InstancesCreator;
 import trainableDeepSegmentation.training.InstancesManager;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
@@ -147,7 +151,7 @@ public class WekaSegmentation {
 
 	public Settings settings = new Settings();
 
-	public double minFeatureUsageFactor = 1.0;
+	public double minFeatureUsageFactor = 0.0; // TODO: does not seem
 
 	private boolean computeFeatureImportance = false;
 
@@ -258,6 +262,189 @@ public class WekaSegmentation {
 			return false;
 		}
 	}
+
+
+	private FinalInterval labelImageInterval = null;
+	private FeatureProvider labelImageFeatureProvider = null;
+	private ArrayList< int[][] > labelImageClassificationAccuraciesHistory = null;
+	private ArrayList< Integer > numInstancesHistory = null;
+	private ImageProcessor ipLabelImageInstancesDistribution = null;
+	// show dialog
+	final String NEW = "Start new training";
+	final String APPEND = "Append to previous training";
+
+	public void trainIterativeFromLabelImage(
+			String instancesKey,
+			String modality,
+			int numIterations,
+			FinalInterval interval )
+	{
+
+		if ( modality.equals( NEW ) )
+		{
+			labelImageFeatureProvider = new FeatureProvider();
+			labelImageInterval = interval;
+			if ( labelImageInterval == null ) return;
+			labelImageClassificationAccuraciesHistory = new ArrayList<>();
+			numInstancesHistory = new ArrayList<>();
+			ipLabelImageInstancesDistribution = new ShortProcessor(
+					( int ) labelImageInterval.dimension( X ),
+					( int ) labelImageInterval.dimension( Y ) );
+
+		}
+
+
+		for ( int i = 0; i < numIterations; ++i )
+		{
+
+			for ( int z = (int) labelImageInterval.min( Z ); z <= labelImageInterval.max( Z )); ++z )
+			{
+				// create new instances
+
+				FinalInterval newInstancesInterval =
+						IntervalUtils.fixDimension( labelImageInterval, Z, z );
+
+				Instances instances = InstancesCreator.getUsefulInstancesFromLabelImage(
+						this,
+						getInputImage(),
+						getLabelImage(),
+						getResultImage(),
+						ipLabelImageInstancesDistribution,
+						labelImageFeatureProvider,
+						instancesKey,
+						newInstancesInterval,
+						getNumLabelImageInstancesPerPlaneAndClass(),
+						Prefs.getThreads(),
+						logger );
+
+				if ( i == 0 && modality.equals( NEW ) )
+				{
+					instancesKey = getInstancesManager().putInstances( instances );
+				}
+				else
+				{
+					instancesKey = getInstancesManager().appendInstances( instances );
+				}
+
+				instances = getInstancesManager().getInstances( instancesKey );
+
+				numInstancesHistory.add( instances.size() );
+
+				InstancesManager.logInstancesInformation( instances, logger );
+
+				if ( instances == null ) return;
+
+				FastRandomForest classifier = createFastRandomForest( instances );
+
+				if ( classifier == null ) return;
+
+				String key = getClassifierManager().setClassifier( classifier, instances );
+
+				if ( minFeatureUsageFactor > 0 )
+				{
+					// TODO: does not work
+					performFeatureSelection();
+				}
+
+				// apply classifier to next z-plane
+				logger.info( "\n# Apply classifier" );
+
+				int classificationZ = z + 1;
+				if( classificationZ > labelImageInterval.max( Z ) )
+				{
+					classificationZ = (int) labelImageInterval.min( Z );
+				}
+
+				FinalInterval classificationInterval =
+						IntervalUtils.fixDimension( labelImageInterval, Z, classificationZ );
+
+				applyClassifier(
+						key,
+						classificationInterval,
+						Prefs.getThreads(),
+						1,
+						1,
+						labelImageFeatureProvider ).run();
+
+
+				// record progress
+				ImageProcessor ipCorrectness = null;
+
+				if ( classificationZ == labelImageInterval.max( Z ) )
+				{
+					// record progress
+					ipCorrectness = new ShortProcessor(
+							( int ) labelImageInterval.dimension( X ),
+							( int ) labelImageInterval.dimension( Y ) );
+				}
+
+				labelImageClassificationAccuraciesHistory.add(
+						InstancesCreator.getAccuracies(
+								getLabelImage(),
+								getResultImage(),
+								ipCorrectness,
+								labelImageInterval
+						) );
+
+
+				if( classificationZ == labelImageInterval.max( Z ) )
+				{
+					ImagePlus impCorrectness = new ImagePlus( "correctness " + i, ipCorrectness );
+					impCorrectness.show();
+				}
+
+			}
+
+
+		}
+
+		logger.info( "..done." );
+
+		// report what happened
+		long intervalVolume = labelImageInterval.dimension( X )
+				* labelImageInterval.dimension( Y )
+				* labelImageInterval.dimension( Z );
+
+		logger.info( "\n# Instances history");
+		for ( int n : numInstancesHistory )
+		{
+			logger.info( "Total: " + n
+					+ String.format("; Percent: %.2f" , ( 100.0 * n / intervalVolume ) ));
+		}
+
+		for ( int[][] accuracies : labelImageClassificationAccuraciesHistory )
+		{
+			InstancesCreator.reportClassificationAccuracies( accuracies, logger );
+		}
+
+		ImagePlus impInstancesDistribution = new ImagePlus( "instance distribution" , ipLabelImageInstancesDistribution );
+		impInstancesDistribution.show();
+
+
+	}
+
+	public void performFeatureSelection()
+	{
+
+		/*
+		ArrayList< Integer > goners = AttributeSelector.getGoners(
+				classifier,
+				instances,
+				minFeatureUsageFactor,
+				getLogger() );
+
+		Instances instances2 = InstancesCreator.removeAttributes(
+				instances, goners );
+
+		logger.info( "\n# Second Training" );
+
+		FastRandomForest classifier2 = createFastRandomForest( instances2 );
+
+		key = getClassifierManager().
+				setClassifier( classifier2, instances2 );
+				*/
+	}
+
 
 	/**
 	 * flag to set the resampling of the training data in order to guarantee
@@ -1725,7 +1912,6 @@ public class WekaSegmentation {
 
 			featureProvider.setFeatureListSubset(
 					classifierManager.getClassifierAttributeNames( classifierKey ) );
-
 
 
 			// determine chunking

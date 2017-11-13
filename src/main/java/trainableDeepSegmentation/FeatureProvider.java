@@ -44,9 +44,7 @@ import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
 import trainableDeepSegmentation.filters.HessianImgLib2;
 
-import java.util.ArrayList;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -63,12 +61,7 @@ public class FeatureProvider
     private ImagePlus inputImage = null;
 
     /** the feature images */
-    private SortedMap< String, ImagePlus > featureImages = new TreeMap<>();
-
-    /** image width */
-    private int width = 0;
-    /** image height */
-    private int height = 0;
+    private Map< String, ImagePlus > featureImages = new LinkedHashMap<>();
 
     private ArrayList<Integer> activeChannels;
 
@@ -103,6 +96,16 @@ public class FeatureProvider
 
     private FinalInterval interval = null;
 
+    final int cacheSize = 2;
+
+    final LinkedHashMap< Integer, double[][][] > featureSliceCache
+            = new LinkedHashMap< Integer, double[][][]>() {
+        @Override
+        protected boolean removeEldestEntry(final Map.Entry eldest) {
+            return size() > cacheSize;
+        }
+    };
+
     /**
      * Initialize a feature stack list of a specific size
      *
@@ -116,6 +119,7 @@ public class FeatureProvider
      */
     public FeatureProvider()
     {
+
     }
 
     public FeatureProvider(ImagePlus imp )
@@ -125,8 +129,6 @@ public class FeatureProvider
 
     public void setInputImage(ImagePlus imp )
     {
-        width = imp.getWidth();
-        height = imp.getHeight();
         inputImage = imp;
     }
 
@@ -402,6 +404,16 @@ public class FeatureProvider
                                            int numThreads )
     {
 
+        if ( featureSliceCache.containsKey( zGlobal ) )
+        {
+            // TODO: do some security checking
+            featureSlice = featureSliceCache.get( zGlobal );
+            return ( true );
+        }
+        else
+        {
+            featureSliceCache.put( zGlobal, featureSlice );
+        }
 
         if ( (zGlobal > interval.max(Z)) || (zGlobal < interval.min(Z)) )
         {
@@ -477,7 +489,7 @@ public class FeatureProvider
             float[] pixelsBase = null;
             float[] pixelsAbove = null;
 
-            ImagePlus imp = featureImages.get(feature);
+            ImagePlus imp = featureImages.get( feature );
             calibration = imp.getCalibration();
             xCal = calibration.pixelWidth;
             yCal = calibration.pixelHeight;
@@ -1222,7 +1234,7 @@ public class FeatureProvider
         calibration.pixelHeight = 1;
         calibration.setUnit("um");
         inputImageCrop.setCalibration( calibration );
-        inputImageCrop.setTitle( inputImage.getTitle() + "_" + channelName );
+        inputImageCrop.setTitle( inputImageCrop.getTitle() + "_" + channelName );
 
         // ResolutionLevelList of ImageList
         ArrayList < ArrayList < ImagePlus > > multiResolutionFeatureImages = new ArrayList<>();
@@ -1695,27 +1707,6 @@ public class FeatureProvider
             return featureListSubset;
         }
 
-    }
-
-    public int getWidth()
-    {
-
-
-        return inputImage.getWidth();
-    }
-
-    public int getHeight()
-    {
-        return inputImage.getHeight();
-    }
-
-    public int getDepth()
-    {
-        return inputImage.getNSlices();
-    }
-
-    public int getSize() {
-        return getNumActiveFeatures();
     }
 
 

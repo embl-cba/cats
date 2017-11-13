@@ -173,7 +173,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 					IO_LOAD_PROJECT,
 					IO_SAVE_PROJECT,
 					IO_LOAD_INSTANCES,
-					IO_SAVE_INSTANCES
+					IO_SAVE_INSTANCES,
+					IO_LOAD_LABEL_IMAGE
 			} );
 
 	/** settings button */
@@ -2187,12 +2188,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 	}
 
 
-	private FinalInterval labelImageInterval = null;
-	private FeatureProvider labelImageFeatureProvider = null;
-	private ArrayList< int[][] > labelImageClassificationAccuraciesHistory = null;
-	private ArrayList< Integer > numInstancesHistory = null;
-	private ImageProcessor ipLabelImageInstancesDistribution = null;
-	private ImageProcessor ipCorrectness = null;
 
 
 	/**
@@ -2219,14 +2214,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 				try
 				{
-					// show dialog
-					final String NEW = "Start new training";
-					final String APPEND = "Append to previous training";
 
 					GenericDialog gd = new GenericDialogPlus( "Training from label image" );
 					gd.addStringField( "Training data name", "labelImage", 15 );
 					gd.addChoice( "Modality", new String[]
-							{ NEW, APPEND}, NEW);
+							{ wekaSegmentation.NEW,
+									wekaSegmentation.APPEND},
+									wekaSegmentation.NEW);
 					gd.addNumericField( "Number of iterations", 3.0, 0 );
 
 					gd.showDialog();
@@ -2237,115 +2231,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 					String modality = gd.getNextChoice();
 					int numIterations = (int) gd.getNextNumber();
 
-					if ( modality.equals( NEW ))
-					{
-						labelImageFeatureProvider = new FeatureProvider();
-						labelImageInterval = getIntervalFromGUI();
-						if ( labelImageInterval == null ) return;
-						labelImageClassificationAccuraciesHistory = new ArrayList<>();
-						numInstancesHistory = new ArrayList<>();
-						ipLabelImageInstancesDistribution = new ShortProcessor(
-								(int)labelImageInterval.dimension( X ),
-								(int)labelImageInterval.dimension( Y ));
+					wekaSegmentation.trainIterativeFromLabelImage(
+							instancesKey,
+							modality,
+							numIterations,
+							getIntervalFromGUI()
+					);
 
-					}
-
-
-					for ( int i = 0; i < numIterations; ++i )
-					{
-
-						// create new instances
-						Instances instances = InstancesCreator.getUsefulInstancesFromLabelImage(
-								wekaSegmentation,
-								wekaSegmentation.getInputImage(),
-								wekaSegmentation.getLabelImage(),
-								wekaSegmentation.getResultImage(),
-								ipLabelImageInstancesDistribution,
-								labelImageFeatureProvider,
-								instancesKey,
-								labelImageInterval,
-								wekaSegmentation.getNumLabelImageInstancesPerPlaneAndClass(),
-								Prefs.getThreads(),
-								logger);
-
-
-						if ( i == 0  && modality.equals( NEW ) )
-						{
-							wekaSegmentation.getInstancesManager().putInstances( instances );
-						}
-						else
-						{
-							wekaSegmentation.getInstancesManager().appendInstances( instances );
-						}
-
-						instances = wekaSegmentation.getInstancesManager().getInstances( instancesKey );
-
-						numInstancesHistory.add( instances.size() );
-
-						InstancesManager.logInstancesInformation( instances, logger );
-
-						if ( instances == null || this.isInterrupted() ) return;
-
-						FastRandomForest classifier = wekaSegmentation.createFastRandomForest( instances );
-
-						if ( classifier == null || this.isInterrupted() ) return;
-
-						String key = wekaSegmentation.getClassifierManager().setClassifier( classifier, instances );
-
-						if ( false ) //wekaSegmentation.minFeatureUsageFactor > 0 )
-						{
-
-							// TODO:
-							// - if we do subsetting, the full FeatureProvider
-							// currently does not give the right features back
-
-							ArrayList< Integer > goners = AttributeSelector.getGoners(
-									classifier,
-									instances,
-									wekaSegmentation.minFeatureUsageFactor,
-									wekaSegmentation.getLogger() );
-
-							Instances instances2 = InstancesCreator.removeAttributes(
-									instances, goners );
-
-							logger.info ("\n# Second Training");
-
-							classifier = wekaSegmentation.createFastRandomForest( instances2 );
-
-							key = wekaSegmentation.getClassifierManager().
-									setClassifier( classifier, instances2 );
-						}
-
-
-						logger.info( "\n# Apply classifier");
-
-						wekaSegmentation.applyClassifier(
-								key,
-								labelImageInterval,
-								Prefs.getThreads(),
-								1,
-								1,
-								labelImageFeatureProvider).run();
-
-						ImageProcessor ipCorrectness = new ShortProcessor(
-								(int)labelImageInterval.dimension( X ),
-								(int)labelImageInterval.dimension( Y ));
-
-						labelImageClassificationAccuraciesHistory.add(
-								InstancesCreator.getAccuracies(
-										wekaSegmentation.getLabelImage(),
-										wekaSegmentation.getResultImage(),
-										ipCorrectness,
-										labelImageInterval
-								));
-
-						ImagePlus impCorrectness = new ImagePlus( "correctness " + i , ipCorrectness );
-						impCorrectness.show();
-
-
-						logger.info( "..done.");
-
-					}
 
 				}
 				catch( Exception e )
@@ -2357,27 +2249,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 					err.printStackTrace();
 				}
 
-
-				// report what happened
-
-				long intervalVolume = labelImageInterval.dimension( X )
-						* labelImageInterval.dimension( Y )
-						* labelImageInterval.dimension( Z );
-
-				logger.info( "\n# Instances history");
-				for ( int n : numInstancesHistory )
-				{
-					logger.info( "Total: " + n
-					+ String.format("; Percent: %.2f" , ( 100.0 * n / intervalVolume ) ));
-				}
-
-				for ( int[][] accuracies : labelImageClassificationAccuraciesHistory )
-				{
-					InstancesCreator.reportClassificationAccuracies( accuracies, logger );
-				}
-
-				ImagePlus impInstancesDistribution = new ImagePlus( "instance distribution" , ipLabelImageInstancesDistribution );
-				impInstancesDistribution.show();
 
 
 

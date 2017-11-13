@@ -673,9 +673,12 @@ public class InstancesCreator {
                     }
                     correctness += maxProbability;
 
-                    ipAccuracy.set( x - (int) interval.min(X),
-                            y - (int) interval.min(Y),
-                            correctness );
+                    if ( ipAccuracy != null )
+                    {
+                        ipAccuracy.set( x - ( int ) interval.min( X ),
+                                y - ( int ) interval.min( Y ),
+                                correctness );
+                    }
 
                 }
             }

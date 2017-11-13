@@ -9,12 +9,12 @@ import java.util.*;
 
 public class ClassifierManager {
 
-    SortedMap< String, ClassInst > classifiers;
+    Map< String, ClassInst > classifiers;
 
 
     public ClassifierManager( )
     {
-        this.classifiers = new TreeMap<>();
+        this.classifiers = new LinkedHashMap<>();
     }
 
     public String setClassifier( Classifier classifier, Instances instances )
@@ -33,7 +33,8 @@ public class ClassifierManager {
 
     public String getMostRecentClassifierKey( )
     {
-        return ( classifiers.lastKey() );
+        String lastKey = (String) classifiers.keySet().toArray()[ classifiers.keySet().size() - 1 ];
+        return ( lastKey ) ;
     }
 
 
