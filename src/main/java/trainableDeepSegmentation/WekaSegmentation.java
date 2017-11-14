@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -33,7 +32,6 @@ import ij.ImageStack;
 import ij.Prefs;
 import ij.gui.Roi;
 import net.imglib2.FinalInterval;
-import trainableDeepSegmentation.classification.AttributeSelector;
 import trainableDeepSegmentation.classification.ClassifierManager;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.results.ResultImage;
@@ -137,7 +135,7 @@ public class WekaSegmentation {
 	/**
 	 * maximum depth per tree in the fast random forest classifier
 	 */
-	private int batchSizePercent = 100;
+	private int batchSizePercent = 10;
 	/**
 	 * list of class names on the loaded data
 	 */
@@ -306,6 +304,8 @@ public class WekaSegmentation {
 
 			isFirstTime = true;
 
+			batchSizePercent = 100; // since we chose uncorrelated features anyway
+
 		}
 
 		for ( int i = 0; i < numIterations; ++i )
@@ -313,6 +313,14 @@ public class WekaSegmentation {
 
 			for ( int z = (int) labelImageInterval.min( Z ); z <= labelImageInterval.max( Z ); ++z )
 			{
+
+				logger.info("\n# Iterative training from label image, iteration " + i + ", slice " + z);
+
+				if ( stopCurrentTasks )
+				{
+					return;
+				}
+
 				// create new instances
 
 				FinalInterval newInstancesInterval =
@@ -331,9 +339,8 @@ public class WekaSegmentation {
 						logger,
 						isFirstTime);
 
-				isFirstTime = false;
 
-				if ( i == 0 && modality.equals( NEW ) )
+				if ( isFirstTime && modality.equals( NEW ) )
 				{
 					instancesKey = getInstancesManager().putInstances( instances );
 				}
@@ -341,6 +348,8 @@ public class WekaSegmentation {
 				{
 					instancesKey = getInstancesManager().appendInstances( instances );
 				}
+
+				isFirstTime = false;
 
 				instances = getInstancesManager().getInstances( instancesKey );
 
@@ -421,16 +430,11 @@ public class WekaSegmentation {
 				* labelImageInterval.dimension( Y )
 				* labelImageInterval.dimension( Z );
 
-		logger.info( "\n# Instances history");
-		for ( int n : numInstancesHistory )
+		for ( int i = 0; i < numInstancesHistory.size(); ++i )
 		{
-			logger.info( "Total: " + n
-					+ String.format("; Percent: %.2f" , ( 100.0 * n / intervalVolume ) ));
-		}
-
-		for ( int[][] accuracies : labelImageClassificationAccuraciesHistory )
-		{
-			InstancesCreator.reportClassificationAccuracies( accuracies, logger );
+			InstancesCreator.reportClassificationAccuracies( labelImageClassificationAccuraciesHistory.get( i ), logger );
+			logger.info( "# Instances: Total: " + numInstancesHistory.get( i )
+					+ String.format("; Percent: %.2f" , ( 100.0 * numInstancesHistory.get( i ) / intervalVolume ) ));
 		}
 
 		ImagePlus impInstancesDistribution = new ImagePlus( "instance distribution" , ipLabelImageInstancesDistribution );
@@ -1636,44 +1640,71 @@ public class WekaSegmentation {
 			Instances instances)
 	{
 
-
 		int numDecisionNodes = classifier.getDecisionNodes();
 
-		int[] tmp = classifier.getAttributeUsages();
-		List<Integer> attributeUsages = Arrays.stream(tmp).boxed().collect( Collectors.toList());
+		int[] usages = classifier.getAttributeUsages();
+		ArrayList< Attribute > attributes =
+				Collections.list( instances.enumerateAttributes() );
+
+		NamesAndUsages[] namesAndUsages = new NamesAndUsages[usages.length];
+
+		for ( int i = 0; i < usages.length; ++i )
+		{
+			namesAndUsages[i] = new NamesAndUsages(usages[ i ], attributes.get( i ).name() );
+		}
+
+		Arrays.sort( namesAndUsages, Collections.reverseOrder() );
 
 		double avgRfTreeSize = numDecisionNodes / getNumTrees();
 		double avgTreeDepth = 1.0 + Math.log(avgRfTreeSize) / Math.log(2.0);
 		double randomUsage = 1.0 * numDecisionNodes / instances.numAttributes();
 		int minFeatureUsage = (int) Math.ceil( minFeatureUsageFactor * randomUsage );
 
-		ArrayList< Attribute > sortedAttributes =
-				 Collections.list( instances.enumerateAttributes() );
-
-		sortedAttributes.sort( Comparator.comparing( attributeUsages::indexOf ).reversed() );
-
-		Collections.sort( attributeUsages );
-		Collections.reverse( attributeUsages );
-
 		logger.info("# Most used: ");
-		for (int f = Math.min( 9, attributeUsages.size()- 1) ; f >= 0; f--)
+		for (int f = Math.min( 9, namesAndUsages.length - 1 ); f >= 0; f--)
 		{
-			Attribute attribute = sortedAttributes.get(f);
 			logger.info(
-					String.format("Relative usage: %.1f", attributeUsages.get( f ) / randomUsage ) +
-							"; Absolute usage: " + attributeUsages.get( f ) +
-							"; ID: " + "" + "; Name: " + attribute.name());
+					String.format("Relative usage: %.1f", namesAndUsages[f].usage / randomUsage ) +
+							"; Absolute usage: " + namesAndUsages[f].usage +
+							"; ID: " + "" + "; Name: " + namesAndUsages[f].name );
 		}
 
 
 		logger.info("Average number of decision nodes per tree: " +
 				avgRfTreeSize);
+
 		logger.info("Average tree depth: log2(numDecisionNodes) + 1 = " +
 				avgTreeDepth);
+
 		logger.info("Number of features: " + instances.numAttributes() );
+
+		logger.info("Batch size [%]: " + batchSizePercent );
+
+		logger.info("Number of instances: " + instances.size() );
+
+		logger.info("Number of instances per tree = numInstances * batchSizePercent/100: "
+				+ batchSizePercent / 100.0 * instances.size() );
 
 		// Print classifier information
 		logger.info( classifier.toString() );
+
+	}
+
+
+	private class NamesAndUsages implements Comparable<NamesAndUsages > {
+
+		private int usage;
+		private String name;
+
+		public NamesAndUsages( int usage, String name) {
+			this.usage = usage;
+			this.name = name;
+		}
+
+		@Override
+		public int compareTo(NamesAndUsages o) {
+			return (int)(this.usage - o.usage);
+		}
 
 	}
 

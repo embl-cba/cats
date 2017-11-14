@@ -587,7 +587,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 					}
 					else if(e.getSource() == executeIoButton )
 					{
-						win.setButtonsEnabled( false );
 
 						String action = (String) ioComboBox.getSelectedItem();
 
@@ -619,7 +618,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 								break;
 						}
 
-						win.setButtonsEnabled( true );
+
 
 					}
 					else if(e.getSource() == addClassButton){
@@ -683,6 +682,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				e.printStackTrace();
 			}
 		}
+
+		logger.info("...all tasks finished.");
 
 		wekaSegmentation.stopCurrentTasks = false;
 		win.setButtonsEnabled( true );
@@ -947,6 +948,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			applyButton.addActionListener(listener);
 			postProcessButton.addActionListener(listener);
 			executeIoButton.addActionListener(listener);
+			stopButton.addActionListener( listener );
 			addClassButton.addActionListener(listener);
 			settingsButton.addActionListener(listener);
 			testThreadsButton.addActionListener(listener);
@@ -1323,8 +1325,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingJPanel.add( ioPanel, trainingConstraints );
 			trainingConstraints.gridy++;
 
-			//trainingJPanel.add(saveProjectButton, trainingConstraints);
-			//trainingConstraints.gridy++;
+			trainingJPanel.add(stopButton, trainingConstraints);
+			trainingConstraints.gridy++;
 
 			//trainingJPanel.add(printProjectInfoButton, trainingConstraints);
 			//trainingConstraints.gridy++;
@@ -1441,6 +1443,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					postProcessButton.removeActionListener(listener);
 
 					executeIoButton.removeActionListener(listener);
+					stopButton.removeActionListener( listener );
 					addClassButton.removeActionListener(listener);
 					settingsButton.removeActionListener(listener);
 					wekaButton.removeActionListener(listener);
@@ -2205,7 +2208,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 			return;
 		}
 
+		if ( ! wekaSegmentation.hasResultImage() )
+		{
+			logger.error( "No result image assigned." );
+			return;
+		}
+
 		win.setButtonsEnabled( false );
+		wekaSegmentation.isBusy = true;
 
 		// Run the training
 		Thread newTask = new Thread() {
@@ -2249,13 +2259,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 				{
 					err.printStackTrace();
 				}
+				finally
+				{
+					updateComboBoxes();
+					win.classificationComplete = true;
+					wekaSegmentation.isBusy = false;
+					win.setButtonsEnabled( true );
+				}
 
-
-
-
-				updateComboBoxes();
-				win.classificationComplete = true;
-				win.setButtonsEnabled( true );
 			}
 		}; newTask.start();
 
@@ -2493,10 +2504,16 @@ public class Weka_Deep_Segmentation implements PlugIn
 		String[] arg = new String[] { sd.getDirectory() + sd.getFileName() };
 		record(SAVE_CLASSIFIER, arg);
 
+		win.setButtonsEnabled( false );
+		wekaSegmentation.isBusy = true;
+
 		if( ! wekaSegmentation.saveProject( sd.getDirectory() + sd.getFileName()) )
 		{
 			IJ.error("Error while writing project to file");
 		}
+
+		win.setButtonsEnabled( true );
+		wekaSegmentation.isBusy = false;
 
 	}
 
@@ -2525,12 +2542,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public void saveInstances( String key )
 	{
 
+		win.setButtonsEnabled( false );
+		wekaSegmentation.isBusy = true;
+
 		String[] dirFile =
 				getSaveDirFile(
 						"Save instance file", ".ARFF" );
 
 		boolean status = wekaSegmentation.getInstancesManager().
 					saveInstancesToARFF( key, dirFile[0], dirFile[1] );
+
+		win.setButtonsEnabled( true );
+		wekaSegmentation.isBusy = false;
+
 
 	}
 
@@ -2582,12 +2606,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 */
 	public void loadInstances()
 	{
+
 		String[] dirFile =
 				getOpenDirFile(
 						"Please choose instance file" );
 
+		win.setButtonsEnabled( false );
+		wekaSegmentation.isBusy = true;
+
 		String key = wekaSegmentation.getInstancesManager().
 				putInstancesFromARFF( dirFile[0], dirFile[1] );
+
+		win.setButtonsEnabled( true );
+		wekaSegmentation.isBusy = false;
 
 		updateComboBoxes();
 	}
@@ -2599,6 +2630,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public void loadProject( String directory, String fileName )
 	{
 
+
 		if ( directory == null || fileName == null )
 		{
 			OpenDialog od = new OpenDialog("Choose project file",
@@ -2609,6 +2641,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 			fileName = od.getFileName();
 		}
 
+
+		win.setButtonsEnabled( false );
+		wekaSegmentation.isBusy = true;
 
 		try
 		{
@@ -2636,6 +2671,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 		{
 			IJ.showMessage(e.toString());
 		}
+
+		win.setButtonsEnabled( true );
+		wekaSegmentation.isBusy = false;
+
 
 	}
 

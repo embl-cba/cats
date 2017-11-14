@@ -303,6 +303,12 @@ public class InstancesCreator {
 
             for ( int i = 0; i < numInstancesPerClassAndPlane; ++i )
             {
+
+                if ( wekaSegmentation.stopCurrentTasks )
+                {
+                    return null;
+                }
+
                 for ( int iClass = 0; iClass < numClasses; ++iClass )
                 {
 
@@ -356,11 +362,11 @@ public class InstancesCreator {
 
                         addToInstancesDistribution( instancesDistribution, xyLocal, interval );
 
-                        removeNeighbors( iClass, classCoordinates, xyLocal, radius );
+                        removeNeighbors( localClass, classCoordinates, xyLocal, radius );
 
-                        addInstance( instances, featureProvider, xyLocal, featureSlice, iClass );
+                        addInstance( instances, featureProvider, xyLocal, featureSlice, localClass );
 
-                        pixelsPerClass[ iClass ]++;
+                        pixelsPerClass[ localClass ]++;
 
                         }
 
@@ -368,7 +374,7 @@ public class InstancesCreator {
 
                 }
             }
-        
+
         logger.info ( "...computed instance values in [min]: " +
                 wekaSegmentation.getMinutes( System.currentTimeMillis(), startTime ) );
 
