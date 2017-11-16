@@ -45,7 +45,7 @@ import weka.core.Utils;
 /**
  * This class implements a Balanced Random Forest classifier,
  * it is an ensemble classifier of random trees where all classes
- * have the same representation in the training process. 
+ * have the same representation in the instances process.
  * 
  * <!-- globalinfo-start -->
  * Class for constructing a balanced forest of random trees.

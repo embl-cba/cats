@@ -1,5 +1,6 @@
 package trainableDeepSegmentation.results;
 
+import ij.ImagePlus;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 
@@ -29,5 +30,7 @@ public interface ResultImage {
     }
 
     int getProbabilityRange();
+
+    ImagePlus getDataCube( FinalInterval interval );
 
 }

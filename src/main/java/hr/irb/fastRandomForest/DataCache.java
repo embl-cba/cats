@@ -27,7 +27,7 @@ import java.util.Random;
 import weka.core.Instances;
 
 /**
- * Stores a dataset that in FastRandomTrees use for training. The data points
+ * Stores a dataset that in FastRandomTrees use for instances. The data points
  * are stored in a single-precision array indexed by attribute first, and then
  * by instance, to make access by FastRandomTrees faster. 
  * 
@@ -73,11 +73,11 @@ public class DataCache {
   /** How many instances are in 'bag' created by bootstrap sampling. */
   protected int numInBag = 0;
 
-  /** Used in training of FastRandomTrees. */
+  /** Used in instances of FastRandomTrees. */
   protected int[] whatGoesWhere = null;
   
   /**
-   * Used in training of FastRandomTrees. Each tree can store its own
+   * Used in instances of FastRandomTrees. Each tree can store its own
    * custom-seeded random generator in this field.
    */
   protected Random reusableRandomGenerator = null;
@@ -249,7 +249,7 @@ public class DataCache {
     result.instWeights = newWeights;
 
     // we also need to fill sortedIndices by peeking into the inBag array, but
-    // this can be postponed until the tree training begins
+    // this can be postponed until the tree instances begins
     // we will use the "createInBagSortedIndices()" for this
 
     return result;

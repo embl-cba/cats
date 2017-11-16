@@ -40,7 +40,7 @@ public abstract class ExamplesUtils {
                                  Logger logger )
     {
 
-        // add and report training values
+        // add and report instances values
         int[] numExamplesPerClass = new int[classNames.size()];
         int[] numExamplePixelsPerClass = new int[classNames.size()];
 

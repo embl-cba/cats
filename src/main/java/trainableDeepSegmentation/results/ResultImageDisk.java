@@ -9,12 +9,12 @@ import ij.ImageStack;
 import ij.io.FileSaver;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
+import trainableDeepSegmentation.IntervalUtils;
 import trainableDeepSegmentation.WekaSegmentation;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static trainableDeepSegmentation.ImageUtils.*;
 import static trainableDeepSegmentation.results.Utils.saveImagePlusAsSeparateImarisChannels;
 
 public class ResultImageDisk implements ResultImage {
@@ -78,14 +78,24 @@ public class ResultImageDisk implements ResultImage {
         return CLASS_LUT_WIDTH;
     }
 
+    @Override
+    public ImagePlus getDataCube( FinalInterval interval )
+    {
+
+        VirtualStackOfStacks vss = (VirtualStackOfStacks)result.getStack();
+        ImagePlus dataCube = vss.getDataCube( IntervalUtils.convertIntervalToRegion5D( interval ),
+                new int[] {-1,-1,}, 1 );
+        return dataCube;
+    }
+
 
     private ImagePlus createStream( String directory, long[] dimensions )
     {
         // TODO: check for cancel!
 
         DataStreamingTools dst = new DataStreamingTools();
-        String tMax = String.format( "%05d", dimensions[ T ] );
-        String zMax = String.format( "%05d", dimensions[ Z ] );
+        String tMax = String.format( "%05d", dimensions[ IntervalUtils.T ] );
+        String zMax = String.format( "%05d", dimensions[ IntervalUtils.Z ] );
 
         String namingPattern = "classified--C<C01-01>--T<T00001-" +
                 tMax + ">--Z<Z00001-"+zMax+">.tif";
@@ -95,8 +105,8 @@ public class ResultImageDisk implements ResultImage {
 
         // create one image
         ImageStack stack = ImageStack.create(
-                (int) dimensions[ X ],
-                (int) dimensions[ Y ],
+                (int) dimensions[ IntervalUtils.X ],
+                (int) dimensions[ IntervalUtils.Y ],
                 1, 8);
         ImagePlus impC0T0Z0 = new ImagePlus("", stack);
         FileSaver fileSaver = new FileSaver( impC0T0Z0 );
@@ -115,8 +125,8 @@ public class ResultImageDisk implements ResultImage {
 
         result.setDimensions(
                 1,
-                (int) dimensions[ Z ],
-                (int) dimensions[ T ]);
+                (int) dimensions[ IntervalUtils.Z ],
+                (int) dimensions[ IntervalUtils.T ]);
 
         result.setOpenAsHyperStack(true);
         result.setTitle("classification_result");
@@ -128,7 +138,7 @@ public class ResultImageDisk implements ResultImage {
             FinalInterval interval,
             byte[][][] resultChunk )
     {
-        assert interval.min( T ) == interval.max( T );
+        assert interval.min( IntervalUtils.T ) == interval.max( IntervalUtils.T );
 
         VirtualStackOfStacks stack = ( VirtualStackOfStacks ) result.getStack();
         try

@@ -41,7 +41,7 @@ import weka.core.WeightedInstancesHandler;
 /**
  * Based on the "weka.classifiers.trees.RandomTree" class, revision 1.19,
  * by Eibe Frank and Richard Kirkby, with major modifications made to improve
- * the speed of classifier training.
+ * the speed of classifier instances.
  * 
  * Please refer to the Javadoc of buildTree, splitData and distribution
  * function, as well as the changelog.txt, for the details of changes to 
@@ -75,13 +75,13 @@ class FastRandomTree
   /** The split point. */
   protected double m_SplitPoint = Double.NaN;
   
-  /** The proportions of training instances going down each branch. */
+  /** The proportions of instances instances going down each branch. */
   protected double[] m_Prop = null;
 
-  /** Class probabilities from the training vals. */
+  /** Class probabilities from the instances vals. */
   protected double[] m_ClassProbs = null;
 
-  /** The dataset used for training. */
+  /** The dataset used for instances. */
   protected transient DataCache data = null;
   
   /**
@@ -172,7 +172,7 @@ class FastRandomTree
 
   /**
    * This function is not supported by FastRandomTree, as it requires a
-   * DataCache for training.
+   * DataCache for instances.
 
    * @throws Exception every time this function is called
    */
@@ -374,7 +374,7 @@ class FastRandomTree
    * <li>members of dists, splits, props and vals arrays which are not used are
    *     dereferenced prior to recursion to reduce memory requirements
    *
-   * <li>a check for "branch with no training instances" is now (FastRF 0.98)
+   * <li>a check for "branch with no instances instances" is now (FastRF 0.98)
    *     made before recursion; with the current implementation of splitData(),
    *     empty branches can appear only with nominal attributes with more than
    *     two categories

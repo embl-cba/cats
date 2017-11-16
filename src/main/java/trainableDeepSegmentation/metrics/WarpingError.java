@@ -1523,7 +1523,7 @@ public class WarpingError extends Metrics {
 				|| source.getHeight() != target.getHeight()
 				|| source.getImageStackSize() != target.getImageStackSize())
 		{
-			IJ.log("Error: label and training image sizes do not fit.");
+			IJ.log("Error: label and instances image sizes do not fit.");
 			return null;
 		}
 
@@ -1600,7 +1600,7 @@ public class WarpingError extends Metrics {
 				|| source.getHeight() != target.getHeight()
 				|| source.getImageStackSize() != target.getImageStackSize())
 		{
-			IJ.log("Error: label and training image sizes do not fit.");
+			IJ.log("Error: label and instances image sizes do not fit.");
 			return null;
 		}
 
@@ -1648,7 +1648,7 @@ public class WarpingError extends Metrics {
 				|| source.getHeight() != target.getHeight()
 				|| source.getImageStackSize() != target.getImageStackSize())
 		{
-			IJ.log("Error: label and training image sizes do not fit.");
+			IJ.log("Error: label and instances image sizes do not fit.");
 			return null;
 		}
 
@@ -1822,7 +1822,7 @@ public class WarpingError extends Metrics {
 				|| source.getHeight() != target.getHeight()
 				|| source.getImageStackSize() != target.getImageStackSize())
 		{
-			IJ.log("Error: label and training image sizes do not fit.");
+			IJ.log("Error: label and instances image sizes do not fit.");
 			return null;
 		}
 

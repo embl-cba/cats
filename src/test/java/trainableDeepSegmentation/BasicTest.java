@@ -31,7 +31,7 @@ public class BasicTest
 		byte[] pixTrue = (byte[]) labels.getProcessor().getPixels();
 		for( int i=0; i<pix.length; i++)
 		{
-			assertTrue("Misclassified training sample", pix[i] * 255 == (pixTrue[i]&0xff) );
+			assertTrue("Misclassified instances sample", pix[i] * 255 == (pixTrue[i]&0xff) );
 		}
 	}
 

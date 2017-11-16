@@ -89,7 +89,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
    * the original data, and feeds them to the base classifier (which can only
    * be a FastRandomTree).
    *
-   * @param data         The training set to be used for generating the
+   * @param data         The instances set to be used for generating the
    *                     bagged classifier.
    * @param numThreads   The number of simultaneous threads to use for
    *                     computation. Pass zero (0) for autodetection.
@@ -119,7 +119,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
     m_Classifiers = new Classifier[m_NumIterations];
     for (int i = 0; i < m_Classifiers.length; i++) {
       FastRandomTree curTree = new FastRandomTree();
-      // all parameters for training will be looked up in the motherForest (maxDepth, k_Value)
+      // all parameters for instances will be looked up in the motherForest (maxDepth, k_Value)
       curTree.m_MotherForest = motherForest;
       // 0.99: reference to these arrays will get passed down all nodes so the array can be re-used 
       // 0.99: this array is of size two as now all splits are binary - even categorical ones
@@ -133,7 +133,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       m_Classifiers[i] = curTree;
     }
 
-    // this was SLOW.. takes approx 1/2 time as training the forest afterwards (!!!)
+    // this was SLOW.. takes approx 1/2 time as instances the forest afterwards (!!!)
     // super.buildClassifier(data);
 
 
@@ -279,7 +279,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
   /**
    * Compute the out-of-bag error on the instances in a DataCache. This must
-   * be the datacache used for training the FastRandomForest (this is not 
+   * be the datacache used for instances the FastRandomForest (this is not
    * checked in the function!).
    *
    * @param data       the instances (as a DataCache)
@@ -382,7 +382,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
   }
 
   /**
-   * The size of each bag sample, as a percentage of the training size
+   * The size of each bag sample, as a percentage of the instances size
    */
   protected int m_BagSizePercent = 100;
 
@@ -441,7 +441,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
     newVector.addElement(new Option(
       "\tSize of each bag, as a percentage of the\n"
-        + "\ttraining set size. (default 100)",
+        + "\tinstances set size. (default 100)",
       "P", 1, "-P"));
     newVector.addElement(new Option(
       "\tCalculate the out of bag error.",
@@ -464,7 +464,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
    * </p>
    * <pre> -P
    *  Size of each bag, as a percentage of the
-   *  training set size. (default 100)</pre>
+   *  instances set size. (default 100)</pre>
    * <pre> -O
    *  Calculate the out of bag error.</pre>
    * <pre> -S &lt;num&gt;
@@ -539,11 +539,11 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
    *         displaying in the explorer/experimenter gui
    */
   public String bagSizePercentTipText() {
-    return "Size of each bag, as a percentage of the training set size.";
+    return "Size of each bag, as a percentage of the instances set size.";
   }
 
   /**
-   * Gets the size of each bag, as a percentage of the training set size.
+   * Gets the size of each bag, as a percentage of the instances set size.
    *
    * @return the bag size, as a percentage.
    */
@@ -553,7 +553,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
   }
 
   /**
-   * Sets the size of each bag, as a percentage of the training set size.
+   * Sets the size of each bag, as a percentage of the instances set size.
    *
    * @param newBagSizePercent the bag size, as a percentage.
    */

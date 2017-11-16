@@ -26,10 +26,10 @@ public class Settings implements Serializable {
 
     /** List of all possible features for current settings,
      * including active as well as inactive features.
-     * It is necessary to keep this list, because the training
+     * It is necessary to keep this list, because the instances
      * annotations always have all features, because the
-     * active features could change each training and one does not
-     * want to recompute the features for the training data each time.*/
+     * active features could change each instances and one does not
+     * want to recompute the features for the instances data each time.*/
     public ArrayList< Feature > featureList = null;
 
     public ArrayList< Integer > activeChannels = null;

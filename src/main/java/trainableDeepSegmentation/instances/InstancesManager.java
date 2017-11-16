@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.training;
+package trainableDeepSegmentation.instances;
 
 import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;

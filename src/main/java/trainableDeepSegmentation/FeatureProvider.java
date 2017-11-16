@@ -27,14 +27,12 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.measure.Calibration;
 import ij.plugin.Binner;
-import ij.plugin.Duplicator;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.StackProcessor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessible;
-import net.imglib2.exception.IncompatibleTypeException;
 import net.imglib2.img.ImagePlusAdapter;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
@@ -42,7 +40,7 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
-import trainableDeepSegmentation.filters.HessianImgLib2;
+import trainableDeepSegmentation.results.ResultImage;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -65,6 +63,7 @@ public class FeatureProvider
 
     private ArrayList<Integer> activeChannels;
 
+    private final Integer FG_DIST_BG_IMAGE = -1;
     private final String CONV_DEPTH = "CD";
 
     private int X = 0, Y = 1, C = 2, Z = 3, T = 4;
@@ -94,6 +93,18 @@ public class FeatureProvider
 
     private Logger logger;
 
+    public ResultImage getResultImageFgDistBg()
+    {
+        return resultImageFgDistBg;
+    }
+
+    public void setResultImageFgDistBg( ResultImage resultImageFgDistBg )
+    {
+        this.resultImageFgDistBg = resultImageFgDistBg;
+    }
+
+    private ResultImage resultImageFgDistBg;
+
     private FinalInterval interval = null;
 
     final int cacheSize = 2;
@@ -117,19 +128,12 @@ public class FeatureProvider
      * @param membranePatchSize membrane patch size
      * @param enabledFeatures array of flags to enable features
      */
-    public FeatureProvider()
+    public FeatureProvider( WekaSegmentation wekaSegmentation )
     {
-
-    }
-
-    public FeatureProvider(ImagePlus imp )
-    {
-        setInputImage(imp);
-    }
-
-    public void setInputImage(ImagePlus imp )
-    {
-        inputImage = imp;
+        this.wekaSegmentation = wekaSegmentation;
+        this.inputImage = wekaSegmentation.getInputImage();
+        this.resultImageFgDistBg = wekaSegmentation.getResultImageBgFg();
+        this.logger = wekaSegmentation.getLogger();
     }
 
     public void setActiveChannels( ArrayList<Integer> activeChannels )
@@ -145,23 +149,6 @@ public class FeatureProvider
     public FinalInterval getInterval( )
     {
         return ( interval );
-    }
-
-    public long getIntervalWidth ( int d )
-    {
-        long width = interval.max( d ) - interval.min( d ) + 1;
-        return ( width );
-    }
-
-    public void setWekaSegmentation( WekaSegmentation wekaSegmentation )
-    {
-        this.wekaSegmentation = wekaSegmentation;
-        setLogger( wekaSegmentation.getLogger() );
-    }
-
-    public void setLogger( Logger logger )
-    {
-        this.logger = logger;
     }
 
     /**
@@ -393,7 +380,7 @@ public class FeatureProvider
         return ( featureSlice );
     }
 
-    public double[][][] getCachedFeatureSlice( int z )
+    public synchronized double[][][] getCachedFeatureSlice( int z )
     {
         if ( featureSliceCache.containsKey( z ) )
         {
@@ -416,26 +403,13 @@ public class FeatureProvider
                                            int numThreads )
     {
 
-        synchronized ( this )
-        {
-            if ( featureSliceCache.containsKey( zGlobal ) )
-            {
-                // TODO: do some security checking
-                featureSlice = featureSliceCache.get( zGlobal );
-                return ( true );
-            }
-            else
-            {
-                featureSliceCache.put( zGlobal, featureSlice );
-            }
-        }
+        // compute new feature slice
 
         if ( (zGlobal > interval.max(Z)) || (zGlobal < interval.min(Z)) )
         {
             logger.error("No features have been computed for slice " + zGlobal);
             return false;
         }
-
 
         int xs = 0;
         int xe = (int) (interval.dimension( X ) - 1);
@@ -460,7 +434,6 @@ public class FeatureProvider
 
         ExecutorService exe = Executors.newFixedThreadPool( numThreads );
         ArrayList<Future> futures = new ArrayList<>();
-
 
         for ( int f = 0; f < featureNames.size(); ++f )
         {
@@ -1053,7 +1026,7 @@ public class FeatureProvider
 
     ArrayList< String > featureListSubset = null;
 
-    public void setFeatureListSubset( ArrayList< String > featureListSubset )
+    public synchronized void setFeatureListSubset( ArrayList< String > featureListSubset )
     {
         this.featureListSubset = featureListSubset;
     }
@@ -1093,21 +1066,16 @@ public class FeatureProvider
 
         long start = System.currentTimeMillis();
 
-        for ( int c = (int) interval.min( C ); c <= interval.max( C ); ++c )
+        for ( int channel : activeChannels )
         {
-            if ( activeChannels.contains( c ) )
+            boolean success = computeFeatureImages(
+                    channel,
+                    numThreads,
+                    100 );
+
+            if ( ! success )
             {
-                FinalInterval intervalOneChannel = IntervalUtils.fixDimension(interval, C, c);
-
-                boolean success = computeFeatureImages(
-                        intervalOneChannel,
-                        numThreads,
-                        100 );
-
-                if ( ! success )
-                {
-                    return false;
-                }
+                return false;
             }
         }
 
@@ -1132,23 +1100,35 @@ public class FeatureProvider
      * @return data cube with correct voxel values for out-of-bounds positions.
      */
     public < T extends NumericType< T > & NativeType< T >> ImagePlus getDataCube(
-            ImagePlus imp,
             FinalInterval interval,
+            int channel,
             String outOfBoundsStrategy )
     {
+        assert interval.min( T ) == interval.max( T );
+        interval = IntervalUtils.fixDimension( interval, C, channel );
 
+
+        // check whether there are oob pixels requested
         FinalInterval interval3D = new FinalInterval(
                 new long[]{ interval.min( X ), interval.min( Y ), interval.min( Z ) },
                 new long[]{ interval.max( X ), interval.max( Y ), interval.max( Z ) } );
-        FinalInterval impInterval3D = new FinalInterval( new long[]{ imp.getWidth(), imp.getHeight(), imp.getNSlices() } );
+        FinalInterval impInterval3D = new FinalInterval(
+                new long[]{ inputImage.getWidth(), inputImage.getHeight(), inputImage.getNSlices() } );
         FinalInterval intersect3D = Intervals.intersect( impInterval3D, interval3D );
 
         if ( Intervals.equals( intersect3D, interval3D ) )
         {
             // everything is within bounds
-            return bigDataTools.utils.Utils.getDataCube(imp,
-                    ImageUtils.convertIntervalToRegion5D( interval ),
-                    new int[]{-1, -1}, 1);
+            if ( channel == FG_DIST_BG_IMAGE )
+            {
+                return ( resultImageFgDistBg.getDataCube(interval) );
+            }
+            else
+            {
+                return bigDataTools.utils.Utils.getDataCube( inputImage,
+                        IntervalUtils.convertIntervalToRegion5D( interval ),
+                        new int[]{ -1, -1 }, 1 );
+            }
         }
 
 
@@ -1168,9 +1148,18 @@ public class FeatureProvider
         }
 
         FinalInterval intersect5D = new FinalInterval( minIntersect5D, maxIntersect5D );
-        ImagePlus impWithinBounds = bigDataTools.utils.Utils.getDataCube(
-                imp, ImageUtils.convertIntervalToRegion5D( intersect5D ),
-                new int[]{-1,-1}, 1 );
+
+        ImagePlus impWithinBounds;
+        if ( channel == FG_DIST_BG_IMAGE )
+        {
+            impWithinBounds = resultImageFgDistBg.getDataCube( intersect5D );
+        }
+        else
+        {
+            impWithinBounds = bigDataTools.utils.Utils.getDataCube(
+                    inputImage, IntervalUtils.convertIntervalToRegion5D( intersect5D ),
+                    new int[]{ -1, -1 }, 1 );
+        }
 
         // - copy impWithinBounds into a larger imp
         // that has the originally requested size
@@ -1214,15 +1203,16 @@ public class FeatureProvider
      * @return true if the features are correctly updated
      */
     public boolean computeFeatureImages(
-            FinalInterval interval,
+            int channel,
             int numThreads,
             int maximumMultithreadedLevel )
     {
+        long start = System.currentTimeMillis();
+
         // TODO:
         // - bit of a mess which variables are passed on via
         // wekaSegmentation object and which not
         double anisotropy = wekaSegmentation.settings.anisotropy;
-        String channelName = "ch" + interval.min( C );
 
         // get the larger part of original image that is
         // needed to compute features for requested interval.
@@ -1230,17 +1220,9 @@ public class FeatureProvider
         FinalInterval expandedInterval = addBordersXYZ( interval,
                 featureImageBorderSizes );
 
-
-        long start = System.currentTimeMillis();
-
-        ImagePlus inputImageCrop = getDataCube( inputImage, expandedInterval, "mirror" );
-        inputImageCrop.setTitle( "Orig" );
-
-        if ( isLogging )
-        {
-            logger.info("Image data cube loaded in [ms]: " +
-                    (System.currentTimeMillis() - start));
-        }
+        ImagePlus inputImageCrop = getDataCube( expandedInterval,
+                channel, "mirror" );
+        inputImageCrop.setTitle( "Orig_ch" + channel );
 
         // Set a calibration that can be changed during the binning
         Calibration calibration = new Calibration();
@@ -1249,7 +1231,6 @@ public class FeatureProvider
         calibration.pixelHeight = 1;
         calibration.setUnit("um");
         inputImageCrop.setCalibration( calibration );
-        inputImageCrop.setTitle( inputImageCrop.getTitle() + "_" + channelName );
 
         // ResolutionLevelList of ImageList
         ArrayList < ArrayList < ImagePlus > > multiResolutionFeatureImages = new ArrayList<>();
@@ -1584,39 +1565,6 @@ public class FeatureProvider
         };
     }
 
-    public ImagePlus getStackCT (ImagePlus imp, int c, int t)
-    {
-        Duplicator duplicator = new Duplicator();
-        ImagePlus impCT = duplicator.run(imp, c+1, c+1, 1, imp.getNSlices(), t+1, t+1);
-        return ( impCT );
-    }
-
-    public void getHessianImgLib2( ImagePlus imp, int numThreads )
-    {
-        HessianImgLib2 hessianImgLib2 = new HessianImgLib2();
-        try
-        {
-            hessianImgLib2.run( imp, 1);
-        } catch (IncompatibleTypeException e)
-        {
-            e.printStackTrace();
-        } catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        } catch (ExecutionException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    public boolean is3D()
-    {
-        if ( inputImage.getNSlices() > 1 )
-            return true;
-        else
-            return false;
-    }
-
     private int[] getBinning(ImagePlus imp, double anisotropy, int scalingFactor)
     {
         // compute binning for this resolution layer
@@ -1638,16 +1586,6 @@ public class FeatureProvider
 
         return ( binning );
 
-    }
-
-    public void removeCalibration ( ImagePlus imp )
-    {
-        Calibration calibration = new Calibration();
-        calibration.pixelDepth = 1;
-        calibration.pixelWidth = 1;
-        calibration.pixelHeight = 1;
-        calibration.setUnit("pixel");
-        imp.setCalibration(calibration);
     }
 
     public Callable<ImagePlus> bin(ImagePlus imp_, int[] binning_, String binningTitle, String method)
@@ -1704,7 +1642,6 @@ public class FeatureProvider
 
         };
     }
-
 
     public ArrayList<String> getAllFeatureNames()
     {

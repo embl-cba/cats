@@ -1,8 +1,7 @@
 package trainableDeepSegmentation.results;
 
 import net.imglib2.FinalInterval;
-
-import static trainableDeepSegmentation.ImageUtils.*;
+import trainableDeepSegmentation.IntervalUtils;
 
 public class ResultImageFrameSetterDisk implements ResultImageFrameSetter {
 
@@ -12,13 +11,13 @@ public class ResultImageFrameSetterDisk implements ResultImageFrameSetter {
 
     public ResultImageFrameSetterDisk( ResultImage resultImage, FinalInterval interval )
     {
-        assert interval.min( T ) == interval.max( T );
+        assert interval.min( IntervalUtils.T ) == interval.max( IntervalUtils.T );
 
         this.interval = interval;
         this.resultImage = (ResultImageDisk) resultImage;
-        resultChunk = new byte[ (int) interval.dimension( Z ) ]
-                [ (int) interval.dimension( Y ) ]
-                [ (int) interval.dimension( X ) ];
+        resultChunk = new byte[ (int) interval.dimension( IntervalUtils.Z ) ]
+                [ (int) interval.dimension( IntervalUtils.Y ) ]
+                [ (int) interval.dimension( IntervalUtils.X ) ];
     }
 
     @Override
@@ -28,9 +27,9 @@ public class ResultImageFrameSetterDisk implements ResultImageFrameSetter {
 
         int classOffset = classId * resultImage.CLASS_LUT_WIDTH + 1;
 
-        resultChunk[ (int) (z - interval.min( Z )) ]
-                [ (int) (y - interval.min ( Y )) ]
-                [ (int) (x - interval.min ( X )) ]
+        resultChunk[ (int) (z - interval.min( IntervalUtils.Z )) ]
+                [ (int) (y - interval.min ( IntervalUtils.Y )) ]
+                [ (int) (x - interval.min ( IntervalUtils.X )) ]
                 = (byte) ( classOffset + lutCertainty );
 
     }

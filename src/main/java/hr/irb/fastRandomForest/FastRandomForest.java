@@ -345,7 +345,7 @@ public class FastRandomForest
   }
 
   /**
-   * Get the number of simultaneous threads used in training, 0 for autodetect.
+   * Get the number of simultaneous threads used in instances, 0 for autodetect.
    *
    * @return the maximum depth.
    */
@@ -354,7 +354,7 @@ public class FastRandomForest
   }
 
   /**
-   * Set the number of simultaneous threads used in training, 0 for autodetect.
+   * Set the number of simultaneous threads used in instances, 0 for autodetect.
    *
    * @param value the maximum depth.
    */
