@@ -637,9 +637,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							}
 							if(e.getSource() == addAnnotationButton[i])
 							{
-
 								addAnnotation( i );
-
 								break;
 							}
 						}
@@ -719,9 +717,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 		win.resultOverlay.setImage(null);
 		displayImage.updateAndDraw();
 
+		// show labels
 		labelManager = new LabelManager( displayImage );
 		labelManager.setExamples( wekaSegmentation.getExamples() );
-		labelManager.reviewLabelsInRoiManager( classNum );
+		String order = labelManager.showOrderGUI();
+		labelManager.reviewLabelsInRoiManager( classNum, order );
 	};
 
 	/**
@@ -1965,6 +1965,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 */
 	private void addAnnotation( int classNum )
 	{
+		if ( classNum >= wekaSegmentation.getNumClasses() )
+		{
+			logger.error( "Class number " + classNum + " does not exist; " +
+					"cannot at label.");
+			return;
+		}
 
 		if ( wekaSegmentation.isBusy )
 		{

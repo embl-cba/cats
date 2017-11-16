@@ -1,6 +1,7 @@
 package trainableDeepSegmentation.labels;
 
 import ij.ImagePlus;
+import ij.gui.GenericDialog;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.plugin.frame.RoiManager;
@@ -27,7 +28,7 @@ public class LabelManager {
     public void setExamples( ArrayList< Example > examples )
     {
 
-        this.examples = new HashMap<>();
+        this.examples = new LinkedHashMap<>();
 
         for ( int i = 0; i < examples.size(); ++i )
         {
@@ -55,9 +56,28 @@ public class LabelManager {
         return ( exampleArrayList );
     }
 
-    public void reviewLabelsInRoiManager( int classNum )
+    public String showOrderGUI()
     {
-        ArrayList< Roi > rois = getRoisFromExamples( classNum );
+        GenericDialog gd = new GenericDialog("Label ordering");
+        gd.addChoice( "Ordering of labels:",
+                new String[]{ ORDER_TIME_ADDED, ORDER_Z}, ORDER_TIME_ADDED);
+        gd.showDialog();
+        if(gd.wasCanceled())
+        {
+            return null;
+        }
+        else
+        {
+            return gd.getNextChoice();
+        }
+
+    }
+
+    public void reviewLabelsInRoiManager( int classNum,
+                                          String order)
+    {
+
+        ArrayList< Roi > rois = getRoisFromExamples( classNum, order );
         manager = new RoiManager();
         underReview = new ArrayList<>();
 
@@ -142,25 +162,57 @@ public class LabelManager {
         return ( keys );
     }
 
-    private ArrayList< Roi > getRoisFromExamples( int classNum )
+    final static String ORDER_Z = "z-position";
+    final static String ORDER_TIME_ADDED = "time added";
+
+    private ArrayList< Roi > getRoisFromExamples( int classNum,
+                                                  String ordering)
     {
         ArrayList< Roi > rois = new ArrayList<>();
 
-        final Set< String > strings = examples.keySet();
+        final Set< String > keys = examples.keySet();
+        final ArrayList< String > keysRequestedClass = new ArrayList<>();
+        final ArrayList< Integer > zPositions = new ArrayList<>();
 
-        for ( String key : strings )
+        for ( String key : keys )
         {
             if ( key.contains( "c"+ classNum + "-" ) )
             {
-                Roi roi = getRoiFromExample( examples.get( key ) );
-                roi.setProperty( KEY, key );
-                roi.setName( key );
-                rois.add( roi );
+                keysRequestedClass.add( key );
             }
         }
 
+        if ( ordering == ORDER_Z )
+        {
+
+            Collections.sort( keysRequestedClass, new Comparator< String >() {
+                public int compare( String o1, String o2 )
+                {
+                    return extractInt( o1 ) - extractInt( o2 );
+                }
+
+                int extractInt( String s )
+                {
+                    int z = Integer.parseInt(
+                            s.split( "z" )[ 1 ].split( "-" )[ 0 ] );
+                    return z;
+                }
+            } );
+        }
+
+        for ( String key : keysRequestedClass )
+        {
+            Roi roi = getRoiFromExample( examples.get( key ) );
+            roi.setProperty( KEY, key );
+            roi.setName( key );
+            rois.add( roi );
+        }
+
+
+
         return rois;
     }
+
 
     private Roi getRoiFromExample( Example example )
     {
