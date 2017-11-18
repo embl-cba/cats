@@ -1208,20 +1208,33 @@ public class FeatureProvider
             int maximumMultithreadedLevel )
     {
         long start = System.currentTimeMillis();
-
-        // TODO:
-        // - bit of a mess which variables are passed on via
-        // wekaSegmentation object and which not
         double anisotropy = wekaSegmentation.settings.anisotropy;
+
+        // TODO: isn't below a job for the feature-provider?
+        featureImageBorderSizes = wekaSegmentation.getFeatureBorderSizes();
 
         // get the larger part of original image that is
         // needed to compute features for requested interval.
-        featureImageBorderSizes = wekaSegmentation.getFeatureBorderSizes();
         FinalInterval expandedInterval = addBordersXYZ( interval,
                 featureImageBorderSizes );
 
         ImagePlus inputImageCrop = getDataCube( expandedInterval,
                 channel, "mirror" );
+
+        // preprocessing
+        if ( wekaSegmentation.getImagingModality() == WekaSegmentation.FLUORESCENCE_IMAGING )
+        {
+            // subtract background
+            IJ.run( inputImageCrop, "Subtract...", "value="
+                    + wekaSegmentation.settings.backgroundThreshold + " stack" );
+            // make sure there are no zeros, because the log will give -Infinity
+            IJ.run( inputImageCrop, "Add...", "value=1 stack" );
+
+            // log transformation to go to multiplicative math
+            IJ.run( inputImageCrop, "32-bit", "" );
+            IJ.run( inputImageCrop, "Log", "stack" );
+        }
+
         inputImageCrop.setTitle( "Orig_ch" + channel );
 
         // Set a calibration that can be changed during the binning

@@ -40,6 +40,7 @@ import trainableDeepSegmentation.instances.InstancesCreator;
 import trainableDeepSegmentation.instances.InstancesManager;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
@@ -240,6 +241,21 @@ public class WekaSegmentation {
 	 */
 	private boolean useNeighbors = false;
 
+	public static final String SEM_IMAGING = "Scanning EM";
+	public static final String FLUORESCENCE_IMAGING = "Fluorescence";
+
+	public String getImagingModality()
+	{
+		return imagingModality;
+	}
+
+	public void setImagingModality( String imagingModality )
+	{
+		this.imagingModality = imagingModality;
+	}
+
+	private String imagingModality = FLUORESCENCE_IMAGING;
+
 	public AtomicInteger totalThreadsExecuted = new AtomicInteger(0);
 
 	public AtomicLong pixelsClassified = new AtomicLong(0);
@@ -367,7 +383,7 @@ public class WekaSegmentation {
 
 				if ( instances == null ) return;
 
-				FastRandomForest classifier = createFastRandomForest( instances );
+				FastRandomForest classifier = trainClassifier( instances );
 
 				if ( classifier == null ) return;
 
@@ -464,7 +480,7 @@ public class WekaSegmentation {
 
 		logger.info( "\n# Second Training" );
 
-		FastRandomForest classifier2 = createFastRandomForest( instances2 );
+		FastRandomForest classifier2 = trainClassifier( instances2 );
 
 		key = getClassifierManager().
 				setClassifier( classifier2, instances2 );
@@ -941,18 +957,6 @@ public class WekaSegmentation {
 
 
 	/**
-	 * Homogenize number of instancesComboBox per class
-	 *
-	 * @param data input set of instancesComboBox
-	 * @return resampled set of instancesComboBox
-	 * @deprecated use balanceTrainingData
-	 */
-	public static Instances homogenizeTrainingData(Instances data)
-	{
-		return WekaSegmentation.balanceTrainingData(data);
-	}
-
-	/**
 	 * Balance number of instancesComboBox per class
 	 *
 	 * @param data input set of instancesComboBox
@@ -966,7 +970,7 @@ public class WekaSegmentation {
 		try
 		{
 			filter.setInputFormat(data);
-			filter.setNoReplacement(false);
+			filter.setNoReplacement(false); // with replacement => adds more of underrepresented class
 			filter.setSampleSizePercent(100);
 			filteredIns = Filter.useFilter(data, filter);
 		}
@@ -1014,9 +1018,94 @@ public class WekaSegmentation {
 		trainingData = filteredIns;
 	}
 
-	public void updateExamples( boolean recomputeFeatures )
+
+	private ArrayList< Integer > setInstancesClassesToBgFg( Instances instances )
+	{
+		ArrayList< Integer > originalClasses = new ArrayList< >( );
+
+		int classIndex = instances.classIndex();
+
+		for ( Instance instance : instances )
+		{
+			originalClasses.add( (int) instance.value( classIndex ) );
+
+			if ( instance.value( classIndex ) > 0 )
+			{
+				instance.setValue( classIndex, 1 );
+			}
+		}
+
+		return originalClasses;
+	}
+
+
+	private void resetInstancesClasses( Instances instances,
+										ArrayList< Integer > classes )
+	{
+		// TODO
+	}
+
+
+	public void applyBgFgClassification( FinalInterval interval,
+										 Instances instances )
 	{
 
+		ArrayList< Integer > originalClasses = setInstancesClassesToBgFg( instances );
+		FastRandomForest classifierBgFg = trainClassifier( instances );
+		String classifierBgFgKey = classifierManager.setClassifier( classifierBgFg, instances );
+		resetInstancesClasses( instances, originalClasses );
+
+		// reroute classification to BgFg result image
+		ResultImage originalResultImage = resultImage;
+		resultImage = resultImageBgFg;
+
+		applyClassifierWithTiling( classifierBgFgKey,
+				interval, null, null );
+
+		// reset
+		resultImage = originalResultImage;
+
+		ImagePlus imp1 = resultImageBgFg.getDataCube( interval );
+		imp1.setTitle( "BgFg" );
+		imp1.show();
+
+		resultImage.getDataCube( interval ).show();
+
+
+		// apply bgfg classifier
+
+		// apply distance transfrom to bgfg image
+
+		// add bgfg result image to active channels
+
+		// recompute instances, now including the bgfg result image
+
+		/*
+		updateExamples( true );
+		Instances instances2 = InstancesCreator.createInstancesAndMetadataFromLabels(
+				getExamples(),
+				getInputImageTitle(),
+				settings,
+				latestFeatureNames,
+				getClassNames() );
+		*/
+
+
+		//
+
+
+		// train classifier with new instances and all classes
+
+		// apply classifier
+
+
+
+
+	}
+
+
+	public void updateExamples( boolean recomputeFeatures )
+	{
 		ArrayList<Example> examplesWithoutFeatures = new ArrayList<>();
 
 		for ( Example example : examples )
@@ -1480,21 +1569,12 @@ public class WekaSegmentation {
 	}
 
 
-	public void balanceTrainingData2() // TODO
-	{
-		final long start = System.currentTimeMillis();
-		logger.info("Balancing classes distribution...");
-		trainingData = balanceTrainingData( trainingData );
-		final long end = System.currentTimeMillis();
-		logger.info("Done. Balancing classes distribution took: " + (end - start) + "ms");
-	}
-
 	/**
 	 * Train classifier with the current instances
 	 * and current classifier settings
 	 * and current active features
 	 */
-	public FastRandomForest createFastRandomForest( Instances instances )
+	public FastRandomForest trainClassifier( Instances instances )
 	{
 		isTrainingCompleted = false;
 
@@ -1521,9 +1601,19 @@ public class WekaSegmentation {
 		classifier.setBatchSize("" + getBatchSizePercent());
 		classifier.setComputeImportances(false); // using own method currently
 
+		// balance traces training data
+
+		Instances balancedInstances = instances;
+
+		if ( labelImage == null )
+		{
+			logger.info( "Balancing training data..." );
+			balancedInstances = balanceTrainingData( instances );
+		}
+
 		try
 		{
-			classifier.buildClassifier( instances );
+			classifier.buildClassifier( balancedInstances );
 		}
 		catch (InterruptedException ie)
 		{
@@ -1549,7 +1639,7 @@ public class WekaSegmentation {
 
 	public void applyClassifierWithTiling( String classifierKey,
 										   FinalInterval interval,
-										   int numTiles,
+										   Integer numTiles,
 										   FeatureProvider featureProvider )
 	{
 
@@ -1715,7 +1805,7 @@ public class WekaSegmentation {
 	}
 
 
-	private ArrayList<FinalInterval> createTiles( FinalInterval interval, int numTiles )
+	private ArrayList<FinalInterval> createTiles( FinalInterval interval, Integer numTiles )
 	{
 
 		IntervalUtils.logInterval( interval );

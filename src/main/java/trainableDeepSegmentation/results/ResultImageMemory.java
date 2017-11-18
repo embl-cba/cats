@@ -11,6 +11,7 @@ import trainableDeepSegmentation.WekaSegmentation;
 
 import java.util.ArrayList;
 
+import static bigDataTools.utils.Utils.getDataCubeFromImagePlus;
 import static trainableDeepSegmentation.results.Utils.saveImagePlusAsSeparateImarisChannels;
 
 public class ResultImageMemory implements ResultImage {
@@ -106,14 +107,10 @@ public class ResultImageMemory implements ResultImage {
         assert interval.min( IntervalUtils.C ) == interval.max( IntervalUtils.C );
         assert interval.min( IntervalUtils.T ) == interval.max( IntervalUtils.T );
 
-        Duplicator duplicator = new Duplicator();
+        ImagePlus cube = getDataCubeFromImagePlus( result,
+                IntervalUtils.convertIntervalToRegion5D( interval ));
 
-        ImagePlus dataCube = duplicator.run( result,
-                (int) interval.min( IntervalUtils.C ), (int) interval.max( IntervalUtils.C ),
-                (int) interval.min( IntervalUtils.Z ), (int) interval.max( IntervalUtils.Z ),
-                (int) interval.min( IntervalUtils.T ), (int) interval.max( IntervalUtils.T ));
-
-        return dataCube;
+        return cube;
     }
 
 }

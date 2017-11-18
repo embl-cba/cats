@@ -16,7 +16,7 @@ public abstract class ExamplesUtils {
     {
         Set<Integer> classNums = new HashSet<>();
 
-        for (Example example : examples )
+        for ( Example example : examples )
         {
             classNums.add( example.classNum );
         }
@@ -25,14 +25,14 @@ public abstract class ExamplesUtils {
 
     public static int[] getNumExamplesPerClass( ArrayList< Example > examples )
     {
-        int[] numExamplesPerClass = new int[ getNumClassesInExamples(examples) ];
+        int[] numExamplesPerClass = new int[ getNumClassesInExamples( examples ) ];
 
         for (Example example : examples )
         {
-            numExamplesPerClass[example.classNum]++;
+            numExamplesPerClass[ example.classNum ]++;
         }
 
-        return (numExamplesPerClass);
+        return ( numExamplesPerClass );
     }
 
     public void logExamplesInfo( ArrayList< Example > examples,

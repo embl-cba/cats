@@ -2,6 +2,8 @@ package trainableDeepSegmentation.instances;
 
 import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
+import trainableDeepSegmentation.IntervalUtils;
+import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -10,23 +12,75 @@ import java.util.*;
 
 public class InstancesManager {
 
+
+    public enum Metadata {
+        X("Metadata_X"),
+        Y("Metadata_Y"),
+        Z("Metadata_Z"),
+        T("Metadata_T"),
+        LabelID("Metadata_LabelID");
+        private final String text;
+        private Metadata(String s) {
+            text = s;
+        }
+        @Override
+        public String toString() {
+            return text;
+        }
+    }
+
+
     Logger logger = new IJLazySwingLogger();
 
-    SortedMap< String, Instances > instancesMap = null;
+    SortedMap< String, InstancesAndMetadata > instancesMap = null;
 
     public InstancesManager()
     {
         instancesMap = new TreeMap<>();
     }
 
+    public static Map< String, ArrayList< Double > > getEmptyMetadata()
+    {
+        Map< String, ArrayList< Double > > metadata = new HashMap<>(  );
+
+        for ( Metadata item : Metadata.values() )
+        {
+            ArrayList< Double > list = new ArrayList<>();
+            metadata.put( item.toString(), list );
+        }
+
+        return metadata;
+    }
+
     public String putInstances( Instances instances )
     {
         String key = instances.relationName().split( "--" )[0];
 
-        instancesMap.put( key, instances );
+        instancesMap.put( key, new InstancesAndMetadata( instances, null ) );
 
         return key;
     }
+
+    public String putInstancesAndMetadata( Instances instances,
+                                           Map< String, ArrayList< Double > >  metadata )
+    {
+        String key = instances.relationName().split( "--" )[0];
+
+        instancesMap.put( key, new InstancesAndMetadata( instances, metadata ) );
+
+        return key;
+    }
+
+    public String putInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata )
+    {
+        String key = instancesAndMetadata.instances.relationName().split( "--" )[0];
+
+        instancesMap.put( key, instancesAndMetadata );
+
+        return key;
+    }
+
+
 
     public String appendInstances( Instances newInstances )
     {
@@ -42,12 +96,9 @@ public class InstancesManager {
         return key;
     }
 
-
-
-
     public Instances getInstances( String key )
     {
-        return ( instancesMap.get( key ) );
+        return ( instancesMap.get( key ).instances );
     }
 
     public Set< String > getKeys()
@@ -98,16 +149,21 @@ public class InstancesManager {
         return true;
     }
 
-
     public boolean saveInstancesToARFF( String key,
                                         String directory,
                                         String filename)
     {
-        boolean status = saveInstancesToARFF( instancesMap.get( key ),
+        // TODO: add metadata here
+        Instances instances = instancesMap.get( key ).instances;
+        Map< String, ArrayList< Double > >  metadata = instancesMap.get( key ).metadata;
+
+        //appendMetadata( instances, metadata );
+
+        boolean status = saveInstancesToARFF( instancesMap.get( key ).instances,
                 directory, filename );
+
         return status;
     }
-
 
     public Instances getCombinedInstances( List< String > keys )
     {
@@ -129,7 +185,6 @@ public class InstancesManager {
 
     }
 
-
     private void extractFeatureSettingsFromInstances()
     {
         // maybe simply put the settings into each feature name....
@@ -148,14 +203,15 @@ public class InstancesManager {
         }*/
     }
 
-
     public String putInstancesFromARFF( String directory, String filename )
     {
-        Instances instances = loadInstancesFromARFF( directory, filename );
-        if ( instances == null ) return null;
+        InstancesAndMetadata instancesAndMetadata
+                = loadInstancesFromARFF( directory, filename );
 
-        String key = getName( instances );
-        instancesMap.put( key, instances );
+        if ( instancesAndMetadata == null ) return null;
+
+        String key = getName( instancesAndMetadata.instances );
+        instancesMap.put( key, instancesAndMetadata );
 
         return key;
     }
@@ -172,7 +228,7 @@ public class InstancesManager {
      * @param filename ARFF file name
      * @return set of instancesMap read from the file
      */
-    private Instances loadInstancesFromARFF( String directory, String filename )
+    private InstancesAndMetadata loadInstancesFromARFF( String directory, String filename )
     {
         String pathname = directory + File.separator + filename;
 
@@ -182,11 +238,17 @@ public class InstancesManager {
             BufferedReader reader = new BufferedReader(
                     new FileReader( pathname ));
             try{
-                Instances data = new Instances( reader );
-                // setting class attribute
-                data.setClassIndex(data.numAttributes() - 1);
+                Instances instances = new Instances( reader );
                 reader.close();
-                return data;
+
+                // TODO: separate metadata off
+                ArrayList< double[] > metadata =
+                        separateMetadata( instances );
+
+                // set class attribute
+                instances.setClassIndex( instances.numAttributes() - 1 );
+
+                return ( new InstancesAndMetadata( instances, metadata ));
             }
             catch(IOException e)
             {
@@ -201,6 +263,35 @@ public class InstancesManager {
         return null;
     }
 
+    private static ArrayList< double[] > separateMetadata( Instances instances )
+    {
+        ArrayList< String > metadata = new ArrayList<>(  );
+
+        int n = instances.numAttributes();
+
+        for ( Instance instance : instances )
+        {
+
+        }
+
+        instances.deleteAttributeAt( 0 );
+
+        int numAttributes = instances.numAttributes();
+        int a = 1;
+
+        return ( metadata );
+    }
+
+    public void appendMetadata( Instances instances, ArrayList< double[] > metadata )
+    {
+        Attribute attribute = new Attribute( "z-position" );
+        instances.insertAttributeAt( attribute, IntervalUtils.X );
+
+        for ( Instance instance : instances )
+        {
+
+        }
+    }
 
     public static void logInstancesInformation( Instances instances, Logger logger )
     {
@@ -211,5 +302,7 @@ public class InstancesManager {
         // TODO: output per class a.s.o
 
     }
+
+
 
 }

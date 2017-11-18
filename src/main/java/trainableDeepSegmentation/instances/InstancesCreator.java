@@ -7,13 +7,17 @@ import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.*;
 import trainableDeepSegmentation.examples.Example;
+import trainableDeepSegmentation.instances.InstancesManager.Metadata;
 import trainableDeepSegmentation.results.ResultImage;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Random;
+
+import static trainableDeepSegmentation.IntervalUtils.*;
 
 public class InstancesCreator {
 
@@ -26,32 +30,38 @@ public class InstancesCreator {
      *
      * @return set of instancesMap (feature vectors in Weka format)
      */
-    public static Instances createInstancesFromLabels( ArrayList< Example > examples,
-                                                       String inputImageTitle,
-                                                       Settings settings,
-                                                       ArrayList< String > featureNames,
-                                                       ArrayList< String > classNames )
+    public static InstancesAndMetadata createInstancesAndMetadataFromLabels( ArrayList< Example > examples,
+                                                                             String inputImageTitle,
+                                                                             Settings settings,
+                                                                             ArrayList< String > featureNames,
+                                                                             ArrayList< String > classNames )
     {
 
         String instancesInfo = getInfoString( inputImageTitle, settings );
 
-        Instances instances = createInstancesHeader(
+        Instances instances = getInstancesHeader(
                 instancesInfo,
                 featureNames,
                 classNames  );
 
+        Map< String, ArrayList< Double > > metadata
+                = InstancesManager.getEmptyMetadata();
+
         for ( Example example : examples )
         {
-            // loop over all pixels of the example
-            // and add the feature values for each pixel to the trainingData
-            // note: sub-setting of active features happens in another function
-            for ( double[] values : example.instanceValuesArray )
+            for ( int i = 0; i < example.points.length; ++i )
             {
-                instances.add( new DenseInstance(1.0, values) );
+                instances.add( new DenseInstance(1.0, example.instanceValuesArray.get(i) ) );
+                metadata.get( Metadata.X ).add( ( double ) example.points[i].x );
+                metadata.get( Metadata.Y ).add( ( double ) example.points[i].y );
+                metadata.get( Metadata.Z ).add( ( double ) example.z );
+                metadata.get( Metadata.T ).add( ( double ) example.t );
+                metadata.get( Metadata.LabelID ).add( ( double ) i );
             }
+
         }
 
-        return instances;
+        return ( new InstancesAndMetadata( instances, metadata ) );
 
     }
 
@@ -92,7 +102,7 @@ public class InstancesCreator {
         logger.info("\n# Getting instances from Label image");
 
         final int numClasses = wekaSegmentation.getNumClasses();
-        int t = (int) interval.min( IntervalUtils.T );
+        int t = (int) interval.min( T );
 
         Random rand = new Random();
 
@@ -111,7 +121,7 @@ public class InstancesCreator {
 
         double[][][] reusableFeatureSlice = featureProvider.getReusableFeatureSlice();
 
-        Instances instances = InstancesCreator.createInstancesHeader(
+        Instances instances = InstancesCreator.getInstancesHeader(
                 instancesName,
                 featureProvider.getAllFeatureNames(),
                 wekaSegmentation.getClassNames());
@@ -120,7 +130,7 @@ public class InstancesCreator {
         int[][] classificationAccuracies = new int[numClasses][4]; // TOTAL, CORRECT, FP, FN
 
         // Collect instances per plane
-        for ( int z = (int) interval.min( IntervalUtils.Z ); z <= interval.max( IntervalUtils.Z ); ++z)
+        for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z)
         {
             logLabelImageTrainingProgress( logger, z, interval, "...");
 
@@ -248,8 +258,8 @@ public class InstancesCreator {
                                              int[] xy,
                                              FinalInterval interval )
     {
-        int xx = xy[ 0 ] - ( int ) interval.min( IntervalUtils.X );
-        int yy = xy[ 1 ] - ( int ) interval.min( IntervalUtils.Y );
+        int xx = xy[ 0 ] - ( int ) interval.min( X );
+        int yy = xy[ 1 ] - ( int ) interval.min( Y );
         int v = instancesDistribution.get( xx, yy ) + 1;
         instancesDistribution.set( xx, yy, v );
     }
@@ -309,16 +319,16 @@ public class InstancesCreator {
 
         ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
 
-        for ( int y = (int) interval.min( IntervalUtils.Y ); y <= interval.max( IntervalUtils.Y ); ++y)
+        for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
         {
-            for ( int x = ( int ) interval.min( IntervalUtils.X ); x <= interval.max( IntervalUtils.X ); ++x )
+            for ( int x = ( int ) interval.min( X ); x <= interval.max( X ); ++x )
             {
 
                 int realClass = labelImageSlice.get( x, y );
 
                 if ( onlySetCoordinates )
                 {
-                    // put all coordinates into the zero
+                    // put all metadata into the zero
                     // accuracy slot, this makes sense for the
                     // first iteration where we do not
                     // want to use the result image yet
@@ -366,17 +376,17 @@ public class InstancesCreator {
         int maxProbability = resultImage.getProbabilityRange();
 
         int numClasses = 2; // TODO: get from ResultImage
-        int t = (int) interval.min( IntervalUtils.T );
+        int t = (int) interval.min( T );
 
         int[][] accuracies = new int[numClasses][5];
 
-        for ( int z = (int) interval.min( IntervalUtils.Z ); z <= interval.max( IntervalUtils.Z ); ++z )
+        for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z )
         {
             ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
 
-            for ( int y = (int) interval.min( IntervalUtils.Y ); y <= interval.max( IntervalUtils.Y ); ++y)
+            for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
             {
-                for ( int x = ( int ) interval.min( IntervalUtils.X ); x <= interval.max( IntervalUtils.X ); ++x )
+                for ( int x = ( int ) interval.min( X ); x <= interval.max( X ); ++x )
                 {
                     int realClass = labelImageSlice.get( x, y );
                     int[] classifiedClassAndProbability =
@@ -400,8 +410,8 @@ public class InstancesCreator {
 
                     if ( ipAccuracy != null )
                     {
-                        ipAccuracy.set( x - ( int ) interval.min( IntervalUtils.X ),
-                                y - ( int ) interval.min( IntervalUtils.Y ),
+                        ipAccuracy.set( x - ( int ) interval.min( X ),
+                                y - ( int ) interval.min( Y ),
                                 correctness );
                     }
 
@@ -559,15 +569,15 @@ public class InstancesCreator {
     {
         logger.progress("Getting instances: z (current, min, max): ",
                 "" + z
-                        + ", " + interval.min( IntervalUtils.Z )
-                        + ", " + interval.max( IntervalUtils.Z )
+                        + ", " + interval.min( Z )
+                        + ", " + interval.max( Z )
                         + "; " + currentTask);
 
     }
 
 
 
-    public static Instances createInstancesHeader(
+    public static Instances getInstancesHeader(
             String instancesName,
             ArrayList< String > featureNames,
             ArrayList< String > classNames  )

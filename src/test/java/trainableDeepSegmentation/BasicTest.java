@@ -18,7 +18,7 @@ public class BasicTest
 			assertTrue("Error while adding binary data to segmentator", false);
 
 
-		assertTrue("Failed to train classifier", true == segmentator.createFastRandomForest());
+		assertTrue("Failed to train classifier", true == segmentator.trainClassifier());
 
 		segmentator.applyClassifierWithTiling( false );
 
@@ -85,7 +85,7 @@ public class BasicTest
 
 		FastRandomForest rf = (FastRandomForest) segmentator.getClassifier();
 		rf.setSeed( 69 );
-		assertTrue( segmentator.createFastRandomForest() );
+		assertTrue( segmentator.trainClassifier() );
 
 		segmentator.applyClassifierWithTiling( false );
 		ImagePlus output = segmentator.getClassifiedImage();

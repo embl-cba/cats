@@ -1,7 +1,6 @@
 package trainableDeepSegmentation;
 
 import bigDataTools.logging.Logger;
-import com.sun.org.apache.regexp.internal.RE;
 import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
 import hr.irb.fastRandomForest.FastRandomForest;
@@ -44,6 +43,7 @@ import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.classification.AttributeSelector;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.examples.ExamplesUtils;
+import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import trainableDeepSegmentation.labels.LabelManager;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageDisk;
@@ -168,6 +168,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	// TODO: how to know the settings associated with instances data
 	// ??
 	private JButton executeIoButton = null;
+
 	private JComboBox ioComboBox = new JComboBox(
 			new String[] {
 					TRAIN_FROM_LABEL_IMAGE,
@@ -178,6 +179,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 					IO_LOAD_LABEL_IMAGE,
 					APPLY_BG_FG_CLASSIFIER
 			} );
+
+
+	private JComboBox imagingModalityComboBox = new JComboBox(
+			new String[] {
+					WekaSegmentation.FLUORESCENCE_IMAGING,
+					WekaSegmentation.SEM_IMAGING
+			} );
+
 
 	/** settings button */
 	private JButton settingsButton = null;
@@ -225,7 +234,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** name of the macro method to delete the current trace */
 	public static final String DELETE_TRACE = "deleteTrace";
 	/** name of the macro method to train the current classifier */
-	public static final String TRAIN_CLASSIFIER = "createFastRandomForest";
+	public static final String TRAIN_CLASSIFIER = "trainClassifier";
 	/** name of the macro method to toggle the overlay image */
 	public static final String TOGGLE_OVERLAY = "toggleOverlay";
 	/** name of the macro method to get the binary result */
@@ -350,7 +359,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		roiOverlay = new RoiListOverlay[WekaSegmentation.MAX_NUM_CLASSES];
 
-		updateTrainingDataButton = new JButton("Update instances data");
+		updateTrainingDataButton = new JButton("Update instances");
 
 		trainClassifierButton = new JButton("Train classifier");
 
@@ -379,9 +388,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		assignResultImageButton.setToolTipText("Assign result image");
 		assignResultImageButton.setEnabled(true);
 
-		resultImageComboBox = new JComboBox( new String[]{ RESULT_IMAGE_DISK_SINGLE_TIFF ,
-										RESULT_IMAGE_RAM} );
-
+		resultImageComboBox = new JComboBox( new String[]{ RESULT_IMAGE_RAM,
+				RESULT_IMAGE_DISK_SINGLE_TIFF } );
 
 		reviewLabelsClassComboBox = new JComboBox( new String[]{ "1" ,
 				"2"} );
@@ -561,7 +569,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 						String classifierKey =
 								wekaSegmentation.getClassifierManager()
 										.getMostRecentClassifierKey();
-						applyClassifier( classifierKey );
+						if ( classifierKey != null )
+						{
+							applyClassifier( classifierKey );
+						}
+						else
+						{
+							logger.error( "No classifier trained yet..." );
+						}
 					}
 					else if(e.getSource() == postProcessButton)
 					{
@@ -606,11 +621,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 							case TRAIN_FROM_LABEL_IMAGE:
 								trainIterativeFromLabelImage();
 								break;
-
 						}
-
-
-
+					}
+					else if(e.getSource() == imagingModalityComboBox )
+					{
+						wekaSegmentation.setImagingModality(
+								(String) imagingModalityComboBox.getSelectedItem() );
 					}
 					else if(e.getSource() == addClassButton){
 						addNewClass();
@@ -939,6 +955,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			applyButton.addActionListener(listener);
 			postProcessButton.addActionListener(listener);
 			executeIoButton.addActionListener(listener);
+			imagingModalityComboBox.addActionListener(listener);
 			stopButton.addActionListener( listener );
 			addClassButton.addActionListener(listener);
 			settingsButton.addActionListener(listener);
@@ -1309,6 +1326,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingConstraints.gridy++;
 			trainingJPanel.add(saveClassifierButton, trainingConstraints);
 			*/
+
+			JPanel imagingModality = new JPanel();
+			imagingModality.add( new JLabel( "Imaging" ), trainingConstraints);
+			imagingModality.add( imagingModalityComboBox, trainingConstraints );
+			trainingJPanel.add( imagingModality, trainingConstraints );
+			trainingConstraints.gridy++;
 
 			JPanel ioPanel = new JPanel();
 			ioPanel.add( executeIoButton, trainingConstraints);
@@ -2149,7 +2172,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		Thread newTask = new Thread() {
 			public void run()
 			{
-				Instances instances = null;
+				InstancesAndMetadata instancesAndMetadata = null;
 
 				// compute instances data for new labels
 				wekaSegmentation.updateExamples( trainingRecomputeFeaturesCheckBox.isSelected() );
@@ -2157,7 +2180,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				if ( wekaSegmentation.getNumExamples() > 0 )
 				{
 
-					instances = InstancesCreator.createInstancesFromLabels(
+					instancesAndMetadata = InstancesCreator.createInstancesAndMetadataFromLabels(
 							wekaSegmentation.getExamples(),
 							wekaSegmentation.getInputImageTitle(),
 							wekaSegmentation.settings,
@@ -2170,7 +2193,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				}
 
 
-				wekaSegmentation.getInstancesManager().putInstances( instances );
+				wekaSegmentation.getInstancesManager().
+						putInstancesAndMetadata( instancesAndMetadata );
 
 				updateComboBoxes();
 				win.setButtonsEnabled( true );
@@ -2276,6 +2300,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
+	public Instances getCombinedSelectedInstancesFromGUI()
+	{
+		List selectedInstances = (List< String >) instancesList.getSelectedValuesList();
+
+		if ( selectedInstances.size() == 0 ) return null;
+
+		Instances combinedInstances = wekaSegmentation.
+				getInstancesManager().getCombinedInstances( selectedInstances );
+
+		return combinedInstances;
+
+	}
+
 	/**
 	 * Run/stop the classifier instances
 	 *
@@ -2298,18 +2335,16 @@ public class Weka_Deep_Segmentation implements PlugIn
 				FastRandomForest classifier = null;
 
 				// get instances instances
-				List selectedInstances = (List< String >) instancesList.getSelectedValuesList();
-
-				if ( selectedInstances.size() == 0 ) return;
-
-				Instances instances = wekaSegmentation.
-						getInstancesManager().getCombinedInstances( selectedInstances );
-
+				Instances instances = getCombinedSelectedInstancesFromGUI();
 				InstancesManager.logInstancesInformation( instances, logger );
 
-				if ( instances == null || this.isInterrupted() ) return;
+				if ( instances == null || this.isInterrupted() )
+				{
+					logger.error( "Please select one or multiple training instances." );
+					return;
+				}
 
-				classifier = wekaSegmentation.createFastRandomForest( instances );
+				classifier = wekaSegmentation.trainClassifier( instances );
 
 				if ( classifier == null || this.isInterrupted() ) return;
 
@@ -2329,7 +2364,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 					logger.info ("\n# Second Training");
 
-					classifier = wekaSegmentation.createFastRandomForest( instances2 );
+					classifier = wekaSegmentation.trainClassifier( instances2 );
 
 					wekaSegmentation.getClassifierManager().setClassifier( classifier, instances2);
 				}
@@ -2423,21 +2458,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.stopCurrentTasks = false;
 				wekaSegmentation.isBusy = true;
 
-				// obtain bgfg instances
-
-				// train bgfg classifier (and add to list)
-
-				// apply bgfg classifier
-
-				// apply distance transfrom to bgfg image
-
-				// add bgfg result image to active channels
-
-				// recompute instances, now including the bgfg result image
-
-				// train classifier with new instances
-
-				// apply classifier
+				Instances instances = getCombinedSelectedInstancesFromGUI();
+				wekaSegmentation.applyBgFgClassification( interval, instances );
 
 				win.updateOverlay();
 				win.setButtonsEnabled( true );

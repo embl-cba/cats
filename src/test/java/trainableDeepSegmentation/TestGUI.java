@@ -86,40 +86,43 @@ public class TestGUI {
 		*/
 
 
-		/*
+
 		DataStreamingTools dst = new DataStreamingTools();
 		dst.openFromDirectory(
-				"/Volumes/almf/tischer/Processed_25_8bit_3-3_Imaris/",
+				"/Users/tischi/Desktop/raw/",
 				"None",
 				"raw--C.*",
 				"ResolutionLevel 0/Data",
 				null,
 				3,
 				true,
-				false);*/
+				false);
 
 
 		//IJ.open("/Users/tischi/Desktop/mitosis.tif");
 		//IJ.open( "/Users/tischi/Desktop/mri-stack-big-2d-movie.tif" );
 
-		IJ.open( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/combined-clahe.tif" );
+		//IJ.open( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/combined-clahe.tif" );
 		//IJ.open( "/Users/tischi/Desktop/Nils.tif" );
 
 		//IJ.open("/Users/tischi/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
-		IJ.wait(100);
 
+		IJ.wait(100);
+		IJ.run("Properties...", "unit=nm pixel_width=309 pixel_height=309 voxel_depth=1000");
 		Weka_Deep_Segmentation weka_segmentation = new Weka_Deep_Segmentation();
 		weka_segmentation.run("");
 
+		weka_segmentation.assignResultImage( weka_segmentation.RESULT_IMAGE_RAM );
 
+
+		/*
 		ImagePlus imp = IJ.openImage( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train" +
 				"-labels/train-labels-binary-larger-borders.tif" );
 
-		//weka_segmentation.getWekaSegmentation().setLabelImage( imp );
-
-		weka_segmentation.assignResultImage( weka_segmentation.RESULT_IMAGE_RAM );
-
+		weka_segmentation.getWekaSegmentation().setLabelImage( imp );
 		makeRectangle(430, 249, 95, 10);
+		*/
+
 
 		/*
 		Thread t1 = new Thread(new Runnable() {

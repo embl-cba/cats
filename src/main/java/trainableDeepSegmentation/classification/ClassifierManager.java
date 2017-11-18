@@ -33,8 +33,15 @@ public class ClassifierManager {
 
     public String getMostRecentClassifierKey( )
     {
-        String lastKey = (String) classifiers.keySet().toArray()[ classifiers.keySet().size() - 1 ];
-        return ( lastKey ) ;
+        if ( classifiers.keySet().size() > 0 )
+        {
+            String lastKey = ( String ) classifiers.keySet().toArray()[ classifiers.keySet().size() - 1 ];
+            return ( lastKey );
+        }
+        else
+        {
+            return null;
+        }
     }
 
 
