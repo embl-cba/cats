@@ -56,10 +56,17 @@ public class ClassifierManager {
     {
 
         if ( ! classifiers.containsKey( key ) ) return null;
-
         ArrayList< Attribute > attributes = Collections.list( classifiers.get(key).instances.enumerateAttributes() );
         attributes.add ( classifiers.get(key).instances.classAttribute() );
         return ( attributes );
+    }
+
+    public Instances getInstancesHeader( String key )
+    {
+        Instances instancesHeader =
+                new Instances( classifiers.get(key).instances, 0 );
+
+        return ( instancesHeader );
     }
 
     public ArrayList< String > getClassifierAttributeNames( String key )

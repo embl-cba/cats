@@ -369,13 +369,10 @@ public class FeatureProvider
 
     public double[][][] getReusableFeatureSlice()
     {
-        // allocate memory for featureSlice
-
-
         double[][][] featureSlice = new double
                 [(int) interval.dimension(X)]
                 [(int) interval.dimension(Y)]
-                [ getNumActiveFeatures() + 1 ]; // last one for class ID
+                [ getNumActiveFeatures() + 1 ]; // one extra for class ID
 
         return ( featureSlice );
     }
@@ -615,7 +612,7 @@ public class FeatureProvider
 
                     vAAA = zBaseDist2 * vAA0 + zBaseDist * vAA1;
 
-                    featureSlice[x-xs][y-ys][f] = vAAA;
+                    featureSlice[ x-xs ][ y-ys ][ f ] = vAAA;
 
                 }
             }

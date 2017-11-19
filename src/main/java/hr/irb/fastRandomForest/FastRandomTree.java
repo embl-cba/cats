@@ -218,7 +218,18 @@ class FastRandomTree
     data.whatGoesWhere = new int[ data.inBag.length ];
     data.createInBagSortedIndices();
 
-    buildTree(data.sortedIndices, 0, data.sortedIndices[0].length - 1,
+    // TISCHI
+    int endAt = 0;
+    if ( data.classIndex != 0 )
+    {
+      endAt = data.sortedIndices[ 0 ].length - 1;
+    }
+    else
+    {
+      endAt = data.sortedIndices[ 1 ].length - 1;
+    }
+
+    buildTree(data.sortedIndices, 0, endAt,
             classProbs, m_Debug, attIndicesWindow, 0);
 
     this.data = null;

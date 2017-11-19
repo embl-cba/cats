@@ -1,13 +1,18 @@
 package trainableDeepSegmentation.examples;
 
 import bigDataTools.logging.Logger;
-import ij.IJ;
+import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import weka.core.DenseInstance;
+import weka.core.Instance;
 import weka.core.Instances;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+
+import static trainableDeepSegmentation.instances.InstancesAndMetadata.Metadata.*;
+import static trainableDeepSegmentation.instances.InstancesAndMetadata.Metadata.Metadata_Label_Id;
 
 public abstract class ExamplesUtils {
 
@@ -62,6 +67,51 @@ public abstract class ExamplesUtils {
 
 
 
+    public static ArrayList< Example > getExamplesFromInstancesAndMetadata(
+            InstancesAndMetadata instancesAndMetadata )
+    {
+        ArrayList< Example > examples = new ArrayList<>(  );
+
+        Instances instances = instancesAndMetadata.getInstances();
+        int i = 0;
+
+        while ( i < instances.size() )
+        {
+            int label_id = ( int ) instancesAndMetadata.getMetadata( Metadata_Label_Id, i );
+
+            Example example = new Example(
+                    ( int ) instances.get( i ).classValue(),
+                    null,
+                    1,
+                    ( int ) instancesAndMetadata.getMetadata( Metadata_Position_Z, i ),
+                    ( int ) instancesAndMetadata.getMetadata( Metadata_Position_T, i )
+            );
+
+            example.instanceValuesArray = new ArrayList<>();
+            ArrayList< Point > points = new ArrayList<>();
+
+            do
+            {
+                // TODO: this assumes that the instances are sorted
+                // according to their label id...maybe this should be
+                // ensured during loading
+                example.instanceValuesArray.add( instances.get( i ).toDoubleArray() );
+                points.add( new Point(
+                        ( int ) instancesAndMetadata.getMetadata( Metadata_Position_X, i ),
+                        ( int ) instancesAndMetadata.getMetadata( Metadata_Position_Y, i )
+                ) );
+
+                i++;
+            } while (
+                    i < instances.size() &&
+                    ( int ) instancesAndMetadata.getMetadata( Metadata_Label_Id, i ) == label_id );
+
+            example.points = points.toArray( new Point[ points.size() ]);
+            examples.add( example );
+        }
+
+        return ( examples );
+    }
 
 
 }

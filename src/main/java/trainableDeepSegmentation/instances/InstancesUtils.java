@@ -7,21 +7,23 @@ import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.*;
 import trainableDeepSegmentation.examples.Example;
-import trainableDeepSegmentation.instances.InstancesManager.Metadata;
 import trainableDeepSegmentation.results.ResultImage;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
+import weka.core.Instance;
 import weka.core.Instances;
 
+import java.io.*;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Random;
 
 import static trainableDeepSegmentation.IntervalUtils.*;
+import static trainableDeepSegmentation.WekaSegmentation.*;
+import static trainableDeepSegmentation.instances.InstancesAndMetadata.Metadata.*;
 
-public class InstancesCreator {
+public class InstancesUtils {
 
-    public InstancesCreator( )
+    public InstancesUtils( )
     {
     }
 
@@ -30,11 +32,11 @@ public class InstancesCreator {
      *
      * @return set of instancesMap (feature vectors in Weka format)
      */
-    public static InstancesAndMetadata createInstancesAndMetadataFromLabels( ArrayList< Example > examples,
-                                                                             String inputImageTitle,
-                                                                             Settings settings,
-                                                                             ArrayList< String > featureNames,
-                                                                             ArrayList< String > classNames )
+    public static InstancesAndMetadata getInstancesAndMetadataFromLabels( ArrayList< Example > examples,
+                                                                          String inputImageTitle,
+                                                                          Settings settings,
+                                                                          ArrayList< String > featureNames,
+                                                                          ArrayList< String > classNames )
     {
 
         String instancesInfo = getInfoString( inputImageTitle, settings );
@@ -44,27 +46,28 @@ public class InstancesCreator {
                 featureNames,
                 classNames  );
 
-        Map< String, ArrayList< Double > > metadata
-                = InstancesManager.getEmptyMetadata();
+        InstancesAndMetadata instancesAndMetadata
+                = new InstancesAndMetadata( instances );
 
-        for ( Example example : examples )
+        for ( int e = 0; e < examples.size(); ++e )
         {
-            for ( int i = 0; i < example.points.length; ++i )
+            Example example = examples.get( e );
+            for ( int p = 0; p < example.points.length; ++p )
             {
-                instances.add( new DenseInstance(1.0, example.instanceValuesArray.get(i) ) );
-                metadata.get( Metadata.X ).add( ( double ) example.points[i].x );
-                metadata.get( Metadata.Y ).add( ( double ) example.points[i].y );
-                metadata.get( Metadata.Z ).add( ( double ) example.z );
-                metadata.get( Metadata.T ).add( ( double ) example.t );
-                metadata.get( Metadata.LabelID ).add( ( double ) i );
+                Instance instance = new DenseInstance(1.0, example.instanceValuesArray.get( p ) );
+                instancesAndMetadata.addInstance( instance );
+                instancesAndMetadata.addMetadata( Metadata_Position_X , example.points[p].x );
+                instancesAndMetadata.addMetadata( Metadata_Position_Y , example.points[p].y );
+                instancesAndMetadata.addMetadata( Metadata_Position_Z , example.z );
+                instancesAndMetadata.addMetadata( Metadata_Position_T , example.t );
+                instancesAndMetadata.addMetadata( Metadata_Label_Id, e );
             }
 
         }
 
-        return ( new InstancesAndMetadata( instances, metadata ) );
+        return ( instancesAndMetadata );
 
     }
-
 
 
     private static String getInfoString( String inputImageTitle, Settings settings )
@@ -84,7 +87,7 @@ public class InstancesCreator {
 
 
     // TODO: improve separation from WekaSegmentation
-    public static Instances createUsefulInstancesFromLabelImage(
+    public static InstancesAndMetadata createUsefulInstancesFromLabelImage(
             WekaSegmentation wekaSegmentation,
             ImagePlus labelImage,
             ResultImage resultImage,
@@ -94,7 +97,6 @@ public class InstancesCreator {
             FinalInterval interval,
             int numInstancesPerClassAndPlane,
             int numThreads,
-            Logger logger,
             boolean isFirstTime)
     {
         int radius = 5;
@@ -105,8 +107,6 @@ public class InstancesCreator {
         int t = (int) interval.min( T );
 
         Random rand = new Random();
-
-        if ( logger == null ) logger = new IJLazySwingLogger();
 
         logger.info( "Instances per class and plane: " + numInstancesPerClassAndPlane);
 
@@ -121,11 +121,12 @@ public class InstancesCreator {
 
         double[][][] reusableFeatureSlice = featureProvider.getReusableFeatureSlice();
 
-        Instances instances = InstancesCreator.getInstancesHeader(
+        Instances instances = InstancesUtils.getInstancesHeader(
                 instancesName,
                 featureProvider.getAllFeatureNames(),
                 wekaSegmentation.getClassNames());
 
+        InstancesAndMetadata instancesAndMetadata = new InstancesAndMetadata( instances );
 
         int[][] classificationAccuracies = new int[numClasses][4]; // TOTAL, CORRECT, FP, FN
 
@@ -146,8 +147,8 @@ public class InstancesCreator {
                     interval,
                     isFirstTime);
 
-
             double[][][] featureSlice = featureProvider.getCachedFeatureSlice( z );
+
             if ( featureSlice == null )
             {
                 featureProvider.setFeatureSlicesValues( z, reusableFeatureSlice, numThreads );
@@ -213,12 +214,17 @@ public class InstancesCreator {
                             break;
                         }
 
-
                         addToInstancesDistribution( instancesDistribution, xyLocal, interval );
 
                         removeNeighbors( localClass, classCoordinates, xyLocal, radius );
 
-                        addInstance( instances, featureProvider, xyLocal, featureSlice, localClass );
+                        Instance instance = getInstance( featureProvider, xyLocal, featureSlice, localClass );
+
+                        instancesAndMetadata.addInstance( instance );
+                        instancesAndMetadata.addMetadata( Metadata_Position_X, xyLocal[ 0 ] );
+                        instancesAndMetadata.addMetadata( Metadata_Position_Y, xyLocal[ 1 ] );
+                        instancesAndMetadata.addMetadata( Metadata_Position_Z, z );
+                        instancesAndMetadata.addMetadata( Metadata_Position_T, t );
 
                         pixelsPerClass[ localClass ]++;
 
@@ -249,7 +255,7 @@ public class InstancesCreator {
             reportClassificationAccuracies( classificationAccuracies, logger );
         }
 
-        return ( instances );
+        return ( instancesAndMetadata );
 
     }
 
@@ -488,6 +494,27 @@ public class InstancesCreator {
         instances.add( denseInstance );
     }
 
+    public static Instance getInstance(
+            FeatureProvider featureProvider,
+            int[] xy,
+            double[][][] featureSlice,
+            int iClass )
+    {
+        double[] featureValuesWithClassNum
+                = new double[ featureProvider.getNumAllFeatures() + 1 ];
+
+        featureProvider.setFeatureValuesAndClassIndex(
+                featureValuesWithClassNum,
+                xy[0], xy[1],
+                featureSlice,
+                iClass);
+
+        DenseInstance denseInstance = new DenseInstance(
+                1.0,
+                featureValuesWithClassNum);
+
+        return denseInstance;
+    }
 
 
     private static int[] getRandomCoordinate( int iClass,
@@ -584,16 +611,18 @@ public class InstancesCreator {
     {
 
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+
         for ( String feature : featureNames )
         {
             attributes.add( new Attribute(feature) );
         }
+
         attributes.add( new Attribute("class", classNames ) );
 
         // initialize set of instancesMap
         Instances instances = new Instances(instancesName, attributes, 1);
         // Set the index of the class attribute
-        instances.setClassIndex( featureNames.size() );
+        instances.setClassIndex( instances.numAttributes() - 1 );
 
         return ( instances );
 
@@ -615,6 +644,117 @@ public class InstancesCreator {
         }
 
         return ( attributeSubset );
+    }
+
+    public static void logInstancesInformation( Instances instances )
+    {
+        logger.info( "\n# Instances information" );
+        logger.info( "Number of instances: " + instances.size() );
+        logger.info( "Number of attributes: " + instances.numAttributes() );
+
+        // TODO: output per class a.s.o.
+
+    }
+
+    /**
+     * Read ARFF file
+     * @param filename ARFF file name
+     * @return set of instancesMap read from the file
+     */
+    static Instances loadInstancesFromARFF( String directory, String filename )
+    {
+        String pathname = directory + File.separator + filename;
+
+        logger.info("Loading instances from " + pathname + " ...");
+
+        try{
+            BufferedReader reader = new BufferedReader( new FileReader( pathname ) );
+
+            try
+            {
+                Instances instances = new Instances( reader );
+                reader.close();
+                return ( instances );
+            }
+            catch(IOException e)
+            {
+                logger.error("IOException");
+            }
+        }
+        catch(FileNotFoundException e)
+        {
+            logger.error("File not found!");
+        }
+
+        return null;
+    }
+
+    public static InstancesAndMetadata loadInstancesAndMetadataFromARFF(
+            String directory, String filename )
+    {
+        Instances instances = loadInstancesFromARFF( directory, filename );
+
+        if ( instances == null ) return null;
+
+        InstancesAndMetadata instancesAndMetadata
+                = new InstancesAndMetadata( instances );
+
+        instancesAndMetadata.moveMetadataOutOfInstances();
+
+        return instancesAndMetadata;
+    }
+
+    public static boolean saveInstancesAsARFF( Instances instances,
+                                        String directory,
+                                        String filename )
+    {
+
+        BufferedWriter out = null;
+        try{
+            out = new BufferedWriter(
+                    new OutputStreamWriter(
+                            new FileOutputStream( directory
+                                    + File.separator + filename ) ) );
+
+            final Instances header = new Instances(instances, 0);
+            out.write( header.toString() );
+
+            for(int i = 0; i < instances.numInstances(); i++)
+            {
+                out.write(instances.get(i).toString()+"\n");
+            }
+        }
+        catch(Exception e)
+        {
+            logger.error("Error: couldn't write instancesMap into .ARFF file.");
+            e.printStackTrace();
+            return false;
+        }
+        finally{
+            try {
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean saveInstancesAndMetadataAsARFF( InstancesAndMetadata instancesAndMetadata,
+                                                          String directory,
+                                                          String filename)
+    {
+
+        instancesAndMetadata.putMetadataIntoInstances();
+
+        boolean success = saveInstancesAsARFF( instancesAndMetadata.instances, directory, filename );
+
+        instancesAndMetadata.removeMetadataFromInstances();
+
+        return success;
+
     }
 
 
