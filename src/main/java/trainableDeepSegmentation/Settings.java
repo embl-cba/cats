@@ -20,7 +20,7 @@ public class Settings implements Serializable {
 
     public int maxDeepConvLevel = 3; // 3
 
-    public int backgroundThreshold = 0; // gray-values
+    public int imageBackground = 0; // gray-values
 
     //public ArrayList< String > activeFeatureNames = null;
 

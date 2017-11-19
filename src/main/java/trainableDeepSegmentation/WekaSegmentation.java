@@ -34,6 +34,7 @@ import ij.gui.Roi;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.classification.ClassifierManager;
 import trainableDeepSegmentation.examples.Example;
+import trainableDeepSegmentation.examples.ExamplesUtils;
 import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageFrameSetter;
@@ -45,6 +46,9 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
+
+import static trainableDeepSegmentation.instances.InstancesAndMetadata.*;
+import static trainableDeepSegmentation.instances.InstancesAndMetadata.Metadata.*;
 
 
 /**
@@ -178,7 +182,7 @@ public class WekaSegmentation {
 
 	public double accuracy = 4.0;
 
-	public double memoryFactor = 1.0;
+	public double memoryFactor = 50.0;
 
 	public int labelImageNumInstancesPerClass = 1000;
 
@@ -237,6 +241,8 @@ public class WekaSegmentation {
 		return computeFeatureImportance;
 	}
 
+
+
 	/**
 	 * use neighborhood flag
 	 */
@@ -254,6 +260,27 @@ public class WekaSegmentation {
 	{
 		this.imagingModality = imagingModality;
 	}
+
+	private boolean recomputeLabelInstances = false;
+
+	public void setImageBackground( int background )
+	{
+		if ( background != settings.imageBackground &&
+				getNumExamples() > 0 )
+		{
+			logger.warning( "Image background value has changed. " +
+					"Feature values for labels will thus be recomputed during " +
+					"next update." );
+			recomputeLabelInstances = true;
+		}
+		settings.imageBackground = background;
+	}
+
+	public int getImageBackground()
+	{
+		return settings.imageBackground;
+	}
+
 
 	private String imagingModality = FLUORESCENCE_IMAGING;
 
@@ -317,6 +344,7 @@ public class WekaSegmentation {
 			labelImageFeatureProvider.isLogging( true );
 			labelImageFeatureProvider.setInterval( interval );
 			labelImageFeatureProvider.setActiveChannels( settings.activeChannels );
+			labelImageFeatureProvider.setCacheSize( 2 );
 			labelImageFeatureProvider.computeFeatures( Prefs.getThreads() );
 
 			labelImageInterval = interval;
@@ -1108,13 +1136,47 @@ public class WekaSegmentation {
 	}
 
 
-	public void updateExamples( boolean recomputeFeatures )
+
+	public void loadInstancesAndMetadata( String directory, String fileName )
+	{
+		InstancesAndMetadata instancesAndMetadata =
+				InstancesUtils.
+						loadInstancesAndMetadataFromARFF( directory, fileName );
+
+
+		if ( instancesAndMetadata == null )
+		{
+			logger.error( "Loading failed..." );
+		}
+
+		getInstancesManager().putInstancesAndMetadata( instancesAndMetadata );
+
+		if ( getInstancesManager().getKeys().size() == 1 )
+		{
+			// this was the first one that was loaded
+			// => we assume it contains
+			//  labels for current image
+			setExamples(
+					ExamplesUtils.
+							getExamplesFromInstancesAndMetadata(
+									instancesAndMetadata
+							)
+			);
+
+			latestFeatureNames = instancesAndMetadata.getAttributeNames();
+		}
+
+		setImageBackground( (int) instancesAndMetadata.getMetadata( Metadata_ImageBackground, 0 ) );
+
+	}
+
+	public void updateExamples()
 	{
 		ArrayList<Example> examplesWithoutFeatures = new ArrayList<>();
 
 		for ( Example example : examples )
 		{
-			if ( recomputeFeatures )
+			if ( recomputeLabelInstances )
 			{
 				// add all examples to the list
 				examplesWithoutFeatures.add( example );
@@ -1128,6 +1190,8 @@ public class WekaSegmentation {
 				}
 			}
 		}
+
+		recomputeLabelInstances = false;
 
 		// compute feature values for examples
 		//
@@ -2035,10 +2099,10 @@ public class WekaSegmentation {
 
 			// TODO: check whether this is a background region
 			/*
-			if ( settings.backgroundThreshold > 0 )
+			if ( settings.imageBackground > 0 )
 			{
 				// check whether the region is background
-				if ( isBackgroundRegion( imageToClassify, settings.backgroundThreshold) )
+				if ( isBackgroundRegion( imageToClassify, settings.imageBackground) )
 				{
 					// don't classify, but leave all classification pixels as is, hopefully 0...
 					pixelsClassified.addAndGet( nx * ny * nz  );

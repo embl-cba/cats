@@ -48,6 +48,7 @@ public class InstancesAndMetadata {
         Metadata_Position_Y,
         Metadata_Position_Z,
         Metadata_Position_T,
+        Metadata_ImageBackground,
         Metadata_Label_Id;
 
         public static boolean contains( String test )

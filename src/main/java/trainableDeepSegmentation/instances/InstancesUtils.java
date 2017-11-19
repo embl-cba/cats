@@ -61,6 +61,7 @@ public class InstancesUtils {
                 instancesAndMetadata.addMetadata( Metadata_Position_Z , example.z );
                 instancesAndMetadata.addMetadata( Metadata_Position_T , example.t );
                 instancesAndMetadata.addMetadata( Metadata_Label_Id, e );
+                instancesAndMetadata.addMetadata( Metadata_ImageBackground, settings.imageBackground );
             }
 
         }
@@ -756,26 +757,6 @@ public class InstancesUtils {
         return success;
 
     }
-
-
-
-    /*
-    private ImageProcessor createWrongnessImage()
-    {
-        ImageProcessor ip = null;
-
-        return ( ip );
-    }
-
-
-    private ArrayList< int[] > getCoordinatesOfLocalMaxima(
-            ImageProcessor ip,
-            int tolerance )
-    {
-        MaximumFinder mf = new MaximumFinder();
-        Polygon maxima = mf.getMaxima(ip, tolerance, false);
-        //print("count="+maxima.npoints);
-    }*/
 
 
 

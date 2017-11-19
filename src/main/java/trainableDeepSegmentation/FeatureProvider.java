@@ -107,7 +107,17 @@ public class FeatureProvider
 
     private FinalInterval interval = null;
 
-    final int cacheSize = 2;
+    public int getCacheSize()
+    {
+        return cacheSize;
+    }
+
+    public void setCacheSize( int cacheSize )
+    {
+        this.cacheSize = cacheSize;
+    }
+
+    public int cacheSize = 0;
 
     final LinkedHashMap< Integer, double[][][] > featureSliceCache
             = new LinkedHashMap< Integer, double[][][]>() {
@@ -436,7 +446,7 @@ public class FeatureProvider
         {
             futures.add(
                 exe.submit(
-                    setFeatureSliceValues(
+                    setFeatureSliceValue(
                             featureSlice,
                             f, featureNames.get( f ),
                             xs, xe, ys, ye, z)
@@ -447,13 +457,19 @@ public class FeatureProvider
         ThreadUtils.joinThreads( futures, logger );
         exe.shutdown();
 
+        // cache featureSlice
+        if ( cacheSize > 0 )
+        {
+            featureSliceCache.put( zGlobal, featureSlice );
+        }
+
         return ( true );
     }
 
 
-    private Runnable setFeatureSliceValues( double[][][] featureSlice,
-                                            int f, String feature,
-                                            int xs, int xe, int ys, int ye, int z )
+    private Runnable setFeatureSliceValue( double[][][] featureSlice,
+                                           int f, String feature,
+                                           int xs, int xe, int ys, int ye, int z )
     {
         return () ->
         {
@@ -1218,12 +1234,12 @@ public class FeatureProvider
         ImagePlus inputImageCrop = getDataCube( expandedInterval,
                 channel, "mirror" );
 
-        // preprocessing
+        // pre-processing
         if ( wekaSegmentation.getImagingModality() == WekaSegmentation.FLUORESCENCE_IMAGING )
         {
             // subtract background
             IJ.run( inputImageCrop, "Subtract...", "value="
-                    + wekaSegmentation.settings.backgroundThreshold + " stack" );
+                    + wekaSegmentation.settings.imageBackground + " stack" );
             // make sure there are no zeros, because the log will give -Infinity
             IJ.run( inputImageCrop, "Add...", "value=1 stack" );
 

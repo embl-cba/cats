@@ -136,13 +136,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private JTextField classificationRangeTextField = null;
 
-	private JTextField objectSizeRangeTextField = null;
+	private JTextField imageBackgroundTextField = null;
 
 	/** load annotations button */
 	public static final String IO_LOAD_PROJECT = "Load project";
 	public static final String IO_SAVE_PROJECT = "Save project";
 
 	public static final String UPDATE_LABELS_AND_TRAIN = "Update labels and train";
+	public static final String TRAIN_CLASSIFIER = "Train classifier";
 	public static final String IO_LOAD_LABEL_IMAGE = "Load label image";
 	public static final String IO_LOAD_INSTANCES = "Load instances";
 	public static final String IO_SAVE_INSTANCES = "Save instances";
@@ -158,6 +159,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private JComboBox ioComboBox = new JComboBox(
 			new String[] {
 					UPDATE_LABELS_AND_TRAIN,
+					TRAIN_CLASSIFIER,
 					IO_LOAD_INSTANCES,
 					IO_SAVE_INSTANCES,
 					IO_LOAD_LABEL_IMAGE,
@@ -218,8 +220,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String ADD_TRACE = "addTrace";
 	/** name of the macro method to delete the current trace */
 	public static final String DELETE_TRACE = "deleteTrace";
-	/** name of the macro method to train the current classifier */
-	public static final String TRAIN_CLASSIFIER = "trainClassifier";
 	/** name of the macro method to toggle the overlay image */
 	public static final String TOGGLE_OVERLAY = "toggleOverlay";
 	/** name of the macro method to get the binary result */
@@ -373,7 +373,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		applyClassifierButton.setEnabled(false);
 
 		classificationRangeTextField = new JTextField("None", 15);
-		objectSizeRangeTextField     = new JTextField("300,100000");
+		imageBackgroundTextField = new JTextField("0", 6);
 
 		executeIoButton = new JButton (" Do it! ");
 		executeIoButton.setEnabled(true);
@@ -482,6 +482,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 					else if(e.getSource() == executeIoButton )
 					{
 
+						wekaSegmentation.setImageBackground(
+								Integer.parseInt(
+										imageBackgroundTextField.getText() ) );
+
 						String action = (String) ioComboBox.getSelectedItem();
 
 						switch ( action )
@@ -516,13 +520,21 @@ public class Weka_Deep_Segmentation implements PlugIn
 							case UPDATE_LABELS_AND_TRAIN:
 								updateLabelsTrainingDataAndTrainClassifier();
 								break;
-
+							case TRAIN_CLASSIFIER:
+								trainClassifier();
+								break;
 						}
 					}
 					else if(e.getSource() == imagingModalityComboBox )
 					{
 						wekaSegmentation.setImagingModality(
 								(String) imagingModalityComboBox.getSelectedItem() );
+					}
+					else if(e.getSource() == imageBackgroundTextField )
+					{
+						wekaSegmentation.setImageBackground(
+								Integer.parseInt(
+									imageBackgroundTextField.getText() ) );
 					}
 					else if(e.getSource() == addClassButton){
 						addNewClass();
@@ -848,6 +860,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			applyClassifierButton.addActionListener(listener);
 			executeIoButton.addActionListener(listener);
 			imagingModalityComboBox.addActionListener(listener);
+			imageBackgroundTextField.addActionListener( listener );
 			stopButton.addActionListener( listener );
 			addClassButton.addActionListener(listener);
 			settingsButton.addActionListener(listener);
@@ -1100,6 +1113,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingJPanel.add( imagingModality, trainingConstraints );
 			trainingConstraints.gridy++;
 
+
+			JPanel backgroundPanel = new JPanel();
+			backgroundPanel.add( new JLabel("Image background") );
+			backgroundPanel.add( imageBackgroundTextField );
+			trainingJPanel.add( backgroundPanel, trainingConstraints );
+			trainingConstraints.gridy++;
+
 			trainingJPanel.add(settingsButton, trainingConstraints);
 			trainingConstraints.gridy++;
 
@@ -1198,7 +1218,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingConstraints.gridy++;
 			JPanel panelObjectSize = new JPanel();
 			panelObjectSize.add(new JLabel("size:"));
-			panelObjectSize.add(objectSizeRangeTextField);
+			panelObjectSize.add(imageBackgroundTextField);
 			trainingJPanel.add(panelObjectSize, trainingConstraints);
 			*/
 
@@ -2041,7 +2061,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				InstancesAndMetadata instancesAndMetadata = null;
 
 				// compute instances data for new labels
-				wekaSegmentation.updateExamples( trainingRecomputeFeaturesCheckBox.isSelected() );
+				wekaSegmentation.updateExamples();
 
 				if ( wekaSegmentation.getNumExamples() > 0 )
 				{
@@ -2085,6 +2105,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 				if ( wekaSegmentation.minFeatureUsageFactor > 0 )
 				{
 
+					// TODO: report fraction of rejected features
+					// such that the memory factor can be adjusted
+					// (less features need less memory during classification)
+
 					ArrayList< Integer > goners = AttributeSelector.getGoners(
 							classifier,
 							instances,
@@ -2127,7 +2151,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				InstancesAndMetadata instancesAndMetadata = null;
 
 				// compute instances data for new labels
-				wekaSegmentation.updateExamples( trainingRecomputeFeaturesCheckBox.isSelected() );
+				wekaSegmentation.updateExamples();
 
 				if ( wekaSegmentation.getNumExamples() > 0 )
 				{
@@ -2672,34 +2696,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.isBusy = true;
 
 
-		InstancesAndMetadata instancesAndMetadata =
-				InstancesUtils.
-					loadInstancesAndMetadataFromARFF( dirFile[0], dirFile[1] );
-
-
-
-		if ( instancesAndMetadata == null )
-		{
-			logger.error( "Loading failed..." );
-		}
-
-		String instancesKey = wekaSegmentation.getInstancesManager().putInstancesAndMetadata( instancesAndMetadata );
-
-		if ( wekaSegmentation.getInstancesManager().getKeys().size() == 1 )
-		{
-			// this was the first one that was loaded
-			// => we assume it contains
-			// the labels for this image
-			wekaSegmentation.setExamples(
-					ExamplesUtils.
-							getExamplesFromInstancesAndMetadata(
-								instancesAndMetadata
-					)
-			);
-
-			wekaSegmentation.latestFeatureNames =
-					instancesAndMetadata.getAttributeNames();
-		}
+		wekaSegmentation.loadInstancesAndMetadata( dirFile[0], dirFile[1] );
 
 		for ( int c = 0; c < wekaSegmentation.getNumClasses(); c++ )
 		{
@@ -2708,17 +2705,15 @@ public class Weka_Deep_Segmentation implements PlugIn
 			changeClassName(c, wekaSegmentation.getClassName( c ));
 		}
 
-		if ( wekaSegmentation.getClassifier() != null )
-		{
-			win.trainingComplete = true;
-		}
+		imageBackgroundTextField.setText( "" + wekaSegmentation.getImageBackground() );
 
 		updateComboBoxes();
 		repaintWindow();
-
 		win.setButtonsEnabled( true );
 		win.updateExampleLists();
 		wekaSegmentation.isBusy = false;
+
+		logger.info("Loading instances finished.");
 
 	}
 
@@ -2940,7 +2935,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		//gd.addNumericField("Number of threads inside a region", wekaSegmentation.threadsPerRegion, 0);
 		//gd.addNumericField("Number of RF instances threads", wekaSegmentation.numRfTrainingThreads, 0);
 		//gd.addNumericField("Tiling delay [ms]", wekaSegmentation.tilingDelay, 0);
-		gd.addNumericField("Classification: Background threshold [gray values]", wekaSegmentation.settings.backgroundThreshold, 0);
+		//gd.addNumericField("Classification: Background threshold [gray values]", wekaSegmentation.settings.imageBackground, 0);
 		//gd.addStringField("Resolution level weights", wekaSegmentation.getResolutionWeightsAsString());
 		//gd.addNumericField("Uncertainty LUT decay", wekaSegmentation.uncertaintyLUTdecay, 1);
 
@@ -3039,7 +3034,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		wekaSegmentation.setTileSizeSetting( gd.getNextString() );
 		//wekaSegmentation.tilingDelay = (int) gd.getNextNumber();
-		wekaSegmentation.settings.backgroundThreshold = (int) gd.getNextNumber();
+		//wekaSegmentation.settings.imageBackground = (int) gd.getNextNumber();
 		//wekaSegmentation.setResolutionWeightsFromString( gd.getNextString() );
 		//wekaSegmentation.uncertaintyLUTdecay = (double) gd.getNextNumber();
 
