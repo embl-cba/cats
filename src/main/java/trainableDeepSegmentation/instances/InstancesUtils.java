@@ -1,8 +1,8 @@
 package trainableDeepSegmentation.instances;
 
-import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.*;
@@ -39,10 +39,8 @@ public class InstancesUtils {
                                                                           ArrayList< String > classNames )
     {
 
-        String instancesInfo = getInfoString( inputImageTitle, settings );
-
         Instances instances = getInstancesHeader(
-                instancesInfo,
+                inputImageTitle,
                 featureNames,
                 classNames  );
 
@@ -61,7 +59,12 @@ public class InstancesUtils {
                 instancesAndMetadata.addMetadata( Metadata_Position_Z , example.z );
                 instancesAndMetadata.addMetadata( Metadata_Position_T , example.t );
                 instancesAndMetadata.addMetadata( Metadata_Label_Id, e );
-                instancesAndMetadata.addMetadata( Metadata_ImageBackground, settings.imageBackground );
+                // TODO: use the Metadata enum also for the settings to be able to loop
+                instancesAndMetadata.addMetadata( Metadata_Settings_ImageBackground, settings.imageBackground );
+                instancesAndMetadata.addMetadata( Metadata_Settings_Anisotropy, settings.anisotropy );
+                instancesAndMetadata.addMetadata( Metadata_Settings_MaxBinLevel, settings.maxBinLevel );
+                instancesAndMetadata.addMetadata( Metadata_Settings_MaxDeepConvLevel, settings.maxDeepConvLevel );
+                instancesAndMetadata.addMetadata( Metadata_Settings_BinFactor, settings.binFactor );
             }
 
         }
@@ -377,7 +380,7 @@ public class InstancesUtils {
     public static int[][] getAccuracies(
             ImagePlus labelImage,
             ResultImage resultImage,
-            ImageProcessor ipAccuracy,
+            ImageStack accuraciesStack,
             FinalInterval interval )
     {
         int maxProbability = resultImage.getProbabilityRange();
@@ -387,9 +390,16 @@ public class InstancesUtils {
 
         int[][] accuracies = new int[numClasses][5];
 
+        ImageProcessor ipAccuracies = null;
+
         for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z )
         {
             ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
+
+            if ( accuraciesStack != null )
+            {
+                ipAccuracies = accuraciesStack.getProcessor( z + 1 - ( int ) interval.min( Z ) );
+            }
 
             for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
             {
@@ -415,9 +425,10 @@ public class InstancesUtils {
                     }
                     correctness += maxProbability;
 
-                    if ( ipAccuracy != null )
+                    if ( ipAccuracies != null )
                     {
-                        ipAccuracy.set( x - ( int ) interval.min( X ),
+                        ipAccuracies.set(
+                                x - ( int ) interval.min( X ),
                                 y - ( int ) interval.min( Y ),
                                 correctness );
                     }
@@ -426,7 +437,7 @@ public class InstancesUtils {
             }
         }
 
-        return (accuracies);
+        return ( accuracies );
 
     }
 
@@ -621,7 +632,7 @@ public class InstancesUtils {
         attributes.add( new Attribute("class", classNames ) );
 
         // initialize set of instancesMap
-        Instances instances = new Instances(instancesName, attributes, 1);
+        Instances instances = new Instances( instancesName, attributes, 1);
         // Set the index of the class attribute
         instances.setClassIndex( instances.numAttributes() - 1 );
 

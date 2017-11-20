@@ -33,6 +33,22 @@ public abstract class IntervalUtils {
         return new FinalInterval(min, max);
     }
 
+    // TODO: move to Utils
+    public static FinalInterval replaceValues( Interval interval, int d, long minValue, long maxValue)
+    {
+
+        int n = interval.numDimensions();
+        long[] min = new long[n];
+        long[] max = new long[n];
+        interval.min(min);
+        interval.max(max);
+
+        min[d] = minValue;
+        max[d] = maxValue;
+
+        return new FinalInterval(min, max);
+    }
+
     public static void logInterval( FinalInterval interval )
     {
         WekaSegmentation.logger.info("Interval: ");

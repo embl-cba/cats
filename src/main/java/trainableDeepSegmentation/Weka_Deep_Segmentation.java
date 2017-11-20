@@ -2194,7 +2194,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
-
+	public void setImagingModality( String imagingModality )
+	{
+		imagingModalityComboBox.setSelectedItem( imagingModality );
+	}
 
 
 	/**
@@ -2236,6 +2239,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 									wekaSegmentation.APPEND},
 									wekaSegmentation.NEW);
 					gd.addNumericField( "Number of iterations", 3.0, 0 );
+					gd.addNumericField( "Z chunk size", Prefs.getThreads(), 0 );
 
 					gd.showDialog();
 
@@ -2244,11 +2248,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 					String instancesKey = gd.getNextString();
 					String modality = gd.getNextChoice();
 					int numIterations = (int) gd.getNextNumber();
+					int zChunkSize = (int) gd.getNextNumber();
 
 					wekaSegmentation.trainIterativeFromLabelImage(
 							instancesKey,
 							modality,
 							numIterations,
+							zChunkSize,
 							getIntervalFromGUI()
 					);
 

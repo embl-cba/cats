@@ -1,5 +1,6 @@
 package trainableDeepSegmentation.instances;
 
+import trainableDeepSegmentation.Settings;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -48,8 +49,12 @@ public class InstancesAndMetadata {
         Metadata_Position_Y,
         Metadata_Position_Z,
         Metadata_Position_T,
-        Metadata_ImageBackground,
-        Metadata_Label_Id;
+        Metadata_Label_Id,
+        Metadata_Settings_ImageBackground,
+        Metadata_Settings_Anisotropy,
+        Metadata_Settings_MaxBinLevel,
+        Metadata_Settings_BinFactor,
+        Metadata_Settings_MaxDeepConvLevel;
 
         public static boolean contains( String test )
         {
