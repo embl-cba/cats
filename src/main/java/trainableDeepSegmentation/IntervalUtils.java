@@ -5,6 +5,8 @@ import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 
+import java.util.ArrayList;
+
 public abstract class IntervalUtils {
 
 
@@ -13,6 +15,7 @@ public abstract class IntervalUtils {
     public static int Y = 1;
     public static int C = 2;
     public static int Z = 3;
+    public static int[] XY = new int[]{X, Y};
     public static int[] XYZ = new int[]{X, Y, Z};
     public static int T = 4;
     public static int[] XYZT = new int[]{X, Y, Z, T};
@@ -60,6 +63,66 @@ public abstract class IntervalUtils {
 
     }
 
+    public static ArrayList<FinalInterval> getXYTiles( FinalInterval interval,
+                                                       int nxy,
+                                                       long[] imgDims )
+    {
+
+        WekaSegmentation.logger.info("\n# Creating xy tiles");
+
+        ArrayList<FinalInterval> tiles = new ArrayList<>();
+
+        long[] tileSizes = new long[5];
+
+        for ( int d : XY )
+        {
+
+            tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / nxy );
+
+            // make sure sizes fit into image
+            tileSizes[d] = Math.min( tileSizes[d], imgDims[d] );
+
+        }
+
+
+        WekaSegmentation.logger.info("Tile sizes [x,y]: "
+                + tileSizes[ X ]
+                + ", " + tileSizes[ Y ] );
+
+
+        for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); y += tileSizes[ Y ])
+        {
+            for ( int x = (int) interval.min( X ); x <= interval.max( X ); x += tileSizes[ X ])
+            {
+
+                long[] min = new long[5];
+                min[ X ] = x;
+                min[ Y ] = y;
+                min[ Z ] = interval.min( Z );
+                min[ T ] = interval.min( T );
+
+                long[] max = new long[5];
+                max[ X ] = x + tileSizes[ X ] - 1;
+                max[ Y ] = y + tileSizes[ Y ] - 1;
+                max[ Z ] = interval.max( Z );
+                max[ T ] = interval.max( T );
+
+                // make sure to stay within image bounds
+                for ( int d : XY )
+                {
+                    max[ d ] = Math.min( interval.max( d ), max[ d ] );
+                }
+
+                tiles.add( new FinalInterval(min, max) );
+
+            }
+        }
+
+        WekaSegmentation.logger.info("Number of tiles: " + tiles.size());
+
+        return (tiles);
+    }
+
     public static Region5D convertIntervalToRegion5D( FinalInterval interval )
     {
         Region5D region5D = new Region5D();
@@ -77,5 +140,86 @@ public abstract class IntervalUtils {
         region5D.subSampling = new Point3D( 1, 1, 1);
 
         return ( region5D );
+    }
+
+    public static ArrayList<FinalInterval> getTiles( FinalInterval interval,
+                                                     Integer numTiles,
+                                                     WekaSegmentation ws)
+    {
+
+        logInterval( interval );
+
+        ArrayList<FinalInterval> tiles = new ArrayList<>();
+
+        long[] imgDims = ws.getInputImageDimensions();
+        long[] tileSizes = new long[5];
+
+        for ( int d : XYZ )
+        {
+
+            if ( numTiles > 0 )
+            {
+                tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / Math.pow( numTiles, 1.0/3.0 ) );
+            }
+            else if ( interval.dimension(d) <= ws.getMaximalRegionSize() )
+            {
+                // everything can be computed at once
+                tileSizes[d] = interval.dimension(d);
+            }
+            else
+            {
+                // we need to tile
+                int n = (int) Math.ceil( (1.0 * interval.dimension(d)) / ws.getMaximalRegionSize());
+                tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / n );
+            }
+
+            // make sure sizes fit into image
+            tileSizes[d] = Math.min( tileSizes[d], imgDims[d] );
+        }
+
+        tileSizes[ T ] = 1;
+
+        WekaSegmentation.logger.info("Tile sizes [x,y,z]: "
+                + tileSizes[ X]
+                + ", " + tileSizes[ Y]
+                + ", " + tileSizes[ Z]);
+
+
+        for ( int t = (int) interval.min( T); t <= interval.max( T); t += 1)
+        {
+            for ( int z = (int) interval.min( Z); z <= interval.max( Z); z += tileSizes[ Z])
+            {
+                for ( int y = (int) interval.min( Y); y <= interval.max( Y); y += tileSizes[ Y])
+                {
+                    for ( int x = (int) interval.min( X); x <= interval.max( X); x += tileSizes[ X])
+                    {
+                        long[] min = new long[5];
+                        min[ X ] = x;
+                        min[ Y ] = y;
+                        min[ Z ] = z;
+                        min[ T ] = t;
+
+                        long[] max = new long[5];
+                        max[ X ] = x + tileSizes[ X ] - 1;
+                        max[ Y ] = y + tileSizes[ Y ] - 1;
+                        max[ Z ] = z + tileSizes[ Z ] - 1;
+                        max[ T ] = t + tileSizes[ T ] - 1;
+
+                        // make sure to stay within image bounds
+                        for ( int d : XYZT )
+                        {
+                            max[ d ] = Math.min( interval.max( d ), max[ d ] );
+                        }
+
+                        tiles.add( new FinalInterval(min, max) );
+
+                    }
+                }
+            }
+        }
+
+        WekaSegmentation.logger.info("Number of tiles: " + tiles.size());
+
+        return (tiles);
     }
 }

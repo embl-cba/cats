@@ -103,6 +103,12 @@ public class FeatureProvider
         this.resultImageFgDistBg = resultImageFgDistBg;
     }
 
+    public Set<Integer> getFeatureSliceCacheKeys()
+    {
+        return featureSliceCache.keySet();
+    }
+
+
     private ResultImage resultImageFgDistBg;
 
     private FinalInterval interval = null;
@@ -414,7 +420,7 @@ public class FeatureProvider
 
         if ( (zGlobal > interval.max(Z)) || (zGlobal < interval.min(Z)) )
         {
-            logger.error("No features have been computed for slice " + zGlobal);
+            logger.error("No features available for slice " + zGlobal);
             return false;
         }
 

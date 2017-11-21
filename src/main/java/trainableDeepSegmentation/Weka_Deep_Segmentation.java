@@ -194,7 +194,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	/** available colors for available classes */
 	private Color[] colors = new Color[]{
-			Color.darkGray,
+			Color.blue,
 			Color.green,
 			Color.magenta,
 			Color.red,
@@ -2240,6 +2240,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 									wekaSegmentation.NEW);
 					gd.addNumericField( "Number of iterations", 3.0, 0 );
 					gd.addNumericField( "Z chunk size", Prefs.getThreads(), 0 );
+					gd.addNumericField( "(nx,ny) for tiling", 3, 0 );
 
 					gd.showDialog();
 
@@ -2249,12 +2250,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 					String modality = gd.getNextChoice();
 					int numIterations = (int) gd.getNextNumber();
 					int zChunkSize = (int) gd.getNextNumber();
+					int nxyTiles = (int) gd.getNextNumber();
 
 					wekaSegmentation.trainIterativeFromLabelImage(
 							instancesKey,
 							modality,
 							numIterations,
 							zChunkSize,
+							nxyTiles,
 							getIntervalFromGUI()
 					);
 
@@ -2483,7 +2486,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 						classifierKey,
 						interval,
 						-1, // -1 = auto
-						null);
+						null, false);
 
 				if (showColorOverlay)
 					win.toggleOverlay();

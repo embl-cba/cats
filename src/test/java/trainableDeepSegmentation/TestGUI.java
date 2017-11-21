@@ -123,7 +123,7 @@ public class TestGUI {
 				"-labels/train-labels-binary-larger-borders.tif" );
 
 		weka_segmentation.getWekaSegmentation().setLabelImage( imp );
-		makeRectangle(430, 249, 100, 100);
+		makeRectangle(430, 249, 50, 50);
 
 
 

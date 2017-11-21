@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import java.util.zip.ZipEntry;
 
 import bigDataTools.logging.Logger;
 import bigDataTools.logging.IJLazySwingLogger;
@@ -317,177 +316,240 @@ public class WekaSegmentation {
 		}
 	}
 
-
-	private FinalInterval labelImageInterval = null;
-	private FeatureProvider labelImageFeatureProvider = null;
-	private ArrayList< int[][] > labelImageClassificationAccuraciesHistory = null;
-	private ArrayList< Integer > numInstancesHistory = null;
-	private ImageProcessor ipLabelImageInstancesDistribution = null;
-	// show dialog
 	final String NEW = "Start new instances";
 	final String APPEND = "Append to previous instances";
+
 
 	public void trainIterativeFromLabelImage(
 			String instancesKey,
 			String modality,
 			int numIterations,
 			int zChunkSize,
+			int nxyTiles,
 			FinalInterval interval )
 	{
 
-		boolean isFirstTime = false;
+		if ( interval == null ) return;
 
-		if ( modality.equals( NEW ) )
+
+		// TODO: obtain from label image
+		settings.classNames = new ArrayList<>();
+		settings.classNames.add( "label_im_class_0" );
+		settings.classNames.add( "label_im_class_1" );
+
+		batchSizePercent = 100; // since we chose uncorrelated features anyway
+
+		FeatureProvider featureProvider = null;
+		ArrayList< int[][] > labelImageClassificationAccuraciesHistory = null;
+		ArrayList< Integer > numInstancesHistory = null;
+		ImageProcessor ipLabelImageInstancesDistribution = null;
+
+		boolean isFirstTime = true;
+
+		ArrayList< FinalInterval > tiles = getXYTiles( interval, nxyTiles, getInputImageDimensions() );
+
+		for ( int iTile = 0; iTile < tiles.size(); ++iTile )
 		{
-			logInterval( interval );
 
-			logger.info( "\n# Computing features for label image region...");
-			labelImageFeatureProvider = new FeatureProvider( this );
-			labelImageFeatureProvider.isLogging( true );
-			labelImageFeatureProvider.setInterval( interval );
-			labelImageFeatureProvider.setActiveChannels( settings.activeChannels );
-			labelImageFeatureProvider.setCacheSize( zChunkSize );
-			labelImageFeatureProvider.computeFeatures( Prefs.getThreads() );
+			FinalInterval tile = tiles.get( iTile );
 
-			labelImageInterval = interval;
-			if ( labelImageInterval == null ) return;
+			logger.info( "\n# Computing features for label image region..." );
+			logInterval( tile );
+			featureProvider = new FeatureProvider( this );
+			featureProvider.isLogging( true );
+			featureProvider.setInterval( tile );
+			featureProvider.setActiveChannels( settings.activeChannels );
+			featureProvider.setCacheSize( zChunkSize );
+			featureProvider.computeFeatures( Prefs.getThreads() );
+
 			labelImageClassificationAccuraciesHistory = new ArrayList<>();
 			numInstancesHistory = new ArrayList<>();
 			ipLabelImageInstancesDistribution = new ShortProcessor(
-					( int ) labelImageInterval.dimension( X ),
-					( int ) labelImageInterval.dimension( Y ) );
+					( int ) tile.dimension( X ),
+					( int ) tile.dimension( Y ) );
 
-			isFirstTime = true;
+			int numSliceChunks = ( int ) tile.dimension( Z ) / zChunkSize;
+			int numSlicesInCurrentChunk;
+			int numThreadsPerSlice;
+			ExecutorService exe;
+			long[] zChunk;
 
-			batchSizePercent = 100; // since we chose uncorrelated features anyway
+			ResultImageFrameSetter resultImageFrameSetter = resultImage.getFrameSetter( tile );
 
-		}
+			ArrayList< long[] > zChunks = getZChunks( numSliceChunks, tile );
 
-		int numSliceChunks = (int) interval.dimension( Z ) / zChunkSize;
-
-		ArrayList< long[] > zChunks = getZChunks( numSliceChunks, interval );
-
-		for ( int i = 0; i < numIterations; ++i )
-		{
-
-			for ( int iChunk = 0; iChunk < zChunks.size(); ++iChunk )
+			for ( int i = 0; i < numIterations; ++i )
 			{
-				logger.info("\n# Iterative instances from label image, iteration " + i + ", chunk " + iChunk);
-
-				if ( stopCurrentTasks )
+				for ( int iChunk = 0; iChunk < zChunks.size(); ++iChunk )
 				{
-					return;
+
+					logger.info( "\n# Iterative instances from label image, " +
+							"tile " + iTile + ", iteration " + i + ", chunk " + iChunk );
+
+					zChunk = zChunks.get( iChunk );
+
+					if ( stopCurrentTasks ) return;
+
+					numSlicesInCurrentChunk = ( int ) ( zChunk[ 1 ] - zChunk[ 0 ] + 1 );
+					numThreadsPerSlice = 1; // (int) ( 1.0 * Prefs.getThreads() / numSlicesInCurrentChunk );
+
+					// create new instances
+					exe = Executors.newFixedThreadPool( numSlicesInCurrentChunk );
+					ArrayList< Future< InstancesAndMetadata > > futures = new ArrayList<>();
+
+					for ( int z = ( int ) zChunk[ 0 ]; z <= zChunk[ 1 ]; ++z )
+					{
+
+						FinalInterval newInstancesInterval =
+								fixDimension( tile, Z, z );
+
+						futures.add(
+								exe.submit(
+										InstancesUtils.getUsefulInstancesFromLabelImage(
+												this,
+												getLabelImage(),
+												getResultImage(),
+												ipLabelImageInstancesDistribution,
+												featureProvider,
+												instancesKey,
+												newInstancesInterval,
+												getNumLabelImageInstancesPerPlaneAndClass(),
+												numThreadsPerSlice,
+												isFirstTime )
+								)
+						);
+
+					}
+
+					for ( Future< InstancesAndMetadata > future : futures )
+					{
+
+						InstancesAndMetadata instancesAndMetadata = null;
+
+						try
+						{
+							instancesAndMetadata = future.get();
+						} catch ( InterruptedException e )
+						{
+							e.printStackTrace();
+						} catch ( ExecutionException e )
+						{
+							e.printStackTrace();
+						}
+
+						if ( isFirstTime && modality.equals( NEW ) )
+						{
+							instancesKey = instancesManager.putInstancesAndMetadata( instancesAndMetadata );
+							isFirstTime = false;
+						}
+						else
+						{
+							instancesManager.
+									getInstancesAndMetadata( instancesKey ).
+									appendInstancesAndMetadata( instancesAndMetadata );
+						}
+
+
+					}
+
+					futures = null;
+					exe.shutdown();
+					System.gc();
+
+
+					Instances instances = getInstancesManager().getInstances( instancesKey );
+
+					if ( instances == null ) return;
+
+					FastRandomForest classifier = trainClassifier( instances );
+
+					if ( classifier == null ) return;
+
+					String key = getClassifierManager().setClassifier( classifier, instances );
+
+					if ( minFeatureUsageFactor > 0 )
+					{
+						// TODO: does not work
+						// performFeatureSelection();
+					}
+
+					// in order to have the maximum information gain,
+					// we apply the classifier not to the chunk where the
+					// intstances where collected but already to the next one
+
+					int iClassificationChunk = iChunk < ( zChunks.size() - 1 ) ? iChunk + 1 : 0;
+					zChunk = zChunks.get( iClassificationChunk );
+
+					numSlicesInCurrentChunk = ( int ) ( zChunk[ 1 ] - zChunk[ 0 ] + 1 );
+					numThreadsPerSlice = 1; // (int) ( 1.0 * Prefs.getThreads() / numSlicesInCurrentChunk );
+
+					exe = Executors.newFixedThreadPool( numSlicesInCurrentChunk );
+					ArrayList< Future > classificationFutures = new ArrayList<>();
+
+					Set< Integer > set = featureProvider.getFeatureSliceCacheKeys();
+					int a = 1;
+
+					for ( int z = ( int ) zChunk[ 0 ]; z <= zChunk[ 1 ]; ++z )
+					{
+
+						classificationFutures.add(
+								exe.submit(
+										classifyZChunk(
+												featureProvider,
+												resultImageFrameSetter,
+												z, z,
+												getClassifierManager().getInstancesHeader( key ),
+												getClassifierManager().getClassifier( key ),
+												accuracy,
+												numThreadsPerSlice
+										)
+								)
+						);
+					}
+
+					ThreadUtils.joinThreads( classificationFutures, logger );
+
+					set = featureProvider.getFeatureSliceCacheKeys();
+					a = 1;
+
+
 				}
-
-
-				// create new instances
-
-				FinalInterval newInstancesInterval =
-						replaceValues( labelImageInterval, Z, zChunks.get(iChunk)[0], zChunks.get(iChunk)[1] );
-
-				InstancesAndMetadata instancesAndMetadata =
-						InstancesUtils.createUsefulInstancesFromLabelImage(
-							this,
-							getLabelImage(),
-							getResultImage(),
-							ipLabelImageInstancesDistribution,
-							labelImageFeatureProvider,
-							instancesKey,
-							newInstancesInterval,
-							getNumLabelImageInstancesPerPlaneAndClass(),
-							Prefs.getThreads(),
-							isFirstTime);
-
-
-				if ( isFirstTime && modality.equals( NEW ) )
-				{
-					instancesKey = instancesManager.putInstancesAndMetadata( instancesAndMetadata );
-				}
-				else
-				{
-					instancesManager.
-							getInstancesAndMetadata( instancesKey ).
-							appendInstancesAndMetadata( instancesAndMetadata  );
-				}
-
-				isFirstTime = false;
-
-				Instances instances = getInstancesManager().getInstances( instancesKey );
-
-				numInstancesHistory.add( instances.size() );
-
-				InstancesUtils.logInstancesInformation( instances );
-
-				if ( instances == null ) return;
-
-				FastRandomForest classifier = trainClassifier( instances );
-
-				if ( classifier == null ) return;
-
-				String key = getClassifierManager().setClassifier( classifier, instances );
-
-				if ( minFeatureUsageFactor > 0 )
-				{
-					// TODO: does not work
-					performFeatureSelection();
-				}
-
-				// in order to have the maximum information gain,
-				// we apply the classifier not to the chunk where the
-				// intstances where collected but already to the next one
-
-				int iClassificationChunk = iChunk < (zChunks.size() - 1) ? iChunk + 1 : 0 ;
-
-				FinalInterval classificationInterval = IntervalUtils.replaceValues(
-						labelImageInterval, Z,
-						zChunks.get( iClassificationChunk )[0],
-						zChunks.get( iClassificationChunk )[1] );
-
-				applyClassifierWithTiling(
-						key,
-						classificationInterval,
-						Prefs.getThreads(),
-						labelImageFeatureProvider );
 
 				// record progress
 
-				ImageStack accuraciesStack = null;
-
-				if ( iChunk == zChunks.size() - 1  )
-				{
-					accuraciesStack = ImageStack.create(
-							(int) labelImageInterval.dimension( X ),
-							(int) labelImageInterval.dimension( Y ),
-							(int) labelImageInterval.dimension( Z ),
-							8);
-				}
+				ImageStack accuraciesStack = ImageStack.create(
+						( int ) tile.dimension( X ),
+						( int ) tile.dimension( Y ),
+						( int ) tile.dimension( Z ),
+						8 );
 
 				labelImageClassificationAccuraciesHistory.add(
 						InstancesUtils.getAccuracies(
 								getLabelImage(),
 								getResultImage(),
 								accuraciesStack,
-								labelImageInterval
+								tile
 						) );
 
+				numInstancesHistory.add( instancesManager.getInstancesAndMetadata( instancesKey ).getInstances().size() );
 
-				if( iChunk == zChunks.size() - 1 )
-				{
-					ImagePlus impCorrectness = new ImagePlus( "correctness @ iteration " + i, accuraciesStack );
-					impCorrectness.show();
-				}
+				InstancesUtils.reportClassificationAccuracies(
+						labelImageClassificationAccuraciesHistory.get(
+								labelImageClassificationAccuraciesHistory.size() - 1 ), logger );
 
-			}
+				new ImagePlus( "tile " + iTile + " " + i + ". accuracy", accuraciesStack ).show();
 
+			} // iterations
 
-		}
+		} // tiles
 
-		logger.info( "..done." );
 
 		// report what happened
-		long intervalVolume = labelImageInterval.dimension( X )
-				* labelImageInterval.dimension( Y )
-				* labelImageInterval.dimension( Z );
+		logger.info( "\n\n # Training from label image summary");
+
+		long intervalVolume = interval.dimension( X )
+				* interval.dimension( Y )
+				* interval.dimension( Z );
 
 		for ( int i = 0; i < numInstancesHistory.size(); ++i )
 		{
@@ -996,20 +1058,34 @@ public class WekaSegmentation {
 	/**
 	 * Balance number of instancesComboBox per class
 	 *
-	 * @param data input set of instancesComboBox
+	 * @param instances input set of instancesComboBox
 	 * @return resampled set of instancesComboBox
 	 */
-	public static Instances balanceTrainingData( Instances data )
+	public static Instances balanceTrainingData( Instances instances )
 	{
+
+		long[] classDistribution = InstancesUtils.getClassDistribution( instances );
+		Arrays.sort( classDistribution );
+
+		long numMissingInstances = 0;
+		long mostOccuringClass = classDistribution[ classDistribution.length - 1 ];
+
+		for ( int i = 0; i < classDistribution.length - 1; ++i )
+		{
+			numMissingInstances += mostOccuringClass - classDistribution[ i ];
+		}
+
+		int sampleSizePercent = (int) ( 100.0 * ( instances.size() + numMissingInstances ) / instances.size() );
+
 		final Resample filter = new Resample();
 		Instances filteredIns = null;
 		filter.setBiasToUniformClass(1.0);
 		try
 		{
-			filter.setInputFormat(data);
-			filter.setNoReplacement(false); // with replacement => adds more of underrepresented class
-			filter.setSampleSizePercent(100);
-			filteredIns = Filter.useFilter(data, filter);
+			filter.setInputFormat(instances);
+			filter.setNoReplacement(false); // with replacement
+			filter.setSampleSizePercent(sampleSizePercent);
+			filteredIns = Filter.useFilter(instances, filter);
 		}
 		catch (Exception e)
 		{
@@ -1098,7 +1174,7 @@ public class WekaSegmentation {
 		resultImage = resultImageBgFg;
 
 		applyClassifierWithTiling( classifierBgFgKey,
-				interval, null, null );
+				interval, null, null, false );
 
 		// reset
 		resultImage = originalResultImage;
@@ -1658,6 +1734,7 @@ public class WekaSegmentation {
 		// Train the classifier on the current data
 		logger.info("\n# Train classifier");
 
+		InstancesUtils.logInstancesInformation( instances );
 		final long start = System.currentTimeMillis();
 
 		if (Thread.currentThread().isInterrupted())
@@ -1684,12 +1761,14 @@ public class WekaSegmentation {
 
 		if ( labelImage == null )
 		{
-			logger.info( "Balancing training data..." );
+			logger.info( "\nBalancing training data..." );
 			balancedInstances = balanceTrainingData( instances );
+			InstancesUtils.logInstancesInformation( balancedInstances );
 		}
 
 		try
 		{
+			logger.info( "\n" );
 			classifier.buildClassifier( balancedInstances );
 		}
 		catch (InterruptedException ie)
@@ -1719,13 +1798,14 @@ public class WekaSegmentation {
 	public void applyClassifierWithTiling( String classifierKey,
 										   FinalInterval interval,
 										   Integer numTiles,
-										   FeatureProvider featureProvider )
+										   FeatureProvider featureProvider,
+										   boolean doNotLog )
 	{
 
 		logger.info("\n# Apply classifier");
 
 		// set up tiling
-		ArrayList<FinalInterval> tiles = createTiles( interval, numTiles );
+		ArrayList<FinalInterval> tiles = getTiles( interval, numTiles, this );
 
 		// set up multi-threading
 
@@ -1764,7 +1844,8 @@ public class WekaSegmentation {
 									adaptedThreadsPerRegion,
 									++tileCounter,
 									tiles.size(),
-									featureProvider )
+									featureProvider,
+									doNotLog )
 					)
 			);
 		}
@@ -1815,6 +1896,8 @@ public class WekaSegmentation {
 			Instances instances)
 	{
 
+		logger.info( "\n# Classifier characteristics");
+
 		int numDecisionNodes = classifier.getDecisionNodes();
 
 		int[] usages = classifier.getAttributeUsages();
@@ -1838,7 +1921,7 @@ public class WekaSegmentation {
 		double randomUsage = 1.0 * numDecisionNodes / instances.numAttributes();
 		int minFeatureUsage = (int) Math.ceil( minFeatureUsageFactor * randomUsage );
 
-		logger.info("# Most used: ");
+		logger.info("## Most used features: ");
 		for (int f = Math.min( 9, namesAndUsages.length - 1 ); f >= 0; f--)
 		{
 			logger.info(
@@ -1847,6 +1930,7 @@ public class WekaSegmentation {
 							"; ID: " + "" + "; Name: " + namesAndUsages[f].name );
 		}
 
+		logger.info("## Further information: ");
 
 		logger.info("Average number of decision nodes per tree: " +
 				avgRfTreeSize);
@@ -1884,86 +1968,6 @@ public class WekaSegmentation {
 			return (int)(this.usage - o.usage);
 		}
 
-	}
-
-
-	private ArrayList<FinalInterval> createTiles( FinalInterval interval, Integer numTiles )
-	{
-
-		logInterval( interval );
-
-		ArrayList<FinalInterval> tiles = new ArrayList<>();
-
-		long[] imgDims = getInputImageDimensions();
-		long[] tileSizes = new long[5];
-
-		for ( int d : XYZ )
-		{
-
-			if ( numTiles > 0 )
-			{
-				tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / Math.pow( numTiles, 1.0/3.0 ) );
-			}
-			else if ( interval.dimension(d) <= getMaximalRegionSize() )
-			{
-				// everything can be computed at once
-				tileSizes[d] = interval.dimension(d);
-			}
-			else
-			{
-				// we need to tile
-				int n = (int) Math.ceil( (1.0 * interval.dimension(d)) / getMaximalRegionSize());
-				tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / n );
-			}
-
-			// make sure sizes fit into image
-			tileSizes[d] = Math.min( tileSizes[d], imgDims[d] );
-		}
-
-		tileSizes[ T] = 1;
-
-		logger.info("Tile sizes [x,y,z]: "
-				+ tileSizes[ X]
-				+ ", " + tileSizes[ Y]
-				+ ", " + tileSizes[ Z]);
-
-
-		for ( int t = (int) interval.min( T); t <= interval.max( T); t += 1)
-		{
-			for ( int z = (int) interval.min( Z); z <= interval.max( Z); z += tileSizes[ Z])
-			{
-				for ( int y = (int) interval.min( Y); y <= interval.max( Y); y += tileSizes[ Y])
-				{
-					for ( int x = (int) interval.min( X); x <= interval.max( X); x += tileSizes[ X])
-					{
-						long[] min = new long[5];
-						min[ X ] = x;
-						min[ Y ] = y;
-						min[ Z ] = z;
-						min[ T ] = t;
-
-						long[] max = new long[5];
-						max[ X ] = x + tileSizes[ X ] - 1;
-						max[ Y ] = y + tileSizes[ Y ] - 1;
-						max[ Z ] = z + tileSizes[ Z ] - 1;
-						max[ T ] = t + tileSizes[ T ] - 1;
-
-						// make sure to stay within image bounds
-						for ( int d : XYZT )
-						{
-							max[ d ] = Math.min( interval.max( d ), max[ d ] );
-						}
-
-						tiles.add( new FinalInterval(min, max) );
-
-					}
-				}
-			}
-		}
-
-		logger.info("Number of tiles: " + tiles.size());
-
-		return (tiles);
 	}
 
 
@@ -2016,7 +2020,7 @@ public class WekaSegmentation {
 				+ ", " + rfStatsMaximumTreesUsed
 				+ ", " + getNumTrees();
 
-		logger.progress("Progress", tileInfo
+		logger.progress("Classification", tileInfo
 				+ "; " + timeInfo
 				+ "; " + treeInfo
 				+ "; " + memoryInfo);
@@ -2093,7 +2097,8 @@ public class WekaSegmentation {
 			final int numThreads,
 			final int tileCounter,
 			final int tileCounterMax,
-			final FeatureProvider externalFeatureProvider)
+			final FeatureProvider externalFeatureProvider,
+			boolean doNotLog)
 	{
 
 		return () ->
@@ -2102,10 +2107,11 @@ public class WekaSegmentation {
 			if ( ThreadUtils.stopThreads( logger, stopCurrentTasks,
 					tileCounter, tileCounterMax ) ) return;
 
-			if ( tileCounter <= regionThreads )
-				waitMilliseconds( tileCounter * tilingDelay);
+			//if ( tileCounter <= regionThreads )
+		    //	waitMilliseconds( tileCounter * tilingDelay );
 
 			boolean isLogging = (tileCounter <= regionThreads);
+			if( doNotLog ) isLogging = false;
 
 			// TODO: check whether this is a background region
 			/*
@@ -2195,7 +2201,6 @@ public class WekaSegmentation {
 			// wait until done
 			ThreadUtils.joinThreads( futures, logger );
 			exe.shutdown();
-			if ( isLogging ) logger.info("Classification computed in [ms]: " + (System.currentTimeMillis() - start) + ", using " + numThreads + " threads");
 
 			// save classification results
 			start = System.currentTimeMillis();
@@ -2340,84 +2345,86 @@ public class WekaSegmentation {
 			int numThreads )
 	{
 
-		final int FIRST_CLASS_ID = 0, SECOND_CLASS_ID = 1, FIRST_CLASS_PROB = 2,
-				SECOND_CLASS_PROB = 3, NUM_TREES_EVALUATED = 4;
+		return new Runnable() {
 
-		if ( Thread.currentThread().isInterrupted() )
-			return null;
-
-		return () -> {
-
-			// interval is the same for all channels, thus simply take from 0th
-			FinalInterval interval = featureProvider.getInterval();
-
-			// create reusable instance
-			double[] featureValues = new double[ featureProvider.getNumActiveFeatures() + 1];
-			final ReusableDenseInstance ins = new ReusableDenseInstance( 1.0, featureValues );
-			ins.setDataset( instancesHeader );
-
-			// create empty reusable feature slice
-			double[][][] reusableFeatureSlice = featureProvider.getReusableFeatureSlice();
-
-			// create empty, reusable results array
-			double[] result = new double[5];
-
-			try
+			public void run()
 			{
 
-				for ( long z = zMin; z <= zMax; ++z )
+				if ( Thread.currentThread().isInterrupted() )
+					return;
+
+				final int FIRST_CLASS_ID = 0, SECOND_CLASS_ID = 1, FIRST_CLASS_PROB = 2,
+						SECOND_CLASS_PROB = 3, NUM_TREES_EVALUATED = 4;
+
+
+				FinalInterval interval = featureProvider.getInterval();
+
+				// create reusable instance
+				double[] featureValues = new double[ featureProvider.getNumActiveFeatures() + 1 ];
+				final ReusableDenseInstance ins = new ReusableDenseInstance( 1.0, featureValues );
+				ins.setDataset( instancesHeader );
+
+				// create empty reusable feature slice
+				double[][][] featureSlice = null;
+
+				// create empty, reusable results array
+				double[] result = null;
+
+				try
 				{
 
-					double[][][] featureSlice = featureProvider.getCachedFeatureSlice( (int) z );
-					if ( featureSlice == null )
+					for ( long z = zMin; z <= zMax; ++z )
 					{
-						featureProvider.setFeatureSlicesValues( ( int ) z,
-								reusableFeatureSlice,
-								numThreads );
-						featureSlice = reusableFeatureSlice;
-					}
 
-					int a = 1;
-
-
-					for ( long y = interval.min( Y ); y <= interval.max( Y ); ++y )
-					{
-						for ( long x = interval.min( X ); x <= interval.max( X ); ++x )
+						featureSlice = featureProvider.getCachedFeatureSlice( ( int ) z );
+						if ( featureSlice == null )
 						{
+							featureSlice = featureProvider.getReusableFeatureSlice();
+							featureProvider.setFeatureSlicesValues( ( int ) z, featureSlice, numThreads );
+						}
 
-							// set instance values
-							featureValues = featureProvider.getValuesFromFeatureSlice( (int) x, (int) y, featureSlice );
-							ins.setValues( 1.0, featureValues );
+						int a = 1;
 
-							result = classifier.distributionForInstance( ins, accuracy );
 
-							double certainty = ( result[ FIRST_CLASS_PROB ] - result [ SECOND_CLASS_PROB ] );
-
-							resultSetter.set( x, y, z,
-									(int) result[ FIRST_CLASS_ID ], certainty );
-
-							pixelsClassified.incrementAndGet();
-
-							// record tree usage stats
-							rfStatsTreesEvaluated.addAndGet( (int) result[ NUM_TREES_EVALUATED ] );
-							if ( result[ NUM_TREES_EVALUATED ] > rfStatsMaximumTreesUsed.get() )
+						for ( long y = interval.min( Y ); y <= interval.max( Y ); ++y )
+						{
+							for ( long x = interval.min( X ); x <= interval.max( X ); ++x )
 							{
-								rfStatsMaximumTreesUsed.set( (int) result[ NUM_TREES_EVALUATED ] );
-							}
 
+								// set instance values
+								featureValues = featureProvider.getValuesFromFeatureSlice( ( int ) x, ( int ) y, featureSlice );
+								ins.setValues( 1.0, featureValues );
+
+								result = classifier.distributionForInstance( ins, accuracy );
+
+								double certainty = ( result[ FIRST_CLASS_PROB ] - result[ SECOND_CLASS_PROB ] );
+
+								resultSetter.set( x, y, z,
+										( int ) result[ FIRST_CLASS_ID ], certainty );
+
+								pixelsClassified.incrementAndGet();
+
+								// record tree usage stats
+								rfStatsTreesEvaluated.addAndGet( ( int ) result[ NUM_TREES_EVALUATED ] );
+								if ( result[ NUM_TREES_EVALUATED ] > rfStatsMaximumTreesUsed.get() )
+								{
+									rfStatsMaximumTreesUsed.set( ( int ) result[ NUM_TREES_EVALUATED ] );
+								}
+
+							}
 						}
 					}
-				}
 
-			}
-			catch(Exception e)
-			{
-					IJ.showMessage("Could not apply Classifier!");
+				} catch ( Exception e )
+				{
+					IJ.showMessage( "Could not apply Classifier!" );
 					e.printStackTrace();
 					return;
+				}
 			}
 		};
 	}
+
 
 	public UncertaintyRegion getUncertaintyRegion( int i )
 	{
@@ -2601,98 +2608,6 @@ public class WekaSegmentation {
 		return maxDepth;
 	}
 
-	/**
-	 * Set the flag to balance the class distributions
-	 * @param homogenizeClasses boolean flag to enable/disable the class balance
-	 * @deprecated use setDoClassBalance
-	 */
-	public void setDoHomogenizeClasses( boolean homogenizeClasses )
-	{
-		this.balanceClasses = homogenizeClasses;
-	}
-
-	/**
-	 * Get the boolean flag to enable/disable the class balance
-	 * @return flag to enable/disable the class balance
-	 * @deprecated use doClassBalance
-	 */
-	public boolean doHomogenizeClasses()
-	{
-		return balanceClasses;
-	}
-
-	/**
-	 * Set the flag to balance the class distributions
-	 * @param balanceClasses boolean flag to enable/disable the class balance
-	 */
-	public void setDoClassBalance( boolean balanceClasses )
-	{
-		this.balanceClasses = balanceClasses;
-	}
-
-	/**
-	 * Get the boolean flag to enable/disable the class balance
-	 * @return flag to enable/disable the class balance
-	 */
-	public boolean doClassBalance()
-	{
-		return balanceClasses;
-	}
-
-	/**
-	 * Set feature update flag
-	 * @param updateFeatures new feature update flag
-	 */
-	public void setUpdateFeatures(boolean updateFeatures)
-	{
-		this.updateFeatures = updateFeatures;
-	}
-
-	/**
-	 * Forces the feature stack to be updated whenever it is needed next.
-	 */
-	public void setFeaturesDirty()
-	{
-		updateFeatures = true;
-		return;
-	}
-
-	/**
-	 * Update fast random forest classifier with new values
-	 *
-	 * @param newNumTrees new number of trees
-	 * @param newRandomFeatures new number of random features per tree
-	 * @param newMaxDepth new maximum depth per tree
-	 * @return false if error
-	 */
-	public boolean updateClassifier(
-			int newNumTrees,
-			int newRandomFeatures,
-			int newMaxDepth)
-	{
-		if(newNumTrees < 1 || newRandomFeatures < 0)
-			return false;
-		numOfTrees = newNumTrees;
-		numRandomFeatures = newRandomFeatures;
-		maxDepth = newMaxDepth;
-
-		rf.setNumTrees(numOfTrees);
-		rf.setNumFeatures(numRandomFeatures);
-		rf.setMaxDepth(maxDepth);
-
-		return true;
-	}
-
-	/**
-	 * Merge two datasets of Weka instancesComboBox in place
-	 * @param first first (and destination) dataset
-	 * @param second second dataset
-	 */
-	public void mergeDataInPlace(Instances first, Instances second)
-	{
-		for(int i=0; i<second.numInstances(); i++)
-			first.add(second.get(i));
-	}
 
 	public boolean hasResultImage()
 	{

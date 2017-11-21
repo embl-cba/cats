@@ -25,6 +25,7 @@ public abstract class ExamplesUtils {
         {
             classNums.add( example.classNum );
         }
+
         return classNums.size();
     }
 
