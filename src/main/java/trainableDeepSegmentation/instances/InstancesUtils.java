@@ -114,7 +114,7 @@ public class InstancesUtils {
                 int t = ( int ) interval.min( T );
 
                 Random rand = new Random();
-                
+
                 int[] pixelsPerClass = new int[ numClasses ];
 
                 Instances instances = InstancesUtils.getInstancesHeader(
@@ -224,13 +224,25 @@ public class InstancesUtils {
                                 instancesAndMetadata.addMetadata( Metadata_Position_Y, xyLocal[ 1 ] );
                                 instancesAndMetadata.addMetadata( Metadata_Position_Z, z );
                                 instancesAndMetadata.addMetadata( Metadata_Position_T, t );
+                                instancesAndMetadata.addMetadata( Metadata_Label_Id, 0 );
+
+                                // TODO: make this a loop!!!
+                                instancesAndMetadata.addMetadata( Metadata_Settings_ImageBackground,
+                                        wekaSegmentation.settings.imageBackground );
+                                instancesAndMetadata.addMetadata( Metadata_Settings_Anisotropy,
+                                        wekaSegmentation.settings.anisotropy );
+                                instancesAndMetadata.addMetadata( Metadata_Settings_MaxBinLevel,
+                                        wekaSegmentation.settings.maxBinLevel );
+                                instancesAndMetadata.addMetadata( Metadata_Settings_BinFactor,
+                                        wekaSegmentation.settings.binFactor );
+                                instancesAndMetadata.addMetadata( Metadata_Settings_MaxDeepConvLevel,
+                                        wekaSegmentation.settings.maxDeepConvLevel );
+
 
                                 pixelsPerClass[ localClass ]++;
 
                             }
-
                         }
-
                     }
                 }
 

@@ -182,7 +182,7 @@ public class WekaSegmentation {
 
 	public double accuracy = 4.0;
 
-	public double memoryFactor = 50.0;
+	public double memoryFactor = 1.0;
 
 	public int labelImageNumInstancesPerClass = 1000;
 
@@ -261,7 +261,7 @@ public class WekaSegmentation {
 		this.imagingModality = imagingModality;
 	}
 
-	private boolean recomputeLabelInstances = false;
+	public boolean recomputeLabelInstances = false;
 
 	public void setImageBackground( int background )
 	{
@@ -383,10 +383,12 @@ public class WekaSegmentation {
 				for ( int iChunk = 0; iChunk < zChunks.size(); ++iChunk )
 				{
 
-					logger.info( "\n# Iterative instances from label image, " +
-							"tile " + iTile + ", iteration " + i + ", chunk " + iChunk );
-
 					zChunk = zChunks.get( iChunk );
+
+					logger.info( "\n# Instances from label image"
+							+ ", tile " + iTile + "/" + tiles.size()
+							+ ", iteration " + i + "/" + numIterations
+							+ ", zMin " + zChunk[0] + ", zMax " + zChunk[1] );
 
 					if ( stopCurrentTasks ) return;
 
@@ -444,6 +446,7 @@ public class WekaSegmentation {
 						}
 						else
 						{
+							// TODO: could it be that this is slooow?
 							instancesManager.
 									getInstancesAndMetadata( instancesKey ).
 									appendInstancesAndMetadata( instancesAndMetadata );
@@ -454,14 +457,12 @@ public class WekaSegmentation {
 
 					futures = null;
 					exe.shutdown();
-					System.gc();
-
 
 					Instances instances = getInstancesManager().getInstances( instancesKey );
 
 					if ( instances == null ) return;
 
-					FastRandomForest classifier = trainClassifier( instances );
+					FastRandomForest classifier = trainClassifier( instances, zChunkSize );
 
 					if ( classifier == null ) return;
 
@@ -486,8 +487,7 @@ public class WekaSegmentation {
 					exe = Executors.newFixedThreadPool( numSlicesInCurrentChunk );
 					ArrayList< Future > classificationFutures = new ArrayList<>();
 
-					Set< Integer > set = featureProvider.getFeatureSliceCacheKeys();
-					int a = 1;
+					logger.info( "\n# Apply classifier ..." );
 
 					for ( int z = ( int ) zChunk[ 0 ]; z <= zChunk[ 1 ]; ++z )
 					{
@@ -509,25 +509,22 @@ public class WekaSegmentation {
 
 					ThreadUtils.joinThreads( classificationFutures, logger );
 
-					set = featureProvider.getFeatureSliceCacheKeys();
-					a = 1;
 
+					labelImageClassificationAccuraciesHistory.add(
+							InstancesUtils.getAccuracies(
+									getLabelImage(),
+									getResultImage(),
+									null,
+									tile
+							) );
 
 				}
-
-				// record progress
-
-				ImageStack accuraciesStack = ImageStack.create(
-						( int ) tile.dimension( X ),
-						( int ) tile.dimension( Y ),
-						( int ) tile.dimension( Z ),
-						8 );
 
 				labelImageClassificationAccuraciesHistory.add(
 						InstancesUtils.getAccuracies(
 								getLabelImage(),
 								getResultImage(),
-								accuraciesStack,
+								null,
 								tile
 						) );
 
@@ -537,7 +534,7 @@ public class WekaSegmentation {
 						labelImageClassificationAccuraciesHistory.get(
 								labelImageClassificationAccuraciesHistory.size() - 1 ), logger );
 
-				new ImagePlus( "tile " + iTile + " " + i + ". accuracy", accuraciesStack ).show();
+				// new ImagePlus( "tile " + iTile + " " + i + ". accuracy", accuraciesStack ).show();
 
 			} // iterations
 
@@ -1165,7 +1162,7 @@ public class WekaSegmentation {
 	{
 
 		ArrayList< Integer > originalClasses = setInstancesClassesToBgFg( instances );
-		FastRandomForest classifierBgFg = trainClassifier( instances );
+		FastRandomForest classifierBgFg = trainClassifier( instances, Prefs.getThreads() );
 		String classifierBgFgKey = classifierManager.setClassifier( classifierBgFg, instances );
 		resetInstancesClasses( instances, originalClasses );
 
@@ -1727,7 +1724,7 @@ public class WekaSegmentation {
 	 * and current classifier settings
 	 * and current active features
 	 */
-	public FastRandomForest trainClassifier( Instances instances )
+	public FastRandomForest trainClassifier( Instances instances, int numThreads )
 	{
 		isTrainingCompleted = false;
 
@@ -1735,6 +1732,7 @@ public class WekaSegmentation {
 		logger.info("\n# Train classifier");
 
 		InstancesUtils.logInstancesInformation( instances );
+
 		final long start = System.currentTimeMillis();
 
 		if (Thread.currentThread().isInterrupted())
@@ -1747,13 +1745,13 @@ public class WekaSegmentation {
 		numRandomFeatures = (int) Math.ceil(1.0 * instances.numAttributes() * fractionRandomFeatures);
 
 		FastRandomForest classifier = new FastRandomForest();
-		classifier.setSeed((new Random()).nextInt());
-		classifier.setMaxDepth(maxDepth);
-		classifier.setNumTrees(getNumTrees());
-		classifier.setNumThreads(numRfTrainingThreads);
-		classifier.setNumFeatures(numRandomFeatures);
+		classifier.setSeed( (new Random()).nextInt() );
+		classifier.setMaxDepth( maxDepth );
+		classifier.setNumTrees( getNumTrees() );
+		classifier.setNumThreads( numThreads );
+		classifier.setNumFeatures( numRandomFeatures );
 		classifier.setBatchSize("" + getBatchSizePercent());
-		classifier.setComputeImportances(false); // using own method currently
+		classifier.setComputeImportances( false ); // using own method currently
 
 		// balance traces training data
 

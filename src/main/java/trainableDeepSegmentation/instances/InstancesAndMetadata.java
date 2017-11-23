@@ -142,7 +142,7 @@ public class InstancesAndMetadata {
         return instances.get( i );
     }
 
-    public void appendInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata )
+    public synchronized void appendInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata )
     {
 
         for( Instance instance : instancesAndMetadata.instances )

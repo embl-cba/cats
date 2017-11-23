@@ -143,6 +143,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String IO_SAVE_PROJECT = "Save project";
 
 	public static final String UPDATE_LABELS_AND_TRAIN = "Update labels and train";
+	public static final String RECOMPUTE_LABELS = "Recompute all labels";
 	public static final String TRAIN_CLASSIFIER = "Train classifier";
 	public static final String IO_LOAD_LABEL_IMAGE = "Load label image";
 	public static final String IO_LOAD_INSTANCES = "Load instances";
@@ -164,6 +165,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					IO_SAVE_INSTANCES,
 					IO_LOAD_LABEL_IMAGE,
 					TRAIN_FROM_LABEL_IMAGE,
+					RECOMPUTE_LABELS,
 					APPLY_BG_FG_CLASSIFIER
 			} );
 
@@ -519,6 +521,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 								break;
 							case UPDATE_LABELS_AND_TRAIN:
 								updateLabelsTrainingDataAndTrainClassifier();
+								break;
+							case RECOMPUTE_LABELS:
+								wekaSegmentation.recomputeLabelInstances = true;
+								updateLabelsTrainingData();
 								break;
 							case TRAIN_CLASSIFIER:
 								trainClassifier();
@@ -1911,6 +1917,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				Integer.toString(n)};
 		record(ADD_TRACE, arg);
 
+		/*
 		String numLabelsPerClassString = "";
 
 		int[] numLabelsPerClass = ExamplesUtils.getNumExamplesPerClass(
@@ -1922,6 +1929,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 
 		logger.progress("Number of labels per class:", numLabelsPerClassString);
+		*/
 
 	}
 
@@ -2096,7 +2104,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					return;
 				}
 
-				classifier = wekaSegmentation.trainClassifier( instances );
+				classifier = wekaSegmentation.trainClassifier( instances, Prefs.getThreads() );
 
 				if ( classifier == null || this.isInterrupted() ) return;
 
@@ -2120,7 +2128,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 					logger.info ("\n# Second Training");
 
-					classifier = wekaSegmentation.trainClassifier( instances2 );
+					classifier = wekaSegmentation.trainClassifier( instances2, Prefs.getThreads() );
 
 					wekaSegmentation.getClassifierManager().setClassifier( classifier, instances2);
 				}
@@ -2137,7 +2145,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}; newTask.start();
 
 	}
-
 
 	void updateLabelsTrainingData()
 	{
@@ -2168,12 +2175,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 					return;
 				}
 
-
 				wekaSegmentation.getInstancesManager().
 						putInstancesAndMetadata( instancesAndMetadata );
 
 				updateComboBoxes();
 				win.setButtonsEnabled( true );
+
 			}
 
 		}; newTask.start();
@@ -2329,7 +2336,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					return;
 				}
 
-				classifier = wekaSegmentation.trainClassifier( instances );
+				classifier = wekaSegmentation.trainClassifier( instances, Prefs.getThreads() );
 
 				if ( classifier == null || this.isInterrupted() ) return;
 
@@ -2349,7 +2356,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 					logger.info ("\n# Second Training");
 
-					classifier = wekaSegmentation.trainClassifier( instances2 );
+					classifier = wekaSegmentation.trainClassifier( instances2, Prefs.getThreads() );
 
 					wekaSegmentation.getClassifierManager().setClassifier( classifier, instances2);
 				}

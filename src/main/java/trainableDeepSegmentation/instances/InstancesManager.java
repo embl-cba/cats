@@ -27,7 +27,7 @@ public class InstancesManager {
         return key;
     }
 
-    public String putInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata )
+    public synchronized String putInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata )
     {
         String key = getName( instancesAndMetadata.instances );
 
