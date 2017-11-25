@@ -336,7 +336,7 @@ public final class Utils {
 	 */
 	private static FloatProcessor normalize(ImageProcessor ip) 
 	{
-		// get mean and standard deviation of input image
+		// getInstancesAndMetadata mean and standard deviation of input image
 		ImageStatistics stats = ImageStatistics.getStatistics( ip, Measurements.MEAN + Measurements.STD_DEV, null);
 
 		FloatProcessor fp = (FloatProcessor) ip.convertToFloat();
@@ -498,7 +498,7 @@ public final class Utils {
 	}
 	
 	/**
-	 * Post-process probability image to get more reasonable objects
+	 * Post-process probability image to getInstancesAndMetadata more reasonable objects
 	 * at a certain threshold
 	 * 
 	 * @param probabilityMap probability image

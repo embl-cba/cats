@@ -411,7 +411,7 @@ class FastRandomTree
    * 
    * <li>0.99: the temporary arrays splits, props, vals now are not wide
    * as the full number of attributes in the dataset (of which only "k" columns
-   * of randomly chosen attributes get filled). Now, it's just a single array
+   * of randomly chosen attributes getInstancesAndMetadata filled). Now, it's just a single array
    * which gets replaced as the k features are evaluated sequentially, but it
    * gets replaced only if a next feature is better than a previous one.
    * 
@@ -695,7 +695,7 @@ class FastRandomTree
           // decide if instance goes into subset 0 or 1 randomly,
           // with bigger subsets having a greater probability of getting
           // the instance assigned to them
-          // instances with missing values get processed LAST (sort order)
+          // instances with missing values getInstancesAndMetadata processed LAST (sort order)
           // so branch sizes are known by now (and stored in m_Prop)
           double rn = random.nextDouble();
           int branch = ( rn > m_Prop[0] ) ? 1 : 0;
@@ -832,7 +832,7 @@ class FastRandomTree
           // decide if instance goes into subset 0 or 1 randomly,
           // with bigger subsets having a greater probability of getting
           // the instance assigned to them
-          // instances with missing values get processed LAST (sort order)
+          // instances with missing values getInstancesAndMetadata processed LAST (sort order)
           // so branch sizes are known by now (and stored in m_Prop)
           double rn = random.nextDouble();
           int branch = ( rn > m_Prop[0] ) ? 1 : 0;

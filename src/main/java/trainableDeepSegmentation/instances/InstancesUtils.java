@@ -75,7 +75,6 @@ public class InstancesUtils {
 
     }
 
-
     private static String getInfoString( String inputImageTitle, Settings settings )
     {
 
@@ -89,8 +88,7 @@ public class InstancesUtils {
         return ( info );
 
     }
-
-
+    
     public static Callable<InstancesAndMetadata> getUsefulInstancesFromLabelImage(
             WekaSegmentation wekaSegmentation,
             ImagePlus labelImage,
@@ -109,7 +107,7 @@ public class InstancesUtils {
 
             public InstancesAndMetadata call()
             {
-                final int numClasses = wekaSegmentation.getNumClasses(); // TODO: get from label image
+                final int numClasses = wekaSegmentation.getNumClasses(); // TODO: getInstancesAndMetadata from label image
 
                 int t = ( int ) interval.min( T );
 
@@ -392,7 +390,7 @@ public class InstancesUtils {
     {
         int maxProbability = resultImage.getProbabilityRange();
 
-        int numClasses = 2; // TODO: get from ResultImage
+        int numClasses = 2; // TODO: getInstancesAndMetadata from ResultImage
         int t = (int) interval.min( T );
 
         int[][] accuracies = new int[numClasses][5];
@@ -448,7 +446,6 @@ public class InstancesUtils {
 
     }
 
-
     private static ArrayList< int[] >[] getLocalClassCoordinates(
             int numClasses,
             ImagePlus labelImage,
@@ -490,7 +487,6 @@ public class InstancesUtils {
         return ( localClassCoordinates );
 
     }
-
 
     private static void addInstance( Instances instances,
                                      FeatureProvider featureProvider,
@@ -535,7 +531,6 @@ public class InstancesUtils {
         return denseInstance;
     }
 
-
     private static int[] getRandomCoordinate( int iClass,
                                               ArrayList< int[] >[] classCoordinates,
                                               Random random )
@@ -575,8 +570,6 @@ public class InstancesUtils {
             }
         }
     }
-
-
 
     private static int[] getUsefulRandomCoordinate( int iClass,
                                                     ArrayList< int[] >[][] classCoordinates,
@@ -621,8 +614,6 @@ public class InstancesUtils {
 
     }
 
-
-
     public static Instances getInstancesHeader(
             String instancesName,
             ArrayList< String > featureNames,
@@ -646,8 +637,6 @@ public class InstancesUtils {
         return ( instances );
 
     }
-
-
 
     public static InstancesAndMetadata removeAttributes( InstancesAndMetadata instancesAndMetadata,
                                               ArrayList< Integer > goners )
@@ -683,7 +672,6 @@ public class InstancesUtils {
         }
 
     }
-
 
     public static long[] getClassDistribution( Instances instances )
     {
@@ -799,7 +787,5 @@ public class InstancesUtils {
         return success;
 
     }
-
-
 
 }

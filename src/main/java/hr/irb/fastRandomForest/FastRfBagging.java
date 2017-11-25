@@ -121,7 +121,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       FastRandomTree curTree = new FastRandomTree();
       // all parameters for instances will be looked up in the motherForest (maxDepth, k_Value)
       curTree.m_MotherForest = motherForest;
-      // 0.99: reference to these arrays will get passed down all nodes so the array can be re-used 
+      // 0.99: reference to these arrays will getInstancesAndMetadata passed down all nodes so the array can be re-used
       // 0.99: this array is of size two as now all splits are binary - even categorical ones
       curTree.tempProps = new double[2]; 
       curTree.tempDists = new double[2][]; 

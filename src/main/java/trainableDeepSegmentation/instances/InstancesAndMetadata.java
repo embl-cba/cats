@@ -142,7 +142,7 @@ public class InstancesAndMetadata {
         return instances.get( i );
     }
 
-    public synchronized void appendInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata )
+    public synchronized void append( InstancesAndMetadata instancesAndMetadata )
     {
 
         for( Instance instance : instancesAndMetadata.instances )
@@ -173,22 +173,6 @@ public class InstancesAndMetadata {
 
         return names;
 
-    }
-
-    public ArrayList< Integer > getInstanceIdsOfLabelId( int selectedLabelId )
-    {
-        ArrayList< Integer > instanceIds = new ArrayList<>(  );
-
-        ArrayList< Double > labelIds = metadata.get( Metadata.Metadata_Label_Id );
-        for ( int i = 0; i < labelIds.size(); ++i )
-        {
-            if ( labelIds.get( i ) == selectedLabelId )
-            {
-                instanceIds.add( i );
-            }
-        }
-
-        return instanceIds;
     }
 
     public Map< Integer, ArrayList < Integer > >[] getLabelList()

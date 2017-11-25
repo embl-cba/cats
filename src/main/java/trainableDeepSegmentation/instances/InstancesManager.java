@@ -2,29 +2,17 @@ package trainableDeepSegmentation.instances;
 
 import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
-import weka.core.Instance;
 import weka.core.Instances;
 
 import java.util.*;
 
 public class InstancesManager {
 
-    Logger logger = new IJLazySwingLogger();
-
     SortedMap< String, InstancesAndMetadata > instancesMap = null;
 
     public InstancesManager()
     {
         instancesMap = new TreeMap<>();
-    }
-
-    public String putInstances( Instances instances )
-    {
-        String key = instances.relationName().split( "--" )[0];
-
-        instancesMap.put( key, new InstancesAndMetadata( instances, null ) );
-
-        return key;
     }
 
     public synchronized String putInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata )
@@ -41,7 +29,7 @@ public class InstancesManager {
         return ( instancesMap.get( key ).instances );
     }
 
-    public InstancesAndMetadata get( String key )
+    public InstancesAndMetadata getInstancesAndMetadata( String key )
     {
         return ( instancesMap.get( key ) );
     }
@@ -51,23 +39,19 @@ public class InstancesManager {
         return ( instancesMap.keySet() );
     }
 
-    public InstancesAndMetadata getCombinedInstances( List< String > keys )
+    public InstancesAndMetadata getCombinedInstancesAndMetadata( List< String > keys )
     {
+        // initialize empty IAM
+        InstancesAndMetadata combinedIAM = new InstancesAndMetadata(
+                new Instances( getInstances( keys.get( 0 ) ) , 0 ),
+                InstancesAndMetadata.getEmptyMetadata() );
 
-        Instances combinedInstances = new Instances( getInstances( keys.get( 0 ) ), 0 );
-
-        for ( int i = 0; i < keys.size(); ++i )
+        for ( String key : keys )
         {
-            Instances nextInstances = getInstances( keys.get(i) );
-
-            for( Instance instance : nextInstances )
-            {
-                combinedInstances.add( instance );
-            }
-
+            combinedIAM.append( getInstancesAndMetadata( key ) );
         }
 
-        return new InstancesAndMetadata( combinedInstances, null );
+        return combinedIAM;
 
     }
 

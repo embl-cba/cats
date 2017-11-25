@@ -504,8 +504,8 @@ public class WekaSegmentation {
 						{
 							// TODO: could it be that this is slooow?
 							instancesManager.
-									get( instancesKey ).
-									appendInstancesAndMetadata( instancesAndMetadata );
+									getInstancesAndMetadata( instancesKey ).
+									append( instancesAndMetadata );
 						}
 
 
@@ -514,7 +514,7 @@ public class WekaSegmentation {
 					futures = null;
 					exe.shutdown();
 
-					InstancesAndMetadata instancesAndMetadata = getInstancesManager().get( instancesKey );
+					InstancesAndMetadata instancesAndMetadata = getInstancesManager().getInstancesAndMetadata( instancesKey );
 
 					if ( instancesAndMetadata == null ) return;
 
@@ -585,7 +585,7 @@ public class WekaSegmentation {
 								tile
 						) );
 
-				numInstancesHistory.add( instancesManager.get( instancesKey ).getInstances().size() );
+				numInstancesHistory.add( instancesManager.getInstancesAndMetadata( instancesKey ).getInstances().size() );
 
 				InstancesUtils.reportClassificationAccuracies(
 						labelImageClassificationAccuraciesHistory.get(
@@ -2192,7 +2192,7 @@ public class WekaSegmentation {
 			// determine chunking
 			ArrayList< long[] > zChunks = getZChunks( numThreads, tileInterval );
 
-			// get result image setter
+			// getInstancesAndMetadata result image setter
 			final ResultImageFrameSetter resultSetter = resultImage.getFrameSetter( tileInterval );
 
 			// spawn threads

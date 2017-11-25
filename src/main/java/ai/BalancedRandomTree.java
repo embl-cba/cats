@@ -213,7 +213,7 @@ public class BalancedRandomTree implements Serializable
 			int totalRight = 0;
 			for(final Integer it : indices)
 			{
-				if( splitFn.evaluate( data.get(it.intValue()) ) )
+				if( splitFn.evaluate( data.getInstancesAndMetadata(it.intValue()) ) )
 				{
 					leftArray.add(it);
 					totalLeft ++;					

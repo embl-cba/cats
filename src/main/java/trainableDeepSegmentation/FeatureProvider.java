@@ -492,7 +492,7 @@ public class FeatureProvider
             int nxFeatureImage;
             Calibration calibration = null;
 
-            // get feature values as doubles
+            // getInstancesAndMetadata feature values as doubles
             float[] pixelsBase = null;
             float[] pixelsAbove = null;
 
@@ -533,8 +533,8 @@ public class FeatureProvider
             base = (int) tmp = 1
             baseDist = tmp - base = 1 - 1 = 0
             baseDist2 = 1 - 0 = 1
-            ..this means that bin 2 will get a weight of 0 (i.e., baseDist)
-            ..and bin 1 will get a weight of 1
+            ..this means that bin 2 will getInstancesAndMetadata a weight of 0 (i.e., baseDist)
+            ..and bin 1 will getInstancesAndMetadata a weight of 1
 
             # Example: binning=cal=2, value 3
 
@@ -669,7 +669,7 @@ public class FeatureProvider
         int zBase, xBase, yBase, yBaseOffset, yAboveOffset, xAbove;
         int ys, ye, xs, xe, zs, ze;
 
-        // get feature values as doubles
+        // getInstancesAndMetadata feature values as doubles
         float[] pixelsBase = null;
         float[] pixelsAbove = null;
 
@@ -802,7 +802,7 @@ public class FeatureProvider
             int xBase, yBase, yBaseOffset, yAboveOffset, xAbove;
             int ys, ye, xs, xe;
 
-            // get feature values as doubles
+            // getInstancesAndMetadata feature values as doubles
             float[] pixelsBase = null;
             float[] pixelsAbove = null;
 
@@ -1232,7 +1232,7 @@ public class FeatureProvider
         // TODO: isn't below a job for the feature-provider?
         featureImageBorderSizes = wekaSegmentation.getFeatureBorderSizes();
 
-        // get the larger part of original image that is
+        // getInstancesAndMetadata the larger part of original image that is
         // needed to compute features for requested interval.
         FinalInterval expandedInterval = addBordersXYZ( interval,
                 featureImageBorderSizes );
@@ -1396,7 +1396,7 @@ public class FeatureProvider
 
                     for ( Future<ImagePlus> f : futures )
                     {
-                        // get feature images
+                        // getInstancesAndMetadata feature images
                         featureImagesThisResolution.add( f.get() );
                     }
                     futures = null;
@@ -1482,7 +1482,7 @@ public class FeatureProvider
                 {
                     for (Future<ArrayList<ImagePlus>> f : futures)
                     {
-                        // get feature images
+                        // getInstancesAndMetadata feature images
                         featureImagesList.add( f.get() );
                         wekaSegmentation.totalThreadsExecuted.addAndGet(1);
                     }

@@ -149,14 +149,14 @@ public class GiniFunction extends SplitFunction
 				{	
 					// left set
 					double prob = probLeft[nClass];
-					// Divide by the number of elements to get probabilities
+					// Divide by the number of elements to getInstancesAndMetadata probabilities
 					if(splitPoint != 0)
 						prob /= (double) splitPoint;
 					giniLeft += prob * prob;
 
 					// right set
 					prob = probRight[nClass];
-					// Divide by the number of elements to get probabilities
+					// Divide by the number of elements to getInstancesAndMetadata probabilities
 					if(rightNumElements != 0)
 						prob /= (double) rightNumElements;
 					giniRight += prob * prob;

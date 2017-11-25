@@ -36,7 +36,7 @@ public class ClassifierUtils {
         double avgRfTreeSize = 1.0 * numDecisionNodes / classifier.getNumTrees();
 
         double avgTreeDepth = 1.0 + Math.log( avgRfTreeSize ) / Math.log( 2.0 );
-        if ( avgRfTreeSize == 0 ) avgTreeDepth = 0;
+        if ( avgRfTreeSize < 1 ) avgTreeDepth = 1.0;
 
         double randomUsage = 1.0 * numDecisionNodes / instances.numAttributes();
 
@@ -57,7 +57,8 @@ public class ClassifierUtils {
                 avgRfTreeSize);
 
         WekaSegmentation.logger.info( "Average tree depth: log2(numDecisionNodes) + 1 = " +
-                    avgTreeDepth );
+                avgTreeDepth );
+
 
         WekaSegmentation.logger.info("Number of features: " + instances.numAttributes() );
 

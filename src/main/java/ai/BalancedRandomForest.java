@@ -215,7 +215,7 @@ public class BalancedRandomForest extends AbstractClassifier implements Randomiz
 		// fill indexSample with the indices of each class
 		for(int i = 0 ; i < numInstances; i++)
 		{
-			//System.out.println("data.get("+i+").classValue() = " + data.get(i).classValue());
+			//System.out.println("data.getInstancesAndMetadata("+i+").classValue() = " + data.getInstancesAndMetadata(i).classValue());
 			indexSample[ (int) data.get(i).classValue() ].add( i );
 		}
 		

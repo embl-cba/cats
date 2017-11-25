@@ -48,7 +48,6 @@ import trainableDeepSegmentation.results.ResultImageGUI;
 import trainableDeepSegmentation.results.ResultImageMemory;
 import trainableDeepSegmentation.instances.InstancesUtils;
 import weka.classifiers.AbstractClassifier;
-import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.gui.GUIChooserApp;
 
@@ -223,11 +222,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String DELETE_TRACE = "deleteTrace";
 	/** name of the macro method to toggle the overlay image */
 	public static final String TOGGLE_OVERLAY = "toggleOverlay";
-	/** name of the macro method to get the binary result */
+	/** name of the macro method to getInstancesAndMetadata the binary result */
 	public static final String GET_RESULT = "getResult";
-	/** name of the macro method to get the binary result */
+	/** name of the macro method to getInstancesAndMetadata the binary result */
 	public static final String SET_RESULT = "setResult";
-	/** name of the macro method to get the probability maps */
+	/** name of the macro method to getInstancesAndMetadata the probability maps */
 	public static final String GET_PROBABILITY = "getProbability";
 	/** name of the macro method to plot the threshold curves */
 	public static final String PLOT_RESULT = "plotResultGraphs";
@@ -1791,7 +1790,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 		numOfClasses = wekaSegmentation.getNumClasses();
 
-		//get current image
+		//getInstancesAndMetadata current image
 		if (null == WindowManager.getCurrentImage())
 		{
 			trainingImage = IJ.openImage(); // this implicitely gets the open="..." filePath
@@ -2071,7 +2070,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.trainClassifierWithFeatureSelection(
 						wekaSegmentation.
 								getInstancesManager().
-								get( key ) );
+								getInstancesAndMetadata( key ) );
 
 				win.setButtonsEnabled( true );
 
@@ -2217,16 +2216,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		if ( selectedInstances.size() == 1 )
 		{
-			return wekaSegmentation.getInstancesManager().get( selectedInstances.get(0) );
+			return wekaSegmentation.getInstancesManager().getInstancesAndMetadata( selectedInstances.get(0) );
 		}
 		else
 		{
-			logger.error( "Multiple selection currently not working ..." );
-
-			//InstancesAndMetadata combinedInstances = wekaSegmentation.
-			//		getInstancesManager().getCombinedInstances( selectedInstances );
-
-			return null;
+			return wekaSegmentation
+					.getInstancesManager()
+					.getCombinedInstancesAndMetadata( selectedInstances );
 		}
 
 	}
@@ -2239,7 +2235,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	void trainClassifier()
 	{
 
-		// get instances instances
+		// getInstancesAndMetadata instances instances
 		InstancesAndMetadata instancesAndMetadata = getCombinedSelectedInstancesFromGUI();
 
 		if ( instancesAndMetadata == null )
@@ -2543,7 +2539,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		InstancesAndMetadata instancesAndMetadata =
 				wekaSegmentation.
 						getInstancesManager().
-						get( key );
+						getInstancesAndMetadata( key );
 
 		boolean status = InstancesUtils.
 				saveInstancesAndMetadataAsARFF( instancesAndMetadata, dirFile[0], dirFile[1] );
@@ -2821,7 +2817,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		if(wekaSegmentation.getLoadedTrainingData() != null)
 		{
 			for(int i = 0; i < 4; i++)
-				((TextField) gd.getNumericFields().get( i )).setEnabled(false);
+				((TextField) gd.getNumericFields().getInstancesAndMetadata( i )).setEnabled(false);
 		}
 		*/
 
@@ -3002,7 +2998,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			IJ.log("Loading Weka properties...");
 			Field field = GenericObjectEditor.class.getDeclaredField("EDITOR_PROPERTIES");
 			field.setAccessible(true);
-			Properties editorProperties = (Properties)field.get(null);
+			Properties editorProperties = (Properties)field.getInstancesAndMetadata(null);
 			String key = "weka.ioComboBox.Classifier";
 			String value = editorProperties.getProperty(key);
 			value += ",hr.irb.fastRandomForest.FastRandomForest";
