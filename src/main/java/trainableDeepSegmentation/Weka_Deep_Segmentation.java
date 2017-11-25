@@ -3,7 +3,6 @@ package trainableDeepSegmentation;
 import bigDataTools.logging.Logger;
 import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
-import hr.irb.fastRandomForest.FastRandomForest;
 import ij.*;
 import ij.gui.*;
 import ij.io.OpenDialog;
@@ -40,9 +39,7 @@ import java.util.concurrent.Executors;
 import javax.swing.*;
 
 import net.imglib2.FinalInterval;
-import trainableDeepSegmentation.classification.AttributeSelector;
 import trainableDeepSegmentation.examples.Example;
-import trainableDeepSegmentation.examples.ExamplesUtils;
 import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import trainableDeepSegmentation.labels.LabelManager;
 import trainableDeepSegmentation.results.ResultImage;
@@ -151,6 +148,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String IO_EXPORT_RESULT_IMAGE = "Export result image";
 	public static final String TRAIN_FROM_LABEL_IMAGE = "Train from label image";
 	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier";
+	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
 
 
 	// TODO: how to know the settings associated with instances data
@@ -161,6 +159,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			new String[] {
 					UPDATE_LABELS_AND_TRAIN,
 					TRAIN_CLASSIFIER,
+					DUPLICATE_RESULT_IMAGE_TO_RAM,
 					IO_LOAD_INSTANCES,
 					IO_SAVE_INSTANCES,
 					IO_LOAD_LABEL_IMAGE,
@@ -420,11 +419,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 				public void run()
 				{
-					if( e.getSource() == trainClassifierButton )
-					{
-						trainClassifier();
-					}
-					else if( e.getSource() == overlayButton){
+					if( e.getSource() == overlayButton){
 						// Macro recording
 						String[] arg = new String[] {};
 						record(TOGGLE_OVERLAY, arg);
@@ -469,9 +464,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 					}
 					else if( e.getSource() == applyClassifierButton )
 					{
+
+						// TODO: maybe there is only one classifier at a time??
 						String classifierKey =
 								wekaSegmentation.getClassifierManager()
 										.getMostRecentClassifierKey();
+
 						if ( classifierKey != null )
 						{
 							applyClassifier( classifierKey );
@@ -521,6 +519,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 								break;
 							case UPDATE_LABELS_AND_TRAIN:
 								updateLabelsTrainingDataAndTrainClassifier();
+								break;
+							case DUPLICATE_RESULT_IMAGE_TO_RAM:
+								ImagePlus imp = wekaSegmentation.getResultImage().getImagePlus();
+								if ( imp != null ) imp.show();
 								break;
 							case RECOMPUTE_LABELS:
 								wekaSegmentation.recomputeLabelInstances = true;
@@ -2053,96 +2055,29 @@ public class Weka_Deep_Segmentation implements PlugIn
 		win.drawExamples();
 	}
 
-	private String experiment = "abc";
-
-	private FinalInterval previousLabelImageInterval = null;
 
 	void updateLabelsTrainingDataAndTrainClassifier()
 	{
 		// Disable rest of buttons until the instances has finished
 		win.setButtonsEnabled( false );
 
-		Thread newTask = new Thread() {
+		Thread task = new Thread() {
 			public void run()
 			{
 
-				InstancesAndMetadata instancesAndMetadata = null;
-
-				// compute instances data for new labels
-				wekaSegmentation.updateExamples();
-
-				if ( wekaSegmentation.getNumExamples() > 0 )
-				{
-
-					instancesAndMetadata = InstancesUtils.getInstancesAndMetadataFromLabels(
-							wekaSegmentation.getExamples(),
-							wekaSegmentation.getInputImageTitle(),
-							wekaSegmentation.settings,
-							wekaSegmentation.latestFeatureNames,
-							wekaSegmentation.getClassNames() );
-				}
-				else
-				{
-					return;
-				}
-
-
-				wekaSegmentation.getInstancesManager().
-						putInstancesAndMetadata( instancesAndMetadata );
-
+				String key = wekaSegmentation.putUpdatedExampleInstances();
 				updateComboBoxes();
 
-				FastRandomForest classifier = null;
-
-				// get instances instances
-				Instances instances = getCombinedSelectedInstancesFromGUI();
-				InstancesUtils.logInstancesInformation( instances );
-
-				if ( instances == null || this.isInterrupted() )
-				{
-					logger.error( "Please select one or multiple training instances." );
-					return;
-				}
-
-				classifier = wekaSegmentation.trainClassifier( instances, Prefs.getThreads() );
-
-				if ( classifier == null || this.isInterrupted() ) return;
-
-				// if wished for, train a second time
-				// only with important features
-				if ( wekaSegmentation.minFeatureUsageFactor > 0 )
-				{
-
-					// TODO: report fraction of rejected features
-					// such that the memory factor can be adjusted
-					// (less features need less memory during classification)
-
-					ArrayList< Integer > goners = AttributeSelector.getGoners(
-							classifier,
-							instances,
-							wekaSegmentation.minFeatureUsageFactor,
-							wekaSegmentation.getLogger() );
-
-					Instances instances2 = InstancesUtils.removeAttributes(
-							instances, goners );
-
-					logger.info ("\n# Second Training");
-
-					classifier = wekaSegmentation.trainClassifier( instances2, Prefs.getThreads() );
-
-					wekaSegmentation.getClassifierManager().setClassifier( classifier, instances2);
-				}
-				else
-				{
-					wekaSegmentation.getClassifierManager().setClassifier(
-							classifier, instances);
-				}
-
+				wekaSegmentation.trainClassifierWithFeatureSelection(
+						wekaSegmentation.
+								getInstancesManager().
+								get( key ) );
 
 				win.setButtonsEnabled( true );
+
 			}
 
-		}; newTask.start();
+		}; task.start();
 
 	}
 
@@ -2151,39 +2086,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// Disable rest of buttons until the instances has finished
 		win.setButtonsEnabled( false );
 
-		Thread newTask = new Thread() {
+		Thread task = new Thread() {
 			public void run()
 			{
 
-				InstancesAndMetadata instancesAndMetadata = null;
-
-				// compute instances data for new labels
-				wekaSegmentation.updateExamples();
-
-				if ( wekaSegmentation.getNumExamples() > 0 )
-				{
-
-					instancesAndMetadata = InstancesUtils.getInstancesAndMetadataFromLabels(
-							wekaSegmentation.getExamples(),
-							wekaSegmentation.getInputImageTitle(),
-							wekaSegmentation.settings,
-							wekaSegmentation.latestFeatureNames,
-							wekaSegmentation.getClassNames() );
-				}
-				else
-				{
-					return;
-				}
-
-				wekaSegmentation.getInstancesManager().
-						putInstancesAndMetadata( instancesAndMetadata );
-
+				wekaSegmentation.putUpdatedExampleInstances();
 				updateComboBoxes();
 				win.setButtonsEnabled( true );
 
 			}
 
-		}; newTask.start();
+		}; task.start();
 
 	}
 
@@ -2248,6 +2161,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					gd.addNumericField( "Number of iterations", 3.0, 0 );
 					gd.addNumericField( "Z chunk size", Prefs.getThreads(), 0 );
 					gd.addNumericField( "(nx,ny) for tiling", 3, 0 );
+					gd.addNumericField( "Radius for local instances pairs", 5, 0 );
 
 					gd.showDialog();
 
@@ -2258,6 +2172,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 					int numIterations = (int) gd.getNextNumber();
 					int zChunkSize = (int) gd.getNextNumber();
 					int nxyTiles = (int) gd.getNextNumber();
+					int localRadius = (int) gd.getNextNumber();
+
 
 					wekaSegmentation.trainIterativeFromLabelImage(
 							instancesKey,
@@ -2265,6 +2181,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							numIterations,
 							zChunkSize,
 							nxyTiles,
+							localRadius,
 							getIntervalFromGUI()
 					);
 
@@ -2292,16 +2209,25 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
-	public Instances getCombinedSelectedInstancesFromGUI()
+	public InstancesAndMetadata getCombinedSelectedInstancesFromGUI()
 	{
-		List selectedInstances = (List< String >) instancesList.getSelectedValuesList();
+		List<String> selectedInstances = (List< String >) instancesList.getSelectedValuesList();
 
 		if ( selectedInstances.size() == 0 ) return null;
 
-		Instances combinedInstances = wekaSegmentation.
-				getInstancesManager().getCombinedInstances( selectedInstances );
+		if ( selectedInstances.size() == 1 )
+		{
+			return wekaSegmentation.getInstancesManager().get( selectedInstances.get(0) );
+		}
+		else
+		{
+			logger.error( "Multiple selection currently not working ..." );
 
-		return combinedInstances;
+			//InstancesAndMetadata combinedInstances = wekaSegmentation.
+			//		getInstancesManager().getCombinedInstances( selectedInstances );
+
+			return null;
+		}
 
 	}
 
@@ -2313,6 +2239,15 @@ public class Weka_Deep_Segmentation implements PlugIn
 	void trainClassifier()
 	{
 
+		// get instances instances
+		InstancesAndMetadata instancesAndMetadata = getCombinedSelectedInstancesFromGUI();
+
+		if ( instancesAndMetadata == null )
+		{
+			logger.error( "Please select one or multiple training instances." );
+			return;
+		}
+
 		win.setButtonsEnabled( false );
 
 		// Thread to run the instances
@@ -2323,49 +2258,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			try
 			{
-
-				FastRandomForest classifier = null;
-
-				// get instances instances
-				Instances instances = getCombinedSelectedInstancesFromGUI();
-				InstancesUtils.logInstancesInformation( instances );
-
-				if ( instances == null || this.isInterrupted() )
-				{
-					logger.error( "Please select one or multiple training instances." );
-					return;
-				}
-
-				classifier = wekaSegmentation.trainClassifier( instances, Prefs.getThreads() );
-
-				if ( classifier == null || this.isInterrupted() ) return;
-
-				// if wished for, train a second time
-				// only with important features
-				if ( wekaSegmentation.minFeatureUsageFactor > 0 )
-				{
-
-					ArrayList< Integer > goners = AttributeSelector.getGoners(
-							classifier,
-							instances,
-							wekaSegmentation.minFeatureUsageFactor,
-							wekaSegmentation.getLogger() );
-
-					Instances instances2 = InstancesUtils.removeAttributes(
-							instances, goners );
-
-					logger.info ("\n# Second Training");
-
-					classifier = wekaSegmentation.trainClassifier( instances2, Prefs.getThreads() );
-
-					wekaSegmentation.getClassifierManager().setClassifier( classifier, instances2);
-				}
-				else
-				{
-					wekaSegmentation.getClassifierManager().setClassifier(
-							classifier, instances);
-				}
-
+				wekaSegmentation.trainClassifierWithFeatureSelection(  instancesAndMetadata );
 			}
 			catch( Exception e )
 			{
@@ -2377,7 +2270,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 			}
 
 			win.classificationComplete = true;
-			trainClassifierButton.setText("Train classifier");
 			win.setButtonsEnabled( true );
 
 			}
@@ -2450,8 +2342,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.stopCurrentTasks = false;
 				wekaSegmentation.isBusy = true;
 
-				Instances instances = getCombinedSelectedInstancesFromGUI();
-				wekaSegmentation.applyBgFgClassification( interval, instances );
+				InstancesAndMetadata iam = getCombinedSelectedInstancesFromGUI();
+				wekaSegmentation.applyBgFgClassification( interval, iam );
 
 				win.updateOverlay();
 				win.setButtonsEnabled( true );
@@ -2506,9 +2398,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
-	// TODO: is there a on-final version of an interval?
 	private FinalInterval getIntervalFromGUI( )
 	{
+
+		String rangeString = classificationRangeTextField.getText();
+
+		if ( rangeString.equals("all") )
+		{
+			return ( IntervalUtils.getInterval(
+					wekaSegmentation.getInputImage() ));
+		}
+
 		Roi roi = displayImage.getRoi();
 
 		if (roi == null || !(roi.getType() == Roi.RECTANGLE))
@@ -2535,7 +2435,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		// potentially adapt z and t range to user selection
 
-		String rangeString = classificationRangeTextField.getText();
 
 		try
 		{
@@ -2644,7 +2543,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		InstancesAndMetadata instancesAndMetadata =
 				wekaSegmentation.
 						getInstancesManager().
-							getInstancesAndMetadata( key );
+						get( key );
 
 		boolean status = InstancesUtils.
 				saveInstancesAndMetadataAsARFF( instancesAndMetadata, dirFile[0], dirFile[1] );
@@ -2915,8 +2814,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.settings.anisotropy, 2);
 		gd.addNumericField("Computation: Memory factor",
 				wekaSegmentation.memoryFactor, 1);
-		gd.addNumericField("Training: Label image instance sets per plane",
-				wekaSegmentation.getNumLabelImageInstancesPerPlaneAndClass(), 0);
+		gd.addNumericField("Label Image Training: Instance sets per plane and tile",
+				wekaSegmentation.getNumLabelImageInstancesPerPlaneTileAndClass(), 0);
 
 		/*
 		if(wekaSegmentation.getLoadedTrainingData() != null)
@@ -2934,10 +2833,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.fractionRandomFeatures, 2);
 		gd.addNumericField("Classifier: Minimum feature usage factor",
 				wekaSegmentation.minFeatureUsageFactor, 1);
-
-		gd.addNumericField("RF: Batch size per tree in percent", wekaSegmentation.getBatchSizePercent(), 0);
-		//gd.addNumericField("RF: Maximum tree depth [0 = None]", wekaSegmentation.maxDepth, 0);
-
+		gd.addStringField("RF: Batch size per tree in percent",
+				wekaSegmentation.settings.batchSizePercent);
 		gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
 				wekaSegmentation.getActiveChannelsAsString() );
 
@@ -2946,7 +2843,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			featuresToShow = wekaSegmentation.getFeaturesToShowAsString();
 
 		gd.addStringField("Show features [ID,ID,..]", featuresToShow );
-		gd.addStringField("Classification: Region tile size", wekaSegmentation.getTileSizeSetting());
+		gd.addStringField("Classification: Region tile size",
+				wekaSegmentation.getTileSizeSetting());
 		//gd.addNumericField("Number of region threads", wekaSegmentation.regionThreads, 0);
 		//gd.addNumericField("Number of threads inside a region", wekaSegmentation.threadsPerRegion, 0);
 		//gd.addNumericField("Number of RF instances threads", wekaSegmentation.numRfTrainingThreads, 0);
@@ -2999,97 +2897,25 @@ public class Weka_Deep_Segmentation implements PlugIn
 		if ( gd.wasCanceled() )
 			return false;
 
-		/*
-		final int numOfFeatures = availableFeatures.length;
-
-		final boolean[] newEnableFeatures = new boolean[numOfFeatures];
-
-		boolean featuresChanged = false;
-
-		// Read checked features and check if any of them changed
-		for(int i = 0; i < numOfFeatures; i++)
-		{
-			newEnableFeatures[i] = gd.getNextBoolean();
-			if (newEnableFeatures[i] != oldEnableFeatures[i])
-			{
-				featuresChanged = true;
-				final String name = availableFeatures[ i ];
-				// Macro recording
-				record(SET_FEATURE, new String[]{ name + "=" + newEnableFeatures[ i ] });
-			}
-		}
-
-		if(featuresChanged)
-		{
-			wekaSegmentation.setEnabledFeatures( newEnableFeatures );
-		}
-		*/
-
 		wekaSegmentation.settings.binFactor = (int) gd.getNextNumber();
 		wekaSegmentation.settings.maxBinLevel = (int) gd.getNextNumber();
 		wekaSegmentation.settings.maxDeepConvLevel = (int) gd.getNextNumber();
 		wekaSegmentation.settings.anisotropy = gd.getNextNumber();
 		wekaSegmentation.memoryFactor = gd.getNextNumber();
-		wekaSegmentation.setLabelImageInstancesPerPlaneAndClass( (int) gd.getNextNumber());
+		wekaSegmentation.setLabelImageInstancesPerPlaneTileAndClass( (int) gd.getNextNumber());
 
 		// Set classifier and options
 		wekaSegmentation.setNumTrees((int) gd.getNextNumber());
 		wekaSegmentation.accuracy = (double) gd.getNextNumber();
 		wekaSegmentation.fractionRandomFeatures = (double) gd.getNextNumber();
 		wekaSegmentation.minFeatureUsageFactor = (double) gd.getNextNumber();
-
-		wekaSegmentation.setBatchSizePercent((int) gd.getNextNumber());
-		//wekaSegmentation.maxDepth = (int) gd.getNextNumber();
-
+		wekaSegmentation.setBatchSizePercent( gd.getNextString() );
 		wekaSegmentation.setActiveChannelsFromString(gd.getNextString());
-
 		wekaSegmentation.setFeaturesToShowFromString(gd.getNextString());
-		//wekaSegmentation.regionThreads = (int) gd.getNextNumber();
-		//wekaSegmentation.threadsPerRegion = (int) gd.getNextNumber();
-		//wekaSegmentation.numRfTrainingThreads = (int) gd.getNextNumber();
-
 		wekaSegmentation.setTileSizeSetting( gd.getNextString() );
-		//wekaSegmentation.tilingDelay = (int) gd.getNextNumber();
-		//wekaSegmentation.settings.imageBackground = (int) gd.getNextNumber();
-		//wekaSegmentation.setResolutionWeightsFromString( gd.getNextString() );
-		//wekaSegmentation.uncertaintyLUTdecay = (double) gd.getNextNumber();
-
-		/*
-		c = (Object)m_ClassifierEditor.getValue();
-	    String options = "";
-	    final String[] optionsArray = ((OptionHandler)c).getOptions();
-	    if (c instanceof OptionHandler)
-	    {
-	      options = Utils.joinOptions( optionsArray );
-	    }
-	    //System.out.println("Classifier after choosing: " + c.getClass().getName() + " " + options);
-	    if( !originalClassifierName.equals( c.getClass().getName() )
-	    		|| !originalOptions.equals( options ) )
-	    {
-	    	AbstractClassifier cls;
-	    	try{
-	    		cls = (AbstractClassifier) (c.getClass().newInstance());
-	    		cls.setOptions( optionsArray );
-	    	}
-	    	catch(Exception ex)
-	    	{
-	    		ex.printStackTrace();
-	    		return false;
-	    	}
-
-	    	// Assing new classifier
-	    	wekaSegmentation.setClassifier( cls );
-
-	    	// Set the instances flag to false
-	    	win.trainingComplete = false;
-
-	    	// Macro recording
-			record(SET_CLASSIFIER, new String[] { c.getClass().getName(), options} );
-
-	    	IJ.log("Current classifier: " + c.getClass().getName() + " " + options);
-	    }*/
 
 		boolean classNameChanged = false;
+
 		for(int i = 0; i < wekaSegmentation.getNumClasses(); i++)
 		{
 			String s = gd.getNextString();

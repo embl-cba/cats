@@ -9,6 +9,7 @@ import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.IntervalUtils;
 import trainableDeepSegmentation.WekaSegmentation;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 import static bigDataTools.utils.Utils.getDataCubeFromImagePlus;
@@ -111,6 +112,12 @@ public class ResultImageMemory implements ResultImage {
                 IntervalUtils.convertIntervalToRegion5D( interval ));
 
         return cube;
+    }
+
+    public ImagePlus getImagePlus()
+    {
+        ImagePlus imp = result.duplicate();
+        return imp;
     }
 
 }

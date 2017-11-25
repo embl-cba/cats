@@ -23,7 +23,9 @@
 
 package hr.irb.fastRandomForest;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Vector;
 
 import weka.classifiers.AbstractClassifier;
@@ -221,6 +223,21 @@ public class FastRandomForest
 
     return attributeUsages; // Tischi
   }
+
+
+  Map< Integer, ArrayList< Integer > >[] labelIds = null;
+
+  /**
+   * Tischi: Set list of label ids.
+   *
+   * @return Array of attribute usages.
+   */
+  public void setLabelIds( Map< Integer, ArrayList< Integer > >[] labelIds ){
+
+    this.labelIds = labelIds;
+
+  }
+
 
 
   /**

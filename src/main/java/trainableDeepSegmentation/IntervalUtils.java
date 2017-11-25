@@ -1,6 +1,7 @@
 package trainableDeepSegmentation;
 
 import bigDataTools.Region5D;
+import ij.ImagePlus;
 import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
@@ -221,5 +222,21 @@ public abstract class IntervalUtils {
         WekaSegmentation.logger.info("Number of tiles: " + tiles.size());
 
         return (tiles);
+    }
+
+    public static FinalInterval getInterval( ImagePlus imp )
+    {
+        long[] min = new long[5];
+        long[] max = new long[5];
+
+        max[ X ] = imp.getWidth() - 1;
+        max[ Y ] = imp.getHeight() - 1;
+        max[ Z ] = imp.getNSlices() - 1;
+        max[ C ] = imp.getNChannels() - 1;
+        max[ T ] = imp.getNFrames() - 1;
+
+        return new FinalInterval( min, max );
+
+
     }
 }

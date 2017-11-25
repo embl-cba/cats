@@ -175,6 +175,51 @@ public class InstancesAndMetadata {
 
     }
 
+    public ArrayList< Integer > getInstanceIdsOfLabelId( int selectedLabelId )
+    {
+        ArrayList< Integer > instanceIds = new ArrayList<>(  );
+
+        ArrayList< Double > labelIds = metadata.get( Metadata.Metadata_Label_Id );
+        for ( int i = 0; i < labelIds.size(); ++i )
+        {
+            if ( labelIds.get( i ) == selectedLabelId )
+            {
+                instanceIds.add( i );
+            }
+        }
+
+        return instanceIds;
+    }
+
+    public Map< Integer, ArrayList < Integer > >[] getLabelList()
+    {
+
+        Map< Integer, ArrayList < Integer > >[] labels =
+                new LinkedHashMap[ instances.numClasses() ];
+
+        for ( int c = 0; c < instances.numClasses(); ++c )
+        {
+            labels[c] = new LinkedHashMap<>(  );
+        }
+
+        ArrayList< Double > labelIds = metadata.get( Metadata.Metadata_Label_Id );
+        for ( int i = 0; i < labelIds.size(); ++i )
+        {
+            int c = ( int ) instances.get( i ).classValue();
+            int l = ( int ) ( double ) metadata.get( Metadata.Metadata_Label_Id ).get( i );
+
+            if ( ! labels[ c ].containsKey( l ) )
+            {
+                labels[ c ].put( l, new ArrayList<>() );
+            }
+
+            labels[ c ].get( l ).add( i );
+        }
+
+        return labels;
+    }
+
+
 }
 
 

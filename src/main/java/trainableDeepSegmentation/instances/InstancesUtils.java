@@ -101,6 +101,7 @@ public class InstancesUtils {
             FinalInterval interval,
             int numInstancesPerClassAndPlane,
             int numThreads,
+            int localRadius,
             boolean isFirstTime)
     {
 
@@ -108,7 +109,6 @@ public class InstancesUtils {
 
             public InstancesAndMetadata call()
             {
-                int radius = 5;
                 final int numClasses = wekaSegmentation.getNumClasses(); // TODO: get from label image
 
                 int t = ( int ) interval.min( T );
@@ -182,7 +182,7 @@ public class InstancesUtils {
                                             labelImage, z, t,
                                             interval,
                                             xy,
-                                            radius );
+                                            localRadius );
 
                             for ( int localClass = 0; localClass < numClasses; ++localClass )
                             {
@@ -199,7 +199,7 @@ public class InstancesUtils {
 
                                     if ( xyLocal == null )
                                     {
-                                        // no local coordinate has been found
+                                        // no local coordinate found
                                         // thus we take a useful global one
                                         xyLocal = getUsefulRandomCoordinate( localClass, classCoordinates, rand );
                                     }
@@ -215,7 +215,7 @@ public class InstancesUtils {
 
                                 addToInstancesDistribution( instancesDistribution, xyLocal, interval );
 
-                                removeNeighbors( localClass, classCoordinates, xyLocal, radius );
+                                removeNeighbors( localClass, classCoordinates, xyLocal, localRadius );
 
                                 Instance instance = getInstance( featureProvider, xyLocal, featureSlice, localClass );
 
@@ -251,6 +251,25 @@ public class InstancesUtils {
         };
     }
 
+
+    public ArrayList< Integer >[] getLabelIdsPerClass( InstancesAndMetadata iam )
+    {
+        int numClasses = iam.instances.numClasses();
+        ArrayList< Integer >[]  labelIdsPerClass = new ArrayList[numClasses];
+
+        for ( int iClass = 0; iClass < numClasses; ++iClass )
+        {
+            labelIdsPerClass[iClass] = new ArrayList<>();
+        }
+
+        for ( int i = 0; i < iam.instances.size(); ++i )
+        {
+            labelIdsPerClass [ (int) iam.getInstance( i ).classValue() ]
+                    .add( (int) iam.getMetadata( Metadata_Label_Id, i ) );
+        }
+
+        return labelIdsPerClass;
+    }
 
     private static void addToInstancesDistribution( ImageProcessor instancesDistribution,
                                              int[] xy,
@@ -630,12 +649,11 @@ public class InstancesUtils {
 
 
 
-    public static Instances removeAttributes( Instances instances,
+    public static InstancesAndMetadata removeAttributes( InstancesAndMetadata instancesAndMetadata,
                                               ArrayList< Integer > goners )
     {
 
-
-        Instances attributeSubset = new Instances( instances );
+        Instances attributeSubset = new Instances( instancesAndMetadata.instances );
 
         for( int j = goners.size() - 1; j >= 0; j-- )
         {
@@ -643,7 +661,7 @@ public class InstancesUtils {
             attributeSubset.deleteAttributeAt( id );
         }
 
-        return ( attributeSubset );
+        return ( new InstancesAndMetadata( attributeSubset, instancesAndMetadata.metadata ) );
     }
 
     public static void logInstancesInformation( Instances instances )

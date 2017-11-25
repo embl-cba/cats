@@ -21,10 +21,14 @@
 
 package hr.irb.fastRandomForest;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Random;
 
+import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import weka.core.Instances;
+import weka.core.Utils;
 
 /**
  * Stores a dataset that in FastRandomTrees use for instances. The data points
@@ -256,7 +260,90 @@ public class DataCache {
 
   }
 
-  
+
+
+  /**
+   * TISCHI: ... Uses sampling with replacement to create a new DataCache from an existing
+   * one.
+   *
+   * The probability of sampling a specific instance does not depend on its
+   * weight. When an instance is sampled multiple times, its weight in the new
+   * DataCache increases to a multiple of the original weight.
+   *
+   * @param bagSize If this is equal to the DataCache.numInstances, makes a
+   * a bootstrap sample (n of of in
+   * @param random A random number generator.
+   * @return a new DataCache - consult "DataCache(DataCache origData)"
+   * constructor to see what's deep / shallow copied
+   */
+  public DataCache resampleBalancingLabels( int bagSizePercent,
+                                            Map< Integer, ArrayList < Integer > >[] labelIds,
+                                            Random random ) {
+
+    DataCache result =
+            new DataCache(this); // makes shallow copy of vals matrix
+
+    double[] newWeights = new double[ numInstances ]; // all 0.0 by default
+
+    // for each class collect instances
+    // represented a fraction (i.e. bagFraction) of distinct labelIds
+
+    //ArrayList< Integer >[] selectedLabelIds = new ArrayList[ numClasses ];
+    for ( int c = 0; c < numClasses; ++c )
+    {
+      //selectedLabelIds[c] = new ArrayList<>(  );
+      for ( int l : labelIds[c].keySet() )
+      {
+        if ( random.nextInt( 101 ) < bagSizePercent )
+        {
+          ArrayList< Integer > ids = labelIds[c].get( l );
+
+          // put weight for balancing training data of this tree
+          // - divide by number of available labels of this class
+          // - divide by number of instances in this label
+
+          double weight = 1.0
+                  / ( labelIds[c].size() * labelIds[c].get(l).size() );
+
+          for ( int i : ids )
+          {
+            result.numInBag++;
+            result.inBag[ i ] = true;
+            newWeights[ i ] = weight;
+          }
+        }
+      }
+    }
+
+    /*
+    // now that we know how many instances have been selected per class
+    // let's set weights to balance the classes.
+    int max = instancesPerClass [ Utils.maxIndex( instancesPerClass ) ];
+    double[] classWeights = new double[ numClasses ];
+    for ( int c = 0; c < numClasses; ++c )
+    {
+      classWeights[c] = 1.0 * max / instancesPerClass[ c ];
+    }
+
+    for ( int i = 0; i < newWeights.length; ++i )
+    {
+      if ( result.inBag[i] )
+      {
+        newWeights[ i ] = classWeights [ (int) iam.getInstance( i ).classValue() ];
+      }
+    }
+    */
+
+    result.instWeights = newWeights;
+
+    // we also need to fill sortedIndices by peeking into the inBag array, but
+    // this can be postponed until the tree instances begins
+    // we will use the "createInBagSortedIndices()" for this
+
+    return result;
+
+  }
+
 
   /** Invoked only when tree is trained. */
   protected void createInBagSortedIndices() {

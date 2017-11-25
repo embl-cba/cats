@@ -163,7 +163,23 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
         // create the in-bag dataset (and be sure to remember what's in bag)
         // for computing the out-of-bag error later
-        DataCache bagData = myData.resample(bagSize, random);
+
+        DataCache bagData;
+
+        // Tischi
+        if ( motherForest.labelIds != null )
+        {
+          bagData = myData.resampleBalancingLabels(
+                  m_BagSizePercent,
+                  motherForest.labelIds,
+                  random );
+        }
+        else
+        {
+           bagData = myData.resample( bagSize, random );
+        }
+
+
         bagData.reusableRandomGenerator = bagData.getRandomNumberGenerator(
           random.nextInt());
         inBag[treeIdx] = bagData.inBag; // store later for OOB error calculation

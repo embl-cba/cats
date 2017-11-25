@@ -32,7 +32,9 @@ import ij.ImageStack;
 import ij.Prefs;
 import ij.gui.Roi;
 import net.imglib2.FinalInterval;
+import trainableDeepSegmentation.classification.AttributeSelector;
 import trainableDeepSegmentation.classification.ClassifierManager;
+import trainableDeepSegmentation.classification.ClassifierUtils;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.examples.ExamplesUtils;
 import trainableDeepSegmentation.instances.InstancesAndMetadata;
@@ -41,7 +43,6 @@ import trainableDeepSegmentation.results.ResultImageFrameSetter;
 import trainableDeepSegmentation.instances.InstancesUtils;
 import trainableDeepSegmentation.instances.InstancesManager;
 import weka.classifiers.AbstractClassifier;
-import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
@@ -141,6 +142,9 @@ public class WekaSegmentation {
 	 * number of random features per node in the fast random forest classifier
 	 */
 	private int numRandomFeatures = 50;
+
+	public int numThreadsForClassifierTraining = Prefs.getThreads();
+
 	/**
 	 * fraction of random features per node in the fast random forest classifier
 	 */
@@ -149,10 +153,7 @@ public class WekaSegmentation {
 	 * maximum depth per tree in the fast random forest classifier
 	 */
 	public int maxDepth = 0;
-	/**
-	 * maximum depth per tree in the fast random forest classifier
-	 */
-	private int batchSizePercent = 10;
+
 	/**
 	 * list of class names on the loaded data
 	 */
@@ -166,7 +167,7 @@ public class WekaSegmentation {
 
 	public Settings settings = new Settings();
 
-	public double minFeatureUsageFactor = 0.0; // TODO: does not seem
+	public double minFeatureUsageFactor = 1.0;
 
 	private boolean computeFeatureImportance = false;
 
@@ -241,12 +242,64 @@ public class WekaSegmentation {
 		return computeFeatureImportance;
 	}
 
+	double getAvgExampleLength()
+	{
+		double totalLength = 0;
 
+		for ( Example example : examples )
+		{
+			totalLength += example.points.length;
+		}
 
-	/**
-	 * use neighborhood flag
-	 */
-	private boolean useNeighbors = false;
+		return totalLength / getNumExamples();
+	}
+
+	public void setBatchSizePercent( String batchSizePercent )
+	{
+		if ( batchSizePercent.equals( "Auto" )
+				|| batchSizePercent.equals( "auto" )  )
+		{
+			settings.batchSizePercent = "auto";
+		}
+		else
+		{
+			try
+			{
+				settings.batchSizePercent = "" + Integer.parseInt( batchSizePercent );
+			}
+			catch ( NumberFormatException e )
+			{
+				logger.error( "Batch size must be a number (1-100) or 'auto'" +
+						"\nSetting to 'auto' now." );
+				settings.batchSizePercent = "auto";
+			}
+		}
+
+	}
+
+	public int getBatchSizePercent( )
+	{
+		int avgNumPointsFromEachExamplePerTree = 5;
+
+		if ( settings.batchSizePercent.equals("auto") && getNumExamples() > 0 )
+		{
+			logger.info( "\n# Auto setting batch size..." );
+
+			double avgExampleLength = getAvgExampleLength();
+			logger.info( "Average example length: " + avgExampleLength );
+			double batchSizePercent =
+					avgNumPointsFromEachExamplePerTree
+							* ( 100.0 / avgExampleLength ) ;
+			logger.info( "Batch size [%]: " + batchSizePercent );
+
+			return Math.max( 1, (int) batchSizePercent );
+
+		}
+		else
+		{
+			return Integer.parseInt( settings.batchSizePercent );
+		}
+	}
 
 	public static final String SEM_IMAGING = "Scanning EM";
 	public static final String FLUORESCENCE_IMAGING = "Fluorescence";
@@ -292,12 +345,12 @@ public class WekaSegmentation {
 
 	private AtomicInteger rfStatsMaximumTreesUsed = new AtomicInteger(0);
 
-	public int getNumLabelImageInstancesPerPlaneAndClass()
+	public int getNumLabelImageInstancesPerPlaneTileAndClass()
 	{
 		return labelImageInstancesPerPlaneAndClass;
 	}
 
-	public void setLabelImageInstancesPerPlaneAndClass( int labelImageInstancesPerPlaneAndClass )
+	public void setLabelImageInstancesPerPlaneTileAndClass( int labelImageInstancesPerPlaneAndClass )
 	{
 		this.labelImageInstancesPerPlaneAndClass = labelImageInstancesPerPlaneAndClass;
 	}
@@ -326,18 +379,20 @@ public class WekaSegmentation {
 			int numIterations,
 			int zChunkSize,
 			int nxyTiles,
+			int localRadius,
 			FinalInterval interval )
 	{
 
 		if ( interval == null ) return;
 
+		minFeatureUsageFactor = 0.0; // TODO: somehow this strategy does not seem to work otherwise..
+		settings.batchSizePercent = "100"; // since we choose uncorrelated features anyway
+		numThreadsForClassifierTraining = zChunkSize;
 
 		// TODO: obtain from label image
 		settings.classNames = new ArrayList<>();
 		settings.classNames.add( "label_im_class_0" );
 		settings.classNames.add( "label_im_class_1" );
-
-		batchSizePercent = 100; // since we chose uncorrelated features anyway
 
 		FeatureProvider featureProvider = null;
 		ArrayList< int[][] > labelImageClassificationAccuraciesHistory = null;
@@ -386,8 +441,8 @@ public class WekaSegmentation {
 					zChunk = zChunks.get( iChunk );
 
 					logger.info( "\n# Instances from label image"
-							+ ", tile " + iTile + "/" + tiles.size()
-							+ ", iteration " + i + "/" + numIterations
+							+ ", tile " + (iTile+1) + "/" + tiles.size()
+							+ ", iteration " + (i+1) + "/" + numIterations
 							+ ", zMin " + zChunk[0] + ", zMax " + zChunk[1] );
 
 					if ( stopCurrentTasks ) return;
@@ -415,8 +470,9 @@ public class WekaSegmentation {
 												featureProvider,
 												instancesKey,
 												newInstancesInterval,
-												getNumLabelImageInstancesPerPlaneAndClass(),
+												getNumLabelImageInstancesPerPlaneTileAndClass(),
 												numThreadsPerSlice,
+												localRadius,
 												isFirstTime )
 								)
 						);
@@ -448,7 +504,7 @@ public class WekaSegmentation {
 						{
 							// TODO: could it be that this is slooow?
 							instancesManager.
-									getInstancesAndMetadata( instancesKey ).
+									get( instancesKey ).
 									appendInstancesAndMetadata( instancesAndMetadata );
 						}
 
@@ -458,15 +514,16 @@ public class WekaSegmentation {
 					futures = null;
 					exe.shutdown();
 
-					Instances instances = getInstancesManager().getInstances( instancesKey );
+					InstancesAndMetadata instancesAndMetadata = getInstancesManager().get( instancesKey );
 
-					if ( instances == null ) return;
+					if ( instancesAndMetadata == null ) return;
 
-					FastRandomForest classifier = trainClassifier( instances, zChunkSize );
+					FastRandomForest classifier = trainClassifier( instancesAndMetadata );
 
 					if ( classifier == null ) return;
 
-					String key = getClassifierManager().setClassifier( classifier, instances );
+					String key = getClassifierManager().setClassifier( classifier,
+							instancesAndMetadata.getInstances() );
 
 					if ( minFeatureUsageFactor > 0 )
 					{
@@ -528,7 +585,7 @@ public class WekaSegmentation {
 								tile
 						) );
 
-				numInstancesHistory.add( instancesManager.getInstancesAndMetadata( instancesKey ).getInstances().size() );
+				numInstancesHistory.add( instancesManager.get( instancesKey ).getInstances().size() );
 
 				InstancesUtils.reportClassificationAccuracies(
 						labelImageClassificationAccuraciesHistory.get(
@@ -836,8 +893,6 @@ public class WekaSegmentation {
 		if ( examples == null ) return 0;
 		else return examples.size();
 	}
-
-
 
 	public void setExamples( ArrayList<Example> examples )
 	{
@@ -1158,13 +1213,15 @@ public class WekaSegmentation {
 
 
 	public void applyBgFgClassification( FinalInterval interval,
-										 Instances instances )
+										 InstancesAndMetadata instancesAndMetadata )
 	{
 
-		ArrayList< Integer > originalClasses = setInstancesClassesToBgFg( instances );
-		FastRandomForest classifierBgFg = trainClassifier( instances, Prefs.getThreads() );
-		String classifierBgFgKey = classifierManager.setClassifier( classifierBgFg, instances );
-		resetInstancesClasses( instances, originalClasses );
+		ArrayList< Integer > originalClasses =
+				setInstancesClassesToBgFg( instancesAndMetadata.getInstances() );
+		FastRandomForest classifierBgFg = trainClassifier( instancesAndMetadata );
+		String classifierBgFgKey = classifierManager.setClassifier( classifierBgFg,
+				instancesAndMetadata.getInstances() );
+		resetInstancesClasses( instancesAndMetadata.getInstances(), originalClasses );
 
 		// reroute classification to BgFg result image
 		ResultImage originalResultImage = resultImage;
@@ -1251,6 +1308,35 @@ public class WekaSegmentation {
 		settings.binFactor = (int) instancesAndMetadata.getMetadata( Metadata_Settings_BinFactor, 0 );
 		settings.maxBinLevel = (int) instancesAndMetadata.getMetadata( Metadata_Settings_MaxBinLevel, 0 );
 
+	}
+
+
+	public String putUpdatedExampleInstances()
+	{
+		InstancesAndMetadata instancesAndMetadata = null;
+
+		// compute instances data for new labels
+		updateExamples();
+
+		if ( getNumExamples() > 0 )
+		{
+			instancesAndMetadata = InstancesUtils.getInstancesAndMetadataFromLabels(
+					getExamples(),
+					getInputImageTitle(),
+					settings,
+					latestFeatureNames,
+					getClassNames() );
+		}
+		else
+		{
+			return null;
+		}
+
+
+		String key = getInstancesManager().
+				putInstancesAndMetadata( instancesAndMetadata );
+
+		return key;
 	}
 
 	public void updateExamples()
@@ -1718,20 +1804,56 @@ public class WekaSegmentation {
 		return metaData;
 	}
 
+	public void trainClassifierWithFeatureSelection (
+			InstancesAndMetadata instancesAndMetadata )
+	{
+		FastRandomForest classifier = trainClassifier( instancesAndMetadata );
+
+		if ( classifier == null ) return;
+
+		// if wished for, train a second time
+		// only with important features
+		if ( minFeatureUsageFactor > 0 )
+		{
+			ArrayList< Integer > goners = AttributeSelector.getGoners(
+					classifier,
+					instancesAndMetadata.getInstances(),
+					minFeatureUsageFactor,
+					logger );
+
+			InstancesAndMetadata instancesWithFeatureSelection
+					= InstancesUtils.removeAttributes( instancesAndMetadata, goners );
+
+			logger.info ("\n# Second Training");
+
+			classifier = trainClassifier( instancesWithFeatureSelection );
+
+			getClassifierManager().setClassifier( classifier,
+					instancesWithFeatureSelection.getInstances());
+		}
+		else
+		{
+			getClassifierManager().setClassifier( classifier,
+					instancesAndMetadata.getInstances() );
+		}
+
+	}
+
 
 	/**
 	 * Train classifier with the current instances
 	 * and current classifier settings
 	 * and current active features
 	 */
-	public FastRandomForest trainClassifier( Instances instances, int numThreads )
+	public FastRandomForest trainClassifier(
+			InstancesAndMetadata iam )
 	{
 		isTrainingCompleted = false;
 
 		// Train the classifier on the current data
 		logger.info("\n# Train classifier");
 
-		InstancesUtils.logInstancesInformation( instances );
+		InstancesUtils.logInstancesInformation( iam.getInstances() );
 
 		final long start = System.currentTimeMillis();
 
@@ -1742,32 +1864,35 @@ public class WekaSegmentation {
 		}
 
 		// Set up the classifier
-		numRandomFeatures = (int) Math.ceil(1.0 * instances.numAttributes() * fractionRandomFeatures);
+		numRandomFeatures = (int) Math.ceil(1.0 * iam.getInstances().numAttributes() * fractionRandomFeatures);
 
 		FastRandomForest classifier = new FastRandomForest();
 		classifier.setSeed( (new Random()).nextInt() );
 		classifier.setMaxDepth( maxDepth );
 		classifier.setNumTrees( getNumTrees() );
-		classifier.setNumThreads( numThreads );
+		classifier.setNumThreads( numThreadsForClassifierTraining );
 		classifier.setNumFeatures( numRandomFeatures );
-		classifier.setBatchSize("" + getBatchSizePercent());
+		classifier.setBatchSize( "" + getBatchSizePercent() );
 		classifier.setComputeImportances( false ); // using own method currently
 
 		// balance traces training data
+		// Instances balancedInstances = instancesAndMetadata.getInstances();
 
-		Instances balancedInstances = instances;
-
-		if ( labelImage == null )
+		if ( getNumExamples() > 0 )
 		{
-			logger.info( "\nBalancing training data..." );
-			balancedInstances = balanceTrainingData( instances );
-			InstancesUtils.logInstancesInformation( balancedInstances );
+			//logger.info( "\nBalancing training data..." );
+			//balancedInstances = balanceTrainingData( instances );
+			//InstancesUtils.logInstancesInformation( balancedInstances );
+
+			classifier.setLabelIds( iam.getLabelList() );
+
 		}
+
 
 		try
 		{
 			logger.info( "\n" );
-			classifier.buildClassifier( balancedInstances );
+			classifier.buildClassifier( iam.getInstances() );
 		}
 		catch (InterruptedException ie)
 		{
@@ -1782,7 +1907,8 @@ public class WekaSegmentation {
 
 		final long end = System.currentTimeMillis();
 
-		reportClassifierCharacteristics( classifier, instances );
+		ClassifierUtils.reportClassifierCharacteristics( classifier,
+				iam.getInstances() );
 
 		logger.info("Trained classifier in " + (end - start) + " ms.");
 
@@ -1790,8 +1916,6 @@ public class WekaSegmentation {
 
 		return classifier;
 	}
-
-
 
 	public void applyClassifierWithTiling( String classifierKey,
 										   FinalInterval interval,
@@ -1885,86 +2009,6 @@ public class WekaSegmentation {
 
 		// we're done
 		exe.shutdown();
-
-	}
-
-	// TODO: make static!
-	public void reportClassifierCharacteristics(
-			FastRandomForest classifier,
-			Instances instances)
-	{
-
-		logger.info( "\n# Classifier characteristics");
-
-		int numDecisionNodes = classifier.getDecisionNodes();
-
-		int[] usages = classifier.getAttributeUsages();
-		ArrayList< Attribute > attributes =
-				Collections.list( instances.enumerateAttributes() );
-
-		NamesAndUsages[] namesAndUsages = new NamesAndUsages[usages.length];
-
-		for ( int i = 0; i < usages.length; ++i )
-		{
-			namesAndUsages[i] = new NamesAndUsages(usages[ i ], attributes.get( i ).name() );
-		}
-
-		Arrays.sort( namesAndUsages, Collections.reverseOrder() );
-
-		double avgRfTreeSize = numDecisionNodes / getNumTrees();
-
-		double avgTreeDepth = 1.0 + Math.log(avgRfTreeSize) / Math.log(2.0);
-		if ( numDecisionNodes == 0 ) avgTreeDepth = 1;
-
-		double randomUsage = 1.0 * numDecisionNodes / instances.numAttributes();
-		int minFeatureUsage = (int) Math.ceil( minFeatureUsageFactor * randomUsage );
-
-		logger.info("## Most used features: ");
-		for (int f = Math.min( 9, namesAndUsages.length - 1 ); f >= 0; f--)
-		{
-			logger.info(
-					String.format("Relative usage: %.1f", namesAndUsages[f].usage / randomUsage ) +
-							"; Absolute usage: " + namesAndUsages[f].usage +
-							"; ID: " + "" + "; Name: " + namesAndUsages[f].name );
-		}
-
-		logger.info("## Further information: ");
-
-		logger.info("Average number of decision nodes per tree: " +
-				avgRfTreeSize);
-
-		logger.info("Average tree depth: log2(numDecisionNodes) + 1 = " +
-				avgTreeDepth);
-
-		logger.info("Number of features: " + instances.numAttributes() );
-
-		logger.info("Batch size [%]: " + batchSizePercent );
-
-		logger.info("Number of instances: " + instances.size() );
-
-		logger.info("Average number of instances per tree = numInstances * batchSizePercent/100: "
-				+ batchSizePercent / 100.0 * instances.size() );
-
-		// Print classifier information
-		logger.info( classifier.toString() );
-
-	}
-
-
-	private class NamesAndUsages implements Comparable<NamesAndUsages > {
-
-		private int usage;
-		private String name;
-
-		public NamesAndUsages( int usage, String name) {
-			this.usage = usage;
-			this.name = name;
-		}
-
-		@Override
-		public int compareTo(NamesAndUsages o) {
-			return (int)(this.usage - o.usage);
-		}
 
 	}
 
@@ -2514,16 +2558,6 @@ public class WekaSegmentation {
 		return numOfTrees;
 	}
 
-	public void setBatchSizePercent( int percent )
-	{
-		batchSizePercent = percent;
-	}
-
-	public int getBatchSizePercent()
-	{
-		return batchSizePercent;
-	}
-
 	public ArrayList < Integer > getFeaturesToShow()
 	{
 		return featuresToShow;
@@ -2538,7 +2572,6 @@ public class WekaSegmentation {
 		}
 		return ss;
 	}
-
 
 	public void setFeaturesToShowFromString( String featuresToShow )
 	{

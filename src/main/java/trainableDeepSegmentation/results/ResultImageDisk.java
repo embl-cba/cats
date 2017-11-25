@@ -88,7 +88,6 @@ public class ResultImageDisk implements ResultImage {
         return dataCube;
     }
 
-
     private ImagePlus createStream( String directory, long[] dimensions )
     {
         // TODO: check for cancel!
@@ -153,4 +152,9 @@ public class ResultImageDisk implements ResultImage {
     }
 
 
+    public ImagePlus getImagePlus()
+    {
+        logger.error( "Currently not implemented for disk resident result images." );
+        return null;
+    }
 }

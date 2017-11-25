@@ -33,4 +33,5 @@ public interface ResultImage {
 
     ImagePlus getDataCube( FinalInterval interval );
 
+    ImagePlus getImagePlus();
 }

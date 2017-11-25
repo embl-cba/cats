@@ -41,7 +41,7 @@ public class InstancesManager {
         return ( instancesMap.get( key ).instances );
     }
 
-    public InstancesAndMetadata getInstancesAndMetadata( String key )
+    public InstancesAndMetadata get( String key )
     {
         return ( instancesMap.get( key ) );
     }
@@ -51,10 +51,10 @@ public class InstancesManager {
         return ( instancesMap.keySet() );
     }
 
-    public Instances getCombinedInstances( List< String > keys )
+    public InstancesAndMetadata getCombinedInstances( List< String > keys )
     {
 
-        Instances combined = new Instances( getInstances( keys.get( 0 ) ), 0 );;
+        Instances combinedInstances = new Instances( getInstances( keys.get( 0 ) ), 0 );
 
         for ( int i = 0; i < keys.size(); ++i )
         {
@@ -62,12 +62,12 @@ public class InstancesManager {
 
             for( Instance instance : nextInstances )
             {
-                combined.add( instance );
+                combinedInstances.add( instance );
             }
 
         }
 
-        return combined;
+        return new InstancesAndMetadata( combinedInstances, null );
 
     }
 
