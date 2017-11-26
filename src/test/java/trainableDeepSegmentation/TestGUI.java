@@ -116,7 +116,7 @@ public class TestGUI {
 		weka_segmentation.assignResultImage( weka_segmentation.RESULT_IMAGE_RAM );
 		weka_segmentation.getWekaSegmentation().setImagingModality( WekaSegmentation.SEM_IMAGING );
 		weka_segmentation.setImagingModality( WekaSegmentation.SEM_IMAGING );
-		weka_segmentation.getWekaSegmentation().setNumTrees( 50 );
+		weka_segmentation.getWekaSegmentation().setNumTrees( 200 );
 		weka_segmentation.getWekaSegmentation().settings.binFactor = 2;
 
 		ImagePlus imp = IJ.openImage( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train" +

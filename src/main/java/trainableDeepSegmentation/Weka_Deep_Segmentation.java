@@ -130,7 +130,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** apply classifier button */
 	private JButton applyClassifierButton = null;
 
-	private JTextField classificationRangeTextField = null;
+	private JComboBox rangeComboBox = null;
 
 	private JTextField imageBackgroundTextField = null;
 
@@ -148,13 +148,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String TRAIN_FROM_LABEL_IMAGE = "Train from label image";
 	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier";
 	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
-
+	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
 
 	// TODO: how to know the settings associated with instances data
 	// ??
 	private JButton executeIoButton = null;
 
-	private JComboBox ioComboBox = new JComboBox(
+	private JComboBox actionComboBox = new JComboBox(
 			new String[] {
 					UPDATE_LABELS_AND_TRAIN,
 					TRAIN_CLASSIFIER,
@@ -163,6 +163,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					IO_SAVE_INSTANCES,
 					IO_LOAD_LABEL_IMAGE,
 					TRAIN_FROM_LABEL_IMAGE,
+					GET_LABEL_IMAGE_TRAINING_ACCURACIES,
 					RECOMPUTE_LABELS,
 					APPLY_BG_FG_CLASSIFIER
 			} );
@@ -286,6 +287,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String TRAINING_DATA_TRACES = "Traces";
 	public static final String TRAINING_DATA_LABEL_IMAGE = "Label image";
 
+
+	public static final String SELECTION = "Selected ROI";
+	public static final String SELECTION_PM10Z = "Current ROI +/- 10 planes";
+	public static final String WHOLE_DATA_SET = "Whole data set";
+
 	private LabelManager labelManager = null;
 
 	private boolean isFirstTime = true;
@@ -372,7 +378,16 @@ public class Weka_Deep_Segmentation implements PlugIn
 		applyClassifierButton.setToolTipText("Apply classifier");
 		applyClassifierButton.setEnabled(false);
 
-		classificationRangeTextField = new JTextField("None", 15);
+
+		rangeComboBox = new JComboBox( new String[]
+				{ SELECTION,
+						SELECTION_PM10Z,
+						WHOLE_DATA_SET,
+						"1,10,1,2"
+				});
+
+		rangeComboBox.setEditable( true );
+
 		imageBackgroundTextField = new JTextField("0", 6);
 
 		executeIoButton = new JButton (" Do it! ");
@@ -485,7 +500,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 								Integer.parseInt(
 										imageBackgroundTextField.getText() ) );
 
-						String action = (String) ioComboBox.getSelectedItem();
+						String action = (String) actionComboBox.getSelectedItem();
 
 						switch ( action )
 						{
@@ -515,6 +530,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 								break;
 							case TRAIN_FROM_LABEL_IMAGE:
 								trainIterativeFromLabelImage();
+								break;
+							case GET_LABEL_IMAGE_TRAINING_ACCURACIES:
+								reportLabelImageTrainingAccuracies();
 								break;
 							case UPDATE_LABELS_AND_TRAIN:
 								updateLabelsTrainingDataAndTrainClassifier();
@@ -1141,7 +1159,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			JPanel doItPanel = new JPanel();
 			doItPanel.add( executeIoButton, trainingConstraints);
-			doItPanel.add( ioComboBox, trainingConstraints );
+			doItPanel.add( actionComboBox, trainingConstraints );
 			trainingJPanel.add( doItPanel, trainingConstraints );
 			trainingConstraints.gridy++;
 
@@ -1169,7 +1187,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			JPanel panelZTRange = new JPanel();
 			panelZTRange.add( new JLabel("Range") );
-			panelZTRange.add( classificationRangeTextField );
+			panelZTRange.add( rangeComboBox );
 			trainingJPanel.add( panelZTRange, trainingConstraints );
 			trainingConstraints.gridy++;
 
@@ -1694,9 +1712,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 					{
 						// TODO:
 						// - check whether this is correct
-						red[offset + i] = (byte) ( 255.0 * Math.exp( - wekaSegmentation.uncertaintyLUTdecay * i  ));
+						red[offset + i] = (byte) ( 255.0 * Math.exp( - wekaSegmentation.uncertaintyLutDecay * i  ));
 						green[offset + i] = (byte) ( 0 );
-						blue[offset + i] = (byte) ( 255.0 * Math.exp( - wekaSegmentation.uncertaintyLUTdecay * i  ));
+						blue[offset + i] = (byte) ( 255.0 * Math.exp( - wekaSegmentation.uncertaintyLutDecay * i  ));
 					}
 				}
 				overlayLUT = new LUT(red, green, blue);
@@ -2208,6 +2226,20 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
+	public void reportLabelImageTrainingAccuracies()
+	{
+
+		Thread task = new Thread() {
+
+			public void run()
+			{
+				wekaSegmentation.reportLabelImageTrainingAccuracies();
+
+			}
+		}; task.start();
+	}
+
+
 	public InstancesAndMetadata getCombinedSelectedInstancesFromGUI()
 	{
 		List<String> selectedInstances = (List< String >) instancesList.getSelectedValuesList();
@@ -2397,79 +2429,85 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private FinalInterval getIntervalFromGUI( )
 	{
 
-		String rangeString = classificationRangeTextField.getText();
+		String rangeString = (String) rangeComboBox.getSelectedItem();
 
-		if ( rangeString.equals("all") )
+		if ( rangeString.equals( WHOLE_DATA_SET) )
 		{
 			return ( IntervalUtils.getInterval(
 					wekaSegmentation.getInputImage() ));
 		}
-
-		Roi roi = displayImage.getRoi();
-
-		if (roi == null || !(roi.getType() == Roi.RECTANGLE))
+		else
 		{
-			IJ.showMessage("Please use ImageJ's rectangle selection tool to  image" +
-					" in order to select the center of the region to be classified");
-			return ( null );
-		}
+			Roi roi = displayImage.getRoi();
 
-		Rectangle rectangle = roi.getBounds();
-
-		long[] min = new long[ 5 ];
-		long[] max = new long[ 5 ];
-
-		min[ X ] = (int) rectangle.getX();
-		max[ X ] = min[0] + (int) rectangle.getWidth() - 1;
-
-		min[ Y ] = (int) rectangle.getY();
-		max[ Y ] = min[1] + (int) rectangle.getHeight() - 1;
-
-		min[ Z ] = max[ Z ] = displayImage.getZ() - 1;
-		min[ T ] = max[ T ] = displayImage.getT() - 1;
-		min[ C ] = max[ C ] = displayImage.getC() - 1;
-
-		// potentially adapt z and t range to user selection
-
-
-		try
-		{
-			int[] range = bigDataTools.utils.Utils.delimitedStringToIntegerArray( rangeString, ",");
-
-			if ( trainingImage.getNFrames() == 1 )
+			if ( roi == null || !( roi.getType() == Roi.RECTANGLE ) )
 			{
-				min[ Z ] = range[0] - 1;
-				max[ Z ] = range[1] - 1;
+				IJ.showMessage( "Please use ImageJ's rectangle selection tool to  image" +
+						" in order to select the center of the region to be classified" );
+				return ( null );
 			}
-			else if ( trainingImage.getNSlices() == 1 )
-			{
-				min[ T ] = range[0] - 1;
-				max[ T ] = range[1] - 1;
-			}
-			else
-			{
-				min[ Z ] = range[0] - 1;
-				max[ Z ] = range[1] - 1;
 
-				if ( range.length == 4 )
+			Rectangle rectangle = roi.getBounds();
+
+			long[] min = new long[ 5 ];
+			long[] max = new long[ 5 ];
+
+			min[ X ] = ( int ) rectangle.getX();
+			max[ X ] = min[ 0 ] + ( int ) rectangle.getWidth() - 1;
+
+			min[ Y ] = ( int ) rectangle.getY();
+			max[ Y ] = min[ 1 ] + ( int ) rectangle.getHeight() - 1;
+
+			min[ Z ] = max[ Z ] = displayImage.getZ() - 1;
+
+			if ( rangeString.equals( SELECTION_PM10Z ))
+			{
+				min[ Z ] = displayImage.getZ() - 1 - 10;
+				max[ Z ] = displayImage.getZ() - 1 + 10;
+			}
+
+			min[ T ] = max[ T ] = displayImage.getT() - 1;
+			min[ C ] = max[ C ] = displayImage.getC() - 1;
+
+			// potentially adapt z and t range to user selection
+
+			try
+			{
+				int[] range = bigDataTools.utils.Utils.delimitedStringToIntegerArray( rangeString, "," );
+
+				if ( trainingImage.getNFrames() == 1 )
 				{
-					min[ T ] = range[2] - 1;
-					max[ T ] = range[3] - 1;
+					min[ Z ] = range[ 0 ] - 1;
+					max[ Z ] = range[ 1 ] - 1;
 				}
+				else if ( trainingImage.getNSlices() == 1 )
+				{
+					min[ T ] = range[ 0 ] - 1;
+					max[ T ] = range[ 1 ] - 1;
+				}
+				else
+				{
+					min[ Z ] = range[ 0 ] - 1;
+					max[ Z ] = range[ 1 ] - 1;
+
+					if ( range.length == 4 )
+					{
+						min[ T ] = range[ 2 ] - 1;
+						max[ T ] = range[ 3 ] - 1;
+					}
+				}
+				logger.info( "Using selected z and t range: " );
+				logger.info( "..." );
+				// TODO: make function to print range
+			} catch ( NumberFormatException e )
+			{
+				logger.info( "No (or invalid) z and t range selected." );
 			}
-			logger.info("Using selected z and t range: ");
-			logger.info("...");
-			// TODO: make function to print range
+
+			FinalInterval interval = new FinalInterval( min, max );
+
+			return ( interval );
 		}
-		catch ( NumberFormatException e )
-		{
-			logger.info("No (or invalid) z and t range selected.");
-		}
-
-		FinalInterval interval = new FinalInterval( min, max );
-
-		return ( interval );
-
 
 	}
 
@@ -2847,7 +2885,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		//gd.addNumericField("Tiling delay [ms]", wekaSegmentation.tilingDelay, 0);
 		//gd.addNumericField("Classification: Background threshold [gray values]", wekaSegmentation.settings.imageBackground, 0);
 		//gd.addStringField("Resolution level weights", wekaSegmentation.getResolutionWeightsAsString());
-		//gd.addNumericField("Uncertainty LUT decay", wekaSegmentation.uncertaintyLUTdecay, 1);
+		//gd.addNumericField("Uncertainty LUT decay", wekaSegmentation.uncertaintyLutDecay, 1);
 
 
 
@@ -2989,7 +3027,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	}
 
 	// Quite of a hack from Johannes Schindelin:
-	// use reflection to insert ioComboBox, since there is no other method to do that...
+	// use reflection to insert actionComboBox, since there is no other method to do that...
 	// TODO: what is that good for??
 	/*
 	static {
@@ -2999,17 +3037,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 			Field field = GenericObjectEditor.class.getDeclaredField("EDITOR_PROPERTIES");
 			field.setAccessible(true);
 			Properties editorProperties = (Properties)field.getInstancesAndMetadata(null);
-			String key = "weka.ioComboBox.Classifier";
+			String key = "weka.actionComboBox.Classifier";
 			String value = editorProperties.getProperty(key);
 			value += ",hr.irb.fastRandomForest.FastRandomForest";
 			editorProperties.setProperty(key, value);
 			//new Exception("insert").printStackTrace();
 			//System.err.println("value: " + value);
 
-			// add ioComboBox from properties (needed after upgrade to WEKA version 3.7.11)
+			// add actionComboBox from properties (needed after upgrade to WEKA version 3.7.11)
 			PluginManager.addFromProperties(editorProperties);
 		} catch (Exception e) {
-			IJ.error("Could not insert my own cool ioComboBox!");
+			IJ.error("Could not insert my own cool actionComboBox!");
 		}
 	}*/
 

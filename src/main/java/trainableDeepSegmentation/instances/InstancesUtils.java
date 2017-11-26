@@ -14,9 +14,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import static trainableDeepSegmentation.IntervalUtils.*;
@@ -88,7 +86,7 @@ public class InstancesUtils {
         return ( info );
 
     }
-    
+
     public static Callable<InstancesAndMetadata> getUsefulInstancesFromLabelImage(
             WekaSegmentation wekaSegmentation,
             ImagePlus labelImage,
@@ -102,7 +100,6 @@ public class InstancesUtils {
             int localRadius,
             boolean isFirstTime)
     {
-
         return new Callable< InstancesAndMetadata >() {
 
             public InstancesAndMetadata call()
@@ -222,7 +219,7 @@ public class InstancesUtils {
                                 instancesAndMetadata.addMetadata( Metadata_Position_Y, xyLocal[ 1 ] );
                                 instancesAndMetadata.addMetadata( Metadata_Position_Z, z );
                                 instancesAndMetadata.addMetadata( Metadata_Position_T, t );
-                                instancesAndMetadata.addMetadata( Metadata_Label_Id, 0 );
+                                instancesAndMetadata.addMetadata( Metadata_Label_Id, -1 );
 
                                 // TODO: make this a loop!!!
                                 instancesAndMetadata.addMetadata( Metadata_Settings_ImageBackground,
@@ -385,7 +382,7 @@ public class InstancesUtils {
     public static int[][] getAccuracies(
             ImagePlus labelImage,
             ResultImage resultImage,
-            ImageStack accuraciesStack,
+            ImagePlus accuraciesImage,
             FinalInterval interval )
     {
         int maxProbability = resultImage.getProbabilityRange();
@@ -401,9 +398,9 @@ public class InstancesUtils {
         {
             ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
 
-            if ( accuraciesStack != null )
+            if ( accuraciesImage != null )
             {
-                ipAccuracies = accuraciesStack.getProcessor( z + 1 - ( int ) interval.min( Z ) );
+                ipAccuracies = accuraciesImage.getImageStack().getProcessor( z + 1 - ( int ) interval.min( Z ) );
             }
 
             for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
@@ -786,6 +783,12 @@ public class InstancesUtils {
 
         return success;
 
+    }
+
+    public static int getNumLabelIds( InstancesAndMetadata instancesAndMetadata )
+    {
+        Set<Double> uniqueLabelIds = new HashSet<>(instancesAndMetadata.getMetadata( Metadata_Label_Id ));
+        return uniqueLabelIds.size();
     }
 
 }

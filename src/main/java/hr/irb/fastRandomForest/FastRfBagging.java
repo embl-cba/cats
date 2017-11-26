@@ -35,6 +35,7 @@ import java.util.concurrent.Future;
 
 import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
+import trainableDeepSegmentation.WekaSegmentation;
 import weka.classifiers.Classifier;
 import weka.classifiers.RandomizableIteratedSingleClassifierEnhancer;
 import weka.core.AdditionalMeasureProducer;
@@ -169,6 +170,8 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
         // Tischi
         if ( motherForest.labelIds != null )
         {
+          WekaSegmentation.logger.progress("Training data resampling:",
+                  "Tree " + (treeIdx + 1) + "/" + m_Classifiers.length );
           bagData = myData.resampleBalancingLabels(
                   m_BagSizePercent,
                   motherForest.labelIds,
@@ -207,7 +210,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       // make sure all trees have been trained before proceeding
       for (int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++) {
         futures.get(treeIdx).get();
-        logger.progress( "Built tree", null, start, treeIdx+1, m_Classifiers.length); // Tischi
+        logger.progress( "Building trees...", null, start, treeIdx+1, m_Classifiers.length); // Tischi
       }
 
       // calc OOB error?

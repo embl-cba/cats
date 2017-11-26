@@ -99,6 +99,11 @@ public class InstancesAndMetadata {
         return metadata.get( aMetadata ).get( i );
     }
 
+    public ArrayList< Double > getMetadata( Metadata aMetadata )
+    {
+        return metadata.get( aMetadata );
+    }
+
     public void addMetadata( Metadata aMetadata, double value )
     {
         metadata.get( aMetadata ).add( value );

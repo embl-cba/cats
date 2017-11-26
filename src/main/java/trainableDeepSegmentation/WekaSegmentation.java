@@ -179,13 +179,11 @@ public class WekaSegmentation {
 
 	public int tilingDelay = 2000; // milli-seconds
 
-	public double uncertaintyLUTdecay = 0.5;
+	public double uncertaintyLutDecay = 0.5;
 
 	public double accuracy = 4.0;
 
 	public double memoryFactor = 1.0;
-
-	public int labelImageNumInstancesPerClass = 1000;
 
 	public static final IJLazySwingLogger logger = new IJLazySwingLogger();
 
@@ -207,12 +205,10 @@ public class WekaSegmentation {
 
 	private int labelImageTrainingIteration = 2;
 
-
 	public Logger getLogger()
 	{
 		return logger;
 	}
-
 
 	public ImagePlus getInputImage()
 	{
@@ -544,7 +540,9 @@ public class WekaSegmentation {
 					exe = Executors.newFixedThreadPool( numSlicesInCurrentChunk );
 					ArrayList< Future > classificationFutures = new ArrayList<>();
 
-					logger.info( "\n# Apply classifier ..." );
+					logger.info( "\n# Applying classifier to: zMin " + zChunk[ 0 ]
+							+ "; zMax " + zChunk[ 1 ]
+							+ "; using " + numSlicesInCurrentChunk + " threads." );
 
 					for ( int z = ( int ) zChunk[ 0 ]; z <= zChunk[ 1 ]; ++z )
 					{
@@ -566,14 +564,6 @@ public class WekaSegmentation {
 
 					ThreadUtils.joinThreads( classificationFutures, logger );
 
-
-					labelImageClassificationAccuraciesHistory.add(
-							InstancesUtils.getAccuracies(
-									getLabelImage(),
-									getResultImage(),
-									null,
-									tile
-							) );
 
 				}
 
@@ -617,6 +607,25 @@ public class WekaSegmentation {
 
 
 	}
+
+	public void reportLabelImageTrainingAccuracies()
+	{
+
+		FinalInterval interval = IntervalUtils.getInterval( resultImage.getImagePlus() );
+		ImagePlus accuraciesImage = IntervalUtils.createImagePlus( interval );
+
+		int[][] accuracies = InstancesUtils.getAccuracies(
+				getLabelImage(),
+				getResultImage(),
+				accuraciesImage,
+				interval
+		);
+
+		InstancesUtils.reportClassificationAccuracies( accuracies, logger );
+		accuraciesImage.show();
+	}
+
+
 
 	public void performFeatureSelection()
 	{
@@ -1279,7 +1288,6 @@ public class WekaSegmentation {
 				InstancesUtils.
 						loadInstancesAndMetadataFromARFF( directory, fileName );
 
-
 		if ( instancesAndMetadata == null )
 		{
 			logger.error( "Loading failed..." );
@@ -1287,11 +1295,14 @@ public class WekaSegmentation {
 
 		getInstancesManager().putInstancesAndMetadata( instancesAndMetadata );
 
-		if ( getInstancesManager().getKeys().size() == 1 )
+
+		// create examples, if
+		// - this contains multiple labels
+		// - was the first loaded set
+		if ( InstancesUtils.getNumLabelIds( instancesAndMetadata ) > 1
+				&& getInstancesManager().getKeys().size() == 1  )
 		{
-			// this was the first one that was loaded
-			// => we assume it contains
-			//  labels for current image
+			logger.info( "\nCreating examples from instances..." );
 			setExamples(
 					ExamplesUtils.
 							getExamplesFromInstancesAndMetadata(
@@ -1880,7 +1891,7 @@ public class WekaSegmentation {
 
 		if ( getNumExamples() > 0 )
 		{
-			//logger.info( "\nBalancing training data..." );
+			logger.info( "\nUsing label balancing strategy..." );
 			//balancedInstances = balanceTrainingData( instances );
 			//InstancesUtils.logInstancesInformation( balancedInstances );
 

@@ -2,6 +2,7 @@ package trainableDeepSegmentation;
 
 import bigDataTools.Region5D;
 import ij.ImagePlus;
+import ij.ImageStack;
 import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
@@ -236,7 +237,18 @@ public abstract class IntervalUtils {
         max[ T ] = imp.getNFrames() - 1;
 
         return new FinalInterval( min, max );
-
-
     }
+
+    public static ImagePlus createImagePlus( FinalInterval interval )
+    {
+
+        ImageStack stack = ImageStack.create(
+                (int) interval.dimension( X ),
+                (int) interval.dimension( Y ),
+                (int) interval.dimension( Z ),
+                8 );
+
+        return new ImagePlus( "empty", stack );
+    }
+
 }

@@ -294,7 +294,7 @@ public class DataCache {
       //selectedLabelIds[c] = new ArrayList<>(  );
       for ( int l : labelIds[c].keySet() )
       {
-        if ( random.nextInt( 101 ) < bagSizePercent )
+        if ( random.nextInt( 100 ) < bagSizePercent )
         {
           ArrayList< Integer > ids = labelIds[c].get( l );
 
