@@ -12,6 +12,7 @@ import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.IntervalUtils;
 import trainableDeepSegmentation.WekaSegmentation;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -102,15 +103,20 @@ public class ResultImageDisk implements ResultImage {
         imageDataInfo.bitDepth = 8;
         int nIOthreads = 3;
 
-        // create one image
-        ImageStack stack = ImageStack.create(
-                (int) dimensions[ IntervalUtils.X ],
-                (int) dimensions[ IntervalUtils.Y ],
-                1, 8);
-        ImagePlus impC0T0Z0 = new ImagePlus("", stack);
-        FileSaver fileSaver = new FileSaver( impC0T0Z0 );
-        fileSaver.saveAsTiff( directory + "/" +
-                "classified--C01--T00001--Z00001.tif");
+
+        String[] list = new File(directory).list();
+        if (list == null || list.length == 0)
+        {
+            // empty directory => create one empty image
+            ImageStack stack = ImageStack.create(
+                    ( int ) dimensions[ IntervalUtils.X ],
+                    ( int ) dimensions[ IntervalUtils.Y ],
+                    1, 8 );
+            ImagePlus impC0T0Z0 = new ImagePlus( "", stack );
+            FileSaver fileSaver = new FileSaver( impC0T0Z0 );
+            fileSaver.saveAsTiff( directory + "/" +
+                    "classified--C01--T00001--Z00001.tif" );
+        }
 
         ImagePlus result = dst.openFromDirectory(
                 directory,

@@ -148,7 +148,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String TRAIN_FROM_LABEL_IMAGE = "Train from label image";
 	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier";
 	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
-	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
+	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Get label image training accuracies";
 
 	// TODO: how to know the settings associated with instances data
 	// ??
@@ -158,6 +158,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			new String[] {
 					UPDATE_LABELS_AND_TRAIN,
 					TRAIN_CLASSIFIER,
+					IO_EXPORT_RESULT_IMAGE,
 					DUPLICATE_RESULT_IMAGE_TO_RAM,
 					IO_LOAD_INSTANCES,
 					IO_SAVE_INSTANCES,
@@ -2228,6 +2229,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	public void reportLabelImageTrainingAccuracies()
 	{
+		win.setButtonsEnabled( false );
+		wekaSegmentation.isBusy = true;
 
 		Thread task = new Thread() {
 
@@ -2235,6 +2238,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			{
 				wekaSegmentation.reportLabelImageTrainingAccuracies();
 
+				wekaSegmentation.isBusy = false;
+				win.setButtonsEnabled( true );
 			}
 		}; task.start();
 	}

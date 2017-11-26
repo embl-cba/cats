@@ -572,7 +572,8 @@ public class WekaSegmentation {
 								getLabelImage(),
 								getResultImage(),
 								null,
-								tile
+								tile,
+								this
 						) );
 
 				numInstancesHistory.add( instancesManager.getInstancesAndMetadata( instancesKey ).getInstances().size() );
@@ -602,10 +603,6 @@ public class WekaSegmentation {
 					+ String.format("; Percent: %.2f" , ( 100.0 * numInstancesHistory.get( i ) / intervalVolume ) ));
 		}
 
-		ImagePlus impInstancesDistribution = new ImagePlus( "instance distribution" , ipLabelImageInstancesDistribution );
-		impInstancesDistribution.show();
-
-
 	}
 
 	public void reportLabelImageTrainingAccuracies()
@@ -613,16 +610,17 @@ public class WekaSegmentation {
 
 		FinalInterval interval = IntervalUtils.getInterval( resultImage.getImagePlus() );
 		ImagePlus accuraciesImage = IntervalUtils.createImagePlus( interval );
+		accuraciesImage.show();
 
 		int[][] accuracies = InstancesUtils.getAccuracies(
 				getLabelImage(),
 				getResultImage(),
 				accuraciesImage,
-				interval
+				interval,
+				this
 		);
 
 		InstancesUtils.reportClassificationAccuracies( accuracies, logger );
-		accuraciesImage.show();
 	}
 
 

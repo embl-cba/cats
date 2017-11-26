@@ -2,7 +2,7 @@ package trainableDeepSegmentation.instances;
 
 import bigDataTools.logging.Logger;
 import ij.ImagePlus;
-import ij.ImageStack;
+import ij.Prefs;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.*;
@@ -16,6 +16,9 @@ import weka.core.Instances;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static trainableDeepSegmentation.IntervalUtils.*;
 import static trainableDeepSegmentation.WekaSegmentation.*;
@@ -383,64 +386,111 @@ public class InstancesUtils {
             ImagePlus labelImage,
             ResultImage resultImage,
             ImagePlus accuraciesImage,
-            FinalInterval interval )
+            FinalInterval interval,
+            WekaSegmentation ws)
     {
-        int maxProbability = resultImage.getProbabilityRange();
 
-        int numClasses = 2; // TODO: getInstancesAndMetadata from ResultImage
-        int t = (int) interval.min( T );
+        logger.info( "\n# Label image training accuracies");
+
+        int numClasses = 2; // TODO
 
         int[][] accuracies = new int[numClasses][5];
 
-        ImageProcessor ipAccuracies = null;
+        ExecutorService exe = Executors.newFixedThreadPool( Prefs.getThreads() );
+        ArrayList< Future > futures = new ArrayList< >(  );
 
         for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z )
         {
-            ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
+            futures.add(
+                    exe.submit(
+                        setAccuracies(
+                            accuracies,
+                            labelImage,
+                            resultImage,
+                            accuraciesImage,
+                            z,
+                            interval,
+                            ws
+                        )
+                    )
+            );
+        }
 
-            if ( accuraciesImage != null )
-            {
-                ipAccuracies = accuraciesImage.getImageStack().getProcessor( z + 1 - ( int ) interval.min( Z ) );
-            }
+        ThreadUtils.joinThreads( futures, ws.getLogger() );
 
-            for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
+        return ( accuracies );
+
+    }
+
+
+    public static Runnable setAccuracies(
+            int[][] accuracies,
+            ImagePlus labelImage,
+            ResultImage resultImage,
+            ImagePlus accuraciesImage,
+            int z,
+            FinalInterval interval,
+            WekaSegmentation ws )
+    {
+
+        return new Runnable() {
+            @Override
+            public void run()
             {
-                for ( int x = ( int ) interval.min( X ); x <= interval.max( X ); ++x )
+
+                int maxProbability = resultImage.getProbabilityRange();
+                int t = (int) interval.min( T );
+
+                if ( ws.stopCurrentTasks ) return;
+
+                logger.progress( "Measuring accuracies",
+                        "in z-slice " + ( z + 1 ) + "/" + ( interval.max( Z ) + 1 ) );
+
+                ImageProcessor labelImageSlice = labelImage.getStack().getProcessor( z + 1 );
+                ImageProcessor ipAccuracies = null;
+
+                if ( accuraciesImage != null )
                 {
-                    int realClass = labelImageSlice.get( x, y );
-                    int[] classifiedClassAndProbability =
-                            resultImage.getClassAndProbability( x, y, z, t );
+                    ipAccuracies = accuraciesImage.getImageStack().getProcessor( z + 1 - ( int ) interval.min( Z ) );
+                }
 
-                    int classifiedClass = classifiedClassAndProbability[ 0 ];
-                    int correctness = classifiedClassAndProbability[ 1 ];
+                for ( int y = ( int ) interval.min( Y ); y <= interval.max( Y ); ++y )
+                {
+                    for ( int x = ( int ) interval.min( X ); x <= interval.max( X ); ++x )
+                    {
+                        int realClass = labelImageSlice.get( x, y );
+                        int[] classifiedClassAndProbability =
+                                resultImage.getClassAndProbability( x, y, z, t );
 
-                    accuracies[ realClass ][ TOTAL ]++;
-                    if ( realClass == classifiedClass )
-                    {
-                        accuracies[ realClass ][ CORRECT ]++;
-                    }
-                    else
-                    {
-                        correctness *= -1;
-                        accuracies[ realClass ][ FN ]++;
-                        accuracies[ classifiedClass ][ FP ]++;
-                    }
-                    correctness += maxProbability;
+                        int classifiedClass = classifiedClassAndProbability[ 0 ];
+                        int correctness = classifiedClassAndProbability[ 1 ];
 
-                    if ( ipAccuracies != null )
-                    {
-                        ipAccuracies.set(
-                                x - ( int ) interval.min( X ),
-                                y - ( int ) interval.min( Y ),
-                                correctness );
+                        accuracies[ realClass ][ TOTAL ]++;
+                        if ( realClass == classifiedClass )
+                        {
+                            accuracies[ realClass ][ CORRECT ]++;
+                        }
+                        else
+                        {
+                            correctness *= -1;
+                            accuracies[ realClass ][ FN ]++;
+                            accuracies[ classifiedClass ][ FP ]++;
+                        }
+                        correctness += maxProbability;
+
+                        if ( ipAccuracies != null )
+                        {
+                            ipAccuracies.set(
+                                    x - ( int ) interval.min( X ),
+                                    y - ( int ) interval.min( Y ),
+                                    correctness );
+                        }
+
                     }
 
                 }
             }
-        }
-
-        return ( accuracies );
-
+        };
     }
 
     private static ArrayList< int[] >[] getLocalClassCoordinates(
