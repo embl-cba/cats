@@ -376,6 +376,7 @@ public class WekaSegmentation {
 			int zChunkSize,
 			int nxyTiles,
 			int localRadius,
+			long maxNumInstances,
 			FinalInterval interval )
 	{
 
@@ -391,7 +392,7 @@ public class WekaSegmentation {
 		settings.classNames.add( "label_im_class_1" );
 
 		FeatureProvider featureProvider = null;
-		ArrayList< int[][] > labelImageClassificationAccuraciesHistory = null;
+		ArrayList< long[][] > labelImageClassificationAccuraciesHistory = null;
 		ArrayList< Integer > numInstancesHistory = null;
 		ImageProcessor ipLabelImageInstancesDistribution = null;
 
@@ -399,12 +400,15 @@ public class WekaSegmentation {
 
 		ArrayList< FinalInterval > tiles = getXYTiles( interval, nxyTiles, getInputImageDimensions() );
 
-		for ( int iTile = 0; iTile < tiles.size(); ++iTile )
+		iterationLoop:
+		for ( int i = 0; i < numIterations; ++i )
 		{
+			for ( int iTile = 0; iTile < tiles.size(); ++iTile )
+			{
 
 			FinalInterval tile = tiles.get( iTile );
 
-			logger.info( "\n# Computing features for label image region..." );
+			logger.info( "\n# Computing image features for tile " +  ( iTile + 1 ) );
 			logInterval( tile );
 			featureProvider = new FeatureProvider( this );
 			featureProvider.isLogging( true );
@@ -415,9 +419,10 @@ public class WekaSegmentation {
 
 			labelImageClassificationAccuraciesHistory = new ArrayList<>();
 			numInstancesHistory = new ArrayList<>();
-			ipLabelImageInstancesDistribution = new ShortProcessor(
-					( int ) tile.dimension( X ),
-					( int ) tile.dimension( Y ) );
+
+			//ipLabelImageInstancesDistribution = new ShortProcessor(
+			//		( int ) tile.dimension( X ),
+			//		( int ) tile.dimension( Y ) );
 
 			int numSliceChunks = ( int ) tile.dimension( Z ) / zChunkSize;
 			int numSlicesInCurrentChunk;
@@ -429,8 +434,6 @@ public class WekaSegmentation {
 
 			ArrayList< long[] > zChunks = getZChunks( numSliceChunks, tile );
 
-			for ( int i = 0; i < numIterations; ++i )
-			{
 				for ( int iChunk = 0; iChunk < zChunks.size(); ++iChunk )
 				{
 
@@ -567,8 +570,9 @@ public class WekaSegmentation {
 
 				}
 
+				/*
 				labelImageClassificationAccuraciesHistory.add(
-						InstancesUtils.getAccuracies(
+						InstancesUtils.setAccuracies(
 								getLabelImage(),
 								getResultImage(),
 								null,
@@ -582,16 +586,29 @@ public class WekaSegmentation {
 						labelImageClassificationAccuraciesHistory.get(
 								labelImageClassificationAccuraciesHistory.size() - 1 ), logger );
 
-				// new ImagePlus( "tile " + iTile + " " + i + ". accuracy", accuraciesStack ).show();
+				new ImagePlus( "tile " + iTile + " " + i + ". accuracy", accuraciesStack ).show();
 
-			} // iterations
+												*/
 
-		} // tiles
+				long numInstances = instancesManager
+						.getInstancesAndMetadata( instancesKey )
+						.getInstances().numInstances();
+				if ( numInstances >= maxNumInstances )
+				{
+					logger.info( "\nMaximum number of instances reached: "
+						+ numInstances + "/" + maxNumInstances );
+					break iterationLoop;
+				}
+
+			} // tiles
+
+		} // iterations
 
 
 		// report what happened
-		logger.info( "\n\n # Training from label image summary");
+		logger.info( "\n\n# Training from label image: DONE.");
 
+		/*
 		long intervalVolume = interval.dimension( X )
 				* interval.dimension( Y )
 				* interval.dimension( Z );
@@ -601,18 +618,24 @@ public class WekaSegmentation {
 			InstancesUtils.reportClassificationAccuracies( labelImageClassificationAccuraciesHistory.get( i ), logger );
 			logger.info( "# Instances: Total: " + numInstancesHistory.get( i )
 					+ String.format("; Percent: %.2f" , ( 100.0 * numInstancesHistory.get( i ) / intervalVolume ) ));
-		}
+		}*/
 
 	}
 
 	public void reportLabelImageTrainingAccuracies()
 	{
 
-		FinalInterval interval = IntervalUtils.getInterval( resultImage.getImagePlus() );
+		if ( labelImage == null )
+		{
+			logger.error( "No label image found. Please load one." );
+			return;
+		}
+
+		FinalInterval interval = IntervalUtils.getInterval( inputImage );
 		ImagePlus accuraciesImage = IntervalUtils.createImagePlus( interval );
 		accuraciesImage.show();
 
-		int[][] accuracies = InstancesUtils.getAccuracies(
+		long[][] accuracies = InstancesUtils.setAccuracies(
 				getLabelImage(),
 				getResultImage(),
 				accuraciesImage,
@@ -623,53 +646,11 @@ public class WekaSegmentation {
 		InstancesUtils.reportClassificationAccuracies( accuracies, logger );
 	}
 
-
-
-	public void performFeatureSelection()
-	{
-
-		/*
-		ArrayList< Integer > goners = AttributeSelector.getGoners(
-				classifier,
-				instances,
-				minFeatureUsageFactor,
-				getLogger() );
-
-		Instances instances2 = InstancesCreator.removeAttributes(
-				instances, goners );
-
-		logger.info( "\n# Second Training" );
-
-		FastRandomForest classifier2 = trainClassifier( instances2 );
-
-		key = getClassifierManager().
-				setClassifier( classifier2, instances2 );
-				*/
-	}
-
-
-	/**
-	 * flag to set the resampling of the instances data in order to guarantee
-	 * the same number of instancesComboBox per class (class balance)
-	 */
-	private boolean balanceClasses = false;
-
-	/**
-	 * Project folder name. It is used to stored temporary data if different from null
-	 */
-	private String projectFolder = null;
-
 	private ArrayList<Integer> featuresToShow = null;
-
-	/**
-	 * executor service to launch threads for the library operations
-	 */
-	private ExecutorService exe = Executors.newFixedThreadPool(threadsPerRegion);
 
 	public boolean stopCurrentTasks = false;
 
 	public boolean isBusy = false;
-
 
 	private int currentUncertaintyRegion = 0;
 

@@ -163,4 +163,6 @@ public class ResultImageDisk implements ResultImage {
         logger.error( "Currently not implemented for disk resident result images." );
         return null;
     }
+
+
 }
