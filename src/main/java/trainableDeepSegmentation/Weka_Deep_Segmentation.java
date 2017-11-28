@@ -108,7 +108,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private JButton trainClassifierButton = null;
 	private JButton updateTrainingDataButton = null;
 
-	private JButton stopButton = new JButton( "   Stop   " );
+	private JButton stopButton = new JButton( "   STOP   " );
 
 
 	private JCheckBox trainingRecomputeFeaturesCheckBox = null;
@@ -153,7 +153,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	// TODO: how to know the settings associated with instances data
 	// ??
-	private JButton doItButton = null;
+	private JButton doButton = null;
 
 	private JComboBox actionComboBox = new JComboBox(
 			new String[] {
@@ -392,8 +392,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		stopButton.setEnabled( false );
 
-		doItButton = new JButton ("   Do it!   ");
-		doItButton.setEnabled(true);
+		doButton = new JButton ("Perform action");
+		doButton.setEnabled(true);
 
 		addClassButton = new JButton ("Create new class");
 		addClassButton.setToolTipText("Add one more label to mark different areas");
@@ -495,7 +495,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							logger.error( "No classifier trained yet..." );
 						}
 					}
-					else if(e.getSource() == doItButton )
+					else if(e.getSource() == doButton )
 					{
 
 						wekaSegmentation.setImageBackground(
@@ -885,7 +885,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			assignResultImageButton.addActionListener(listener);
 			reviewLabelsButton.addActionListener( listener );
 			applyClassifierButton.addActionListener(listener);
-			doItButton.addActionListener(listener);
+			doButton.addActionListener(listener);
 			imagingModalityComboBox.addActionListener(listener);
 			imageBackgroundTextField.addActionListener( listener );
 			stopButton.addActionListener( listener );
@@ -1150,11 +1150,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingConstraints.gridy++;
 			*/
 
-			trainingJPanel.add(settingsButton, trainingConstraints);
-			trainingConstraints.gridy++;
-
-			trainingJPanel.add(addClassButton, trainingConstraints);
-			trainingConstraints.gridy++;
 
 			/*
 			JPanel assignResultImagePanel = new JPanel();
@@ -1164,16 +1159,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingConstraints.gridy++;
 			*/
 
-			JPanel doitstopitPanel = new JPanel();
-			doitstopitPanel.add(doItButton, trainingConstraints);
-			doitstopitPanel.add(stopButton, trainingConstraints);
-			trainingJPanel.add( doitstopitPanel, trainingConstraints );
+
 			trainingConstraints.gridy++;
-			
-			JPanel actionChoicePanel = new JPanel();
-			actionChoicePanel.add( new JLabel( "Action:" ), trainingConstraints);
-			actionChoicePanel.add( actionComboBox, trainingConstraints );
-			trainingJPanel.add( actionChoicePanel, trainingConstraints );
+
+			trainingJPanel.add( doButton, trainingConstraints );
+			trainingConstraints.gridy++;
+
+			trainingJPanel.add( actionComboBox, trainingConstraints );
 			trainingConstraints.gridy++;
 
 			JPanel instancesPanel = new JPanel();
@@ -1190,9 +1182,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingJPanel.add(instancesPanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
-			JPanel classifierPanel = new JPanel();
-			classifierPanel.add( applyClassifierButton, trainingConstraints );
-			trainingJPanel.add( classifierPanel, trainingConstraints);
+			trainingJPanel.add( applyClassifierButton, trainingConstraints);
 			trainingConstraints.gridy++;
 
 			JPanel panelZTRange = new JPanel();
@@ -1225,6 +1215,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 			reviewLabelsPanel.add( reviewLabelsClassComboBox );
 			trainingJPanel.add(reviewLabelsPanel, trainingConstraints);
 			trainingConstraints.gridy++;
+
+			trainingJPanel.add(settingsButton, trainingConstraints);
+			trainingConstraints.gridy++;
+
+			trainingJPanel.add(addClassButton, trainingConstraints);
+			trainingConstraints.gridy++;
+
+
+			trainingJPanel.add( stopButton, trainingConstraints );
+			trainingConstraints.gridy++;
+
 
 
 			// Options panel
@@ -1378,7 +1379,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					assignResultImageButton.removeActionListener(listener);
 					reviewLabelsButton.removeActionListener( listener );
 					applyClassifierButton.removeActionListener(listener);
-					doItButton.removeActionListener(listener);
+					doButton.removeActionListener(listener);
 					stopButton.removeActionListener( listener );
 					addClassButton.removeActionListener(listener);
 					settingsButton.removeActionListener(listener);
@@ -1641,7 +1642,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			reviewLabelsButton.setEnabled(s);
 			assignResultImageButton.setEnabled( s );
 			reviewLabelsButton.setEnabled( s );
-			doItButton.setEnabled( s );
+			doButton.setEnabled( s );
 			applyClassifierButton.setEnabled(s);
 			addClassButton.setEnabled(s);
 			settingsButton.setEnabled(s);
@@ -1802,7 +1803,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				new String[]
 						{ RESULT_IMAGE_DISK_SINGLE_TIFF,
 								RESULT_IMAGE_RAM
-						}, RESULT_IMAGE_DISK_SINGLE_TIFF);
+						}, RESULT_IMAGE_RAM);
 
 
 		gd.addMessage( "IMAGING MODALITY\n \n" +
@@ -1811,7 +1812,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				new String[]
 						{ WekaSegmentation.FLUORESCENCE_IMAGING,
 								WekaSegmentation.SEM_IMAGING
-						}, WekaSegmentation.FLUORESCENCE_IMAGING);
+						}, WekaSegmentation.SEM_IMAGING);
 
 		IJ.run("Set Measurements...", "mean redirect=None decimal=4");
 
@@ -1865,9 +1866,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingImage.setSlice(WindowManager.getCurrentImage().getSlice());
 		}
 
-		if ( ! checkImageProperties() ) return;
-
 		wekaSegmentation.setInputImage( trainingImage );
+
+		if ( ! checkImageProperties() ) return;
 
 		Calibration calibration = trainingImage.getCalibration();
 		wekaSegmentation.settings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
@@ -2705,7 +2706,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		win.setButtonsEnabled( false );
 		wekaSegmentation.isBusy = true;
-
 
 		wekaSegmentation.loadInstancesAndMetadata( dirFile[0], dirFile[1] );
 

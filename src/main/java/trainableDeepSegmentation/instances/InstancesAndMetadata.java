@@ -208,6 +208,20 @@ public class InstancesAndMetadata {
         return labels;
     }
 
+    public ArrayList< String > getClassNames()
+    {
+        ArrayList< String > names = new ArrayList<>(  );
+
+        ArrayList< Object > classNames = Collections.list( instances.classAttribute().enumerateValues() );
+
+        for ( Object className : classNames )
+        {
+            names.add( (String) className );
+        }
+
+        return names;
+
+    }
 
 }
 

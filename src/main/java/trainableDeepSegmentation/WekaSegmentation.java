@@ -1297,6 +1297,7 @@ public class WekaSegmentation {
 		settings.maxDeepConvLevel = (int) instancesAndMetadata.getMetadata( Metadata_Settings_MaxDeepConvLevel, 0 );
 		settings.binFactor = (int) instancesAndMetadata.getMetadata( Metadata_Settings_BinFactor, 0 );
 		settings.maxBinLevel = (int) instancesAndMetadata.getMetadata( Metadata_Settings_MaxBinLevel, 0 );
+		settings.classNames = instancesAndMetadata.getClassNames();
 
 	}
 

@@ -286,53 +286,56 @@ public class DataCache {
     double[] newWeights = new double[ numInstances ]; // all 0.0 by default
 
     // for each class collect instances
-    // represented a fraction (i.e. bagFraction) of distinct labelIds
+    // representing a fraction (i.e. bagFraction) of distinct labelIds
 
-    //ArrayList< Integer >[] selectedLabelIds = new ArrayList[ numClasses ];
+    // ArrayList< Integer >[] selectedLabelIds = new ArrayList[ numClasses ];
+    double[] sumClassWeights = new double[ numClasses ];
+    int[] labelsPerClass = new int[ numClasses ];
+    int[] instancesPerClass = new int[ numClasses ];
+    int[] classID = new int[ numInstances ];
+
     for ( int c = 0; c < numClasses; ++c )
     {
-      //selectedLabelIds[c] = new ArrayList<>(  );
+      // selectedLabelIds[c] = new ArrayList<>(  );
       for ( int l : labelIds[c].keySet() )
       {
         if ( random.nextInt( 100 ) < bagSizePercent )
         {
-          ArrayList< Integer > ids = labelIds[c].get( l );
+          ArrayList< Integer > ids = labelIds[ c ].get( l );
 
-          // put weight for balancing training data of this tree
-          // - divide by number of available labels of this class
-          // - divide by number of instances in this label
+          labelsPerClass[c]++;
 
-          double weight = 1.0
-                  / ( labelIds[c].size() * labelIds[c].get(l).size() );
+          //double weight = 1.0 / labelIds[ c ].size() ;
 
           for ( int i : ids )
           {
             result.numInBag++;
             result.inBag[ i ] = true;
-            newWeights[ i ] = weight;
+            classID[ i ] = c;
+            instancesPerClass[ c ]++;
+            //newWeights[ i ] = weight;
+            //sumClassWeights[ c ] += weight;
           }
         }
       }
     }
 
-    /*
     // now that we know how many instances have been selected per class
     // let's set weights to balance the classes.
     int max = instancesPerClass [ Utils.maxIndex( instancesPerClass ) ];
     double[] classWeights = new double[ numClasses ];
     for ( int c = 0; c < numClasses; ++c )
     {
-      classWeights[c] = 1.0 * max / instancesPerClass[ c ];
+      classWeights[ c ] = 1.0 * max / instancesPerClass[ c ];
     }
 
     for ( int i = 0; i < newWeights.length; ++i )
     {
       if ( result.inBag[i] )
       {
-        newWeights[ i ] = classWeights [ (int) iam.getInstance( i ).classValue() ];
+        newWeights[ i ] = classWeights [ classID[i] ];
       }
     }
-    */
 
     result.instWeights = newWeights;
 
