@@ -198,13 +198,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private Color[] colors = new Color[]{
 			Color.blue,
 			Color.green,
-			Color.magenta,
 			Color.red,
+			Color.orange,
+			Color.magenta,
 			Color.cyan,
 			Color.pink,
 			Color.yellow,
 			Color.black,
-			Color.orange,
 			Color.white
 	};
 
@@ -2234,7 +2234,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					gd.addNumericField( "Radius for local instances pairs", 5, 0 );
 					gd.addNumericField( "Maximum number of instances in total", 300000, 0 );
 					gd.addNumericField( "Maximum number of instance pairs per plane and tile", 20, 0 );
-
+					gd.addStringField( "Directory for saving instances", "Do not save" );
 
 					gd.showDialog();
 
@@ -2248,6 +2248,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 					int localRadius = (int) gd.getNextNumber();
 					long maxNumInstances = (long) gd.getNextNumber();
 					wekaSegmentation.setLabelImageTrainingIteration( (int) gd.getNextNumber() );
+					String directory = gd.getNextString();
+
+					if ( ! directory.equals( "Do not save" ) )
+					{
+						File dir = new File( directory );
+						if ( !dir.isDirectory() )
+						{
+							logger.error( "Directory " + directory + " does not exist, please create it first." );
+							return;
+						}
+					}
 
 					wekaSegmentation.trainIterativeFromLabelImage(
 							instancesKey,
@@ -2257,6 +2268,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							nxyTiles,
 							localRadius,
 							maxNumInstances,
+							directory,
 							getIntervalFromGUI()
 					);
 
@@ -2752,7 +2764,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		try
 		{
-
 			wekaSegmentation.loadProject( directory + fileName );
 
 			for ( int c = 0; c < wekaSegmentation.getNumClasses(); c++ )
@@ -2909,7 +2920,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		gd.addNumericField( "Background value", 0, 0 );
 
 
-
 		gd.addChoice( "Assign result image" ,
 				new String[]
 						{ RESULT_IMAGE_DISK_SINGLE_TIFF,
@@ -2939,10 +2949,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		gd.addNumericField("Classifier: Number of trees",
 				wekaSegmentation.getNumTrees(), 0);
-		gd.addNumericField("Classifier: Accuracy",
-				wekaSegmentation.accuracy, 1);
-		gd.addNumericField("Classifier: Fraction of random features per node",
-				wekaSegmentation.fractionRandomFeatures, 2);
+		//gd.addNumericField("Classifier: Accuracy",
+		//		wekaSegmentation.accuracy, 1);
+		//gd.addNumericField("Classifier: Fraction of random features per node",
+		//		wekaSegmentation.fractionRandomFeatures, 2);
 		gd.addNumericField("Classifier: Minimum feature usage factor",
 				wekaSegmentation.minFeatureUsageFactor, 1);
 		gd.addStringField("RF: Batch size per tree in percent",
@@ -2954,9 +2964,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 		if ( wekaSegmentation.getFeaturesToShow() != null )
 			featuresToShow = wekaSegmentation.getFeaturesToShowAsString();
 
-		gd.addStringField("Show features [ID,ID,..]", featuresToShow );
-		gd.addStringField("Classification: Region tile size",
-				wekaSegmentation.getTileSizeSetting());
+		//gd.addStringField("Show features [ID,ID,..]", featuresToShow );
+		//gd.addStringField("Classification: Region tile size",
+		//		wekaSegmentation.getTileSizeSetting());
 		//gd.addNumericField("Number of region threads", wekaSegmentation.regionThreads, 0);
 		//gd.addNumericField("Number of threads inside a region", wekaSegmentation.threadsPerRegion, 0);
 		//gd.addNumericField("Number of RF instances threads", wekaSegmentation.numRfTrainingThreads, 0);
@@ -2964,7 +2974,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		//gd.addNumericField("Classification: Background threshold [gray values]", wekaSegmentation.settings.imageBackground, 0);
 		//gd.addStringField("Resolution level weights", wekaSegmentation.getResolutionWeightsAsString());
 		//gd.addNumericField("Uncertainty LUT decay", wekaSegmentation.uncertaintyLutDecay, 1);
-
 
 
 		/*
@@ -3021,13 +3030,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		// Set classifier and options
 		wekaSegmentation.setNumTrees((int) gd.getNextNumber());
-		wekaSegmentation.accuracy = (double) gd.getNextNumber();
-		wekaSegmentation.fractionRandomFeatures = (double) gd.getNextNumber();
+		//wekaSegmentation.accuracy = (double) gd.getNextNumber();
+		//wekaSegmentation.fractionRandomFeatures = (double) gd.getNextNumber();
 		wekaSegmentation.minFeatureUsageFactor = (double) gd.getNextNumber();
 		wekaSegmentation.setBatchSizePercent( gd.getNextString() );
 		wekaSegmentation.setActiveChannelsFromString(gd.getNextString());
-		wekaSegmentation.setFeaturesToShowFromString(gd.getNextString());
-		wekaSegmentation.setTileSizeSetting( gd.getNextString() );
+		//wekaSegmentation.setFeaturesToShowFromString(gd.getNextString());
+		//wekaSegmentation.setTileSizeSetting( gd.getNextString() );
 
 		boolean classNameChanged = false;
 

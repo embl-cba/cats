@@ -377,6 +377,7 @@ public class WekaSegmentation {
 			int nxyTiles,
 			int localRadius,
 			long maxNumInstances,
+			String directory,
 			FinalInterval interval )
 	{
 
@@ -568,7 +569,7 @@ public class WekaSegmentation {
 					ThreadUtils.joinThreads( classificationFutures, logger );
 
 
-				}
+				} // Chunk
 
 				/*
 				labelImageClassificationAccuraciesHistory.add(
@@ -599,6 +600,17 @@ public class WekaSegmentation {
 						+ numInstances + "/" + maxNumInstances );
 					break iterationLoop;
 				}
+
+				if( ! directory.equals("Do not save") )
+				{
+					logger.info( "/n# Saving instances..." );
+					InstancesUtils.saveInstancesAndMetadataAsARFF(
+							instancesManager.getInstancesAndMetadata( instancesKey ),
+							directory,
+							"Instances-" + numInstances + ".ARFF" );
+					logger.info( "...done" );
+				}
+
 
 			} // tiles
 
