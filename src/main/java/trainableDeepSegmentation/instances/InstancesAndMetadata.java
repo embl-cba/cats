@@ -114,7 +114,7 @@ public class InstancesAndMetadata {
         instances.add( instance );
     }
 
-    public void moveMetadataOutOfInstances()
+    public void moveMetadataFromInstancesToMetadata()
     {
         int numAttributes = instances.numAttributes();
 

@@ -798,10 +798,11 @@ public class InstancesUtils {
         InstancesAndMetadata instancesAndMetadata
                 = new InstancesAndMetadata( instances );
 
-        instancesAndMetadata.moveMetadataOutOfInstances();
+        instancesAndMetadata.moveMetadataFromInstancesToMetadata();
 
         return instancesAndMetadata;
     }
+
 
     public static boolean saveInstancesAsARFF( Instances instances,
                                         String directory,
@@ -860,6 +861,18 @@ public class InstancesUtils {
     {
         Set<Double> uniqueLabelIds = new HashSet<>(instancesAndMetadata.getMetadata( Metadata_Label_Id ));
         return uniqueLabelIds.size();
+    }
+
+    public static void setSettingsFromInstancesAndMetadata(
+            Settings settings,
+            InstancesAndMetadata instancesAndMetadata)
+    {
+        settings.imageBackground = (int) instancesAndMetadata.getMetadata( Metadata_Settings_ImageBackground, 0 );
+        settings.maxDeepConvLevel = (int) instancesAndMetadata.getMetadata( Metadata_Settings_MaxDeepConvLevel, 0 );
+        settings.binFactor = (int) instancesAndMetadata.getMetadata( Metadata_Settings_BinFactor, 0 );
+        settings.maxBinLevel = (int) instancesAndMetadata.getMetadata( Metadata_Settings_MaxBinLevel, 0 );
+        settings.anisotropy = (int) instancesAndMetadata.getMetadata( Metadata_Settings_Anisotropy, 0 );
+        settings.classNames = instancesAndMetadata.getClassNames();
     }
 
 }

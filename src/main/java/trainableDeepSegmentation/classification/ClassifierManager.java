@@ -1,16 +1,18 @@
 package trainableDeepSegmentation.classification;
 
 import hr.irb.fastRandomForest.FastRandomForest;
+import ij.IJ;
+import trainableDeepSegmentation.WekaSegmentation;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instances;
 
+import java.io.*;
 import java.util.*;
 
 public class ClassifierManager {
 
     Map< String, ClassInst > classifiers;
-
 
     public ClassifierManager( )
     {
@@ -43,7 +45,6 @@ public class ClassifierManager {
             return null;
         }
     }
-
 
     public ArrayList< Attribute > getClassifierAttributes( String key )
     {
@@ -85,14 +86,87 @@ public class ClassifierManager {
         return ( attributeNames );
     }
 
-
-
-
     public Set< String > getNames()
     {
         return ( classifiers.keySet() );
     }
 
+    public boolean saveClassifier( String key, String directory, String filename )
+    {
+        String filepath = directory + File.separator + filename;
+
+        File sFile = null;
+        boolean saveOK = true;
+
+        WekaSegmentation.logger.info("\n# Saving classifier to " + filepath + " ..." );
+
+        try
+        {
+            sFile = new File( filepath );
+            OutputStream os = new FileOutputStream( sFile );
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(os);
+            objectOutputStream.writeObject( classifiers.get(key).classifier );
+            objectOutputStream.writeObject( classifiers.get(key).instances );
+            objectOutputStream.flush();
+            objectOutputStream.close();
+        }
+        catch (Exception e)
+        {
+            WekaSegmentation.logger.error("Error when saving classifier to disk");
+            WekaSegmentation.logger.info(e.toString());
+            saveOK = false;
+        }
+
+        if (saveOK)
+        {
+            IJ.log("Saved classifier to " + filename);
+        }
+
+        return saveOK;
+    }
+
+    /**
+     * Read header classifier from a .model file
+     *
+     * @param pathName complete path and file name
+     * @return false if error
+     */
+    public String loadClassifier(String directory, String filename )
+    {
+        String filepath = directory + File.separator + filename;
+
+        WekaSegmentation.logger.info("\n# Loading classifier from " + filepath + " ..." );
+
+        FastRandomForest classifier = null;
+        Instances instances = null;
+
+        try
+        {
+            File selected = new File( filepath );
+
+            InputStream is = new FileInputStream(selected);
+            ObjectInputStream objectInputStream = new ObjectInputStream(is);
+            classifier = (FastRandomForest) objectInputStream.readObject();
+            instances = (Instances ) objectInputStream.readObject();
+            objectInputStream.close();
+        }
+        catch (Exception e)
+        {
+            WekaSegmentation.logger.error("Error while loading classifier!");
+            WekaSegmentation.logger.info(e.toString());
+            return null;
+        }
+
+
+        String key = instances.relationName();
+
+        classifiers.put( key, new ClassInst( classifier, instances ) );
+
+        WekaSegmentation.logger.info( "Added classifier: " + filepath );
+        WekaSegmentation.logger.info( "Classifier key: " + filepath );
+
+        return key;
+    }
 
 
     private class ClassInst

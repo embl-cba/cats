@@ -136,8 +136,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private JTextField imageBackgroundTextField = null;
 
 	/** load annotations button */
-	public static final String IO_LOAD_PROJECT = "Load project";
-	public static final String IO_SAVE_PROJECT = "Save project";
+	public static final String IO_LOAD_CLASSIFIER = "Load classifier";
+	public static final String IO_SAVE_CLASSIFIER = "Save classifier";
 
 	public static final String UPDATE_LABELS_AND_TRAIN = "Update labels and train";
 	public static final String RECOMPUTE_LABELS = "Recompute all labels";
@@ -159,14 +159,16 @@ public class Weka_Deep_Segmentation implements PlugIn
 			new String[] {
 					UPDATE_LABELS_AND_TRAIN,
 					TRAIN_CLASSIFIER,
-					IO_EXPORT_RESULT_IMAGE,
-					DUPLICATE_RESULT_IMAGE_TO_RAM,
 					IO_LOAD_INSTANCES,
 					IO_SAVE_INSTANCES,
+					IO_EXPORT_RESULT_IMAGE,
+					DUPLICATE_RESULT_IMAGE_TO_RAM,
 					IO_LOAD_LABEL_IMAGE,
 					TRAIN_FROM_LABEL_IMAGE,
 					GET_LABEL_IMAGE_TRAINING_ACCURACIES,
-					RECOMPUTE_LABELS
+					RECOMPUTE_LABELS,
+					IO_LOAD_CLASSIFIER,
+					IO_SAVE_CLASSIFIER
 			} );
 
 
@@ -506,11 +508,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 						switch ( action )
 						{
-							case IO_LOAD_PROJECT:
-								loadProject(null, null);
+							case IO_LOAD_CLASSIFIER:
+								loadClassifier();
 								break;
-							case IO_SAVE_PROJECT:
-								saveProject();
+							case IO_SAVE_CLASSIFIER:
+								saveClassifier();
 								break;
 							case IO_LOAD_INSTANCES:
 								loadInstances();
@@ -1265,8 +1267,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingConstraints.gridy++;
 			trainingJPanel.add(saveClassifierButton, trainingConstraints);
 			*/
-
-
 
 
 
@@ -2232,9 +2232,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 					gd.addNumericField( "Z chunk size", Prefs.getThreads(), 0 );
 					gd.addNumericField( "(nx,ny) for tiling", 3, 0 );
 					gd.addNumericField( "Radius for local instances pairs", 5, 0 );
-					gd.addNumericField( "Maximum number of instances in total", 300000, 0 );
+					gd.addNumericField( "Maximum number of instances in total", 400000, 0 );
 					gd.addNumericField( "Maximum number of instance pairs per plane and tile", 20, 0 );
-					gd.addStringField( "Directory for saving instances", "Do not save" );
+					gd.addCheckbox( "Auto save instances", true );
 
 					gd.showDialog();
 
@@ -2248,16 +2248,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 					int localRadius = (int) gd.getNextNumber();
 					long maxNumInstances = (long) gd.getNextNumber();
 					wekaSegmentation.setLabelImageTrainingIteration( (int) gd.getNextNumber() );
-					String directory = gd.getNextString();
+					boolean autoSaveInstances = gd.getNextBoolean();
 
-					if ( ! directory.equals( "Do not save" ) )
+					String directory = null;
+
+					if ( autoSaveInstances )
 					{
-						File dir = new File( directory );
-						if ( !dir.isDirectory() )
-						{
-							logger.error( "Directory " + directory + " does not exist, please create it first." );
-							return;
-						}
+						directory = IJ.getDirectory( "Choose directory for saving the instances" );
 					}
 
 					wekaSegmentation.trainIterativeFromLabelImage(
@@ -2742,59 +2739,55 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 
 	/**
-	 * Load project from a file
+	 * Save instances to a file
 	 */
-	public void loadProject( String directory, String fileName )
+	public void loadClassifier()
 	{
 
-
-		if ( directory == null || fileName == null )
-		{
-			OpenDialog od = new OpenDialog("Choose project file",
-					OpenDialog.getLastDirectory(), "myProject.tsproj");
-			if (od.getFileName() == null) return;
-
-			directory = od.getDirectory();
-			fileName = od.getFileName();
-		}
-
+		String[] dirFile =
+				getOpenDirFile(
+						"Please choose a classifier file" );
 
 		win.setButtonsEnabled( false );
 		wekaSegmentation.isBusy = true;
 
-		try
+		wekaSegmentation.loadClassifier( dirFile[0], dirFile[1] );
+
+		for ( int c = 0; c < wekaSegmentation.getNumClasses(); c++ )
 		{
-			wekaSegmentation.loadProject( directory + fileName );
-
-			for ( int c = 0; c < wekaSegmentation.getNumClasses(); c++ )
-			{
-				if ( c == numOfClasses )
-					win.addClass();
-				changeClassName(c, wekaSegmentation.getClassName( c ));
-			}
-
-			if ( wekaSegmentation.getClassifier() != null )
-			{
-				win.trainingComplete = true;
-			}
-
-			updateComboBoxes();
-			repaintWindow();
-			win.updateExampleLists();
-
+			if ( c == numOfClasses )
+				win.addClass();
+			changeClassName(c, wekaSegmentation.getClassName( c ));
 		}
-		catch (IOException e)
-		{
-			IJ.showMessage(e.toString());
-		}
+
+		imageBackgroundTextField.setText( "" + wekaSegmentation.getImageBackground() );
 
 		win.setButtonsEnabled( true );
 		wekaSegmentation.isBusy = false;
 
-
 	}
 
 
+	/**
+	 * Save instances to a file
+	 */
+	public void saveClassifier()
+	{
+
+		String[] dirFile =
+				getOpenDirFile(
+						"Please choose a output file" );
+
+		win.setButtonsEnabled( false );
+		wekaSegmentation.isBusy = true;
+
+		wekaSegmentation.saveClassifier( dirFile[0], dirFile[1] );
+
+		win.setButtonsEnabled( true );
+		wekaSegmentation.isBusy = false;
+
+	}
+	
 	/**
 	 * Add new class in the panel (up to MAX_NUM_CLASSES)
 	 */
@@ -2911,6 +2904,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 		*/
 
+		/*
 		gd.addChoice( "Imaging modality" ,
 				new String[]
 						{ WekaSegmentation.FLUORESCENCE_IMAGING,
@@ -2925,6 +2919,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 						{ RESULT_IMAGE_DISK_SINGLE_TIFF,
 								RESULT_IMAGE_RAM
 						}, RESULT_IMAGE_DISK_SINGLE_TIFF);
+		*/
 
 		gd.addNumericField("Feature computation: Downsampling factor",
 				wekaSegmentation.settings.binFactor, 0);
@@ -2936,8 +2931,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.settings.anisotropy, 2);
 		gd.addNumericField("Computation: Memory factor",
 				wekaSegmentation.memoryFactor, 1);
-		gd.addNumericField("Label Image Training: Instance sets per plane and tile",
-				wekaSegmentation.getNumLabelImageInstancesPerPlaneTileAndClass(), 0);
+		//gd.addNumericField("Label Image Training: Instance sets per plane and tile",
+		//		wekaSegmentation.getNumLabelImageInstancesPerPlaneTileAndClass(), 0);
 
 		/*
 		if(wekaSegmentation.getLoadedTrainingData() != null)
@@ -3018,15 +3013,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 		if ( gd.wasCanceled() )
 			return false;
 
-		wekaSegmentation.setImagingModality( gd.getNextChoice() );
-		wekaSegmentation.setImageBackground( (int) gd.getNextNumber() );
-		assignResultImage( gd.getNextChoice() );
+		//wekaSegmentation.setImagingModality( gd.getNextChoice() );
+		//wekaSegmentation.setImageBackground( (int) gd.getNextNumber() );
+		//assignResultImage( gd.getNextChoice() );
+
+
 		wekaSegmentation.settings.binFactor = (int) gd.getNextNumber();
 		wekaSegmentation.settings.maxBinLevel = (int) gd.getNextNumber();
 		wekaSegmentation.settings.maxDeepConvLevel = (int) gd.getNextNumber();
 		wekaSegmentation.settings.anisotropy = gd.getNextNumber();
 		wekaSegmentation.memoryFactor = gd.getNextNumber();
-		wekaSegmentation.setLabelImageInstancesPerPlaneTileAndClass( (int) gd.getNextNumber());
+		//wekaSegmentation.setLabelImageInstancesPerPlaneTileAndClass( (int) gd.getNextNumber());
 
 		// Set classifier and options
 		wekaSegmentation.setNumTrees((int) gd.getNextNumber());

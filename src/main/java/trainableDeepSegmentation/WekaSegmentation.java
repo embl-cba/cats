@@ -3,11 +3,7 @@ package trainableDeepSegmentation;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
@@ -15,14 +11,12 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import bigDataTools.logging.Logger;
 import bigDataTools.logging.IJLazySwingLogger;
 import ij.gui.PolygonRoi;
 import ij.process.ImageProcessor;
-import ij.process.ShortProcessor;
 import javafx.geometry.Point3D;
 
 import hr.irb.fastRandomForest.FastRandomForest;
@@ -601,9 +595,9 @@ public class WekaSegmentation {
 					break iterationLoop;
 				}
 
-				if( ! directory.equals("Do not save") )
+				if( directory != null )
 				{
-					logger.info( "/n# Saving instances..." );
+					logger.info( "\n# Saving instances..." );
 					InstancesUtils.saveInstancesAndMetadataAsARFF(
 							instancesManager.getInstancesAndMetadata( instancesKey ),
 							directory,
@@ -1018,75 +1012,6 @@ public class WekaSegmentation {
 	}
 
 	/**
-	 * Read header classifier from a .model file
-	 *
-	 * @param pathName complete path and file name
-	 * @return false if error
-	 */
-	public boolean loadProject(String pathName) throws IOException
-	{
-		FastRandomForest newClassifier = null;
-		Settings newSettings = null;
-		ArrayList<Example> newExamples = null;
-
-		logger.info("Loading project from disk...");
-
-		File selected = new File(pathName);
-		try
-		{
-			InputStream is = new FileInputStream(selected);
-			if (selected.getName().endsWith(".gz"))
-			{
-				is = new GZIPInputStream(is);
-			}
-			try
-			{
-				ObjectInputStream objectInputStream = new ObjectInputStream(is);
-				newClassifier = (FastRandomForest) objectInputStream.readObject();
-				newSettings = (Settings) objectInputStream.readObject();
-				newExamples = (ArrayList<Example>) objectInputStream.readObject();
-				objectInputStream.close();
-			} catch (Exception e)
-			{
-				logger.error("Error while loading project");
-				logger.info(e.toString());
-				return false;
-			}
-		} catch (Exception e)
-		{
-			logger.error("Error while loading project");
-			e.printStackTrace();
-			return false;
-		}
-
-		/*
-		// TODO: check stuff here...
-		try{
-			// Check if the loaded information corresponds to current state of the segmentator
-			// (the attributes can be adjusted, but the classes must match)
-			if(!adjustSegmentationStateToData(newHeader))
-			{
-				IJ.log("Error: current segmentator state could not be updated to loaded data requirements (attributes and classes)");
-				return false;
-			}
-		}catch(Exception e)
-		{
-			IJ.log("Error while adjusting data!");
-			e.printStackTrace();
-			return false;
-		}
-		*/
-
-		setClassifier(newClassifier);
-		setSettings(newSettings);
-		setLabelROIs(newExamples);
-
-		logger.info("...loaded project: " + pathName);
-
-		return true;
-	}
-
-	/**
 	 * Set current classifier
 	 *
 	 * @param cls new classifier
@@ -1104,6 +1029,23 @@ public class WekaSegmentation {
 	public void setSettings(Settings settings)
 	{
 		this.settings = settings;
+	}
+
+
+	public void loadClassifier( String directory, String filename )
+	{
+		String key = classifierManager.loadClassifier( directory, filename );
+
+		Instances instances = classifierManager.getInstancesHeader( key );
+		InstancesAndMetadata instancesAndMetadata = new InstancesAndMetadata( instances );
+		instancesAndMetadata.moveMetadataFromInstancesToMetadata();
+		InstancesUtils.setSettingsFromInstancesAndMetadata( settings, instancesAndMetadata );
+	}
+
+	public void saveClassifier( String directory, String filename )
+	{
+		String key = classifierManager.getMostRecentClassifierKey();
+		classifierManager.saveClassifier( key, directory, filename  );
 	}
 
 
@@ -1304,11 +1246,13 @@ public class WekaSegmentation {
 			latestFeatureNames = instancesAndMetadata.getAttributeNames();
 		}
 
+		// TODO: make settings loop
 		setImageBackground( (int) instancesAndMetadata.getMetadata( Metadata_Settings_ImageBackground, 0 ) );
 		settings.imageBackground = (int) instancesAndMetadata.getMetadata( Metadata_Settings_ImageBackground, 0 );
 		settings.maxDeepConvLevel = (int) instancesAndMetadata.getMetadata( Metadata_Settings_MaxDeepConvLevel, 0 );
 		settings.binFactor = (int) instancesAndMetadata.getMetadata( Metadata_Settings_BinFactor, 0 );
 		settings.maxBinLevel = (int) instancesAndMetadata.getMetadata( Metadata_Settings_MaxBinLevel, 0 );
+		settings.anisotropy = (int) instancesAndMetadata.getMetadata( Metadata_Settings_Anisotropy, 0 );
 		settings.classNames = instancesAndMetadata.getClassNames();
 
 	}
