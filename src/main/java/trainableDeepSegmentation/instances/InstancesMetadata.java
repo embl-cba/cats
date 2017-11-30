@@ -1,13 +1,13 @@
 package trainableDeepSegmentation.instances;
 
-import trainableDeepSegmentation.Settings;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class InstancesAndMetadata {
+public class InstancesMetadata {
 
     Instances instances;
     Map< Metadata, ArrayList< Double > > metadata;
@@ -44,6 +44,22 @@ public class InstancesAndMetadata {
         }
     }
 
+    public void putMetadataIntoInstances( Instances instances )
+    {
+        int numInstances = instances.size();
+
+        for ( Metadata metadata : Metadata.values() )
+        {
+            Attribute attribute = new Attribute( metadata.name() );
+            instances.insertAttributeAt( attribute, 0 );
+            for ( int i = 0; i < numInstances; ++i )
+            {
+                instances.get( i ).setValue( 0, getMetadata( metadata,  i )  );
+            }
+        }
+    }
+
+
     public enum Metadata {
         Metadata_Position_X,
         Metadata_Position_Y,
@@ -68,14 +84,14 @@ public class InstancesAndMetadata {
     }
 
 
-    public InstancesAndMetadata( Instances instances,
-                                 Map< Metadata, ArrayList< Double > > metadata )
+    public InstancesMetadata( Instances instances,
+                              Map< Metadata, ArrayList< Double > > metadata )
     {
         this.instances = instances;
         this.metadata = metadata;
     }
 
-    public InstancesAndMetadata( Instances instances )
+    public InstancesMetadata( Instances instances )
     {
         this.instances = instances;
         this.metadata = getEmptyMetadata();
@@ -147,7 +163,7 @@ public class InstancesAndMetadata {
         return instances.get( i );
     }
 
-    public synchronized void append( InstancesAndMetadata instancesAndMetadata )
+    public synchronized void append( InstancesMetadata instancesAndMetadata )
     {
 
         for( Instance instance : instancesAndMetadata.instances )

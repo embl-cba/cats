@@ -27,11 +27,12 @@ import ij.Prefs;
 import ij.gui.Roi;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.classification.AttributeSelector;
+import trainableDeepSegmentation.classification.ClassifierInstancesMetadata;
 import trainableDeepSegmentation.classification.ClassifierManager;
 import trainableDeepSegmentation.classification.ClassifierUtils;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.examples.ExamplesUtils;
-import trainableDeepSegmentation.instances.InstancesAndMetadata;
+import trainableDeepSegmentation.instances.InstancesMetadata;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageFrameSetter;
 import trainableDeepSegmentation.instances.InstancesUtils;
@@ -43,7 +44,7 @@ import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
 
 import static trainableDeepSegmentation.IntervalUtils.*;
-import static trainableDeepSegmentation.instances.InstancesAndMetadata.Metadata.*;
+import static trainableDeepSegmentation.instances.InstancesMetadata.Metadata.*;
 
 
 /**
@@ -446,7 +447,7 @@ public class WekaSegmentation {
 
 					// create new instances
 					exe = Executors.newFixedThreadPool( numSlicesInCurrentChunk );
-					ArrayList< Future< InstancesAndMetadata > > futures = new ArrayList<>();
+					ArrayList< Future< InstancesMetadata > > futures = new ArrayList<>();
 
 					for ( int z = ( int ) zChunk[ 0 ]; z <= zChunk[ 1 ]; ++z )
 					{
@@ -473,10 +474,10 @@ public class WekaSegmentation {
 
 					}
 
-					for ( Future< InstancesAndMetadata > future : futures )
+					for ( Future< InstancesMetadata > future : futures )
 					{
 
-						InstancesAndMetadata instancesAndMetadata = null;
+						InstancesMetadata instancesAndMetadata = null;
 
 						try
 						{
@@ -508,7 +509,9 @@ public class WekaSegmentation {
 					futures = null;
 					exe.shutdown();
 
-					InstancesAndMetadata instancesAndMetadata = getInstancesManager().getInstancesAndMetadata( instancesKey );
+					InstancesMetadata instancesAndMetadata =
+							getInstancesManager()
+									.getInstancesAndMetadata( instancesKey );
 
 					if ( instancesAndMetadata == null ) return;
 
@@ -516,8 +519,9 @@ public class WekaSegmentation {
 
 					if ( classifier == null ) return;
 
-					String key = getClassifierManager().setClassifier( classifier,
-							instancesAndMetadata.getInstances() );
+					String key = getClassifierManager().setClassifier(
+							classifier,
+							instancesAndMetadata);
 
 					if ( minFeatureUsageFactor > 0 )
 					{
@@ -1034,12 +1038,19 @@ public class WekaSegmentation {
 
 	public void loadClassifier( String directory, String filename )
 	{
-		String key = classifierManager.loadClassifier( directory, filename );
 
-		Instances instances = classifierManager.getInstancesHeader( key );
-		InstancesAndMetadata instancesAndMetadata = new InstancesAndMetadata( instances );
-		instancesAndMetadata.moveMetadataFromInstancesToMetadata();
-		InstancesUtils.setSettingsFromInstancesAndMetadata( settings, instancesAndMetadata );
+		ClassifierInstancesMetadata classifierInstancesMetadata =
+				ClassifierUtils.loadClassifierInstancesMetadata(
+					directory,
+					filename );
+
+		InstancesUtils.setSettingsFromInstancesAndMetadata( settings,
+				classifierInstancesMetadata.instancesMetadata );
+
+		latestFeatureNames = classifierInstancesMetadata.instancesMetadata.getAttributeNames();
+
+		classifierManager.setClassifier( classifierInstancesMetadata );
+
 	}
 
 	public void saveClassifier( String directory, String filename )
@@ -1155,14 +1166,18 @@ public class WekaSegmentation {
 
 
 	public void applyBgFgClassification( FinalInterval interval,
-										 InstancesAndMetadata instancesAndMetadata )
+										 InstancesMetadata instancesAndMetadata )
 	{
 
 		ArrayList< Integer > originalClasses =
 				setInstancesClassesToBgFg( instancesAndMetadata.getInstances() );
+
 		FastRandomForest classifierBgFg = trainClassifier( instancesAndMetadata );
-		String classifierBgFgKey = classifierManager.setClassifier( classifierBgFg,
-				instancesAndMetadata.getInstances() );
+
+		String classifierBgFgKey = classifierManager.setClassifier(
+				classifierBgFg,
+				instancesAndMetadata );
+
 		resetInstancesClasses( instancesAndMetadata.getInstances(), originalClasses );
 
 		// reroute classification to BgFg result image
@@ -1217,7 +1232,7 @@ public class WekaSegmentation {
 
 	public void loadInstancesAndMetadata( String directory, String fileName )
 	{
-		InstancesAndMetadata instancesAndMetadata =
+		InstancesMetadata instancesAndMetadata =
 				InstancesUtils.
 						loadInstancesAndMetadataFromARFF( directory, fileName );
 
@@ -1260,7 +1275,7 @@ public class WekaSegmentation {
 
 	public String putUpdatedExampleInstances()
 	{
-		InstancesAndMetadata instancesAndMetadata = null;
+		InstancesMetadata instancesAndMetadata = null;
 
 		// compute instances data for new labels
 		updateExamples();
@@ -1752,7 +1767,7 @@ public class WekaSegmentation {
 	}
 
 	public void trainClassifierWithFeatureSelection (
-			InstancesAndMetadata instancesAndMetadata )
+			InstancesMetadata instancesAndMetadata )
 	{
 		FastRandomForest classifier = trainClassifier( instancesAndMetadata );
 
@@ -1768,20 +1783,22 @@ public class WekaSegmentation {
 					minFeatureUsageFactor,
 					logger );
 
-			InstancesAndMetadata instancesWithFeatureSelection
+			InstancesMetadata instancesWithFeatureSelection
 					= InstancesUtils.removeAttributes( instancesAndMetadata, goners );
 
 			logger.info ("\n# Second Training");
 
 			classifier = trainClassifier( instancesWithFeatureSelection );
 
-			getClassifierManager().setClassifier( classifier,
-					instancesWithFeatureSelection.getInstances());
+			getClassifierManager().setClassifier(
+					classifier,
+					instancesWithFeatureSelection );
 		}
 		else
 		{
-			getClassifierManager().setClassifier( classifier,
-					instancesAndMetadata.getInstances() );
+			getClassifierManager().setClassifier(
+					classifier,
+					instancesAndMetadata );
 		}
 
 	}
@@ -1793,7 +1810,7 @@ public class WekaSegmentation {
 	 * and current active features
 	 */
 	public FastRandomForest trainClassifier(
-			InstancesAndMetadata iam )
+			InstancesMetadata iam )
 	{
 		isTrainingCompleted = false;
 

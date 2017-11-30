@@ -1,21 +1,19 @@
 package trainableDeepSegmentation.instances;
 
-import bigDataTools.logging.IJLazySwingLogger;
-import bigDataTools.logging.Logger;
 import weka.core.Instances;
 
 import java.util.*;
 
 public class InstancesManager {
 
-    SortedMap< String, InstancesAndMetadata > instancesMap = null;
+    SortedMap< String, InstancesMetadata > instancesMap = null;
 
     public InstancesManager()
     {
         instancesMap = new TreeMap<>();
     }
 
-    public synchronized String putInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata )
+    public synchronized String putInstancesAndMetadata( InstancesMetadata instancesAndMetadata )
     {
         String key = getName( instancesAndMetadata.instances );
 
@@ -29,7 +27,7 @@ public class InstancesManager {
         return ( instancesMap.get( key ).instances );
     }
 
-    public InstancesAndMetadata getInstancesAndMetadata( String key )
+    public InstancesMetadata getInstancesAndMetadata( String key )
     {
         return ( instancesMap.get( key ) );
     }
@@ -39,12 +37,12 @@ public class InstancesManager {
         return ( instancesMap.keySet() );
     }
 
-    public InstancesAndMetadata getCombinedInstancesAndMetadata( List< String > keys )
+    public InstancesMetadata getCombinedInstancesAndMetadata( List< String > keys )
     {
         // initialize empty IAM
-        InstancesAndMetadata combinedIAM = new InstancesAndMetadata(
+        InstancesMetadata combinedIAM = new InstancesMetadata(
                 new Instances( getInstances( keys.get( 0 ) ) , 0 ),
-                InstancesAndMetadata.getEmptyMetadata() );
+                InstancesMetadata.getEmptyMetadata() );
 
         for ( String key : keys )
         {

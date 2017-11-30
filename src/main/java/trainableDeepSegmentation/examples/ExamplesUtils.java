@@ -1,9 +1,7 @@
 package trainableDeepSegmentation.examples;
 
 import bigDataTools.logging.Logger;
-import trainableDeepSegmentation.instances.InstancesAndMetadata;
-import weka.core.DenseInstance;
-import weka.core.Instance;
+import trainableDeepSegmentation.instances.InstancesMetadata;
 import weka.core.Instances;
 
 import java.awt.*;
@@ -11,8 +9,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import static trainableDeepSegmentation.instances.InstancesAndMetadata.Metadata.*;
-import static trainableDeepSegmentation.instances.InstancesAndMetadata.Metadata.Metadata_Label_Id;
+import static trainableDeepSegmentation.instances.InstancesMetadata.Metadata.*;
+import static trainableDeepSegmentation.instances.InstancesMetadata.Metadata.Metadata_Label_Id;
 
 public abstract class ExamplesUtils {
 
@@ -69,7 +67,7 @@ public abstract class ExamplesUtils {
 
 
     public static ArrayList< Example > getExamplesFromInstancesAndMetadata(
-            InstancesAndMetadata instancesAndMetadata )
+            InstancesMetadata instancesAndMetadata )
     {
         ArrayList< Example > examples = new ArrayList<>(  );
 

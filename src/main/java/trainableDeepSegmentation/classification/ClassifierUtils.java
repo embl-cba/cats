@@ -2,9 +2,14 @@ package trainableDeepSegmentation.classification;
 
 import hr.irb.fastRandomForest.FastRandomForest;
 import trainableDeepSegmentation.WekaSegmentation;
+import trainableDeepSegmentation.instances.InstancesMetadata;
 import weka.core.Attribute;
 import weka.core.Instances;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -88,6 +93,50 @@ public class ClassifierUtils {
         public int compareTo(NamesAndUsages o) {
             return (int)(this.usage - o.usage);
         }
+    }
+
+
+    /**
+     * Read header classifier from a .model file
+     *
+     * @param pathName complete path and file name
+     * @return false if error
+     */
+    public static ClassifierInstancesMetadata loadClassifierInstancesMetadata(
+            String directory,
+            String filename )
+    {
+        String filepath = directory + File.separator + filename;
+
+        WekaSegmentation.logger.info("\n# Loading classifier from " + filepath + " ..." );
+
+        ClassifierInstancesMetadata classifierInstancesMetadata = new ClassifierInstancesMetadata();
+
+        try
+        {
+            File selected = new File( filepath );
+
+            InputStream is = new FileInputStream(selected);
+            ObjectInputStream objectInputStream = new ObjectInputStream(is);
+
+            classifierInstancesMetadata.classifier = (FastRandomForest) objectInputStream.readObject();
+            classifierInstancesMetadata.instancesMetadata =
+                    new InstancesMetadata ( (Instances ) objectInputStream.readObject() );
+            classifierInstancesMetadata.instancesMetadata.moveMetadataFromInstancesToMetadata();
+
+            objectInputStream.close();
+
+        }
+        catch (Exception e)
+        {
+            WekaSegmentation.logger.error("Error while loading classifier!");
+            WekaSegmentation.logger.info(e.toString());
+            return null;
+        }
+
+        WekaSegmentation.logger.info( "...done!" );
+        return classifierInstancesMetadata;
+
     }
 
 

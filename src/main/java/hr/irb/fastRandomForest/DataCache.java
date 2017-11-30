@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 
-import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import weka.core.Instances;
 import weka.core.Utils;
 

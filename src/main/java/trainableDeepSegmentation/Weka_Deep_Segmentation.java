@@ -30,7 +30,6 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -40,7 +39,7 @@ import javax.swing.*;
 
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.examples.Example;
-import trainableDeepSegmentation.instances.InstancesAndMetadata;
+import trainableDeepSegmentation.instances.InstancesMetadata;
 import trainableDeepSegmentation.labels.LabelManager;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageDisk;
@@ -497,7 +496,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 							logger.error( "No classifier trained yet..." );
 						}
 					}
-					else if(e.getSource() == doButton )
+					else if( e.getSource() == doButton
+							|| e.getSource() == actionComboBox )
 					{
 
 						wekaSegmentation.setImageBackground(
@@ -1168,6 +1168,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingConstraints.gridy++;
 
 			trainingJPanel.add( actionComboBox, trainingConstraints );
+			actionComboBox.addActionListener(  this );
 			trainingConstraints.gridy++;
 
 			JPanel instancesPanel = new JPanel();
@@ -2311,7 +2312,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	}
 
 
-	public InstancesAndMetadata getCombinedSelectedInstancesFromGUI()
+	public InstancesMetadata getCombinedSelectedInstancesFromGUI()
 	{
 		List<String> selectedInstances = (List< String >) instancesList.getSelectedValuesList();
 
@@ -2339,7 +2340,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	{
 
 		// getInstancesAndMetadata instances instances
-		InstancesAndMetadata instancesAndMetadata = getCombinedSelectedInstancesFromGUI();
+		InstancesMetadata instancesAndMetadata = getCombinedSelectedInstancesFromGUI();
 
 		if ( instancesAndMetadata == null )
 		{
@@ -2441,7 +2442,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.stopCurrentTasks = false;
 				wekaSegmentation.isBusy = true;
 
-				InstancesAndMetadata iam = getCombinedSelectedInstancesFromGUI();
+				InstancesMetadata iam = getCombinedSelectedInstancesFromGUI();
 				wekaSegmentation.applyBgFgClassification( interval, iam );
 
 				win.updateOverlay();
@@ -2646,7 +2647,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				getSaveDirFile(
 						"Save instance file", ".ARFF" );
 
-		InstancesAndMetadata instancesAndMetadata =
+		InstancesMetadata instancesAndMetadata =
 				wekaSegmentation.
 						getInstancesManager().
 						getInstancesAndMetadata( key );
@@ -2775,8 +2776,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	{
 
 		String[] dirFile =
-				getOpenDirFile(
-						"Please choose a output file" );
+				getSaveDirFile("Please choose a output file", ".classifier" );
 
 		win.setButtonsEnabled( false );
 		wekaSegmentation.isBusy = true;
@@ -2787,7 +2787,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaSegmentation.isBusy = false;
 
 	}
-	
+
 	/**
 	 * Add new class in the panel (up to MAX_NUM_CLASSES)
 	 */
