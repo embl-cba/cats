@@ -1,7 +1,5 @@
 package trainableDeepSegmentation;
 
-import bigDataTools.dataStreamingTools.DataStreamingTools;
-import bigDataTools.utils.ImageDataInfo;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -113,9 +111,9 @@ public class TestGUI {
 		Weka_Deep_Segmentation weka_segmentation = new Weka_Deep_Segmentation();
 		weka_segmentation.run("");
 
-		weka_segmentation.assignResultImage( weka_segmentation.RESULT_IMAGE_RAM );
-		weka_segmentation.getWekaSegmentation().setImagingModality( WekaSegmentation.SEM_IMAGING );
-		weka_segmentation.setImagingModality( WekaSegmentation.SEM_IMAGING );
+		weka_segmentation.assignResultImage( WekaSegmentation.RESULT_IMAGE_RAM );
+		weka_segmentation.getWekaSegmentation().setImagingModality( Weka_Deep_Segmentation.SEM_IMAGING );
+		weka_segmentation.setImagingModality( Weka_Deep_Segmentation.SEM_IMAGING );
 		weka_segmentation.getWekaSegmentation().setNumTrees( 200 );
 		weka_segmentation.getWekaSegmentation().settings.binFactor = 2;
 

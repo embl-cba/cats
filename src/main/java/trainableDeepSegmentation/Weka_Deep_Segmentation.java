@@ -149,6 +149,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier";
 	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
 	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
+	public static final String SHOW_CLASSIFIER_SETTINGS = "Show classifier settings";
+	public static final String SHOW_FEATURE_SETTINGS = "Show feature settings";
+
+
 
 	// TODO: how to know the settings associated with instances data
 	// ??
@@ -158,6 +162,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 			new String[] {
 					UPDATE_LABELS_AND_TRAIN,
 					TRAIN_CLASSIFIER,
+					SHOW_CLASSIFIER_SETTINGS,
+					SHOW_FEATURE_SETTINGS,
 					IO_LOAD_INSTANCES,
 					IO_SAVE_INSTANCES,
 					IO_EXPORT_RESULT_IMAGE,
@@ -167,14 +173,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 					GET_LABEL_IMAGE_TRAINING_ACCURACIES,
 					RECOMPUTE_LABELS,
 					IO_LOAD_CLASSIFIER,
-					IO_SAVE_CLASSIFIER
+					IO_SAVE_CLASSIFIER,
 			} );
 
 
+	public static final String SEM_IMAGING = "Scanning EM";
+	public static final String FLUORESCENCE_IMAGING = "Fluorescence";
+	public static final String TRANSMISSION_LM_IMAGING = "Transmission LM";
+
 	private JComboBox imagingModalityComboBox = new JComboBox(
 			new String[] {
-					WekaSegmentation.FLUORESCENCE_IMAGING,
-					WekaSegmentation.SEM_IMAGING
+					FLUORESCENCE_IMAGING,
+					SEM_IMAGING,
+					TRANSMISSION_LM_IMAGING
 			} );
 
 
@@ -283,15 +294,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 	static final String REVIEW_START = "Review labels";
 	static final String REVIEW_END = "Done reviewing";
 
-	public static final String RESULT_IMAGE_DISK_SINGLE_TIFF = "Disk";
-	public static final String RESULT_IMAGE_RAM = "RAM";
-
 	public static final String TRAINING_DATA_TRACES = "Traces";
 	public static final String TRAINING_DATA_LABEL_IMAGE = "Label image";
 
 	public static final String SELECTION = "Selected roi";
 	public static final String SELECTION_PM10Z = "Selected roi +- 10 slices";
-	public static final String WHOLE_DATA_SET = "Whole data set";
 
 	private LabelManager labelManager = null;
 
@@ -367,8 +374,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		assignResultImageButton.setToolTipText("Assign result image");
 		assignResultImageButton.setEnabled(true);
 
-		resultImageComboBox = new JComboBox( new String[]{ RESULT_IMAGE_RAM,
-				RESULT_IMAGE_DISK_SINGLE_TIFF } );
+		resultImageComboBox = new JComboBox( new String[]{ WekaSegmentation.RESULT_IMAGE_RAM,
+				WekaSegmentation.RESULT_IMAGE_DISK_SINGLE_TIFF } );
 
 		reviewLabelsClassComboBox = new JComboBox( new String[]{ "1" , "2"} );
 
@@ -383,7 +390,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		rangeComboBox = new JComboBox( new String[]
 				{ SELECTION,
 						SELECTION_PM10Z,
-						WHOLE_DATA_SET,
+						WekaSegmentation.WHOLE_DATA_SET,
 						"1,10,1,2"
 				});
 
@@ -450,7 +457,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					{
 						stopCurrentWekaSegmentationTasks();
 					}
-					else if(e.getSource() == assignResultImageButton )
+					else if( e.getSource() == assignResultImageButton )
 					{
 						assignResultImage( (String) resultImageComboBox.getSelectedItem() );
 
@@ -508,6 +515,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 						switch ( action )
 						{
+							case SHOW_CLASSIFIER_SETTINGS:
+								showClassifierSettingsDialog();
+								break;
+							case SHOW_FEATURE_SETTINGS:
+								showFeatureComputationSettingsDialog();
+								break;
 							case IO_LOAD_CLASSIFIER:
 								loadClassifier();
 								break;
@@ -533,7 +546,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 								applyBgFgClassification();
 								break;
 							case TRAIN_FROM_LABEL_IMAGE:
-								trainIterativeFromLabelImage();
+								trainFromLabelImage();
 								break;
 							case GET_LABEL_IMAGE_TRAINING_ACCURACIES:
 								reportLabelImageTrainingAccuracies();
@@ -556,8 +569,16 @@ public class Weka_Deep_Segmentation implements PlugIn
 					}
 					else if(e.getSource() == imagingModalityComboBox )
 					{
-						wekaSegmentation.setImagingModality(
-								(String) imagingModalityComboBox.getSelectedItem() );
+						String imagingModality = (String) imagingModalityComboBox.getSelectedItem();
+
+						if ( imagingModality.equals( FLUORESCENCE_IMAGING ) )
+						{
+							wekaSegmentation.settings.log2 = true;
+						}
+						else
+						{
+							wekaSegmentation.settings.log2 = false;
+						}
 					}
 					else if(e.getSource() == imageBackgroundTextField )
 					{
@@ -618,7 +639,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			dotDotDot += ".";
 			try
 			{
-				Thread.sleep( 500 );
+				Thread.sleep( 3000 );
 			} catch ( InterruptedException e )
 			{
 				e.printStackTrace();
@@ -1802,18 +1823,19 @@ public class Weka_Deep_Segmentation implements PlugIn
 				"You can point to a directory with previous results! They will be loaded (and not overwritten)." );
 		gd.addChoice( "Location" ,
 				new String[]
-						{ RESULT_IMAGE_DISK_SINGLE_TIFF,
-								RESULT_IMAGE_RAM
-						}, RESULT_IMAGE_RAM);
+						{ WekaSegmentation.RESULT_IMAGE_DISK_SINGLE_TIFF,
+								WekaSegmentation.RESULT_IMAGE_RAM
+						}, WekaSegmentation.RESULT_IMAGE_RAM);
 
 
 		gd.addMessage( "IMAGING MODALITY\n \n" +
 				"The feature computation slightly depends on this choice." );
 				gd.addChoice( "Modality" ,
 				new String[]
-						{ WekaSegmentation.FLUORESCENCE_IMAGING,
-								WekaSegmentation.SEM_IMAGING
-						}, WekaSegmentation.SEM_IMAGING);
+						{ FLUORESCENCE_IMAGING,
+								SEM_IMAGING,
+								TRANSMISSION_LM_IMAGING },
+						SEM_IMAGING);
 
 		IJ.run("Set Measurements...", "mean redirect=None decimal=4");
 
@@ -1826,7 +1848,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		gd.showDialog();
 
 		assignResultImage( gd.getNextChoice() );
-		wekaSegmentation.setImagingModality( gd.getNextChoice() );
+		setImagingModality( gd.getNextChoice() );
 		wekaSegmentation.setImageBackground( (int) gd.getNextNumber() );
 
 		if ( gd.wasCanceled() ) return false;
@@ -1908,7 +1930,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	public void assignResultImage( String resultImageType )
 	{
-		if ( resultImageType.equals( RESULT_IMAGE_DISK_SINGLE_TIFF ) )
+		if ( resultImageType.equals( WekaSegmentation.RESULT_IMAGE_DISK_SINGLE_TIFF ) )
 		{
 			String directory = IJ.getDirectory("Select result images directory");
 			if( directory == null )
@@ -1929,13 +1951,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 					directory);
 
 		}
-		else if ( resultImageType.equals( RESULT_IMAGE_RAM ))
+		else if ( resultImageType.equals( WekaSegmentation.RESULT_IMAGE_RAM ))
 		{
 
-			ResultImage resultImage = new ResultImageMemory( wekaSegmentation,
-					wekaSegmentation.getInputImageDimensions() );
-
-			wekaSegmentation.setResultImage( resultImage );
+			wekaSegmentation.setResultImageRAM();
 
 			logger.info("Allocated memory for classification result image." );
 
@@ -2196,8 +2215,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 *
 	 * @param command current text of the instances button ("Train classifier" or "STOP")
 	 */
-	public void trainIterativeFromLabelImage()
+	public void trainFromLabelImage()
 	{
+
+		FinalInterval interval = getIntervalFromGUI();
+
+		if ( interval == null ) return;
 
 		if ( ! wekaSegmentation.hasLabelImage() )
 		{
@@ -2229,7 +2252,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							{ wekaSegmentation.NEW,
 									wekaSegmentation.APPEND},
 									wekaSegmentation.NEW);
-					gd.addNumericField( "Number of iterations", 3.0, 0 );
+					//gd.addNumericField( "Number of iterations", 3.0, 0 );
 					gd.addNumericField( "Z chunk size", Prefs.getThreads(), 0 );
 					gd.addNumericField( "(nx,ny) for tiling", 3, 0 );
 					gd.addNumericField( "Radius for local instances pairs", 5, 0 );
@@ -2243,7 +2266,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 					String instancesKey = gd.getNextString();
 					String modality = gd.getNextChoice();
-					int numIterations = (int) gd.getNextNumber();
+					int numIterations = 1000; // let's rather control it via the maxNumInstances
 					int zChunkSize = (int) gd.getNextNumber();
 					int nxyTiles = (int) gd.getNextNumber();
 					int localRadius = (int) gd.getNextNumber();
@@ -2252,6 +2275,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 					boolean autoSaveInstances = gd.getNextBoolean();
 
 					String directory = null;
+
+					if ( ! showClassifierSettingsDialog() ) return;
+					if ( ! showFeatureComputationSettingsDialog() ) return;
 
 					if ( autoSaveInstances )
 					{
@@ -2267,7 +2293,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							localRadius,
 							maxNumInstances,
 							directory,
-							getIntervalFromGUI()
+							interval
 					);
 
 
@@ -2404,7 +2430,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		ResultImage resultImage = null;
 
-		if ( resultImageComboBox.getSelectedItem().equals( RESULT_IMAGE_DISK_SINGLE_TIFF ) )
+		if ( resultImageComboBox.getSelectedItem().equals( WekaSegmentation.RESULT_IMAGE_DISK_SINGLE_TIFF ) )
 		{
 			String directory = IJ.getDirectory("Select a directory");
 
@@ -2415,7 +2441,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					directory);
 
 		}
-		else if ( resultImageComboBox.getSelectedItem().equals( RESULT_IMAGE_RAM ))
+		else if ( resultImageComboBox.getSelectedItem().equals( WekaSegmentation.RESULT_IMAGE_RAM ))
 		{
 			resultImage = new ResultImageMemory( wekaSegmentation,
 					wekaSegmentation.getInputImageDimensions() );
@@ -2481,11 +2507,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.isBusy = true;
 				wekaSegmentation.resetUncertaintyRegions();
 
-				wekaSegmentation.applyClassifierWithTiling(
-						classifierKey,
-						interval,
-						-1, // -1 = auto
-						null, false);
+				wekaSegmentation.applyClassifierWithTiling( classifierKey, interval );
 
 				if (showColorOverlay)
 					win.toggleOverlay();
@@ -2503,7 +2525,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		String rangeString = (String) rangeComboBox.getSelectedItem();
 
-		if ( rangeString.equals( WHOLE_DATA_SET) )
+		if ( rangeString.equals( WekaSegmentation.WHOLE_DATA_SET) )
 		{
 			return ( IntervalUtils.getInterval(
 					wekaSegmentation.getInputImage() ));
@@ -2768,7 +2790,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	}
 
-
 	/**
 	 * Save instances to a file
 	 */
@@ -2885,155 +2906,21 @@ public class Weka_Deep_Segmentation implements PlugIn
 	{
 		GenericDialogPlus gd = new GenericDialogPlus("Segmentation settings");
 
-		/*
-		final boolean[] oldEnableFeatures = wekaSegmentation.getEnabledFeatures();
-		final String[] availableFeatures = FeatureImagesMultiResolution.availableFeatures;
-
-		gd.addMessage("Training features:");
-		final int rows = 1; //(int) Math.round( availableFeatures.length/2.0 );
-		gd.addCheckboxGroup(rows, availableFeatures.length, availableFeatures, oldEnableFeatures);
-		*/
-
-		/*
-		if(wekaSegmentation.getLoadedTrainingData() != null)
-		{
-			final Vector<Checkbox> v = gd.getCheckboxes();
-			for(Checkbox c : v)
-				c.setEnabled(false);
-			gd.addMessage("WARNING: no features are selectable while using loaded data");
-		}
-		*/
-
-		/*
-		gd.addChoice( "Imaging modality" ,
-				new String[]
-						{ WekaSegmentation.FLUORESCENCE_IMAGING,
-								WekaSegmentation.SEM_IMAGING
-						}, WekaSegmentation.FLUORESCENCE_IMAGING);
-
-		gd.addNumericField( "Background value", 0, 0 );
-
-
-		gd.addChoice( "Assign result image" ,
-				new String[]
-						{ RESULT_IMAGE_DISK_SINGLE_TIFF,
-								RESULT_IMAGE_RAM
-						}, RESULT_IMAGE_DISK_SINGLE_TIFF);
-		*/
-
-		gd.addNumericField("Feature computation: Downsampling factor",
-				wekaSegmentation.settings.binFactor, 0);
-		gd.addNumericField("Feature computation: Maximum downsampling level",
-				wekaSegmentation.settings.maxBinLevel, 0);
-		gd.addNumericField("Feature computation: Maximal convolution depth",
-				wekaSegmentation.settings.maxDeepConvLevel, 0);
-		gd.addNumericField("Feature computation: z/xy settings.anisotropy",
-				wekaSegmentation.settings.anisotropy, 2);
-		gd.addNumericField("Computation: Memory factor",
-				wekaSegmentation.memoryFactor, 1);
-		//gd.addNumericField("Label Image Training: Instance sets per plane and tile",
-		//		wekaSegmentation.getNumLabelImageInstancesPerPlaneTileAndClass(), 0);
-
-		/*
-		if(wekaSegmentation.getLoadedTrainingData() != null)
-		{
-			for(int i = 0; i < 4; i++)
-				((TextField) gd.getNumericFields().getInstancesAndMetadata( i )).setEnabled(false);
-		}
-		*/
-
-		gd.addNumericField("Classifier: Number of trees",
-				wekaSegmentation.getNumTrees(), 0);
-		//gd.addNumericField("Classifier: Accuracy",
-		//		wekaSegmentation.accuracy, 1);
-		//gd.addNumericField("Classifier: Fraction of random features per node",
-		//		wekaSegmentation.fractionRandomFeatures, 2);
-		gd.addNumericField("Classifier: Minimum feature usage factor",
-				wekaSegmentation.minFeatureUsageFactor, 1);
-		gd.addStringField("RF: Batch size per tree in percent",
-				wekaSegmentation.settings.batchSizePercent);
-		gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
-				wekaSegmentation.getActiveChannelsAsString() );
-
-		String featuresToShow = "None";
-		if ( wekaSegmentation.getFeaturesToShow() != null )
-			featuresToShow = wekaSegmentation.getFeaturesToShowAsString();
-
-		//gd.addStringField("Show features [ID,ID,..]", featuresToShow );
-		//gd.addStringField("Classification: Region tile size",
-		//		wekaSegmentation.getTileSizeSetting());
-		//gd.addNumericField("Number of region threads", wekaSegmentation.regionThreads, 0);
-		//gd.addNumericField("Number of threads inside a region", wekaSegmentation.threadsPerRegion, 0);
-		//gd.addNumericField("Number of RF instances threads", wekaSegmentation.numRfTrainingThreads, 0);
-		//gd.addNumericField("Tiling delay [ms]", wekaSegmentation.tilingDelay, 0);
-		//gd.addNumericField("Classification: Background threshold [gray values]", wekaSegmentation.settings.imageBackground, 0);
-		//gd.addStringField("Resolution level weights", wekaSegmentation.getResolutionWeightsAsString());
-		//gd.addNumericField("Uncertainty LUT decay", wekaSegmentation.uncertaintyLutDecay, 1);
-
-
-		/*
-		// Add Weka panel for selecting the classifier and its options
-		GenericObjectEditor m_ClassifierEditor = new GenericObjectEditor();
-		PropertyPanel m_CEPanel = new PropertyPanel(m_ClassifierEditor);
-		m_ClassifierEditor.setClassType(Classifier.class);
-		m_ClassifierEditor.setValue(wekaSegmentation.getClassifier());
-
-		// add classifier editor panel
-		gd.addComponent( m_CEPanel,  GridBagConstraints.HORIZONTAL , 1 );
-
-		Object c = (Object)m_ClassifierEditor.getValue();
-	    String originalOptions = "";
-	    String originalClassifierName = c.getClass().getName();
-	    if (c instanceof OptionHandler)
-	    {
-	    	originalOptions = Utils.joinOptions(((OptionHandler)c).getOptions());
-	    }
-	    */
-
-		//gd.addMessage("Class names:");
 		for(int i = 0; i < wekaSegmentation.getNumClasses(); i++)
 			gd.addStringField("Class "+(i+1), wekaSegmentation.getClassName(i), 15);
-
-		/*
-		gd.addMessage("Advanced options:");
-
-		gd.addCheckbox( "Balance classes", wekaSegmentation.doClassBalance() );
-		gd.addButton("Save feature stack", new SaveFeatureStackButtonListener(
-				"Select location to save feature stack", wekaSegmentation ) );
-				*/
-
-		// gd.addCheckbox("Compute feature importances during next instances", wekaSegmentation.getComputeFeatureImportance());
 
 		gd.addSlider("Result overlay opacity", 0, 100, win.overlayOpacity);
 
 		gd.addHelp("http://fiji.sc/Trainable_Weka_Segmentation");
+
+
 
 		gd.showDialog();
 
 		if ( gd.wasCanceled() )
 			return false;
 
-		//wekaSegmentation.setImagingModality( gd.getNextChoice() );
-		//wekaSegmentation.setImageBackground( (int) gd.getNextNumber() );
-		//assignResultImage( gd.getNextChoice() );
 
-
-		wekaSegmentation.settings.binFactor = (int) gd.getNextNumber();
-		wekaSegmentation.settings.maxBinLevel = (int) gd.getNextNumber();
-		wekaSegmentation.settings.maxDeepConvLevel = (int) gd.getNextNumber();
-		wekaSegmentation.settings.anisotropy = gd.getNextNumber();
-		wekaSegmentation.memoryFactor = gd.getNextNumber();
-		//wekaSegmentation.setLabelImageInstancesPerPlaneTileAndClass( (int) gd.getNextNumber());
-
-		// Set classifier and options
-		wekaSegmentation.setNumTrees((int) gd.getNextNumber());
-		//wekaSegmentation.accuracy = (double) gd.getNextNumber();
-		//wekaSegmentation.fractionRandomFeatures = (double) gd.getNextNumber();
-		wekaSegmentation.minFeatureUsageFactor = (double) gd.getNextNumber();
-		wekaSegmentation.setBatchSizePercent( gd.getNextString() );
-		wekaSegmentation.setActiveChannelsFromString(gd.getNextString());
-		//wekaSegmentation.setFeaturesToShowFromString(gd.getNextString());
-		//wekaSegmentation.setTileSizeSetting( gd.getNextString() );
 
 		boolean classNameChanged = false;
 
@@ -3061,19 +2948,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 		// adapt to changes in class names
 		updateComboBoxes();
 
-		// wekaSegmentation.setComputeFeatureImportance(gd.getNextBoolean());
-
-		// Update flag to balance number of class instancesList
-		/*
-		final boolean balanceClasses = gd.getNextBoolean();
-		if( wekaSegmentation.doClassBalance() != balanceClasses )
-		{
-			wekaSegmentation.setClassBalance( balanceClasses );
-			// Macro recording
-			record( SET_BALANCE, new String[] { Boolean.toString( balanceClasses )});
-		}
-		*/
-		// Update result overlay alpha
 		final int newOpacity = (int) gd.getNextNumber();
 		if( newOpacity != win.overlayOpacity )
 		{
@@ -3089,54 +2963,77 @@ public class Weka_Deep_Segmentation implements PlugIn
 		}
 
 
-		// If there is a change in the class names,
-		// the data set (instancesList) must be updated.
 		if(classNameChanged)
 		{
 			// Pack window to update buttons
 			win.pack();
 		}
 
-		// Update feature stack if necessary
-		/*
-		if(featuresChanged)
-		{
-			// Force features to be updated
-			wekaSegmentation.setFeaturesDirty();
-		}
-		else	// This checks if the feature stacks were updated while using the save feature stack button
-			if( ! wekaSegmentation.getFeatureImages().isEmpty()
-					&& wekaSegmentation.getFeatureImages().getReferenceSliceIndex() != -1)
-				wekaSegmentation.setUpdateFeatures(false);
-		*/
 
 		return true;
 	}
 
-	// Quite of a hack from Johannes Schindelin:
-	// use reflection to insert actionComboBox, since there is no other method to do that...
-	// TODO: what is that good for??
-	/*
-	static {
-		try {
-			IJ.showStatus("Loading Weka properties...");
-			IJ.log("Loading Weka properties...");
-			Field field = GenericObjectEditor.class.getDeclaredField("EDITOR_PROPERTIES");
-			field.setAccessible(true);
-			Properties editorProperties = (Properties)field.getInstancesAndMetadata(null);
-			String key = "weka.actionComboBox.Classifier";
-			String value = editorProperties.getProperty(key);
-			value += ",hr.irb.fastRandomForest.FastRandomForest";
-			editorProperties.setProperty(key, value);
-			//new Exception("insert").printStackTrace();
-			//System.err.println("value: " + value);
+	public boolean showClassifierSettingsDialog()
+	{
+		GenericDialogPlus gd = new GenericDialogPlus("Classifier settings");
 
-			// add actionComboBox from properties (needed after upgrade to WEKA version 3.7.11)
-			PluginManager.addFromProperties(editorProperties);
-		} catch (Exception e) {
-			IJ.error("Could not insert my own cool actionComboBox!");
+		gd.addNumericField("Classifier: Number of trees",
+				wekaSegmentation.getNumTrees(), 0);
+		gd.addNumericField("Classifier: Minimum feature usage factor",
+				wekaSegmentation.minFeatureUsageFactor, 1);
+		gd.addStringField("RF: Batch size per tree in percent",
+				wekaSegmentation.settings.batchSizePercent);
+
+
+		gd.showDialog();
+
+		if ( gd.wasCanceled() )
+			return false;
+
+		// Set classifier and options
+		wekaSegmentation.setNumTrees((int) gd.getNextNumber());
+		wekaSegmentation.minFeatureUsageFactor = (double) gd.getNextNumber();
+		wekaSegmentation.setBatchSizePercent( gd.getNextString() );
+
+		return true;
+	}
+
+	public boolean showFeatureComputationSettingsDialog()
+	{
+		GenericDialogPlus gd = new GenericDialogPlus("Segmentation settings");
+
+		for ( int i = 0; i < 5; ++i )
+		{
+			gd.addNumericField( "Binning " + ( i + 1 ), wekaSegmentation.settings.binFactors[ i ], 0 );
 		}
-	}*/
+
+		gd.addNumericField("Maximal convolution depth",
+				wekaSegmentation.settings.maxDeepConvLevel, 0);
+		gd.addNumericField("z/xy settings.anisotropy",
+				wekaSegmentation.settings.anisotropy, 2);
+
+		gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
+				wekaSegmentation.getActiveChannelsAsString() );
+
+
+		gd.showDialog();
+
+		if ( gd.wasCanceled() )
+			return false;
+
+		for ( int i = 0; i < 5; ++i )
+		{
+			wekaSegmentation.settings.binFactors[i] = (int) gd.getNextNumber();
+		}
+
+		wekaSegmentation.settings.maxDeepConvLevel = (int) gd.getNextNumber();
+		wekaSegmentation.settings.anisotropy = gd.getNextNumber();
+
+		wekaSegmentation.setActiveChannelsFromString(gd.getNextString());
+
+
+		return true;
+	}
 
 	/* **********************************************************
 	 * Macro recording related methods

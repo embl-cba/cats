@@ -1216,6 +1216,20 @@ public class FeatureProvider
     }
 
 
+
+    public static int getMaxBinLevel( int[] binFactors )
+    {
+        int maxBinLevel = 0;
+        for ( int b : binFactors )
+        {
+            if ( b > 0 )
+            {
+                maxBinLevel++;
+            }
+        }
+        return maxBinLevel;
+    }
+
     /**
      * Update features with current list in a multi-thread fashion
      *
@@ -1227,10 +1241,13 @@ public class FeatureProvider
             int maximumMultithreadedLevel )
     {
         long start = System.currentTimeMillis();
-        double anisotropy = wekaSegmentation.settings.anisotropy;
 
         // TODO: isn't below a job for the feature-provider?
         featureImageBorderSizes = wekaSegmentation.getFeatureBorderSizes();
+
+        double anisotropy = wekaSegmentation.settings.anisotropy;
+        int[] binFactors = wekaSegmentation.settings.binFactors;
+        int maxLevel = getMaxBinLevel( binFactors );
 
         // getInstancesAndMetadata the larger part of original image that is
         // needed to compute features for requested interval.
@@ -1241,7 +1258,7 @@ public class FeatureProvider
                 channel, "mirror" );
 
         // pre-processing
-        if ( wekaSegmentation.getImagingModality() == WekaSegmentation.FLUORESCENCE_IMAGING )
+        if ( wekaSegmentation.settings.log2 )
         {
             // subtract background
             IJ.run( inputImageCrop, "Subtract...", "value="
@@ -1274,9 +1291,7 @@ public class FeatureProvider
             // BINNING
             //
 
-            ArrayList< int[] > binnings = new ArrayList<>();
-
-            for ( int level = 0; level <= wekaSegmentation.settings.maxBinLevel; level++)
+            for ( int level = 0; level <= maxLevel; level++)
             {
 
                 start = System.currentTimeMillis();
@@ -1286,124 +1301,100 @@ public class FeatureProvider
                     return ( false );
                 }
 
-
                 final ArrayList<ImagePlus> featureImagesThisResolution = new ArrayList<>();
                 final ArrayList<ImagePlus> featureImagesPreviousResolution;
 
                 if ( level == 0 )
                 {
-
-                    featureImagesThisResolution.add( inputImageCrop );
-                    binnings.add( new int[]{1, 1, 1} );
-
+                    featureImagesPreviousResolution = new ArrayList<>(  );
+                    featureImagesPreviousResolution.add( inputImageCrop );
                 }
                 else
                 {
-                    // bin images of previous resolution
-                    // (no multi-threading because this is very fast)
-
-                    featureImagesPreviousResolution = multiResolutionFeatureImages.get(level - 1);
-
-                    // compute how much should be binned;
-                    // if the data is anisotropic
-                    // we bin anisotropic as well
-                    int[] binning = getBinning(
-                            featureImagesPreviousResolution.get(0),
-                            anisotropy,
-                            wekaSegmentation.settings.binFactor );
-
-                    int[] combinedBinning = new int[3];
-                    for ( int i = 0; i < 3; i++ )
-                    {
-                        combinedBinning[i] = binnings.get( level - 1 )[i] * binning[i];
-                    }
-                    binnings.add( combinedBinning ); // remember for feature name construction
-
-                    // add binning information to image title
-                    String binningTitle = "Bin" +
-                            binning[0] + "x" +
-                            binning[1] + "x" +
-                            binning[2];
-
-                    // adapt settingAnisotropy, which could have changed during
-                    // the (anisotropic) binning
-                    anisotropy /= 1.0 * binning[0] / binning[2];
-
-                    // Multi-threaded
-                    ExecutorService exe = Executors.newFixedThreadPool( numThreads );
-                    ArrayList<Future<ImagePlus>> futures = new ArrayList<>();
-
-                    for (ImagePlus featureImage : featureImagesPreviousResolution)
-                    {
-                        if ( level == wekaSegmentation.settings.maxBinLevel )
-                        {
-                            /*
-                            don't bin but smooth last scale to better preserve
-                            spatial information.
-                            smoothing radius of 3 is the largest that will not
-                            cause boundary effects,
-                            because the ignored border during classification is
-                            3 pixel at settings.maxBinLevel - 1
-                            (i.e. 1 pixel at settings.maxBinLevel)
-                            */
-
-                            // TODO:
-                            // - don't compute this feature if not needed
-
-                            // TODO:
-                            // - maybe change below to gaussian smoothing for better
-                            // derivative computation further down
-
-                            /*
-                             currently, below an average filter is computed.
-                             for computing image derivatives this might not be ideal
-                             because the difference of two shifted means only
-                             reflects difference between the two pixels at the edge
-                             of the mean filter, which could be quite noisy.
-                             on the other hand, the hessian and structure themselves
-                             gaussian-smooth a bit before computing the derivatives
-                             such that it actually might be ok.
-                             */
-
-                            int filterRadius = 2;
-                            futures.add( exe.submit(
-                                    filter3d( featureImage, filterRadius ) ) );
-
-                            //featureImagesThisResolution.add(filter3d( featureImage,
-                            //       filterRadius ).call()   );
-
-                        }
-                        else
-                        {
-
-                            if ( isFeatureOrChildrenNeeded( binningTitle + "_" +
-                                            featureImage.getTitle()) )
-                            {
-
-                                futures.add( exe.submit(
-                                        bin( featureImage, binning,
-                                                binningTitle, "AVERAGE")
-                                        )
-                                );
-
-                                //featureImagesThisResolution.add(
-                                //        bin( featureImage,
-                                //                binning,
-                                //                binningTitle, "AVERAGE").call() );
-                            }
-                        }
-                    }
-
-                    for ( Future<ImagePlus> f : futures )
-                    {
-                        // getInstancesAndMetadata feature images
-                        featureImagesThisResolution.add( f.get() );
-                    }
-                    futures = null;
-                    exe.shutdown();
-                    System.gc();
-
+                    featureImagesPreviousResolution = multiResolutionFeatureImages.get( level - 1 );
                 }
+
+                int[] binning = getBinning(
+                        featureImagesPreviousResolution.get(0),
+                        anisotropy,
+                        binFactors[ level ] );
+
+                // add binning information to image title
+                String binningTitle = "Bin" +
+                        binning[0] + "x" +
+                        binning[1] + "x" +
+                        binning[2];
+
+                // adapt settingAnisotropy, which could have changed during
+                // the (anisotropic) binning
+                anisotropy /= 1.0 * binning[0] / binning[2];
+
+                ExecutorService exe = Executors.newFixedThreadPool( numThreads );
+                ArrayList<Future<ImagePlus>> futuresBinning = new ArrayList<>();
+
+                for (ImagePlus featureImage : featureImagesPreviousResolution)
+                {
+                    if ( level == maxLevel )
+                    {
+                        /*
+                        don't bin but smooth last scale to better preserve
+                        spatial information.
+                        smoothing radius of 3 is the largest that will not
+                        cause boundary effects,
+                        because the ignored border during classification is
+                        3 pixel at settings.maxBinLevel - 1
+                        (i.e. 1 pixel at settings.maxBinLevel)
+                        */
+
+                        // TODO:
+                        // - don't compute this feature if not needed
+
+                        // TODO:
+                        // - maybe change below to gaussian smoothing for better
+                        // derivative computation further down
+
+                        /*
+                         currently, below an average filter is computed.
+                         for computing image derivatives this might not be ideal
+                         because the difference of two shifted means only
+                         reflects difference between the two pixels at the edge
+                         of the mean filter, which could be quite noisy.
+                         on the other hand, the hessian and structure themselves
+                         gaussian-smooth a bit before computing the derivatives
+                         such that it actually might be ok.
+                         */
+
+                        int filterRadius = 2;
+                        futuresBinning.add( exe.submit(
+                                filter3d( featureImage, filterRadius ) ) );
+                    }
+                    else
+                    {
+
+                        if ( isFeatureOrChildrenNeeded(
+                                binningTitle + "_" +
+                                        featureImage.getTitle()) )
+                        {
+
+                            futuresBinning.add( exe.submit(
+                                    bin( featureImage, binning,
+                                            binningTitle, "AVERAGE")
+                                    )
+                            );
+
+                        }
+                    }
+                }
+
+                for ( Future<ImagePlus> f : futuresBinning )
+                {
+                    // getInstancesAndMetadata feature images
+                    featureImagesThisResolution.add( f.get() );
+                }
+                futuresBinning = null;
+                exe.shutdown();
+                System.gc();
+
 
                 Calibration calibrationThisResolution =
                         featureImagesThisResolution.get(0).getCalibration().copy();
@@ -1415,19 +1406,11 @@ public class FeatureProvider
                 double smoothingScale = 1.0;
                 double integrationScale = smoothingScale;
 
-                if ( level == wekaSegmentation.settings.maxBinLevel )
-                {
-                    // for the last scale we do not bin but only smooth (s.a.),
-                    // thus we need to look for features over a wider range
-                    integrationScale *= 2.0;
-                    // smoothingScale does not need to be increased, because the images are smoothed already
-                }
-
                 boolean hessianAbsoluteValues = false;
 
                 // Multi-threaded
-                ExecutorService exe = Executors.newFixedThreadPool( numThreads );
-                ArrayList<Future<ArrayList<ImagePlus>>> futures = new ArrayList<>();
+                exe = Executors.newFixedThreadPool( numThreads );
+                ArrayList<Future<ArrayList<ImagePlus>>> futuresFeatures = new ArrayList<>();
 
                 // Single threaded
                 ArrayList<ArrayList<ImagePlus>> featureImagesList = new ArrayList<>();
@@ -1460,10 +1443,10 @@ public class FeatureProvider
                         if (level <= maximumMultithreadedLevel) // multi-threaded
                         {
                             if ( isFeatureOrChildrenNeeded( "He_" + featureImage.getTitle()) )
-                                futures.add( exe.submit( getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
+                                futuresFeatures.add( exe.submit( getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
 
                             if ( isFeatureOrChildrenNeeded( "St_" + featureImage.getTitle()) )
-                                futures.add( exe.submit( getStructure(featureImage, smoothingScale, integrationScale)));
+                                futuresFeatures.add( exe.submit( getStructure(featureImage, smoothingScale, integrationScale)));
                         }
                         else // single-threaded
                         {
@@ -1480,14 +1463,14 @@ public class FeatureProvider
 
                 if ( level <= maximumMultithreadedLevel ) // multi-threaded
                 {
-                    for (Future<ArrayList<ImagePlus>> f : futures)
+                    for (Future<ArrayList<ImagePlus>> f : futuresFeatures)
                     {
                         // getInstancesAndMetadata feature images
                         featureImagesList.add( f.get() );
                         wekaSegmentation.totalThreadsExecuted.addAndGet(1);
                     }
                 }
-                futures = null;
+                futuresFeatures = null;
                 exe.shutdown();
                 System.gc();
 
@@ -1523,12 +1506,12 @@ public class FeatureProvider
             }
 
             // put feature images into simple array for easier access
-            int numFeatures = 0;
-            for ( ArrayList<ImagePlus> singleResolutionFeatureImages2 : multiResolutionFeatureImages )
-                numFeatures += singleResolutionFeatureImages2.size();
+           // int numFeatures;
+            //for ( ArrayList<ImagePlus> singleResolutionFeatureImages2 : multiResolutionFeatureImages )
+             //   numFeatures += singleResolutionFeatureImages2.size();
 
 
-            int iFeature = 0;
+            //int iFeature = 0;
             for ( ArrayList<ImagePlus> featureImages : multiResolutionFeatureImages )
             {
                 for ( ImagePlus featureImage : featureImages )
@@ -1597,13 +1580,14 @@ public class FeatureProvider
         };
     }
 
-    private int[] getBinning(ImagePlus imp, double anisotropy, int scalingFactor)
+    private int[] getBinning(ImagePlus imp,
+                             double anisotropy,
+                             int binFactor)
     {
-        // compute binning for this resolution layer
         int[] binning = new int[3];
 
-        binning[0] = scalingFactor; // x-binning
-        binning[1] = scalingFactor; // y-binning
+        binning[0] = binFactor; // x-binning
+        binning[1] = binFactor; // y-binning
 
         if ( imp.getNSlices() == 1 )
         {
@@ -1612,7 +1596,7 @@ public class FeatureProvider
         else
         {
             // potentially bin less in z
-            binning[2] = (int) (scalingFactor / anisotropy); // z-binning
+            binning[2] = (int) (binFactor / anisotropy); // z-binning
             if( binning[2]==0 ) binning[2] = 1;
         }
 

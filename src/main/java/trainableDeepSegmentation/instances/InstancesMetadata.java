@@ -44,22 +44,6 @@ public class InstancesMetadata {
         }
     }
 
-    public void putMetadataIntoInstances( Instances instances )
-    {
-        int numInstances = instances.size();
-
-        for ( Metadata metadata : Metadata.values() )
-        {
-            Attribute attribute = new Attribute( metadata.name() );
-            instances.insertAttributeAt( attribute, 0 );
-            for ( int i = 0; i < numInstances; ++i )
-            {
-                instances.get( i ).setValue( 0, getMetadata( metadata,  i )  );
-            }
-        }
-    }
-
-
     public enum Metadata {
         Metadata_Position_X,
         Metadata_Position_Y,
@@ -68,9 +52,19 @@ public class InstancesMetadata {
         Metadata_Label_Id,
         Metadata_Settings_ImageBackground,
         Metadata_Settings_Anisotropy,
-        Metadata_Settings_MaxBinLevel,
-        Metadata_Settings_BinFactor,
-        Metadata_Settings_MaxDeepConvLevel;
+        Metadata_Settings_Binning_0,
+        Metadata_Settings_Binning_1,
+        Metadata_Settings_Binning_2,
+        Metadata_Settings_Binning_3,
+        Metadata_Settings_Binning_4,
+        Metadata_Settings_Binning_5,
+        Metadata_Settings_Binning_6,
+        Metadata_Settings_Binning_7,
+        Metadata_Settings_Binning_8,
+        Metadata_Settings_Binning_9,
+        Metadata_Settings_MaxDeepConvLevel,
+        Metadata_Settings_Log2;
+
 
         public static boolean contains( String test )
         {

@@ -8,6 +8,8 @@ import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.*;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.results.ResultImage;
+import trainableDeepSegmentation.settings.Settings;
+import trainableDeepSegmentation.settings.SettingsUtils;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -62,13 +64,10 @@ public class InstancesUtils {
                 instancesAndMetadata.addMetadata( Metadata_Position_Z , example.z );
                 instancesAndMetadata.addMetadata( Metadata_Position_T , example.t );
                 instancesAndMetadata.addMetadata( Metadata_Label_Id, e );
-                // TODO: use the Metadata enum also for the settings to be able to loop
-                instancesAndMetadata.addMetadata( Metadata_Settings_ImageBackground, settings.imageBackground );
-                instancesAndMetadata.addMetadata( Metadata_Settings_Anisotropy, settings.anisotropy );
-                instancesAndMetadata.addMetadata( Metadata_Settings_MaxBinLevel, settings.maxBinLevel );
-                instancesAndMetadata.addMetadata( Metadata_Settings_MaxDeepConvLevel, settings.maxDeepConvLevel );
-                instancesAndMetadata.addMetadata( Metadata_Settings_BinFactor, settings.binFactor );
-            }
+
+                SettingsUtils.addSettingsToMetadata( settings, instancesAndMetadata );
+
+             }
 
         }
 
@@ -76,19 +75,6 @@ public class InstancesUtils {
 
     }
 
-    private static String getInfoString( String inputImageTitle, Settings settings )
-    {
-
-        String info = inputImageTitle;
-
-        info += "--" + Settings.ANISOTROPY + ":" + settings.anisotropy;
-        info += "--" + Settings.MAX_BIN_LEVEL + ":" + settings.maxBinLevel;
-        info += "--" + Settings.BIN_FACTOR + ":" + settings.binFactor;
-        info += "--" + Settings.MAX_DEEP_CONV_LEVEL + ":" + settings.maxDeepConvLevel;
-
-        return ( info );
-
-    }
 
     public static Callable<InstancesMetadata > getUsefulInstancesFromLabelImage(
             WekaSegmentation wekaSegmentation,
@@ -236,18 +222,8 @@ public class InstancesUtils {
                                 instancesAndMetadata.addMetadata( Metadata_Position_T, t );
                                 instancesAndMetadata.addMetadata( Metadata_Label_Id, -1 );
 
-                                // TODO: make this a loop!!!
-                                instancesAndMetadata.addMetadata( Metadata_Settings_ImageBackground,
-                                        wekaSegmentation.settings.imageBackground );
-                                instancesAndMetadata.addMetadata( Metadata_Settings_Anisotropy,
-                                        wekaSegmentation.settings.anisotropy );
-                                instancesAndMetadata.addMetadata( Metadata_Settings_MaxBinLevel,
-                                        wekaSegmentation.settings.maxBinLevel );
-                                instancesAndMetadata.addMetadata( Metadata_Settings_BinFactor,
-                                        wekaSegmentation.settings.binFactor );
-                                instancesAndMetadata.addMetadata( Metadata_Settings_MaxDeepConvLevel,
-                                        wekaSegmentation.settings.maxDeepConvLevel );
-
+                                SettingsUtils.addSettingsToMetadata( wekaSegmentation.settings,
+                                        instancesAndMetadata );
 
                                 pixelsPerClass[ localClass ]++;
 
@@ -863,16 +839,5 @@ public class InstancesUtils {
         return uniqueLabelIds.size();
     }
 
-    public static void setSettingsFromInstancesAndMetadata(
-            Settings settings,
-            InstancesMetadata instancesAndMetadata)
-    {
-        settings.imageBackground = (int) instancesAndMetadata.getMetadata( Metadata_Settings_ImageBackground, 0 );
-        settings.maxDeepConvLevel = (int) instancesAndMetadata.getMetadata( Metadata_Settings_MaxDeepConvLevel, 0 );
-        settings.binFactor = (int) instancesAndMetadata.getMetadata( Metadata_Settings_BinFactor, 0 );
-        settings.maxBinLevel = (int) instancesAndMetadata.getMetadata( Metadata_Settings_MaxBinLevel, 0 );
-        settings.anisotropy = (int) instancesAndMetadata.getMetadata( Metadata_Settings_Anisotropy, 0 );
-        settings.classNames = instancesAndMetadata.getClassNames();
-    }
 
 }

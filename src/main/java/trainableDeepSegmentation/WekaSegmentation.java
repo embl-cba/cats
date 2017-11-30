@@ -37,6 +37,9 @@ import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageFrameSetter;
 import trainableDeepSegmentation.instances.InstancesUtils;
 import trainableDeepSegmentation.instances.InstancesManager;
+import trainableDeepSegmentation.results.ResultImageMemory;
+import trainableDeepSegmentation.settings.Settings;
+import trainableDeepSegmentation.settings.SettingsUtils;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -44,7 +47,6 @@ import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
 
 import static trainableDeepSegmentation.IntervalUtils.*;
-import static trainableDeepSegmentation.instances.InstancesMetadata.Metadata.*;
 
 
 /**
@@ -78,6 +80,9 @@ public class WekaSegmentation {
 	 * maximum number of classes (labels) allowed
 	 */
 	public static final int MAX_NUM_CLASSES = 10;
+	public static final String RESULT_IMAGE_DISK_SINGLE_TIFF = "Disk";
+	public static final String RESULT_IMAGE_RAM = "RAM";
+	public static final String WHOLE_DATA_SET = "Whole data set";
 
 	/**
 	 * array of lists of Rois for each slice (vector index)
@@ -178,7 +183,7 @@ public class WekaSegmentation {
 
 	public double accuracy = 4.0;
 
-	public double memoryFactor = 1.0;
+	public double memoryFactor = 3.0;
 
 	public static final IJLazySwingLogger logger = new IJLazySwingLogger();
 
@@ -292,18 +297,6 @@ public class WekaSegmentation {
 		}
 	}
 
-	public static final String SEM_IMAGING = "Scanning EM";
-	public static final String FLUORESCENCE_IMAGING = "Fluorescence";
-
-	public String getImagingModality()
-	{
-		return imagingModality;
-	}
-
-	public void setImagingModality( String imagingModality )
-	{
-		this.imagingModality = imagingModality;
-	}
 
 	public boolean recomputeLabelInstances = false;
 
@@ -326,7 +319,7 @@ public class WekaSegmentation {
 	}
 
 
-	private String imagingModality = FLUORESCENCE_IMAGING;
+	private String imagingModality = Weka_Deep_Segmentation.FLUORESCENCE_IMAGING;
 
 	public AtomicInteger totalThreadsExecuted = new AtomicInteger(0);
 
@@ -949,6 +942,16 @@ public class WekaSegmentation {
 		this.resultImage = resultImage;
 	}
 
+	public void setResultImageRAM()
+	{
+		ResultImage resultImage = new ResultImageMemory(
+				this,
+				getInputImageDimensions() );
+
+		setResultImage( resultImage );
+
+	}
+
 	public ResultImage getResultImage()
 	{
 		return ( resultImage );
@@ -1044,10 +1047,8 @@ public class WekaSegmentation {
 					directory,
 					filename );
 
-		InstancesUtils.setSettingsFromInstancesAndMetadata( settings,
+		SettingsUtils.setSettingsFromInstancesMetadata( settings,
 				classifierInstancesMetadata.instancesMetadata );
-
-		latestFeatureNames = classifierInstancesMetadata.instancesMetadata.getAttributeNames();
 
 		classifierManager.setClassifier( classifierInstancesMetadata );
 
@@ -1211,7 +1212,7 @@ public class WekaSegmentation {
 				getExamples(),
 				getInputImageTitle(),
 				settings,
-				latestFeatureNames,
+				examplesFeatureNames,
 				getClassNames() );
 		*/
 
@@ -1258,17 +1259,12 @@ public class WekaSegmentation {
 							)
 			);
 
-			latestFeatureNames = instancesAndMetadata.getAttributeNames();
+			examplesFeatureNames = instancesAndMetadata.getAttributeNames();
 		}
 
-		// TODO: make settings loop
-		setImageBackground( (int) instancesAndMetadata.getMetadata( Metadata_Settings_ImageBackground, 0 ) );
-		settings.imageBackground = (int) instancesAndMetadata.getMetadata( Metadata_Settings_ImageBackground, 0 );
-		settings.maxDeepConvLevel = (int) instancesAndMetadata.getMetadata( Metadata_Settings_MaxDeepConvLevel, 0 );
-		settings.binFactor = (int) instancesAndMetadata.getMetadata( Metadata_Settings_BinFactor, 0 );
-		settings.maxBinLevel = (int) instancesAndMetadata.getMetadata( Metadata_Settings_MaxBinLevel, 0 );
-		settings.anisotropy = (int) instancesAndMetadata.getMetadata( Metadata_Settings_Anisotropy, 0 );
-		settings.classNames = instancesAndMetadata.getClassNames();
+		SettingsUtils.setSettingsFromInstancesMetadata( settings, instancesAndMetadata );
+
+		setImageBackground( settings.imageBackground );
 
 	}
 
@@ -1286,7 +1282,7 @@ public class WekaSegmentation {
 					getExamples(),
 					getInputImageTitle(),
 					settings,
-					latestFeatureNames,
+					examplesFeatureNames,
 					getClassNames() );
 		}
 		else
@@ -1408,7 +1404,7 @@ public class WekaSegmentation {
 
 	}
 
-	public ArrayList< String > latestFeatureNames = null;
+	public ArrayList< String > examplesFeatureNames = null;
 
 
 	private Runnable setExamplesInstanceValues(ArrayList<Example> examples,
@@ -1432,7 +1428,7 @@ public class WekaSegmentation {
 
 			int nf = featureProvider.getNumAllFeatures();
 
-			this.latestFeatureNames = featureProvider.getAllFeatureNames();
+			this.examplesFeatureNames = featureProvider.getAllFeatureNames();
 
 			double[][][] featureSlice  = featureProvider.getReusableFeatureSlice();;
 
@@ -1662,8 +1658,17 @@ public class WekaSegmentation {
 	 */
 	public int getFeatureVoxelSizeAtMaximumScale()
 	{
-		int maxFeatureVoxelSize = (int) Math.pow(settings.binFactor,
-				settings.maxBinLevel );
+
+		int maxFeatureVoxelSize = 1;
+
+		for ( int b : settings.binFactors )
+		{
+			if ( b > 0 )
+			{
+				maxFeatureVoxelSize *= b;
+			}
+		}
+
 		return maxFeatureVoxelSize;
 	}
 
@@ -1673,16 +1678,16 @@ public class WekaSegmentation {
 		// - check whether this is too conservative
 		int[] borderSize = new int[5];
 
-		borderSize[ X] = borderSize[ Y] = getFeatureVoxelSizeAtMaximumScale();
+		borderSize[ X ] = borderSize[ Y ] = getFeatureVoxelSizeAtMaximumScale();
 
 		// Z: deal with 2-D case and anisotropy
-		if (imgDims[ Z] == 1)
+		if (imgDims[ Z ] == 1)
 		{
-			borderSize[ Z] = 0;
+			borderSize[ Z ] = 0;
 		}
 		else
 		{
-			borderSize[ Z] = (int) (1.0 * getFeatureVoxelSizeAtMaximumScale() / settings.anisotropy);
+			borderSize[ Z ] = (int) (1.0 * getFeatureVoxelSizeAtMaximumScale() / settings.anisotropy);
 		}
 
 		return (borderSize);
@@ -1880,6 +1885,22 @@ public class WekaSegmentation {
 
 		return classifier;
 	}
+
+
+	public void applyClassifierWithTiling()
+	{
+		String key = getClassifierManager().getMostRecentClassifierKey();
+		FinalInterval interval = IntervalUtils.getInterval( getInputImage() );
+		applyClassifierWithTiling(  key, interval, -1, null , false );
+	}
+
+
+	public void applyClassifierWithTiling( String classifierKey,
+										   FinalInterval interval )
+	{
+		applyClassifierWithTiling(  classifierKey, interval, -1, null , false );
+	}
+
 
 	public void applyClassifierWithTiling( String classifierKey,
 										   FinalInterval interval,
