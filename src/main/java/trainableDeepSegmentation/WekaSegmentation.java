@@ -21,7 +21,6 @@ import ij.gui.PolygonRoi;
 import ij.measure.ResultsTable;
 import ij.process.ImageProcessor;
 import inra.ijpb.binary.BinaryImages;
-import inra.ijpb.binary.ConnectedComponents;
 import inra.ijpb.measure.GeometricMeasures3D;
 import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
@@ -48,8 +47,6 @@ import trainableDeepSegmentation.instances.InstancesManager;
 import trainableDeepSegmentation.results.ResultImageMemory;
 import trainableDeepSegmentation.settings.Settings;
 import trainableDeepSegmentation.settings.SettingsUtils;
-
-import mcib3d.geom.Object3D;
 
 //import inra.ijpb.segment.Threshold;
 
@@ -180,7 +177,9 @@ public class WekaSegmentation {
 
 	public Settings settings = new Settings();
 
-	public double minFeatureUsageFactor = 1.0;
+	public double featureSelectionMinUsageFactor = 1.0;
+
+	public int featureSelectionMaxNum = -1;
 
 	private boolean computeFeatureImportance = false;
 
@@ -384,7 +383,7 @@ public class WekaSegmentation {
 
 		if ( interval == null ) return;
 
-		minFeatureUsageFactor = 0.0; // TODO: somehow this strategy does not seem to work otherwise..
+		featureSelectionMinUsageFactor = 0.0; // TODO: somehow this strategy does not seem to work otherwise..
 		settings.batchSizePercent = "100"; // since we choose uncorrelated features anyway
 		numThreadsForClassifierTraining = zChunkSize;
 
@@ -529,7 +528,7 @@ public class WekaSegmentation {
 							classifier,
 							instancesAndMetadata);
 
-					if ( minFeatureUsageFactor > 0 )
+					if ( featureSelectionMinUsageFactor > 0 )
 					{
 						// TODO: does not work
 						// performFeatureSelection();
@@ -1831,16 +1830,31 @@ public class WekaSegmentation {
 
 		// if wished for, train a second time
 		// only with important features
-		if ( minFeatureUsageFactor > 0 )
+		if ( featureSelectionMinUsageFactor > 0  || featureSelectionMaxNum > 0  )
 		{
-			ArrayList< Integer > goners = AttributeSelector.getGoners(
-					classifier,
-					instancesAndMetadata.getInstances(),
-					minFeatureUsageFactor,
-					logger );
+			InstancesMetadata instancesWithFeatureSelection = null;
 
-			InstancesMetadata instancesWithFeatureSelection
-					= InstancesUtils.removeAttributes( instancesAndMetadata, goners );
+			if ( featureSelectionMinUsageFactor > 0  )
+			{
+				ArrayList< Integer > goners = AttributeSelector.getGonersBasedOnRelativeUsage(
+						classifier,
+						instancesAndMetadata.getInstances(),
+						featureSelectionMinUsageFactor,
+						logger );
+
+				instancesWithFeatureSelection = InstancesUtils.removeAttributes( instancesAndMetadata, goners );
+			}
+			else if ( featureSelectionMaxNum > 0  )
+			{
+				ArrayList< Integer > keepers = AttributeSelector.getMostUsedAttributes(
+						classifier,
+						instancesAndMetadata.getInstances(),
+						featureSelectionMaxNum,
+						logger );
+
+				instancesWithFeatureSelection
+						= InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers );
+			}
 
 			logger.info ("\n# Second Training");
 

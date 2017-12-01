@@ -1103,7 +1103,8 @@ public class FeatureProvider
 
         if ( isLogging )
         {
-            logger.info("Features computed in [ms]: " +
+            logger.info("Active features: " + getNumActiveFeatures() );
+            logger.info("Computed in [ms]: " +
                     (System.currentTimeMillis() - start) +
                     ", using " + numThreads + " threads");
         }

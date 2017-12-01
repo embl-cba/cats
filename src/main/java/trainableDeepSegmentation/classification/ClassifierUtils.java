@@ -3,6 +3,7 @@ package trainableDeepSegmentation.classification;
 import hr.irb.fastRandomForest.FastRandomForest;
 import trainableDeepSegmentation.WekaSegmentation;
 import trainableDeepSegmentation.instances.InstancesMetadata;
+import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instances;
 
@@ -25,18 +26,9 @@ public class ClassifierUtils {
 
         int numDecisionNodes = classifier.getDecisionNodes();
 
-        int[] usages = classifier.getAttributeUsages();
-        ArrayList< Attribute > attributes =
-                Collections.list( instances.enumerateAttributes() );
 
-        NamesAndUsages[] namesAndUsages = new NamesAndUsages[usages.length];
-
-        for ( int i = 0; i < usages.length; ++i )
-        {
-            namesAndUsages[i] = new NamesAndUsages(usages[ i ], attributes.get( i ).name() );
-        }
-
-        Arrays.sort( namesAndUsages, Collections.reverseOrder() );
+        NamesAndUsages[] namesAndUsages = getAttributesSortedByUsage(
+                classifier, instances );
 
         double avgRfTreeSize = 1.0 * numDecisionNodes / classifier.getNumTrees();
 
@@ -65,7 +57,7 @@ public class ClassifierUtils {
                 avgTreeDepth );
 
 
-        WekaSegmentation.logger.info("Number of features: " + instances.numAttributes() );
+        WekaSegmentation.logger.info("Number of features: " + ( instances.numAttributes() - 1 ) );
 
         WekaSegmentation.logger.info("Batch size [%]: " + batchSizePercent );
 
@@ -79,14 +71,38 @@ public class ClassifierUtils {
 
     }
 
+    public static  NamesAndUsages[] getAttributesSortedByUsage(
+            FastRandomForest classifier, Instances instances )
+    {
+        int[] usages = classifier.getAttributeUsages();
+        ArrayList< Attribute > attributes =
+                Collections.list( instances.enumerateAttributes() );
+
+        NamesAndUsages[] namesAndUsages = new NamesAndUsages[ usages.length ];
+
+        for ( int i = 0; i < usages.length; ++i )
+        {
+            namesAndUsages[ i ] = new NamesAndUsages(
+                    usages[ i ],
+                    attributes.get( i ).name(),
+                    i );
+        }
+
+        Arrays.sort( namesAndUsages, Collections.reverseOrder() );
+
+        return namesAndUsages;
+    }
+
     public static class NamesAndUsages implements Comparable< NamesAndUsages > {
 
         public int usage;
         public String name;
+        public int index;
 
-        public NamesAndUsages( int usage, String name) {
+        public NamesAndUsages( int usage, String name, int index ) {
             this.usage = usage;
             this.name = name;
+            this.index = index;
         }
 
         @Override

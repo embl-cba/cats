@@ -694,6 +694,28 @@ public class InstancesUtils {
             attributeSubset.deleteAttributeAt( id );
         }
 
+        attributeSubset.setClassIndex( attributeSubset.numAttributes() - 1 );
+
+        return ( new InstancesMetadata( attributeSubset, instancesAndMetadata.metadata ) );
+    }
+
+    public static InstancesMetadata onlyKeepAttributes( InstancesMetadata instancesAndMetadata,
+                                                      ArrayList< Integer > keepers )
+    {
+
+        Instances attributeSubset = new Instances( instancesAndMetadata.instances );
+        int numAttributes = instancesAndMetadata.instances.numAttributes();
+
+        for( int i = numAttributes - 1; i >= 0; --i )
+        {
+            if ( ! keepers.contains( i )  && i != attributeSubset.classIndex() )
+            {
+                attributeSubset.deleteAttributeAt( i );
+            }
+        }
+
+        attributeSubset.setClassIndex( attributeSubset.numAttributes() - 1 );
+
         return ( new InstancesMetadata( attributeSubset, instancesAndMetadata.metadata ) );
     }
 

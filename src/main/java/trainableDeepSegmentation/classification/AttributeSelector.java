@@ -8,13 +8,16 @@ import weka.core.Instances;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import static trainableDeepSegmentation.classification.ClassifierUtils.getAttributesSortedByUsage;
+
 public abstract class AttributeSelector {
 
 
-    public static ArrayList< Integer > getGoners( FastRandomForest classifier,
-                                           Instances instances,
-                                           double minUsageFactor,
-                                           Logger logger)
+    public static ArrayList< Integer > getGonersBasedOnRelativeUsage(
+            FastRandomForest classifier,
+            Instances instances,
+            double minUsageFactor,
+            Logger logger)
     {
 
         double randomUsage = 1.0 *
@@ -50,4 +53,28 @@ public abstract class AttributeSelector {
 
         return ( goners );
     }
+
+
+    public static ArrayList< Integer > getMostUsedAttributes(
+            FastRandomForest classifier,
+            Instances instances,
+            int n,
+            Logger logger)
+    {
+
+
+        ClassifierUtils.NamesAndUsages[] namesAndUsages =
+                getAttributesSortedByUsage( classifier, instances );
+
+        ArrayList< Integer > mostUsed = new ArrayList<>(  );
+
+        for ( int i = 0; i < n; ++i )
+        {
+            mostUsed.add( namesAndUsages[i].index );
+        }
+
+        return mostUsed;
+    }
+
+
 }

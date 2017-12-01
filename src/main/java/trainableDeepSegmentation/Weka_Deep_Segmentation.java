@@ -2161,6 +2161,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		if ( firstLabelUpdate )
 		{
 			if ( ! showFeatureSettingsDialog() ) return;
+			if ( ! showClassifierSettingsDialog() ) return;
 			firstLabelUpdate = false;
 		}
 
@@ -3014,12 +3015,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 	{
 		GenericDialogPlus gd = new GenericDialogPlus("Classifier settings");
 
-		gd.addNumericField("Classifier: Number of trees",
+		gd.addNumericField("Number of trees",
 				wekaSegmentation.getNumTrees(), 0);
-		gd.addNumericField("Classifier: Minimum feature usage factor",
-				wekaSegmentation.minFeatureUsageFactor, 1);
-		gd.addStringField("RF: Batch size per tree in percent",
+		gd.addStringField("Batch size per tree in percent",
 				wekaSegmentation.settings.batchSizePercent);
+		gd.addNumericField("Feature selection: Minimum relative usage",
+				wekaSegmentation.featureSelectionMinUsageFactor, 1);
+		gd.addNumericField("Feature selection: Maximum number",
+				wekaSegmentation.featureSelectionMaxNum, 0);
 
 
 		gd.showDialog();
@@ -3029,8 +3032,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		// Set classifier and options
 		wekaSegmentation.setNumTrees((int) gd.getNextNumber());
-		wekaSegmentation.minFeatureUsageFactor = (double) gd.getNextNumber();
 		wekaSegmentation.setBatchSizePercent( gd.getNextString() );
+		wekaSegmentation.featureSelectionMinUsageFactor = (double) gd.getNextNumber();
+		wekaSegmentation.featureSelectionMaxNum = (int) gd.getNextNumber();
 
 		return true;
 	}
