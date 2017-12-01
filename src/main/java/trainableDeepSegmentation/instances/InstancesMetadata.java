@@ -62,6 +62,7 @@ public class InstancesMetadata {
         Metadata_Settings_Binning_7,
         Metadata_Settings_Binning_8,
         Metadata_Settings_Binning_9,
+        Metadata_Settings_UseChannels,
         Metadata_Settings_MaxDeepConvLevel,
         Metadata_Settings_Log2;
 

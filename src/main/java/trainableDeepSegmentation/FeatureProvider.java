@@ -30,6 +30,9 @@ import ij.plugin.Binner;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.StackProcessor;
+import mcib3d.image3d.ImageFloat;
+import mcib3d.image3d.ImageShort;
+import mcib3d.image3d.processing.FastFilters3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessible;
@@ -1217,7 +1220,7 @@ public class FeatureProvider
 
 
 
-    public static int getMaxBinLevel( int[] binFactors )
+    public static int getNumLevels( int[] binFactors )
     {
         int maxBinLevel = 0;
         for ( int b : binFactors )
@@ -1247,7 +1250,7 @@ public class FeatureProvider
 
         double anisotropy = wekaSegmentation.settings.anisotropy;
         int[] binFactors = wekaSegmentation.settings.binFactors;
-        int maxLevel = getMaxBinLevel( binFactors );
+        int numLevels = getNumLevels( binFactors );
 
         // getInstancesAndMetadata the larger part of original image that is
         // needed to compute features for requested interval.
@@ -1291,7 +1294,7 @@ public class FeatureProvider
             // BINNING
             //
 
-            for ( int level = 0; level <= maxLevel; level++)
+            for ( int level = 0; level < numLevels; ++level )
             {
 
                 start = System.currentTimeMillis();
@@ -1334,17 +1337,15 @@ public class FeatureProvider
 
                 for (ImagePlus featureImage : featureImagesPreviousResolution)
                 {
-                    if ( level == maxLevel )
+                    if ( level == numLevels - 1 )
                     {
                         /*
-                        don't bin but smooth last scale to better preserve
+                        don't bin but smooth last level to better preserve
                         spatial information.
-                        smoothing radius of 3 is the largest that will not
-                        cause boundary effects,
-                        because the ignored border during classification is
-                        3 pixel at settings.maxBinLevel - 1
-                        (i.e. 1 pixel at settings.maxBinLevel)
                         */
+
+                        // TODO:
+                        // - check again for boundary effects!
 
                         // TODO:
                         // - don't compute this feature if not needed
@@ -1364,9 +1365,14 @@ public class FeatureProvider
                          such that it actually might be ok.
                          */
 
-                        int filterRadius = 2;
+                        int[] radii = new int[ 3 ];
+                        for( int i = 0; i < 3; ++i )
+                        {
+                            radii[i] = (int) Math.ceil ( ( binning[i] - 1 ) / 2.0 );
+                        }
+
                         futuresBinning.add( exe.submit(
-                                filter3d( featureImage, filterRadius ) ) );
+                                filter3d( featureImage, radii ) ) );
                     }
                     else
                     {
@@ -1565,20 +1571,71 @@ public class FeatureProvider
 
     }
 
-    public Callable<ImagePlus> filter3d(ImagePlus imp, int r)
+    public Callable<ImagePlus> filter3d(ImagePlus imp, int[] radii)
     {
         return () -> {
+
             ImageStack result = ImageStack.create( imp.getWidth(), imp.getHeight(), imp.getNSlices(), 32 );
             StackProcessor stackProcessor = new StackProcessor( imp.getStack() );
-            int rz = r;
-            stackProcessor.filter3D( result, ( float ) r, ( float ) r, ( float ) rz,
-                    0, result.size(), StackProcessor.FILTER_MEAN );
+
+            stackProcessor.filter3D( result,
+                    (float) radii[0], (float) radii[1], (float) radii[2],
+                    0, result.size(),
+                    StackProcessor.FILTER_MEAN );
+
             String title = imp.getTitle();
-            ImagePlus impResult = new ImagePlus( "Mean" + r + "x" + r + "x" + r + "_" + title, result );
+            ImagePlus impResult = new ImagePlus(
+                            String.format("Mean%d", (radii[0]*2)+1)
+                            + String.format("_%d", (radii[1]*2)+1)
+                            + String.format("_%d", (radii[2]*2)+1)
+                            + "_" + title,
+                    result );
+
             impResult.setCalibration( imp.getCalibration().copy() );
             return ( impResult );
         };
     }
+
+
+    public Callable<ImagePlus> fastFilter3d(ImagePlus imp, float[] radii)
+    {
+        return () -> {
+
+
+            /*
+            ImageFloat wrap = ;
+            ImageFloat HandMedian = FastFilters3D.filterFloatImage(
+                    new ImageFloat( imp ),
+                    FastFilters3D., median_radius_xy,median_radius_xy, median_radius_z, ncpu,false);
+            ImagePlus medianImage=HandMedian.getImagePlus();
+
+
+            ImageStack result = ImageStack.create( imp.getWidth(), imp.getHeight(), imp.getNSlices(), 32 );
+            StackProcessor stackProcessor = new StackProcessor( imp.getStack() );
+
+            stackProcessor.filter3D( result,
+                    (float) radii[0], (float) radii[1], (float) radii[2],
+                    0, result.size(),
+                    StackProcessor.FILTER_MEAN );
+
+            String title = imp.getTitle();
+            ImagePlus impResult = new ImagePlus(
+                    String.format("Mean%d", (radii[0]*2)+1)
+                            + String.format("_%d", (radii[1]*2)+1)
+                            + String.format("_%d", (radii[2]*2)+1)
+                            + "_" + title,
+                    result );
+
+            impResult.setCalibration( imp.getCalibration().copy() );
+            return ( impResult );
+            */
+            return null;
+        };
+    }
+
+
+
+
 
     private int[] getBinning(ImagePlus imp,
                              double anisotropy,
@@ -1596,7 +1653,7 @@ public class FeatureProvider
         else
         {
             // potentially bin less in z
-            binning[2] = (int) (binFactor / anisotropy); // z-binning
+            binning[2] = (int) Math.ceil( binFactor / anisotropy );
             if( binning[2]==0 ) binning[2] = 1;
         }
 

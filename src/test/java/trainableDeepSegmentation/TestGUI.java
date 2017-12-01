@@ -33,9 +33,9 @@ public class TestGUI {
 		imageDataInfo.bitDepth = 8;
 		int nIOthreads = 3;
 
-		String directory = "/Users/tischi/Desktop/example-data/EM/result/";
+		String ARG_INPUT_DIRECTORY = "/Users/tischi/Desktop/example-data/EM/result/";
 		dst.openFromDirectory(
-				directory,
+				ARG_INPUT_DIRECTORY,
 				namingPattern,
 				"None",
 				"data",
@@ -101,27 +101,25 @@ public class TestGUI {
 		//IJ.open("/Users/tischi/Desktop/mitosis.tif");
 		//IJ.open( "/Users/tischi/Desktop/mri-stack-big-2d-movie.tif" );
 
-		IJ.open( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/combined-clahe.tif" );
+		//IJ.open( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/combined-clahe.tif" );
 		//IJ.open( "/Users/tischi/Desktop/Nils.tif" );
 
 		//IJ.open("/Users/tischi/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
 
+		IJ.run("Image Sequence...", "open=/Users/tischi/Desktop/sylwia/171108_CL13_trial_001/cropped sort");
+		ImagePlus inputImagePlus = IJ.getImage();
+
 		IJ.wait(100);
-		IJ.run("Properties...", "unit=nm pixel_width=309 pixel_height=309 voxel_depth=1000");
+		//IJ.run("Properties...", "unit=nm pixel_width=309 pixel_height=309 voxel_depth=1000");
+
 		Weka_Deep_Segmentation weka_segmentation = new Weka_Deep_Segmentation();
 		weka_segmentation.run("");
 
-		weka_segmentation.assignResultImage( WekaSegmentation.RESULT_IMAGE_RAM );
-		weka_segmentation.getWekaSegmentation().setImagingModality( Weka_Deep_Segmentation.SEM_IMAGING );
-		weka_segmentation.setImagingModality( Weka_Deep_Segmentation.SEM_IMAGING );
-		weka_segmentation.getWekaSegmentation().setNumTrees( 200 );
-		weka_segmentation.getWekaSegmentation().settings.binFactor = 2;
+		//ImagePlus imp = IJ.openImage( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train" +
+		//		"-labels/train-labels-binary-larger-borders.tif" );
 
-		ImagePlus imp = IJ.openImage( "/Users/tischi/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train" +
-				"-labels/train-labels-binary-larger-borders.tif" );
-
-		weka_segmentation.getWekaSegmentation().setLabelImage( imp );
-		makeRectangle(430, 249, 50, 50);
+		//weka_segmentation.getWekaSegmentation().setLabelImage( inputImagePlus );
+		//makeRectangle(430, 249, 50, 50);
 
 
 

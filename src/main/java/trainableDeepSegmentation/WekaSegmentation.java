@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -16,7 +18,13 @@ import java.util.zip.GZIPOutputStream;
 import bigDataTools.logging.Logger;
 import bigDataTools.logging.IJLazySwingLogger;
 import ij.gui.PolygonRoi;
+import ij.measure.ResultsTable;
 import ij.process.ImageProcessor;
+import inra.ijpb.binary.BinaryImages;
+import inra.ijpb.binary.ConnectedComponents;
+import inra.ijpb.measure.GeometricMeasures3D;
+import inra.ijpb.morphology.AttributeFiltering;
+import inra.ijpb.segment.Threshold;
 import javafx.geometry.Point3D;
 
 import hr.irb.fastRandomForest.FastRandomForest;
@@ -40,6 +48,11 @@ import trainableDeepSegmentation.instances.InstancesManager;
 import trainableDeepSegmentation.results.ResultImageMemory;
 import trainableDeepSegmentation.settings.Settings;
 import trainableDeepSegmentation.settings.SettingsUtils;
+
+import mcib3d.geom.Object3D;
+
+//import inra.ijpb.segment.Threshold;
+
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -1038,6 +1051,16 @@ public class WekaSegmentation {
 		this.settings = settings;
 	}
 
+	public void loadClassifier( File file )
+	{
+		loadClassifier( file.getParent().toString(),  file.getName().toString() );
+	}
+
+	public void loadClassifier( String filePath )
+	{
+		Path p = Paths.get(filePath);
+		loadClassifier( p.getParent().toString(),  p.getFileName().toString());
+	}
 
 	public void loadClassifier( String directory, String filename )
 	{
@@ -1053,6 +1076,7 @@ public class WekaSegmentation {
 		classifierManager.setClassifier( classifierInstancesMetadata );
 
 	}
+
 
 	public void saveClassifier( String directory, String filename )
 	{
@@ -1670,6 +1694,33 @@ public class WekaSegmentation {
 		}
 
 		return maxFeatureVoxelSize;
+	}
+
+
+	public ImagePlus analyzeObjects( int minNumVoxels )
+	{
+		// TODO: make possible to select channel
+
+		logger.info( "\n# Thresholding..." );
+		ImagePlus th = Threshold.threshold( resultImage.getImagePlus(), 11, 20 );
+		logger.info( "...done." );
+
+		logger.info( "\n# Filtering objects..." );
+		ImagePlus th_sf = new ImagePlus( "",
+				AttributeFiltering.volumeOpening( th.getStack(), minNumVoxels) );
+		logger.info( "...done." );
+
+		logger.info( "\n# Connected components..." );
+		ImagePlus cc = BinaryImages.componentsLabeling( th_sf, 6, 16);
+		logger.info( "...done." );
+
+		ResultsTable rt_bb = GeometricMeasures3D.boundingBox( cc.getStack() );
+		rt_bb.show( "Bounding boxes" );
+
+		ResultsTable rt_v = GeometricMeasures3D.volume( cc.getStack() , new double[]{1,1,1});
+		rt_v.show( "Volumes" );
+
+		return cc;
 	}
 
 	public int[] getFeatureBorderSizes()

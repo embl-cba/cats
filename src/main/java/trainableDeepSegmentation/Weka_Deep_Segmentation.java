@@ -151,7 +151,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
 	public static final String SHOW_CLASSIFIER_SETTINGS = "Show classifier settings";
 	public static final String SHOW_FEATURE_SETTINGS = "Show feature settings";
-
+	public static final String SHOW_CLASS_SETTINGS = "Show class settings";
+	public static final String GET_LABEL_MASK = "Get label mask";
 
 
 	// TODO: how to know the settings associated with instances data
@@ -163,9 +164,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 					UPDATE_LABELS_AND_TRAIN,
 					TRAIN_CLASSIFIER,
 					SHOW_CLASSIFIER_SETTINGS,
+					SHOW_CLASS_SETTINGS,
 					SHOW_FEATURE_SETTINGS,
 					IO_LOAD_INSTANCES,
 					IO_SAVE_INSTANCES,
+					GET_LABEL_MASK,
 					IO_EXPORT_RESULT_IMAGE,
 					DUPLICATE_RESULT_IMAGE_TO_RAM,
 					IO_LOAD_LABEL_IMAGE,
@@ -515,11 +518,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 						switch ( action )
 						{
+							case GET_LABEL_MASK:
+								analyzeObjects();
+								break;
+							case SHOW_CLASS_SETTINGS:
+								showClassifierSettingsDialog();
+								break;
 							case SHOW_CLASSIFIER_SETTINGS:
 								showClassifierSettingsDialog();
 								break;
 							case SHOW_FEATURE_SETTINGS:
-								showFeatureComputationSettingsDialog();
+								showFeatureSettingsDialog();
 								break;
 							case IO_LOAD_CLASSIFIER:
 								loadClassifier();
@@ -590,7 +599,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 						addNewClass();
 					}
 					else if(e.getSource() == settingsButton){
-						showSettingsDialog();
+						showClassSettingsDialog();
 					}
 					else if(e.getSource() == testThreadsButton){
 						testThreads();
@@ -1240,12 +1249,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 			trainingJPanel.add(reviewLabelsPanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
-			trainingJPanel.add(settingsButton, trainingConstraints);
-			trainingConstraints.gridy++;
+			//trainingJPanel.add(settingsButton, trainingConstraints);
+			//trainingConstraints.gridy++;
 
-			trainingJPanel.add(addClassButton, trainingConstraints);
-			trainingConstraints.gridy++;
-
+			//trainingJPanel.add(addClassButton, trainingConstraints);
+			//trainingConstraints.gridy++;
 
 			trainingJPanel.add( stopButton, trainingConstraints );
 			trainingConstraints.gridy++;
@@ -2146,8 +2154,16 @@ public class Weka_Deep_Segmentation implements PlugIn
 	}
 
 
+	boolean firstLabelUpdate = true;
+
 	void updateLabelsTrainingDataAndTrainClassifier()
 	{
+		if ( firstLabelUpdate )
+		{
+			if ( ! showFeatureSettingsDialog() ) return;
+			firstLabelUpdate = false;
+		}
+
 		// Disable rest of buttons until the instances has finished
 		win.setButtonsEnabled( false );
 
@@ -2167,6 +2183,28 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			}
 
+		}; task.start();
+
+	}
+
+
+	public void analyzeObjects()
+	{
+		GenericDialog gd = new GenericDialogPlus( "Analyze Object" );
+		gd.addNumericField( "Minimum number of voxels", 5, 0 );
+
+		gd.showDialog(); if ( gd.wasCanceled() ) return;
+
+		int minNumVoxels = (int) gd.getNextNumber();
+
+		win.setButtonsEnabled( false );
+
+		Thread task = new Thread() {
+			public void run()
+			{
+				wekaSegmentation.analyzeObjects( minNumVoxels ).show();
+				win.setButtonsEnabled( true );
+			}
 		}; task.start();
 
 	}
@@ -2277,7 +2315,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					String directory = null;
 
 					if ( ! showClassifierSettingsDialog() ) return;
-					if ( ! showFeatureComputationSettingsDialog() ) return;
+					if ( ! showFeatureSettingsDialog() ) return;
 
 					if ( autoSaveInstances )
 					{
@@ -2902,9 +2940,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 *
 	 * @return false when canceled
 	 */
-	public boolean showSettingsDialog()
+	public boolean showClassSettingsDialog()
 	{
-		GenericDialogPlus gd = new GenericDialogPlus("Segmentation settings");
+		GenericDialogPlus gd = new GenericDialogPlus("Class settings");
 
 		for(int i = 0; i < wekaSegmentation.getNumClasses(); i++)
 			gd.addStringField("Class "+(i+1), wekaSegmentation.getClassName(i), 15);
@@ -2914,12 +2952,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 		gd.addHelp("http://fiji.sc/Trainable_Weka_Segmentation");
 
 
-
 		gd.showDialog();
 
 		if ( gd.wasCanceled() )
 			return false;
-
 
 
 		boolean classNameChanged = false;
@@ -2973,6 +3009,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		return true;
 	}
 
+
 	public boolean showClassifierSettingsDialog()
 	{
 		GenericDialogPlus gd = new GenericDialogPlus("Classifier settings");
@@ -2998,7 +3035,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		return true;
 	}
 
-	public boolean showFeatureComputationSettingsDialog()
+	public boolean showFeatureSettingsDialog()
 	{
 		GenericDialogPlus gd = new GenericDialogPlus("Segmentation settings");
 
