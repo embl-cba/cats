@@ -64,7 +64,7 @@ public class FeatureProvider
     /** the feature images */
     private Map< String, ImagePlus > featureImages = new LinkedHashMap<>();
 
-    private ArrayList<Integer> activeChannels;
+    private Set<Integer> activeChannels;
 
     private final Integer FG_DIST_BG_IMAGE = -1;
     private final String CONV_DEPTH = "CD";
@@ -155,7 +155,7 @@ public class FeatureProvider
         this.logger = wekaSegmentation.getLogger();
     }
 
-    public void setActiveChannels( ArrayList<Integer> activeChannels )
+    public void setActiveChannels( Set<Integer> activeChannels )
     {
         this.activeChannels = activeChannels;
     }

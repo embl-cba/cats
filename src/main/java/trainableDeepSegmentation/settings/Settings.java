@@ -4,6 +4,8 @@ import trainableDeepSegmentation.WekaSegmentation;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static trainableDeepSegmentation.WekaSegmentation.MAX_NUM_CLASSES;
 
@@ -24,9 +26,7 @@ public class Settings {
 
     public boolean log2 = false;
 
-    public String batchSizePercent = "66";
-
-    public ArrayList< Integer > activeChannels = null;
+    public Set< Integer > activeChannels = new TreeSet<>();
 
     public ArrayList < String > classNames = new ArrayList<>();
 

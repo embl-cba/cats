@@ -39,7 +39,7 @@ public abstract class IntervalUtils {
     }
 
     // TODO: move to Utils
-    public static FinalInterval replaceValues( Interval interval, int d, long minValue, long maxValue)
+    public static FinalInterval getIntervalByReplacingValues( Interval interval, int d, long minValue, long maxValue)
     {
 
         int n = interval.numDimensions();
@@ -238,6 +238,14 @@ public abstract class IntervalUtils {
 
         return new FinalInterval( min, max );
     }
+
+    public static FinalInterval getEmptyInterval( )
+    {
+        long[] min = new long[5];
+        long[] max = new long[5];
+        return new FinalInterval( min, max );
+    }
+
 
     public static ImagePlus createImagePlus( FinalInterval interval )
     {

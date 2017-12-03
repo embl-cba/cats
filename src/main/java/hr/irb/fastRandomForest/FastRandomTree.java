@@ -65,7 +65,7 @@ class FastRandomTree
   protected FastRandomTree[] m_Successors;
   
   /**
-   * For access to parameters of the RF (k, or maxDepth).
+   * For access to parameters of the RF (k, or classifierMaxDepth).
    */
   protected FastRandomForest m_MotherForest;
 
@@ -391,7 +391,7 @@ class FastRandomTree
    *     two categories
    *
    * <li>each new 'tree' (i.e. node or leaf) is passed a reference to its
-   *     'mother forest', necessary to look up parameters such as maxDepth and K
+   *     'mother forest', necessary to look up parameters such as classifierMaxDepth and K
    *
    * <li>pre-split entropy is not recalculated unnecessarily
    *

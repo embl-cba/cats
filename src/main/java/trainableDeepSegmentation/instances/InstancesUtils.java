@@ -15,6 +15,7 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
+import java.awt.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -87,14 +88,15 @@ public class InstancesUtils {
             int maxInstancesPerClassAndPlane,
             int numThreads,
             int localRadius,
-            boolean isFirstTime)
+            ArrayList< Double > classWeights )
     {
         return new Callable< InstancesMetadata >() {
 
             public InstancesMetadata call()
             {
+                int probabilityRange = resultImage.getProbabilityRange();
 
-                int maxAccuracy = resultImage.getProbabilityRange() - 2;
+                int maxCorrectness = probabilityRange / 2;
 
                 final int numClasses = wekaSegmentation.getNumClasses(); // TODO: getInstancesAndMetadata from label image
 
@@ -103,6 +105,10 @@ public class InstancesUtils {
                 Random rand = new Random();
 
                 int[] pixelsPerClass = new int[ numClasses ];
+                ArrayList< int[] >[][] globalClassCoordinates;
+                ArrayList< int[] >[][] localClassCoordinates;
+
+                FinalInterval localInterval = IntervalUtils.getEmptyInterval();
 
                 Instances instances = InstancesUtils.getInstancesHeader(
                         instancesName,
@@ -111,7 +117,6 @@ public class InstancesUtils {
 
                 InstancesMetadata instancesAndMetadata = new InstancesMetadata( instances );
 
-                //int[][] classificationAccuracies = new int[ numClasses ][ 4 ]; // TOTAL, CORRECT, FP, FN
                 double[][][] featureSlice;
 
                 // Collect instances per plane
@@ -119,18 +124,28 @@ public class InstancesUtils {
                 {
                     logLabelImageTrainingProgress( logger, z, interval, "getting class coordinates..." );
 
-                    ArrayList< int[] >[][] classCoordinates = getEmptyClassCoordinates(
-                            numClasses, resultImage.getProbabilityRange() );
+                    ImageProcessor labelSlice = labelImage.getStack().getProcessor(z + 1);
+                    ImageProcessor resultSlice = resultImage.getSlice( z + 1, t + 1  );
 
-                    setClassCoordinatesAndAccuracies(
-                            classCoordinates,
-                            z, t,
-                            labelImage,
-                            resultImage,
-                            interval,
-                            isFirstTime );
+                    ImageProcessor correctnessSliceRegion = getCorrectnessSlice(
+                            probabilityRange,
+                            labelSlice, resultSlice, interval
+                    );
+
+                    correctnessSliceRegion.blurGaussian( localRadius );
+
+                    // DEBUG
+                    ImagePlus imp2 = new  ImagePlus( "" + z, correctnessSliceRegion); imp2.show();
+
+                    globalClassCoordinates = getClassCoordinatesAndAccuracies(
+                            probabilityRange,
+                            numClasses,
+                            labelSlice,
+                            correctnessSliceRegion,
+                            interval );
 
                     featureSlice = featureProvider.getCachedFeatureSlice( z );
+
                     if ( featureSlice == null )
                     {
                         logLabelImageTrainingProgress( logger, z, interval,
@@ -157,9 +172,9 @@ public class InstancesUtils {
 
                             int[] xy = getUsefulRandomCoordinate(
                                     iClass,
-                                    classCoordinates,
+                                    globalClassCoordinates,
                                     rand,
-                                    maxAccuracy);
+                                    maxCorrectness );
 
                             if ( xy == null )
                             {
@@ -169,12 +184,24 @@ public class InstancesUtils {
                                 break collectInstancesLoop;
                             }
 
-                            ArrayList< int[] >[] localClassCoordinates =
-                                    getLocalClassCoordinates( numClasses,
-                                            labelImage, z, t,
-                                            interval,
-                                            xy,
-                                            localRadius );
+                            // Compute local interval within bounds of global interval.
+                            //
+                            localInterval = IntervalUtils.getIntervalByReplacingValues( interval, X,
+                                    Math.max( xy[0] - localRadius, interval.min( X ) ),
+                                    Math.min( xy[0] + localRadius, interval.max( X ) )
+                            );
+
+                            localInterval = IntervalUtils.getIntervalByReplacingValues( localInterval, Y,
+                                    Math.max( xy[1] - localRadius, interval.min( Y ) ),
+                                    Math.min( xy[1] + localRadius, interval.max( Y ) )
+                            );
+
+                            localClassCoordinates = getClassCoordinatesAndAccuracies(
+                                    probabilityRange,
+                                    numClasses,
+                                    labelSlice,
+                                    correctnessSliceRegion,
+                                    localInterval );
 
                             for ( int localClass = 0; localClass < numClasses; ++localClass )
                             {
@@ -187,17 +214,21 @@ public class InstancesUtils {
                                 }
                                 else
                                 {
-                                    xyLocal = getRandomCoordinate( localClass, localClassCoordinates, rand );
+                                    xyLocal = getUsefulRandomCoordinate(
+                                            localClass,
+                                            localClassCoordinates,
+                                            rand,
+                                            maxCorrectness );
 
                                     if ( xyLocal == null )
                                     {
-                                        // no local coordinate found
-                                        // thus we take a useful global one
+                                        // No useful local coordinate was found.
+                                        // Thus we take a useful global one.
                                         xyLocal = getUsefulRandomCoordinate(
                                                 localClass,
-                                                classCoordinates,
+                                                globalClassCoordinates,
                                                 rand,
-                                                maxAccuracy );
+                                                probabilityRange );
                                     }
 
                                 }
@@ -211,9 +242,11 @@ public class InstancesUtils {
 
                                 addToInstancesDistribution( ipInstancesDistribution, xyLocal, interval );
 
-                                removeNeighbors( localClass, classCoordinates, xyLocal, localRadius );
+                                removeNeighbors( localClass, globalClassCoordinates, xyLocal, localRadius );
 
                                 Instance instance = getInstance( featureProvider, xyLocal, featureSlice, localClass );
+
+                                instance.setWeight( classWeights.get( localClass ) );
 
                                 instancesAndMetadata.addInstance( instance );
                                 instancesAndMetadata.addMetadata( Metadata_Position_X, xyLocal[ 0 ] );
@@ -312,57 +345,84 @@ public class InstancesUtils {
 
     final static int TOTAL = 0, CORRECT = 1, FP = 2, FN = 3;
 
-    private static void setClassCoordinatesAndAccuracies(
-                                    ArrayList < int[] >[][] classCoordinates,
-                                    int z, int t,
-                                    ImagePlus labelImage,
-                                    ResultImage resultImage,
-                                    FinalInterval interval,
-                                    boolean onlySetCoordinates)
+    private static ArrayList< int[] >[][] getClassCoordinatesAndAccuracies(
+                                    int maxProbability,
+                                    int numClasses,
+                                    ImageProcessor labelImageSlice,
+                                    ImageProcessor correctnessSliceRegion,
+                                    FinalInterval interval)
     {
 
-        int maxProbability = resultImage.getProbabilityRange();
 
-        ImageProcessor labelImageSlice = labelImage.getStack().getProcessor(z + 1);
-
-        ImageProcessor ipResultImage = resultImage.getSlice( z + 1, t + 1  );
+        ArrayList< int[] >[][] classCoordinates = getEmptyClassCoordinates(
+                numClasses, maxProbability );
 
         for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
         {
             for ( int x = ( int ) interval.min( X ); x <= interval.max( X ); ++x )
             {
-
                 int realClass = labelImageSlice.get( x, y );
+                int correctness = correctnessSliceRegion
+                        .get( x -(int) interval.min( X ),
+                                y -(int) interval.min( Y ) );
 
-                if ( onlySetCoordinates )
+                classCoordinates[realClass][correctness].add( new int[]{ x, y } );
+            }
+        }
+
+        return classCoordinates;
+    }
+
+
+    private static ImageProcessor getCorrectnessSlice(
+            int maxProbability,
+            ImageProcessor labelSlice,
+            ImageProcessor resultSlice,
+            FinalInterval interval )
+    {
+
+        labelSlice.setRoi( new Rectangle(
+                (int) interval.min( X ),
+                (int) interval.min( Y ),
+                (int) interval.dimension( X ),
+                (int) interval.dimension( Y ) ) );
+
+        ImageProcessor correctnessSlice = labelSlice.duplicate();
+
+        int realClass;
+        byte result;
+        int classifiedClass;
+        int correctness;
+
+        for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
+        {
+            for ( int x = ( int ) interval.min( X ); x <= interval.max( X ); ++x )
+            {
+                realClass = labelSlice.get( x, y );
+                result = (byte) resultSlice.get( x, y );
+
+                if ( result == 0 )
                 {
-                    // put all metadata into the zero
-                    // accuracy slot, this makes sense for the
-                    // first iteration where we do not
-                    // want to use the result image yet
-                    classCoordinates[realClass][0].add( new int[]{ x, y } );
+                    correctness = 0; // no classification available yet
                 }
                 else
                 {
+                    classifiedClass = ( result - 1 ) / maxProbability;
 
-                    byte result = (byte) ipResultImage.get( x, y );
-
-                    int classifiedClass = ( result - 1 ) / maxProbability;
-                    int correctness = result - classifiedClass * maxProbability;
-
-                    if ( realClass != classifiedClass )
-                    {
-                        correctness *= -1;
-                    }
-
-                    // shift such that it becomes a positive index
+                    correctness = result - classifiedClass * maxProbability;
+                    if ( realClass != classifiedClass ) correctness *= -1;
                     correctness += maxProbability;
-
-                    classCoordinates[realClass][correctness].add( new int[]{ x, y } );
                 }
+
+                correctnessSlice.set(
+                        x - (int) interval.min( X ),
+                        y - (int) interval.min( y ),
+                        correctness);
 
             }
         }
+
+        return correctnessSlice;
 
     }
 
@@ -618,6 +678,33 @@ public class InstancesUtils {
     }
 
     private static int[] getUsefulRandomCoordinate( int iClass,
+                                                    ArrayList< int[] >[][] classCoordinates,
+                                                    Random random,
+                                                    int maxAccuracy )
+    {
+
+        int[] xy = null;
+
+        for ( int accuracy = 0; accuracy < maxAccuracy; ++accuracy )
+        {
+            int numInstances = classCoordinates[iClass][accuracy].size();
+
+            if ( numInstances > 0 )
+            {
+                int randomSample = random.nextInt( numInstances );
+
+                xy = classCoordinates[iClass][accuracy].get( randomSample );
+
+                return xy;
+            }
+
+        }
+
+        return xy;
+
+    }
+
+    private static int[] getMostWrongCoordinate( int iClass,
                                                     ArrayList< int[] >[][] classCoordinates,
                                                     Random random,
                                                     int maxAccuracy )

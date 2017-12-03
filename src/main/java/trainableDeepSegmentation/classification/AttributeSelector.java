@@ -13,17 +13,27 @@ import static trainableDeepSegmentation.classification.ClassifierUtils.getAttrib
 public abstract class AttributeSelector {
 
 
-    public static ArrayList< Integer > getGonersBasedOnRelativeUsage(
+    public static ArrayList< Integer > getGonersBasedOnUsage(
             FastRandomForest classifier,
             Instances instances,
-            double minUsageFactor,
+            double minRelativeUsage,
+            int minAbsoluteUsage,
             Logger logger)
     {
 
         double randomUsage = 1.0 *
                 classifier.getDecisionNodes() / instances.numAttributes();
 
-        int usageThreshold = (int) Math.ceil( minUsageFactor * randomUsage );
+        int usageThreshold = 0;
+
+        if ( minAbsoluteUsage > 0 )
+        {
+            usageThreshold = minAbsoluteUsage;
+        }
+        else if ( minRelativeUsage > 0 )
+        {
+            usageThreshold = (int) Math.ceil( minRelativeUsage * randomUsage );
+        }
 
         ArrayList< Integer > goners = new ArrayList<>();
 
@@ -41,7 +51,7 @@ public abstract class AttributeSelector {
         if ( logger != null )
         {
             logger.info("\n# AttributeSelector: ");
-            logger.info("Required usage factor: " + minUsageFactor);
+            logger.info("Required usage factor: " + minRelativeUsage);
             logger.info("Attributes: " + instances.numAttributes());
             logger.info("Nodes: " + classifier.getDecisionNodes());
             logger.info("Random usage = nodes / attributes: " + randomUsage);

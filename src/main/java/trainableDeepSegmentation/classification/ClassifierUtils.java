@@ -63,7 +63,7 @@ public class ClassifierUtils {
 
         WekaSegmentation.logger.info("Number of instances: " + instances.size() );
 
-        WekaSegmentation.logger.info("Average number of instances per tree = numInstances * batchSizePercent/100: "
+        WekaSegmentation.logger.info("Number of instances per tree: "
                 + batchSizePercent / 100.0 * instances.size() );
 
         // Print classifier information

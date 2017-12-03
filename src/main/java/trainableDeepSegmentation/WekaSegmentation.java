@@ -94,6 +94,8 @@ public class WekaSegmentation {
 	public static final String RESULT_IMAGE_RAM = "RAM";
 	public static final String WHOLE_DATA_SET = "Whole data set";
 
+
+
 	/**
 	 * array of lists of Rois for each slice (vector index)
 	 * and each class (arraylist index) of the instances image
@@ -147,22 +149,24 @@ public class WekaSegmentation {
 	/**
 	 * current number of trees in the fast random forest classifier
 	 */
-	private int numOfTrees = 200;
+	public int classifierNumTrees = 200;
 	/**
 	 * number of random features per node in the fast random forest classifier
 	 */
-	private int numRandomFeatures = 50;
+	private int classifierNumRandomFeatures = 50;
 
-	public int numThreadsForClassifierTraining = Prefs.getThreads();
+	public String classifierBatchSizePercent = "66";
+
 
 	/**
 	 * fraction of random features per node in the fast random forest classifier
 	 */
-	public double fractionRandomFeatures = 0.1;
+	public double classifierFractionFeaturesPerNode = 0.1;
+
 	/**
 	 * maximum depth per tree in the fast random forest classifier
 	 */
-	public int maxDepth = 0;
+	public int classifierMaxDepth = 0;
 
 	/**
 	 * list of class names on the loaded data
@@ -177,17 +181,27 @@ public class WekaSegmentation {
 
 	public Settings settings = new Settings();
 
-	public double featureSelectionMinUsageFactor = 1.0;
+	public String featureSelectionMethod = FEATURE_SELECTION_RELATIVE_USAGE;
 
-	public int featureSelectionMaxNum = -1;
+	public double featureSelectionValue = 1.0;
 
 	private boolean computeFeatureImportance = false;
 
-	public int regionThreads = (int) ( Math.sqrt( Prefs.getThreads()) + 0.5 );
+	public void setNumThreads( int numThreads )
+	{
+		this.numThreads = numThreads;
+		threadsRegion = (int) ( Math.sqrt( numThreads ) + 0.5 );
+		threadsPerRegion = (int) ( Math.sqrt( numThreads ) + 0.5 );
+		threadsClassifierTraining = numThreads;
+	}
 
-	public int threadsPerRegion = (int) ( Math.sqrt(Prefs.getThreads()) + 0.5 );
+	public int numThreads = Prefs.getThreads();
 
-	public int numRfTrainingThreads = Prefs.getThreads();
+	public int threadsRegion = (int) ( Math.sqrt( Prefs.getThreads() ) + 0.5 );
+
+	public int threadsPerRegion = (int) ( Math.sqrt( Prefs.getThreads() ) + 0.5 );
+
+	public int threadsClassifierTraining = Prefs.getThreads();
 
 	public int tilingDelay = 2000; // milli-seconds
 
@@ -267,19 +281,19 @@ public class WekaSegmentation {
 		if ( batchSizePercent.equals( "Auto" )
 				|| batchSizePercent.equals( "auto" )  )
 		{
-			settings.batchSizePercent = "auto";
+			classifierBatchSizePercent = "auto";
 		}
 		else
 		{
 			try
 			{
-				settings.batchSizePercent = "" + Integer.parseInt( batchSizePercent );
+				classifierBatchSizePercent = "" + Integer.parseInt( batchSizePercent );
 			}
 			catch ( NumberFormatException e )
 			{
 				logger.error( "Batch size must be a number (1-100) or 'auto'" +
 						"\nSetting to 'auto' now." );
-				settings.batchSizePercent = "auto";
+				classifierBatchSizePercent = "auto";
 			}
 		}
 
@@ -289,7 +303,7 @@ public class WekaSegmentation {
 	{
 		int avgNumPointsFromEachExamplePerTree = 5;
 
-		if ( settings.batchSizePercent.equals("auto") && getNumExamples() > 0 )
+		if ( classifierBatchSizePercent.equals("auto") && getNumExamples() > 0 )
 		{
 			logger.info( "\n# Auto setting batch size..." );
 
@@ -305,7 +319,7 @@ public class WekaSegmentation {
 		}
 		else
 		{
-			return Integer.parseInt( settings.batchSizePercent );
+			return Integer.parseInt( classifierBatchSizePercent );
 		}
 	}
 
@@ -339,19 +353,7 @@ public class WekaSegmentation {
 
 	public AtomicLong rfStatsTreesEvaluated = new AtomicLong(0);
 
-	private AtomicInteger rfStatsMaximumTreesUsed = new AtomicInteger(0);
-
-	public int getNumLabelImageInstancesPerPlaneTileAndClass()
-	{
-		return labelImageInstancesPerPlaneAndClass;
-	}
-
-	public void setLabelImageInstancesPerPlaneTileAndClass( int labelImageInstancesPerPlaneAndClass )
-	{
-		this.labelImageInstancesPerPlaneAndClass = labelImageInstancesPerPlaneAndClass;
-	}
-
-	private int labelImageInstancesPerPlaneAndClass = 50;
+	private AtomicInteger classifierStatsMaximumTreesUsed = new AtomicInteger(0);
 
 	public boolean hasTrainingData()
 	{
@@ -365,27 +367,29 @@ public class WekaSegmentation {
 		}
 	}
 
-	final String NEW = "Start new instances";
-	final String APPEND = "Append to previous instances";
+	final static String START_NEW_INSTANCES = "Start new instances";
+	final static String APPEND_TO_PREVIOUS_INSTANCES = "Append to previous instances";
 
 
-	public void trainIterativeFromLabelImage(
+	public void trainFromLabelImage(
 			String instancesKey,
 			String modality,
 			int numIterations,
 			int zChunkSize,
 			int nxyTiles,
 			int localRadius,
+			int numInstanceSetsPerTilePlaneClass,
 			long maxNumInstances,
+			ArrayList< Double > classWeights,
 			String directory,
 			FinalInterval interval )
 	{
 
 		if ( interval == null ) return;
 
-		featureSelectionMinUsageFactor = 0.0; // TODO: somehow this strategy does not seem to work otherwise..
-		settings.batchSizePercent = "100"; // since we choose uncorrelated features anyway
-		numThreadsForClassifierTraining = zChunkSize;
+		featureSelectionMethod = FEATURE_SELECTION_NONE;
+		classifierBatchSizePercent = "100"; // since we choose uncorrelated features anyway
+		threadsClassifierTraining = zChunkSize;
 
 		// TODO: obtain from label image
 		settings.classNames = new ArrayList<>();
@@ -470,10 +474,10 @@ public class WekaSegmentation {
 												featureProvider,
 												instancesKey,
 												newInstancesInterval,
-												getNumLabelImageInstancesPerPlaneTileAndClass(),
+												numInstanceSetsPerTilePlaneClass,
 												numThreadsPerSlice,
 												localRadius,
-												isFirstTime )
+												classWeights )
 								)
 						);
 
@@ -495,7 +499,7 @@ public class WekaSegmentation {
 							e.printStackTrace();
 						}
 
-						if ( isFirstTime && modality.equals( NEW ) )
+						if ( isFirstTime && modality.equals( START_NEW_INSTANCES ) )
 						{
 							instancesKey = instancesManager.putInstancesAndMetadata( instancesAndMetadata );
 							isFirstTime = false;
@@ -528,15 +532,7 @@ public class WekaSegmentation {
 							classifier,
 							instancesAndMetadata);
 
-					if ( featureSelectionMinUsageFactor > 0 )
-					{
-						// TODO: does not work
-						// performFeatureSelection();
-					}
-
-					// in order to have the maximum information gain,
-					// we apply the classifier not to the chunk where the
-					// intstances where collected but already to the next one
+					// TODO: FEATURE_SELECTION
 
 					int iClassificationChunk = iChunk < ( zChunks.size() - 1 ) ? iChunk + 1 : 0;
 					zChunk = zChunks.get( iClassificationChunk );
@@ -571,6 +567,28 @@ public class WekaSegmentation {
 
 					ThreadUtils.joinThreads( classificationFutures, logger );
 
+					long numInstances = instancesManager
+							.getInstancesAndMetadata( instancesKey )
+							.getInstances().numInstances();
+
+					if ( numInstances >= maxNumInstances )
+					{
+						logger.info( "\nMaximum number of instances reached: "
+								+ numInstances + "/" + maxNumInstances );
+
+						if ( directory != null )
+						{
+							logger.info( "\n# Saving final instances..." );
+							InstancesUtils.saveInstancesAndMetadataAsARFF(
+									instancesManager.getInstancesAndMetadata( instancesKey ),
+									directory,
+									"Instances-" + numInstances + ".ARFF" );
+							logger.info( "...done" );
+						}
+
+						break iterationLoop;
+
+					}
 
 				} // Chunk
 
@@ -597,12 +615,7 @@ public class WekaSegmentation {
 				long numInstances = instancesManager
 						.getInstancesAndMetadata( instancesKey )
 						.getInstances().numInstances();
-				if ( numInstances >= maxNumInstances )
-				{
-					logger.info( "\nMaximum number of instances reached: "
-						+ numInstances + "/" + maxNumInstances );
-					break iterationLoop;
-				}
+
 
 				if( directory != null )
 				{
@@ -730,11 +743,11 @@ public class WekaSegmentation {
 
 		// Initialization of Fast Random Forest classifier
 		rf = new FastRandomForest();
-		rf.setNumTrees(numOfTrees);
-		rf.setNumFeatures(numRandomFeatures);
+		rf.setNumTrees( classifierNumTrees );
+		rf.setNumFeatures( classifierNumRandomFeatures );
 		rf.setSeed((new Random()).nextInt());
-		rf.setNumThreads(numRfTrainingThreads);
-		rf.setMaxDepth(maxDepth);
+		rf.setNumThreads( threadsClassifierTraining );
+		rf.setMaxDepth( classifierMaxDepth );
 		//rf.setBatchSize("50");
 		rf.setComputeImportances(true);
 		classifier = rf;
@@ -1397,7 +1410,7 @@ public class WekaSegmentation {
 
 		// Compute feature values for examples
 		//
-		ExecutorService exe = Executors.newFixedThreadPool(regionThreads);
+		ExecutorService exe = Executors.newFixedThreadPool( threadsRegion );
 		ArrayList<Future> futures = new ArrayList<>();
 
 		isUpdatedFeatureList = false;
@@ -1537,7 +1550,7 @@ public class WekaSegmentation {
 		long freeMemory = maxMemory - currentMemory;
 
 		long maxNumVoxelsPerRegion = (long) 1.0 * freeMemory /
-				(getNeededBytesPerVoxel() * regionThreads * threadsPerRegion);
+				(getNeededBytesPerVoxel() * threadsRegion * threadsPerRegion);
 
 		long maxNumRegionWidth = (long) Math.pow(maxNumVoxelsPerRegion, 1.0 / 3);
 
@@ -1821,6 +1834,20 @@ public class WekaSegmentation {
 		return metaData;
 	}
 
+
+	public final static String FEATURE_SELECTION_ABSOLUTE_USAGE = "Absolute usage";
+	public final static String FEATURE_SELECTION_RELATIVE_USAGE = "Relative usage";
+	public final static String FEATURE_SELECTION_TOTAL_NUMBER = "Total number";
+	public final static String FEATURE_SELECTION_NONE = "None";
+
+
+	public void setFeatureSelection( String method, double value )
+	{
+		featureSelectionMethod = method;
+		featureSelectionValue = value;
+
+	}
+
 	public void trainClassifierWithFeatureSelection (
 			InstancesMetadata instancesAndMetadata )
 	{
@@ -1828,35 +1855,53 @@ public class WekaSegmentation {
 
 		if ( classifier == null ) return;
 
-		// if wished for, train a second time
-		// only with important features
-		if ( featureSelectionMinUsageFactor > 0  || featureSelectionMaxNum > 0  )
+		if ( ! featureSelectionMethod.equals( FEATURE_SELECTION_NONE ) )
 		{
 			InstancesMetadata instancesWithFeatureSelection = null;
 
-			if ( featureSelectionMinUsageFactor > 0  )
+			switch ( featureSelectionMethod )
 			{
-				ArrayList< Integer > goners = AttributeSelector.getGonersBasedOnRelativeUsage(
-						classifier,
-						instancesAndMetadata.getInstances(),
-						featureSelectionMinUsageFactor,
-						logger );
+				case FEATURE_SELECTION_RELATIVE_USAGE:
+					ArrayList< Integer > goners =
+							AttributeSelector.getGonersBasedOnUsage(
+									classifier,
+									instancesAndMetadata.getInstances(),
+									featureSelectionValue,
+									-1,
+									logger );
 
-				instancesWithFeatureSelection = InstancesUtils.removeAttributes( instancesAndMetadata, goners );
+					instancesWithFeatureSelection =
+							InstancesUtils.removeAttributes( instancesAndMetadata, goners );
+					break;
+
+				case FEATURE_SELECTION_TOTAL_NUMBER:
+					ArrayList< Integer > keepers =
+							AttributeSelector.getMostUsedAttributes(
+									classifier,
+									instancesAndMetadata.getInstances(),
+									(int) featureSelectionValue,
+									logger );
+
+					instancesWithFeatureSelection
+							= InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers );
+					break;
+
+				case FEATURE_SELECTION_ABSOLUTE_USAGE:
+					ArrayList< Integer > keepers2 =
+							AttributeSelector.getMostUsedAttributes(
+									classifier,
+									instancesAndMetadata.getInstances(),
+									(int) featureSelectionValue,
+									logger);
+
+					instancesWithFeatureSelection
+							= InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers2 );
+					break;
+
+
 			}
-			else if ( featureSelectionMaxNum > 0  )
-			{
-				ArrayList< Integer > keepers = AttributeSelector.getMostUsedAttributes(
-						classifier,
-						instancesAndMetadata.getInstances(),
-						featureSelectionMaxNum,
-						logger );
 
-				instancesWithFeatureSelection
-						= InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers );
-			}
-
-			logger.info ("\n# Second Training");
+			logger.info ("\n# Second training with feature subset");
 
 			classifier = trainClassifier( instancesWithFeatureSelection );
 
@@ -1898,14 +1943,14 @@ public class WekaSegmentation {
 		}
 
 		// Set up the classifier
-		numRandomFeatures = (int) Math.ceil(1.0 * iam.getInstances().numAttributes() * fractionRandomFeatures);
+		classifierNumRandomFeatures = (int) Math.ceil(1.0 * iam.getInstances().numAttributes() * classifierFractionFeaturesPerNode );
 
 		FastRandomForest classifier = new FastRandomForest();
 		classifier.setSeed( (new Random()).nextInt() );
-		classifier.setMaxDepth( maxDepth );
-		classifier.setNumTrees( getNumTrees() );
-		classifier.setNumThreads( numThreadsForClassifierTraining );
-		classifier.setNumFeatures( numRandomFeatures );
+		classifier.setMaxDepth( classifierMaxDepth );
+		classifier.setNumTrees( classifierNumTrees );
+		classifier.setNumFeatures( classifierNumRandomFeatures );
+		classifier.setNumThreads( threadsClassifierTraining );
 		classifier.setBatchSize( "" + getBatchSizePercent() );
 		classifier.setComputeImportances( false ); // using own method currently
 
@@ -1919,7 +1964,6 @@ public class WekaSegmentation {
 			//InstancesUtils.logInstancesInformation( balancedInstances );
 
 			classifier.setLabelIds( iam.getLabelList() );
-
 		}
 
 
@@ -1982,7 +2026,7 @@ public class WekaSegmentation {
 		// set up multi-threading
 
 		int adaptedThreadsPerRegion = threadsPerRegion;
-		int adaptedRegionThreads = regionThreads;
+		int adaptedRegionThreads = threadsRegion;
 
 		if ( tiles.size() == 1 )
 		{
@@ -2109,8 +2153,8 @@ public class WekaSegmentation {
 
 		String treeInfo = "Trees (avg, max, avail): "
 				+ avgTreesUsed
-				+ ", " + rfStatsMaximumTreesUsed
-				+ ", " + getNumTrees();
+				+ ", " + classifierStatsMaximumTreesUsed
+				+ ", " + classifierNumTrees;
 
 		logger.progress("Classification", tileInfo
 				+ "; " + timeInfo
@@ -2199,10 +2243,10 @@ public class WekaSegmentation {
 			if ( ThreadUtils.stopThreads( logger, stopCurrentTasks,
 					tileCounter, tileCounterMax ) ) return;
 
-			//if ( tileCounter <= regionThreads )
+			//if ( tileCounter <= threadsRegion )
 		    //	waitMilliseconds( tileCounter * tilingDelay );
 
-			boolean isLogging = (tileCounter <= regionThreads);
+			boolean isLogging = (tileCounter <= threadsRegion );
 			if( doNotLog ) isLogging = false;
 
 			// TODO: check whether this is a background region
@@ -2498,9 +2542,9 @@ public class WekaSegmentation {
 
 								// record tree usage stats
 								rfStatsTreesEvaluated.addAndGet( ( int ) result[ NUM_TREES_EVALUATED ] );
-								if ( result[ NUM_TREES_EVALUATED ] > rfStatsMaximumTreesUsed.get() )
+								if ( result[ NUM_TREES_EVALUATED ] > classifierStatsMaximumTreesUsed.get() )
 								{
-									rfStatsMaximumTreesUsed.set( ( int ) result[ NUM_TREES_EVALUATED ] );
+									classifierStatsMaximumTreesUsed.set( ( int ) result[ NUM_TREES_EVALUATED ] );
 								}
 
 							}
@@ -2591,22 +2635,6 @@ public class WekaSegmentation {
 		return 0;
 	}
 
-	/**
-	 * Set current number of trees (for random forest instances)
-	 */
-	public void setNumTrees(int n)
-	{
-		numOfTrees = n;
-	}
-
-	/**
-	 * Get current number of trees (for random forest instances)
-	 * @return number of trees
-	 */
-	public int getNumTrees()
-	{
-		return numOfTrees;
-	}
 
 	public ArrayList < Integer > getFeaturesToShow()
 	{
@@ -2670,13 +2698,13 @@ public class WekaSegmentation {
 		return ss;
 	}
 
-	public void setActiveChannelsFromString(String activeChannels)
+	public void setActiveChannelsFromString( String activeChannels )
 	{
 		String[] ss = activeChannels.split(",");
-		this.settings.activeChannels = new ArrayList<>();
+		settings.activeChannels = new TreeSet<>();
 		for ( String s : ss)
 		{
-			this.settings.activeChannels.add(Integer.parseInt(s.trim()) - 1); // zero-based
+			settings.activeChannels.add(Integer.parseInt(s.trim()) - 1); // zero-based
 		}
 	}
 
@@ -2684,9 +2712,9 @@ public class WekaSegmentation {
 	 * Get maximum depth of the random forest
 	 * @return maximum depth of the random forest
 	 */
-	public int getMaxDepth()
+	public int getClassifierMaxDepth()
 	{
-		return maxDepth;
+		return classifierMaxDepth;
 	}
 
 

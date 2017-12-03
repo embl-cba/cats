@@ -3,6 +3,7 @@ package trainableDeepSegmentation.settings;
 import trainableDeepSegmentation.instances.InstancesMetadata;
 
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 import static trainableDeepSegmentation.instances.InstancesMetadata.Metadata.*;
 
@@ -61,7 +62,7 @@ public abstract class SettingsUtils {
 
         settings.classNames = instancesMetadata.getClassNames();
 
-        settings.activeChannels = new ArrayList< Integer >();
+        settings.activeChannels = new TreeSet<>();
         int channels = (int) instancesMetadata.getMetadata( Metadata_Settings_UseChannels, 0 );
         final String s1 = String.format("%8s", Integer.toBinaryString(channels & 0xFF)).replace(' ', '0');
         for (int i = 0; i < s1.length(); i++)

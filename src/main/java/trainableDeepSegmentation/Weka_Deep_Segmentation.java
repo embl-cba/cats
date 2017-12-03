@@ -1910,11 +1910,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 					"account; but you can still use this plugin, may work anyway...");
 		}
 
-		ArrayList< Integer > channelsToConsider = new ArrayList<>();
+		Set< Integer > channelsToConsider = new TreeSet<>();
 		for ( int c = 0; c < trainingImage.getNChannels(); c++ )
 		{
 			channelsToConsider.add(c); // zero-based
 		}
+
 		wekaSegmentation.settings.activeChannels = channelsToConsider;
 
 		displayImage = trainingImage;
@@ -2288,9 +2289,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 					GenericDialog gd = new GenericDialogPlus( "Training from label image" );
 					gd.addStringField( "Training data name", "labelImage", 15 );
 					gd.addChoice( "Modality", new String[]
-							{ wekaSegmentation.NEW,
-									wekaSegmentation.APPEND},
-									wekaSegmentation.NEW);
+							{ wekaSegmentation.START_NEW_INSTANCES,
+									wekaSegmentation.APPEND_TO_PREVIOUS_INSTANCES },
+									wekaSegmentation.START_NEW_INSTANCES );
 					//gd.addNumericField( "Number of iterations", 3.0, 0 );
 					gd.addNumericField( "Z chunk size", Prefs.getThreads(), 0 );
 					gd.addNumericField( "(nx,ny) for tiling", 3, 0 );
@@ -2310,7 +2311,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					int nxyTiles = (int) gd.getNextNumber();
 					int localRadius = (int) gd.getNextNumber();
 					long maxNumInstances = (long) gd.getNextNumber();
-					wekaSegmentation.setLabelImageTrainingIteration( (int) gd.getNextNumber() );
+					int numInstanceSetsPerTilePlaneClass = (int) gd.getNextNumber();
 					boolean autoSaveInstances = gd.getNextBoolean();
 
 					String directory = null;
@@ -2323,14 +2324,20 @@ public class Weka_Deep_Segmentation implements PlugIn
 						directory = IJ.getDirectory( "Choose directory for saving the instances" );
 					}
 
-					wekaSegmentation.trainIterativeFromLabelImage(
+					ArrayList< Double > classWeights = new ArrayList<>(  );
+					classWeights.add( 1.05 );
+					classWeights.add( 1.0 );
+
+					wekaSegmentation.trainFromLabelImage(
 							instancesKey,
 							modality,
 							numIterations,
 							zChunkSize,
 							nxyTiles,
 							localRadius,
+							numInstanceSetsPerTilePlaneClass,
 							maxNumInstances,
+							classWeights,
 							directory,
 							interval
 					);
@@ -3016,14 +3023,23 @@ public class Weka_Deep_Segmentation implements PlugIn
 		GenericDialogPlus gd = new GenericDialogPlus("Classifier settings");
 
 		gd.addNumericField("Number of trees",
-				wekaSegmentation.getNumTrees(), 0);
-		gd.addStringField("Batch size per tree in percent",
-				wekaSegmentation.settings.batchSizePercent);
-		gd.addNumericField("Feature selection: Minimum relative usage",
-				wekaSegmentation.featureSelectionMinUsageFactor, 1);
-		gd.addNumericField("Feature selection: Maximum number",
-				wekaSegmentation.featureSelectionMaxNum, 0);
+				wekaSegmentation.classifierNumTrees, 0);
 
+		gd.addStringField("Batch size per tree in percent",
+				wekaSegmentation.classifierBatchSizePercent);
+
+		gd.addChoice("Feature selection: method",
+				new String[]
+						{
+								WekaSegmentation.FEATURE_SELECTION_RELATIVE_USAGE,
+								WekaSegmentation.FEATURE_SELECTION_ABSOLUTE_USAGE,
+								WekaSegmentation.FEATURE_SELECTION_TOTAL_NUMBER,
+								WekaSegmentation.FEATURE_SELECTION_NONE,
+						},
+				WekaSegmentation.FEATURE_SELECTION_RELATIVE_USAGE);
+
+		gd.addNumericField("Feature selection: value",
+				wekaSegmentation.featureSelectionValue, 1);
 
 		gd.showDialog();
 
@@ -3031,10 +3047,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 			return false;
 
 		// Set classifier and options
-		wekaSegmentation.setNumTrees((int) gd.getNextNumber());
+		wekaSegmentation.classifierNumTrees = (int) gd.getNextNumber();
 		wekaSegmentation.setBatchSizePercent( gd.getNextString() );
-		wekaSegmentation.featureSelectionMinUsageFactor = (double) gd.getNextNumber();
-		wekaSegmentation.featureSelectionMaxNum = (int) gd.getNextNumber();
+		wekaSegmentation.featureSelectionMethod = gd.getNextChoice();
+		wekaSegmentation.featureSelectionValue = gd.getNextNumber();
 
 		return true;
 	}
