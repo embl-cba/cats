@@ -80,7 +80,7 @@ public class ResultImageDisk implements ResultImage {
     }
 
     @Override
-    public ImagePlus getDataCube( FinalInterval interval )
+    public ImagePlus getDataCubeCopy( FinalInterval interval )
     {
 
         VirtualStackOfStacks vss = (VirtualStackOfStacks)result.getStack();
@@ -158,7 +158,7 @@ public class ResultImageDisk implements ResultImage {
     }
 
 
-    public ImagePlus getImagePlus()
+    public ImagePlus getWholeImageCopy()
     {
         logger.error( "Currently not implemented for disk resident result images." );
         return null;

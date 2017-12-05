@@ -1,5 +1,6 @@
 package trainableDeepSegmentation.results;
 
+import bigDataTools.Region5D;
 import bigDataTools.logging.Logger;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -10,6 +11,7 @@ import trainableDeepSegmentation.IntervalUtils;
 import trainableDeepSegmentation.WekaSegmentation;
 
 import java.awt.*;
+import java.awt.image.ColorModel;
 import java.util.ArrayList;
 
 import static bigDataTools.utils.Utils.getDataCubeFromImagePlus;
@@ -55,6 +57,12 @@ public class ResultImageMemory implements ResultImage {
         int stackIndex = result.getStackIndex(  0, slice, frame );
         ImageProcessor ip = result.getStack().getProcessor( stackIndex );
         return ( ip );
+    }
+
+    public void setProcessor( ImageProcessor ip, int slice, int frame )
+    {
+        int stackIndex = result.getStackIndex(  0, slice, frame );
+        result.getStack().setProcessor( ip, stackIndex );
     }
 
     @Override
@@ -103,7 +111,7 @@ public class ResultImageMemory implements ResultImage {
     }
 
     @Override
-    public ImagePlus getDataCube( FinalInterval interval )
+    public ImagePlus getDataCubeCopy( FinalInterval interval )
     {
         assert interval.min( IntervalUtils.C ) == interval.max( IntervalUtils.C );
         assert interval.min( IntervalUtils.T ) == interval.max( IntervalUtils.T );
@@ -114,10 +122,34 @@ public class ResultImageMemory implements ResultImage {
         return cube;
     }
 
-    public ImagePlus getImagePlus()
+    public ImagePlus getWholeImageCopy()
     {
         ImagePlus imp = result.duplicate();
         return imp;
+    }
+
+    public ImagePlus getFrame( int frame )
+    {
+        ImagePlus imp = result;
+        ImageStack stack = result.getStack();
+        ImageStack stack2 = null;
+        int c = 1;
+
+        for(int slice = 1; slice <= imp.getNSlices(); ++slice) {
+            int n1 = imp.getStackIndex(c, slice, frame);
+            ImageProcessor ip = stack.getProcessor(n1);
+            String label = stack.getSliceLabel(n1);
+            if (stack2 == null) {
+                stack2 = new ImageStack(ip.getWidth(), ip.getHeight(), (ColorModel )null);
+            }
+            stack2.addSlice(label, ip);
+        }
+
+        ImagePlus imp2 = imp.createImagePlus();
+        imp2.setStack("Frame_" + frame + "_" + imp.getTitle(), stack2);
+        imp2.setDimensions( 1, result.getNSlices(), 1);
+        imp2.setOpenAsHyperStack(true);
+        return imp2;
     }
 
 }

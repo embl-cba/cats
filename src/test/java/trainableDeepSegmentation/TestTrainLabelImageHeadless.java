@@ -3,13 +3,8 @@ package trainableDeepSegmentation;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
-import ij.Prefs;
-import ij.io.FileSaver;
 import net.imglib2.FinalInterval;
-import net.imglib2.Interval;
-import net.imglib2.iterator.ZeroMinIntervalIterator;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import static trainableDeepSegmentation.IntervalUtils.*;
@@ -43,7 +38,7 @@ public class TestTrainLabelImageHeadless {
         ws.settings.binFactors[0] = 1;
         ws.settings.binFactors[1] = 2;
         ws.settings.binFactors[2] = 3;
-        ws.settings.binFactors[3] = 3;
+        ws.settings.binFactors[3] = -1;
         ws.settings.anisotropy = 5;
         ws.settings.activeChannels.add( 0 );
 
@@ -58,40 +53,42 @@ public class TestTrainLabelImageHeadless {
         long[] min = new long[ 5 ];
         long[] max = new long[ 5 ];
         min[ X ] = 430; max[ X ] = 530;
-        min[ Y ] = 250; max[ Y ] = 450;
-        min[ Z ] = 0; max[ Z ] = 95;
+        min[ Y ] = 250; max[ Y ] = 350;
+        min[ Z ] = 0; max[ Z ] = 15;
         min[ C ] = 0; max[ C ] = 0;
         min[ T ] = 0; max[ T ] = 0;
 
         FinalInterval interval = new FinalInterval( min, max );
 
         ArrayList< Double > classWeights = new ArrayList<>(  );
-        classWeights.add( 1.05 );
+        classWeights.add( 1.0 );
         classWeights.add( 1.0 );
 
         ws.trainFromLabelImage( "labelImageTraining",
                 WekaSegmentation.START_NEW_INSTANCES,
-                100,
+                6,
                 4,
                 1,
                 7,
                20,
-                1000,
+                2000,
                 classWeights,
                 INSTANCES_DIRECTORY,
                 interval);
 
-        ImagePlus result = ws.getResultImage().getImagePlus();
+        ImagePlus result = ws.getResultImage().getWholeImageCopy();
         result.show();
         IJ.run(result, "Enhance Contrast", "saturated=0.35");
 
+        ws.getInputImage().show();
+
         // Analyse objects
         //
-        //ImagePlus labelMask = ws.analyzeObjects( MIN_NUM_VOXELS );
+        //ImagePlus labelMask = ws.getLabelMask( MIN_VOXELS );
         //labelMask.show();
 
         // Save image
-        //String outFilePath = ARG_OUTPUT_DIRECTORY + File.separator + "R"+ regExp + "--labelMask.tif";
+        //String outFilePath = OUTPUT_DIR + File.separator + "R"+ regExp + "--labelMask.tif";
         //WekaSegmentation.logger.info("\n# Saving file " + outFilePath + "...");
         //FileSaver fileSaver = new FileSaver( labelMask );
         //fileSaver.saveAsTiff( outFilePath );

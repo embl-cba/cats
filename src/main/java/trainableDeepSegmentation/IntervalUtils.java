@@ -158,7 +158,6 @@ public abstract class IntervalUtils {
 
         for ( int d : XYZ )
         {
-
             if ( numTiles > 0 )
             {
                 tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / Math.pow( numTiles, 1.0/3.0 ) );

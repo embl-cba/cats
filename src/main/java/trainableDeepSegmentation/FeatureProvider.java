@@ -30,9 +30,6 @@ import ij.plugin.Binner;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.StackProcessor;
-import mcib3d.image3d.ImageFloat;
-import mcib3d.image3d.ImageShort;
-import mcib3d.image3d.processing.FastFilters3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessible;
@@ -66,7 +63,7 @@ public class FeatureProvider
 
     private Set<Integer> activeChannels;
 
-    private final Integer FG_DIST_BG_IMAGE = -1;
+    public static final Integer FG_DIST_BG_IMAGE = -1;
     private final String CONV_DEPTH = "CD";
 
     private int X = 0, Y = 1, C = 2, Z = 3, T = 4;
@@ -1144,7 +1141,7 @@ public class FeatureProvider
             // everything is within bounds
             if ( channel == FG_DIST_BG_IMAGE )
             {
-                return ( resultImageFgDistBg.getDataCube(interval) );
+                return ( resultImageFgDistBg.getDataCubeCopy(interval) );
             }
             else
             {
@@ -1175,7 +1172,7 @@ public class FeatureProvider
         ImagePlus impWithinBounds;
         if ( channel == FG_DIST_BG_IMAGE )
         {
-            impWithinBounds = resultImageFgDistBg.getDataCube( intersect5D );
+            impWithinBounds = resultImageFgDistBg.getDataCubeCopy( intersect5D );
         }
         else
         {
@@ -1262,7 +1259,7 @@ public class FeatureProvider
                 channel, "mirror" );
 
         // pre-processing
-        if ( wekaSegmentation.settings.log2 )
+        if ( wekaSegmentation.settings.log2 && channel != FG_DIST_BG_IMAGE )
         {
             // subtract background
             IJ.run( inputImageCrop, "Subtract...", "value="
@@ -1608,7 +1605,7 @@ public class FeatureProvider
             ImageFloat HandMedian = FastFilters3D.filterFloatImage(
                     new ImageFloat( imp ),
                     FastFilters3D., median_radius_xy,median_radius_xy, median_radius_z, ncpu,false);
-            ImagePlus medianImage=HandMedian.getImagePlus();
+            ImagePlus medianImage=HandMedian.getWholeImageCopy();
 
 
             ImageStack result = ImageStack.create( imp.getWidth(), imp.getHeight(), imp.getNSlices(), 32 );

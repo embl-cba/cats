@@ -18,10 +18,8 @@ import java.util.zip.GZIPOutputStream;
 import bigDataTools.logging.Logger;
 import bigDataTools.logging.IJLazySwingLogger;
 import ij.gui.PolygonRoi;
-import ij.measure.ResultsTable;
 import ij.process.ImageProcessor;
 import inra.ijpb.binary.BinaryImages;
-import inra.ijpb.measure.GeometricMeasures3D;
 import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
 import javafx.geometry.Point3D;
@@ -41,6 +39,7 @@ import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.examples.ExamplesUtils;
 import trainableDeepSegmentation.instances.InstancesMetadata;
 import trainableDeepSegmentation.results.ResultImage;
+import trainableDeepSegmentation.results.ResultImageDisk;
 import trainableDeepSegmentation.results.ResultImageFrameSetter;
 import trainableDeepSegmentation.instances.InstancesUtils;
 import trainableDeepSegmentation.instances.InstancesManager;
@@ -95,6 +94,7 @@ public class WekaSegmentation {
 	public static final String WHOLE_DATA_SET = "Whole data set";
 
 
+	public String resultImageType = RESULT_IMAGE_RAM;
 
 	/**
 	 * array of lists of Rois for each slice (vector index)
@@ -117,6 +117,31 @@ public class WekaSegmentation {
 	{
 		this.resultImageBgFg = resultImageBgFg;
 	}
+
+	public void setResultImageBgFgRAM( )
+	{
+		resultImageBgFg = new ResultImageMemory(
+				this,
+				getInputImageDimensions() );
+
+		logger.info("Allocated memory for result image." );
+
+	}
+
+	public void setResultImageBgFgDisk( String directory )
+	{
+
+		resultImageBgFg = new ResultImageDisk(
+				this,
+				directory,
+				getInputImageDimensions() );
+
+		logger.info("Created disk-resident result image: " +
+				directory);
+
+
+	}
+
 
 	private ResultImage resultImageBgFg = null;
 
@@ -209,7 +234,7 @@ public class WekaSegmentation {
 
 	public double accuracy = 4.0;
 
-	public double memoryFactor = 3.0;
+	public double memoryFactor = 10.0;
 
 	public static final IJLazySwingLogger logger = new IJLazySwingLogger();
 
@@ -524,13 +549,7 @@ public class WekaSegmentation {
 
 					if ( instancesAndMetadata == null ) return;
 
-					FastRandomForest classifier = trainClassifier( instancesAndMetadata );
-
-					if ( classifier == null ) return;
-
-					String key = getClassifierManager().setClassifier(
-							classifier,
-							instancesAndMetadata);
+					String classiferKey  = trainClassifier( instancesAndMetadata );
 
 					// TODO: FEATURE_SELECTION
 
@@ -556,8 +575,8 @@ public class WekaSegmentation {
 												featureProvider,
 												resultImageFrameSetter,
 												z, z,
-												getClassifierManager().getInstancesHeader( key ),
-												getClassifierManager().getClassifier( key ),
+												getClassifierManager().getInstancesHeader( classiferKey ),
+												getClassifierManager().getClassifier( classiferKey ),
 												accuracy,
 												numThreadsPerSlice
 										)
@@ -967,6 +986,22 @@ public class WekaSegmentation {
 		this.resultImage = resultImage;
 	}
 
+	public void setResultImageDisk( String directory )
+	{
+		ResultImage resultImage = new ResultImageDisk(
+				this,
+				directory,
+				getInputImageDimensions() );
+
+		setResultImage( resultImage );
+
+		setLogFile( directory );
+
+		logger.info("Created disk-resident classification result image: " +
+				directory);
+	}
+
+
 	public void setResultImageRAM()
 	{
 		ResultImage resultImage = new ResultImageMemory(
@@ -1203,17 +1238,44 @@ public class WekaSegmentation {
 
 
 	public void applyBgFgClassification( FinalInterval interval,
+										 String key )
+	{
+		InstancesMetadata instancesMetadata = getInstancesManager().getInstancesAndMetadata( key );
+		applyBgFgClassification( interval, instancesMetadata );
+	}
+
+	public void replaceByDistanceMap( ResultImageMemory resultImageMemory )
+	{
+		// We need to loop through the frames because the
+		// 3-D distance transform code has no hyperstack logic
+		for ( int frame = 1; frame <= inputImage.getNFrames(); ++frame )
+		{
+			ImagePlus imp = resultImageMemory.getFrame( frame );
+
+			// IJ.run(imp, "Exact Euclidean Distance Transform (3D)", "");
+			//
+
+			// Replace values by distance map values
+			//
+			ImageStack distanceMap = null;
+			for( int slice = 1; slice <= imp.getNSlices(); ++slice )
+			{
+				resultImageMemory.setProcessor(
+						distanceMap.getProcessor( slice ),
+						slice, frame );
+			}
+		}
+	}
+
+	public void applyBgFgClassification( FinalInterval interval,
 										 InstancesMetadata instancesAndMetadata )
 	{
+		setResultImageBgFgRAM( );
 
 		ArrayList< Integer > originalClasses =
 				setInstancesClassesToBgFg( instancesAndMetadata.getInstances() );
 
-		FastRandomForest classifierBgFg = trainClassifier( instancesAndMetadata );
-
-		String classifierBgFgKey = classifierManager.setClassifier(
-				classifierBgFg,
-				instancesAndMetadata );
+		String classifierBgFgKey = trainClassifierWithFeatureSelection( instancesAndMetadata );
 
 		resetInstancesClasses( instancesAndMetadata.getInstances(), originalClasses );
 
@@ -1221,44 +1283,44 @@ public class WekaSegmentation {
 		ResultImage originalResultImage = resultImage;
 		resultImage = resultImageBgFg;
 
-		applyClassifierWithTiling( classifierBgFgKey,
-				interval, null, null, false );
+		applyClassifierWithTiling(
+				classifierBgFgKey,
+				interval );
 
-		// reset
+		// reset result image
 		resultImage = originalResultImage;
 
-		ImagePlus imp1 = resultImageBgFg.getDataCube( interval );
-		imp1.setTitle( "BgFg" );
-		imp1.show();
+		// compute distance transform on whole data set
+		// - it is important to do it on the whole data set, because
+		// we need to recompute the examples' instance values, which
+		// can be anywhere
 
-		resultImage.getDataCube( interval ).show();
+		replaceByDistanceMap( (ResultImageMemory)resultImageBgFg );
 
-
-		// apply bgfg classifier
-
-		// apply distance transfrom to bgfg image
-
-		// add bgfg result image to active channels
-
-		// recompute instances, now including the bgfg result image
-
-		/*
-		updateExamples( true );
-		Instances instances2 = InstancesCreator.getInstancesAndMetadataFromLabels(
-				getExamples(),
-				getInputImageTitle(),
-				settings,
-				examplesFeatureNames,
-				getClassNames() );
-		*/
-
-
+		// Recompute instance values, now including the distance map
 		//
+		//settings.activeChannels.remove( 0 );
+		settings.activeChannels.add( FeatureProvider.FG_DIST_BG_IMAGE );
+
+		logger.info( "\n# Recomputing instances including distance image" );
+		String bgFgInstancesKey = "BgFgTraining";
+		recomputeLabelInstances = true;
+		putUpdatedExampleInstances( bgFgInstancesKey );
+		recomputeLabelInstances = false;
+
+		// Retrain classifier
+		//
+		String classifierKey  = trainClassifierWithFeatureSelection( bgFgInstancesKey );
+
+		applyClassifierWithTiling( classifierKey,
+				interval,
+				-1,
+				null,
+				false );
+
+		resultImage.getDataCubeCopy( interval ).show();
 
 
-		// train classifier with new instances and all classes
-
-		// apply classifier
 
 
 
@@ -1266,8 +1328,14 @@ public class WekaSegmentation {
 	}
 
 
+	public String loadInstancesMetadata( String filePath )
+	{
+		Path p = Paths.get(filePath);
+		String key = loadInstancesMetadata( p.getParent().toString(),  p.getFileName().toString());
+		return key;
+	}
 
-	public void loadInstancesAndMetadata( String directory, String fileName )
+	public String loadInstancesMetadata( String directory, String fileName )
 	{
 		InstancesMetadata instancesAndMetadata =
 				InstancesUtils.
@@ -1278,8 +1346,7 @@ public class WekaSegmentation {
 			logger.error( "Loading failed..." );
 		}
 
-		getInstancesManager().putInstancesAndMetadata( instancesAndMetadata );
-
+		String key = getInstancesManager().putInstancesAndMetadata( instancesAndMetadata );
 
 		// create examples, if
 		// - this contains multiple labels
@@ -1302,21 +1369,57 @@ public class WekaSegmentation {
 
 		setImageBackground( settings.imageBackground );
 
+		return key;
+
+	}
+
+	public boolean saveInstances( String key, String directory, String filename )
+	{
+		logger.info("\n# Saving instances to " + directory + File.separator + filename );
+
+		InstancesMetadata instancesAndMetadata =
+						getInstancesManager().
+						getInstancesAndMetadata( key );
+
+		boolean success = InstancesUtils.
+				saveInstancesAndMetadataAsARFF( instancesAndMetadata,
+						directory, filename );
+
+		if ( success )
+		{
+			logger.info( "...done." );
+		}
+		else
+		{
+			logger.error( "Saving instances failed." );
+		}
+
+		return success;
 	}
 
 
-	public String putUpdatedExampleInstances()
+	public String putUpdatedExampleInstances( String key )
 	{
 		InstancesMetadata instancesAndMetadata = null;
+		String instancesName;
 
-		// compute instances data for new labels
+		if ( key != null )
+		{
+			instancesName = key;
+		}
+		else
+		{
+			instancesName = getInputImageTitle();
+		}
+
+		// compute instances data in examples
 		updateExamples();
 
 		if ( getNumExamples() > 0 )
 		{
 			instancesAndMetadata = InstancesUtils.getInstancesAndMetadataFromLabels(
 					getExamples(),
-					getInputImageTitle(),
+					instancesName,
 					settings,
 					examplesFeatureNames,
 					getClassNames() );
@@ -1326,8 +1429,7 @@ public class WekaSegmentation {
 			return null;
 		}
 
-
-		String key = getInstancesManager().
+		getInstancesManager().
 				putInstancesAndMetadata( instancesAndMetadata );
 
 		return key;
@@ -1709,12 +1811,12 @@ public class WekaSegmentation {
 	}
 
 
-	public ImagePlus analyzeObjects( int minNumVoxels )
+	public ImagePlus getLabelMask( int minNumVoxels )
 	{
 		// TODO: make possible to select channel
 
 		logger.info( "\n# Thresholding..." );
-		ImagePlus th = Threshold.threshold( resultImage.getImagePlus(), 11, 20 );
+		ImagePlus th = Threshold.threshold( resultImage.getWholeImageCopy(), 11, 20 );
 		logger.info( "...done." );
 
 		logger.info( "\n# Filtering objects..." );
@@ -1725,12 +1827,6 @@ public class WekaSegmentation {
 		logger.info( "\n# Connected components..." );
 		ImagePlus cc = BinaryImages.componentsLabeling( th_sf, 6, 16);
 		logger.info( "...done." );
-
-		ResultsTable rt_bb = GeometricMeasures3D.boundingBox( cc.getStack() );
-		rt_bb.show( "Bounding boxes" );
-
-		ResultsTable rt_v = GeometricMeasures3D.volume( cc.getStack() , new double[]{1,1,1});
-		rt_v.show( "Volumes" );
 
 		return cc;
 	}
@@ -1848,15 +1944,23 @@ public class WekaSegmentation {
 
 	}
 
-	public void trainClassifierWithFeatureSelection (
+	public String trainClassifierWithFeatureSelection (
+			String key )
+	{
+		return trainClassifierWithFeatureSelection(
+			instancesManager.getInstancesAndMetadata( key ) );
+	}
+
+
+	public String trainClassifierWithFeatureSelection (
 			InstancesMetadata instancesAndMetadata )
 	{
-		FastRandomForest classifier = trainClassifier( instancesAndMetadata );
 
-		if ( classifier == null ) return;
+		String classifierKey = trainClassifier( instancesAndMetadata );
 
 		if ( ! featureSelectionMethod.equals( FEATURE_SELECTION_NONE ) )
 		{
+			FastRandomForest classifier = classifierManager.getClassifier( classifierKey );
 			InstancesMetadata instancesWithFeatureSelection = null;
 
 			switch ( featureSelectionMethod )
@@ -1879,7 +1983,7 @@ public class WekaSegmentation {
 							AttributeSelector.getMostUsedAttributes(
 									classifier,
 									instancesAndMetadata.getInstances(),
-									(int) featureSelectionValue,
+									( int ) featureSelectionValue,
 									logger );
 
 					instancesWithFeatureSelection
@@ -1891,8 +1995,8 @@ public class WekaSegmentation {
 							AttributeSelector.getMostUsedAttributes(
 									classifier,
 									instancesAndMetadata.getInstances(),
-									(int) featureSelectionValue,
-									logger);
+									( int ) featureSelectionValue,
+									logger );
 
 					instancesWithFeatureSelection
 							= InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers2 );
@@ -1901,38 +2005,35 @@ public class WekaSegmentation {
 
 			}
 
-			logger.info ("\n# Second training with feature subset");
+			logger.info( "\n# Second training with feature subset" );
 
-			classifier = trainClassifier( instancesWithFeatureSelection );
+			classifierKey = trainClassifier( instancesWithFeatureSelection );
 
-			getClassifierManager().setClassifier(
-					classifier,
-					instancesWithFeatureSelection );
 		}
-		else
-		{
-			getClassifierManager().setClassifier(
-					classifier,
-					instancesAndMetadata );
-		}
+
+		return classifierKey;
 
 	}
 
+	public String trainClassifier( String key )
+	{
+		return trainClassifier( instancesManager.getInstancesAndMetadata( key ) );
+	}
 
 	/**
 	 * Train classifier with the current instances
 	 * and current classifier settings
 	 * and current active features
 	 */
-	public FastRandomForest trainClassifier(
-			InstancesMetadata iam )
+	public String trainClassifier(
+			InstancesMetadata instancesMetadata )
 	{
 		isTrainingCompleted = false;
 
 		// Train the classifier on the current data
 		logger.info("\n# Train classifier");
 
-		InstancesUtils.logInstancesInformation( iam.getInstances() );
+		InstancesUtils.logInstancesInformation( instancesMetadata.getInstances() );
 
 		final long start = System.currentTimeMillis();
 
@@ -1943,7 +2044,7 @@ public class WekaSegmentation {
 		}
 
 		// Set up the classifier
-		classifierNumRandomFeatures = (int) Math.ceil(1.0 * iam.getInstances().numAttributes() * classifierFractionFeaturesPerNode );
+		classifierNumRandomFeatures = (int) Math.ceil(1.0 * instancesMetadata.getInstances().numAttributes() * classifierFractionFeaturesPerNode );
 
 		FastRandomForest classifier = new FastRandomForest();
 		classifier.setSeed( (new Random()).nextInt() );
@@ -1963,14 +2064,14 @@ public class WekaSegmentation {
 			//balancedInstances = balanceTrainingData( instances );
 			//InstancesUtils.logInstancesInformation( balancedInstances );
 
-			classifier.setLabelIds( iam.getLabelList() );
+			classifier.setLabelIds( instancesMetadata.getLabelList() );
 		}
 
 
 		try
 		{
 			logger.info( "\n" );
-			classifier.buildClassifier( iam.getInstances() );
+			classifier.buildClassifier( instancesMetadata.getInstances() );
 		}
 		catch (InterruptedException ie)
 		{
@@ -1986,13 +2087,17 @@ public class WekaSegmentation {
 		final long end = System.currentTimeMillis();
 
 		ClassifierUtils.reportClassifierCharacteristics( classifier,
-				iam.getInstances() );
+				instancesMetadata.getInstances() );
 
 		logger.info("Trained classifier in " + (end - start) + " ms.");
 
 		isTrainingCompleted = true;
 
-		return classifier;
+		String key = getClassifierManager().setClassifier(
+				classifier,
+				instancesMetadata );
+
+		return key;
 	}
 
 

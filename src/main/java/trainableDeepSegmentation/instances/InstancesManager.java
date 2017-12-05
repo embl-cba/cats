@@ -22,6 +22,12 @@ public class InstancesManager {
         return key;
     }
 
+    public synchronized void putInstancesAndMetadata( String key, InstancesMetadata instancesAndMetadata )
+    {
+        instancesMap.put( key, instancesAndMetadata );
+    }
+
+
     public Instances getInstances( String key )
     {
         return ( instancesMap.get( key ).instances );

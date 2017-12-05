@@ -39,14 +39,14 @@ public class InstancesUtils {
      * @return set of instancesMap (feature vectors in Weka format)
      */
     public static InstancesMetadata getInstancesAndMetadataFromLabels( ArrayList< Example > examples,
-                                                                       String inputImageTitle,
+                                                                       String instancesName,
                                                                        Settings settings,
                                                                        ArrayList< String > featureNames,
                                                                        ArrayList< String > classNames )
     {
 
         Instances instances = getInstancesHeader(
-                inputImageTitle,
+                instancesName,
                 featureNames,
                 classNames  );
 
@@ -94,9 +94,10 @@ public class InstancesUtils {
 
             public InstancesMetadata call()
             {
+                double accuracySmoothingSigma = 2.0;
                 int probabilityRange = resultImage.getProbabilityRange();
 
-                int maxCorrectness = probabilityRange / 2;
+                int maxAccuracy = probabilityRange;
 
                 final int numClasses = wekaSegmentation.getNumClasses(); // TODO: getInstancesAndMetadata from label image
 
@@ -127,21 +128,21 @@ public class InstancesUtils {
                     ImageProcessor labelSlice = labelImage.getStack().getProcessor(z + 1);
                     ImageProcessor resultSlice = resultImage.getSlice( z + 1, t + 1  );
 
-                    ImageProcessor correctnessSliceRegion = getCorrectnessSlice(
+                    ImageProcessor accuracySliceRegion = getAccuracySlice(
                             probabilityRange,
                             labelSlice, resultSlice, interval
                     );
 
-                    correctnessSliceRegion.blurGaussian( localRadius );
+                    accuracySliceRegion.blurGaussian( accuracySmoothingSigma );
 
                     // DEBUG
-                    ImagePlus imp2 = new  ImagePlus( "" + z, correctnessSliceRegion); imp2.show();
+                    // ImagePlus imp2 = new  ImagePlus( "" + z, correctnessSliceRegion); imp2.show();
 
                     globalClassCoordinates = getClassCoordinatesAndAccuracies(
                             probabilityRange,
                             numClasses,
                             labelSlice,
-                            correctnessSliceRegion,
+                            accuracySliceRegion,
                             interval );
 
                     featureSlice = featureProvider.getCachedFeatureSlice( z );
@@ -161,7 +162,6 @@ public class InstancesUtils {
                     collectInstancesLoop:
                     for ( int i = 0; i < maxInstancesPerClassAndPlane; ++i )
                     {
-
                         if ( wekaSegmentation.stopCurrentTasks )
                         {
                             return null;
@@ -174,7 +174,7 @@ public class InstancesUtils {
                                     iClass,
                                     globalClassCoordinates,
                                     rand,
-                                    maxCorrectness );
+                                    maxAccuracy );
 
                             if ( xy == null )
                             {
@@ -200,7 +200,7 @@ public class InstancesUtils {
                                     probabilityRange,
                                     numClasses,
                                     labelSlice,
-                                    correctnessSliceRegion,
+                                    accuracySliceRegion,
                                     localInterval );
 
                             for ( int localClass = 0; localClass < numClasses; ++localClass )
@@ -218,7 +218,7 @@ public class InstancesUtils {
                                             localClass,
                                             localClassCoordinates,
                                             rand,
-                                            maxCorrectness );
+                                            maxAccuracy );
 
                                     if ( xyLocal == null )
                                     {
@@ -264,6 +264,8 @@ public class InstancesUtils {
                         }
                     }
                 }
+
+
 
                 return ( instancesAndMetadata );
             }
@@ -374,12 +376,13 @@ public class InstancesUtils {
     }
 
 
-    private static ImageProcessor getCorrectnessSlice(
+    private static ImageProcessor getAccuracySlice(
             int maxProbability,
             ImageProcessor labelSlice,
             ImageProcessor resultSlice,
             FinalInterval interval )
     {
+
 
         labelSlice.setRoi( new Rectangle(
                 (int) interval.min( X ),
@@ -387,12 +390,12 @@ public class InstancesUtils {
                 (int) interval.dimension( X ),
                 (int) interval.dimension( Y ) ) );
 
-        ImageProcessor correctnessSlice = labelSlice.duplicate();
+        ImageProcessor accuracySlice = labelSlice.crop();
 
         int realClass;
         byte result;
         int classifiedClass;
-        int correctness;
+        int accuracy;
 
         for ( int y = (int) interval.min( Y ); y <= interval.max( Y ); ++y)
         {
@@ -403,26 +406,26 @@ public class InstancesUtils {
 
                 if ( result == 0 )
                 {
-                    correctness = 0; // no classification available yet
+                    accuracy = 0; // no classification available yet
                 }
                 else
                 {
                     classifiedClass = ( result - 1 ) / maxProbability;
 
-                    correctness = result - classifiedClass * maxProbability;
-                    if ( realClass != classifiedClass ) correctness *= -1;
-                    correctness += maxProbability;
+                    accuracy = result - classifiedClass * maxProbability;
+                    if ( realClass != classifiedClass ) accuracy *= -1;
+                    accuracy += maxProbability;
                 }
 
-                correctnessSlice.set(
+                accuracySlice.set(
                         x - (int) interval.min( X ),
-                        y - (int) interval.min( y ),
-                        correctness);
+                        y - (int) interval.min( Y ),
+                        accuracy);
 
             }
         }
 
-        return correctnessSlice;
+        return accuracySlice;
 
     }
 

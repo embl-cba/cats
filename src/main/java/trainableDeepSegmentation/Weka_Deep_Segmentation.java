@@ -8,6 +8,7 @@ import ij.gui.*;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.measure.Calibration;
+import ij.measure.ResultsTable;
 import ij.plugin.MacroInstaller;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.Recorder;
@@ -37,6 +38,7 @@ import java.util.concurrent.Executors;
 
 import javax.swing.*;
 
+import inra.ijpb.measure.GeometricMeasures3D;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.instances.InstancesMetadata;
@@ -44,8 +46,6 @@ import trainableDeepSegmentation.labels.LabelManager;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageDisk;
 import trainableDeepSegmentation.results.ResultImageGUI;
-import trainableDeepSegmentation.results.ResultImageMemory;
-import trainableDeepSegmentation.instances.InstancesUtils;
 import weka.classifiers.AbstractClassifier;
 import weka.core.SerializationHelper;
 import weka.gui.GUIChooserApp;
@@ -110,9 +110,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private JButton stopButton = new JButton( "   STOP   " );
 
 
-	private JCheckBox trainingRecomputeFeaturesCheckBox = null;
-	private JComboBox trainingDataSource = null;
-
 	private int X = 0, Y = 1, C = 2, Z = 3, T = 4;
 	private int[] XYZ = new int[]{ X, Y, Z};
 
@@ -137,7 +134,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	/** load annotations button */
 	public static final String IO_LOAD_CLASSIFIER = "Load classifier";
 	public static final String IO_SAVE_CLASSIFIER = "Save classifier";
-
+	public static final String ADD_CLASS = "Add new class";
 	public static final String UPDATE_LABELS_AND_TRAIN = "Update labels and train";
 	public static final String RECOMPUTE_LABELS = "Recompute all labels";
 	public static final String TRAIN_CLASSIFIER = "Train classifier";
@@ -151,7 +148,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
 	public static final String SHOW_CLASSIFIER_SETTINGS = "Show classifier settings";
 	public static final String SHOW_FEATURE_SETTINGS = "Show feature settings";
-	public static final String SHOW_CLASS_SETTINGS = "Show class settings";
 	public static final String GET_LABEL_MASK = "Get label mask";
 
 
@@ -161,10 +157,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	private JComboBox actionComboBox = new JComboBox(
 			new String[] {
+					ADD_CLASS,
 					UPDATE_LABELS_AND_TRAIN,
 					TRAIN_CLASSIFIER,
 					SHOW_CLASSIFIER_SETTINGS,
-					SHOW_CLASS_SETTINGS,
 					SHOW_FEATURE_SETTINGS,
 					IO_LOAD_INSTANCES,
 					IO_SAVE_INSTANCES,
@@ -365,10 +361,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		trainClassifierButton = new JButton("Train classifier");
 
-		trainingRecomputeFeaturesCheckBox = new JCheckBox("ReComp", false);
-		trainingDataSource = new JComboBox( new String[]{
-				TRAINING_DATA_TRACES, TRAINING_DATA_LABEL_IMAGE });
-
 		overlayButton = new JButton("Toggle overlay [r][p][u]");
 		overlayButton.setToolTipText("Toggle between current segmentation and original image");
 		overlayButton.setEnabled(false);
@@ -521,9 +513,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 							case GET_LABEL_MASK:
 								analyzeObjects();
 								break;
-							case SHOW_CLASS_SETTINGS:
-								showClassifierSettingsDialog();
-								break;
 							case SHOW_CLASSIFIER_SETTINGS:
 								showClassifierSettingsDialog();
 								break;
@@ -532,6 +521,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 								break;
 							case IO_LOAD_CLASSIFIER:
 								loadClassifier();
+								break;
+							case ADD_CLASS:
+								addNewClass();
 								break;
 							case IO_SAVE_CLASSIFIER:
 								saveClassifier();
@@ -564,7 +556,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 								updateLabelsTrainingDataAndTrainClassifier();
 								break;
 							case DUPLICATE_RESULT_IMAGE_TO_RAM:
-								ImagePlus imp = wekaSegmentation.getResultImage().getImagePlus();
+								ImagePlus imp = wekaSegmentation.getResultImage().getWholeImageCopy();
 								if ( imp != null ) imp.show();
 								break;
 							case RECOMPUTE_LABELS:
@@ -1939,6 +1931,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 	public void assignResultImage( String resultImageType )
 	{
+		wekaSegmentation.resultImageType = resultImageType;
+
 		if ( resultImageType.equals( WekaSegmentation.RESULT_IMAGE_DISK_SINGLE_TIFF ) )
 		{
 			String directory = IJ.getDirectory("Select result images directory");
@@ -1949,15 +1943,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 				return;
 			}
 
-			ResultImage resultImage = new ResultImageDisk( wekaSegmentation, directory,
-					wekaSegmentation.getInputImageDimensions() );
+			wekaSegmentation.setResultImageDisk( directory  );
 
-			wekaSegmentation.setResultImage( resultImage );
-
-			wekaSegmentation.setLogFile( directory );
-
-			logger.info("Created disk-resident classification result image: " +
-					directory);
 
 		}
 		else if ( resultImageType.equals( WekaSegmentation.RESULT_IMAGE_RAM ))
@@ -2173,7 +2160,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			public void run()
 			{
 
-				String key = wekaSegmentation.putUpdatedExampleInstances();
+				String key = wekaSegmentation.putUpdatedExampleInstances( null );
 				updateComboBoxes();
 
 				wekaSegmentation.trainClassifierWithFeatureSelection(
@@ -2204,7 +2191,17 @@ public class Weka_Deep_Segmentation implements PlugIn
 		Thread task = new Thread() {
 			public void run()
 			{
-				wekaSegmentation.analyzeObjects( minNumVoxels ).show();
+				ImagePlus labelMask = wekaSegmentation.getLabelMask( minNumVoxels );
+				labelMask.show();
+
+				ResultsTable rt_bb = GeometricMeasures3D.boundingBox( labelMask.getStack() );
+				rt_bb.show( "Bounding boxes" );
+
+				ResultsTable rt_v = GeometricMeasures3D.volume( labelMask.getStack() , new double[]{1,1,1});
+				rt_v.show( "Volumes" );
+
+				logger.info( "Number of objects: " + rt_v.size() );
+
 				win.setButtonsEnabled( true );
 			}
 		}; task.start();
@@ -2220,7 +2217,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			public void run()
 			{
 
-				wekaSegmentation.putUpdatedExampleInstances();
+				wekaSegmentation.putUpdatedExampleInstances( null );
 				updateComboBoxes();
 				win.setButtonsEnabled( true );
 
@@ -2247,6 +2244,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public void setImagingModality( String imagingModality )
 	{
 		imagingModalityComboBox.setSelectedItem( imagingModality );
+		if ( imagingModality.equals( FLUORESCENCE_IMAGING ) )
+		{
+			wekaSegmentation.settings.log2 = true;
+		}
+		else
+		{
+			wekaSegmentation.settings.log2 = false;
+		}
 	}
 
 
@@ -2480,29 +2485,20 @@ public class Weka_Deep_Segmentation implements PlugIn
 		{
 			String directory = IJ.getDirectory("Select a directory");
 
-			resultImage = new ResultImageDisk( wekaSegmentation, directory,
-					wekaSegmentation.getInputImageDimensions() );
 
-			logger.info("Created disk-resident result image: " +
-					directory);
+			wekaSegmentation.setResultImageBgFgDisk( directory );
 
 		}
 		else if ( resultImageComboBox.getSelectedItem().equals( WekaSegmentation.RESULT_IMAGE_RAM ))
 		{
-			resultImage = new ResultImageMemory( wekaSegmentation,
-					wekaSegmentation.getInputImageDimensions() );
-
-			logger.info("Allocated memory for result image." );
+			wekaSegmentation.setResultImageBgFgRAM( );
 		}
 
-		wekaSegmentation.setResultImageBgFg( resultImage );
 	}
 
 
 	public void applyBgFgClassification()
 	{
-		ensureExistenceOfBgFgResultImage();
-
 		FinalInterval interval = getIntervalFromGUI( );
 		if ( interval == null ) return;
 
@@ -2715,13 +2711,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				getSaveDirFile(
 						"Save instance file", ".ARFF" );
 
-		InstancesMetadata instancesAndMetadata =
-				wekaSegmentation.
-						getInstancesManager().
-						getInstancesAndMetadata( key );
-
-		boolean status = InstancesUtils.
-				saveInstancesAndMetadataAsARFF( instancesAndMetadata, dirFile[0], dirFile[1] );
+		boolean status = wekaSegmentation.saveInstances( key, dirFile[0], dirFile[1] );
 
 		win.setButtonsEnabled( true );
 		wekaSegmentation.isBusy = false;
@@ -2785,7 +2775,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 		win.setButtonsEnabled( false );
 		wekaSegmentation.isBusy = true;
 
-		wekaSegmentation.loadInstancesAndMetadata( dirFile[0], dirFile[1] );
+		wekaSegmentation.loadInstancesMetadata( dirFile[0], dirFile[1] );
 
 		for ( int c = 0; c < wekaSegmentation.getNumClasses(); c++ )
 		{

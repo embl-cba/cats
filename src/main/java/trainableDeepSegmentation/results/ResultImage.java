@@ -31,7 +31,7 @@ public interface ResultImage {
 
     int getProbabilityRange();
 
-    ImagePlus getDataCube( FinalInterval interval );
+    ImagePlus getDataCubeCopy( FinalInterval interval );
 
-    ImagePlus getImagePlus();
+    ImagePlus getWholeImageCopy();
 }

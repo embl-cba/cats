@@ -33,9 +33,9 @@ public class TestGUI {
 		imageDataInfo.bitDepth = 8;
 		int nIOthreads = 3;
 
-		String ARG_INPUT_DIRECTORY = "/Users/tischi/Desktop/example-data/EM/result/";
+		String INPUT_DIR = "/Users/tischi/Desktop/example-data/EM/result/";
 		dst.openFromDirectory(
-				ARG_INPUT_DIRECTORY,
+				INPUT_DIR,
 				namingPattern,
 				"None",
 				"data",
@@ -95,7 +95,7 @@ public class TestGUI {
 				3,
 				true,
 				false);
-				*/
+		*/
 
 
 		//IJ.open("/Users/tischi/Desktop/mitosis.tif");
@@ -143,7 +143,7 @@ public class TestGUI {
 		region5D.t = 0;
 		region5D.c = 0;
 		region5D.subSampling = new Point3D(1,1,1);
-		ImagePlus cube = vss.getDataCube(region5D, 0, 3);
+		ImagePlus cube = vss.getDataCubeCopy(region5D, 0, 3);
 		cube.show();
 		*/
 
