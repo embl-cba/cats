@@ -2,6 +2,7 @@ package trainableDeepSegmentation;
 
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.image.ColorModel;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
@@ -18,8 +19,10 @@ import java.util.zip.GZIPOutputStream;
 import bigDataTools.logging.Logger;
 import bigDataTools.logging.IJLazySwingLogger;
 import ij.gui.PolygonRoi;
+import ij.measure.ResultsTable;
 import ij.process.ImageProcessor;
 import inra.ijpb.binary.BinaryImages;
+import inra.ijpb.measure.GeometricMeasures3D;
 import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
 import javafx.geometry.Point3D;
@@ -43,7 +46,7 @@ import trainableDeepSegmentation.results.ResultImageDisk;
 import trainableDeepSegmentation.results.ResultImageFrameSetter;
 import trainableDeepSegmentation.instances.InstancesUtils;
 import trainableDeepSegmentation.instances.InstancesManager;
-import trainableDeepSegmentation.results.ResultImageMemory;
+import trainableDeepSegmentation.results.ResultImageRAM;
 import trainableDeepSegmentation.settings.Settings;
 import trainableDeepSegmentation.settings.SettingsUtils;
 
@@ -120,7 +123,7 @@ public class WekaSegmentation {
 
 	public void setResultImageBgFgRAM( )
 	{
-		resultImageBgFg = new ResultImageMemory(
+		resultImageBgFg = new ResultImageRAM(
 				this,
 				getInputImageDimensions() );
 
@@ -272,7 +275,7 @@ public class WekaSegmentation {
 	 * @return returns true if the log file could be sucessfully created
 	 */
 
-	public boolean setLogFile( String directory )
+	public boolean setLogDir( String directory )
 	{
 		String logFileDirectory = directory.substring(0, directory.length() - 1)
 				+ "--log";
@@ -405,6 +408,7 @@ public class WekaSegmentation {
 			int localRadius,
 			int numInstanceSetsPerTilePlaneClass,
 			long maxNumInstances,
+			int classifierNumTreesDuringEvaluation,
 			ArrayList< Double > classWeights,
 			String directory,
 			FinalInterval interval )
@@ -427,6 +431,7 @@ public class WekaSegmentation {
 		ImageProcessor ipLabelImageInstancesDistribution = null;
 
 		boolean isFirstTime = true;
+		int numTrueObjects = -1;
 
 		ArrayList< FinalInterval > tiles = getXYTiles( interval, nxyTiles, getInputImageDimensions() );
 
@@ -438,14 +443,17 @@ public class WekaSegmentation {
 
 			FinalInterval tile = tiles.get( iTile );
 
-			logger.info( "\n# Computing image features for tile " +  ( iTile + 1 ) );
-			logInterval( tile );
-			featureProvider = new FeatureProvider( this );
-			featureProvider.isLogging( true );
-			featureProvider.setInterval( tile );
-			featureProvider.setActiveChannels( settings.activeChannels );
-			featureProvider.setCacheSize( zChunkSize );
-			featureProvider.computeFeatures( Prefs.getThreads() );
+			if ( featureProvider == null || tiles.size() > 1 )
+			{
+				logger.info( "\n# Computing image features for tile " + ( iTile + 1 ) );
+				logInterval( tile );
+				featureProvider = new FeatureProvider( this );
+				featureProvider.isLogging( true );
+				featureProvider.setInterval( tile );
+				featureProvider.setActiveChannels( settings.activeChannels );
+				featureProvider.setCacheSize( zChunkSize );
+				featureProvider.computeFeatures( numThreads );
+			}
 
 			labelImageClassificationAccuraciesHistory = new ArrayList<>();
 			numInstancesHistory = new ArrayList<>();
@@ -549,7 +557,7 @@ public class WekaSegmentation {
 
 					if ( instancesAndMetadata == null ) return;
 
-					String classiferKey  = trainClassifier( instancesAndMetadata );
+					String classifierKey  = trainClassifier( instancesAndMetadata );
 
 					// TODO: FEATURE_SELECTION
 
@@ -575,8 +583,8 @@ public class WekaSegmentation {
 												featureProvider,
 												resultImageFrameSetter,
 												z, z,
-												getClassifierManager().getInstancesHeader( classiferKey ),
-												getClassifierManager().getClassifier( classiferKey ),
+												getClassifierManager().getInstancesHeader( classifierKey ),
+												getClassifierManager().getClassifier( classifierKey ),
 												accuracy,
 												numThreadsPerSlice
 										)
@@ -609,27 +617,7 @@ public class WekaSegmentation {
 
 					}
 
-				} // Chunk
-
-				/*
-				labelImageClassificationAccuraciesHistory.add(
-						InstancesUtils.setAccuracies(
-								getLabelImage(),
-								getResultImage(),
-								null,
-								tile,
-								this
-						) );
-
-				numInstancesHistory.add( instancesManager.getInstancesAndMetadata( instancesKey ).getInstances().size() );
-
-				InstancesUtils.reportClassificationAccuracies(
-						labelImageClassificationAccuraciesHistory.get(
-								labelImageClassificationAccuraciesHistory.size() - 1 ), logger );
-
-				new ImagePlus( "tile " + iTile + " " + i + ". accuracy", accuraciesStack ).show();
-
-												*/
+				} // chunks
 
 				long numInstances = instancesManager
 						.getInstancesAndMetadata( instancesKey )
@@ -648,6 +636,51 @@ public class WekaSegmentation {
 
 
 			} // tiles
+
+			logger.info( "\n#\n# Evaluate current accuracy\n#" );
+
+			InstancesMetadata instancesAndMetadata =
+					getInstancesManager()
+							.getInstancesAndMetadata( instancesKey );
+
+			int classifierNumTreesDuringTraining = classifierNumTrees;
+
+			classifierNumTrees = classifierNumTreesDuringEvaluation;
+			String classifierKey  = trainClassifier( instancesAndMetadata );
+			classifierNumTrees = classifierNumTreesDuringTraining;
+
+			applyClassifierWithTiling( classifierKey, interval );
+
+			// Report results
+			//
+			if ( numTrueObjects == -1 )
+			{
+				ImagePlus classLabelMask = computeClassLabelMask(
+						labelImage,
+						10, 1, 1 );
+				ResultsTable rtTruth = GeometricMeasures3D.volume( classLabelMask.getStack(), new double[]{ 1, 1, 1 } );
+				numTrueObjects = rtTruth.size();
+			}
+			logger.info( "\n# True number of objects: " + numTrueObjects);
+
+
+			ImagePlus twoClassImage = computeTwoClassImage( resultImage, 0 );
+			// TODO: maybe smooth / morph above image
+
+			twoClassImage.setTitle(""+i+"-twoClasses");
+			twoClassImage.show();
+
+			ImagePlus classLabelMask = computeClassLabelMask(
+					twoClassImage,
+					10, 13, 20 );
+			classLabelMask.setTitle( ""+i+"-labels" );
+			classLabelMask.show();
+
+			ResultsTable rtLearned = GeometricMeasures3D.volume( classLabelMask.getStack() , new double[]{1,1,1});
+			logger.info( "\n# Classified number of objects: " + rtLearned.size() );
+
+			reportLabelImageTrainingAccuracies( ""+i+"-accuracies" );
+
 
 		} // iterations
 
@@ -669,7 +702,10 @@ public class WekaSegmentation {
 
 	}
 
-	public void reportLabelImageTrainingAccuracies()
+
+
+
+	public void reportLabelImageTrainingAccuracies( String title )
 	{
 
 		if ( labelImage == null )
@@ -680,6 +716,7 @@ public class WekaSegmentation {
 
 		FinalInterval interval = IntervalUtils.getInterval( inputImage );
 		ImagePlus accuraciesImage = IntervalUtils.createImagePlus( interval );
+		accuraciesImage.setTitle( title );
 		accuraciesImage.show();
 
 		long[][] accuracies = InstancesUtils.setAccuracies(
@@ -692,6 +729,8 @@ public class WekaSegmentation {
 
 		InstancesUtils.reportClassificationAccuracies( accuracies, logger );
 	}
+
+
 
 	private ArrayList<Integer> featuresToShow = null;
 
@@ -995,7 +1034,7 @@ public class WekaSegmentation {
 
 		setResultImage( resultImage );
 
-		setLogFile( directory );
+		setLogDir( directory );
 
 		logger.info("Created disk-resident classification result image: " +
 				directory);
@@ -1004,7 +1043,7 @@ public class WekaSegmentation {
 
 	public void setResultImageRAM()
 	{
-		ResultImage resultImage = new ResultImageMemory(
+		ResultImage resultImage = new ResultImageRAM(
 				this,
 				getInputImageDimensions() );
 
@@ -1244,7 +1283,7 @@ public class WekaSegmentation {
 		applyBgFgClassification( interval, instancesMetadata );
 	}
 
-	public void replaceByDistanceMap( ResultImageMemory resultImageMemory )
+	public void replaceByDistanceMap( ResultImageRAM resultImageMemory )
 	{
 		// We need to loop through the frames because the
 		// 3-D distance transform code has no hyperstack logic
@@ -1295,7 +1334,7 @@ public class WekaSegmentation {
 		// we need to recompute the examples' instance values, which
 		// can be anywhere
 
-		replaceByDistanceMap( (ResultImageMemory)resultImageBgFg );
+		replaceByDistanceMap( (ResultImageRAM )resultImageBgFg );
 
 		// Recompute instance values, now including the distance map
 		//
@@ -1432,7 +1471,7 @@ public class WekaSegmentation {
 		getInstancesManager().
 				putInstancesAndMetadata( instancesAndMetadata );
 
-		return key;
+		return instancesName;
 	}
 
 	public void updateExamples()
@@ -1543,6 +1582,45 @@ public class WekaSegmentation {
 	}
 
 	public ArrayList< String > examplesFeatureNames = null;
+
+
+	public ImagePlus computeTwoClassImage(
+			ResultImage resultImage,
+			int t )
+	{
+		ImageStack newStack = null;
+
+		int probabilityRange = resultImage.getProbabilityRange();
+
+		for ( int z = 0; z < inputImage.getNSlices(); ++z )
+		{
+			ImageProcessor ipResult = resultImage.getSlice( z + 1, t + 1 );
+			ImageProcessor ip = ipResult.duplicate();
+
+			for ( int x = 0; x < inputImage.getWidth(); ++x )
+			{
+				for ( int y = 0; y < inputImage.getHeight(); ++y )
+				{
+
+					byte value = ( byte ) ipResult.get( x, y );
+					if ( value <= probabilityRange && value > 0 )
+					{
+						ip.set( x, y, probabilityRange - value );
+					}
+
+				}
+
+			}
+			if ( newStack == null )
+			{
+				newStack = new ImageStack( ip.getWidth(), ip.getHeight(), ( ColorModel ) null );
+			}
+			newStack.addSlice( "", ip );
+		}
+
+		return new ImagePlus("two-classes", newStack);
+	}
+
 
 
 	private Runnable setExamplesInstanceValues(ArrayList<Example> examples,
@@ -1811,12 +1889,15 @@ public class WekaSegmentation {
 	}
 
 
-	public ImagePlus getLabelMask( int minNumVoxels )
+	public ImagePlus computeClassLabelMask(
+			ImagePlus imp,
+			int minNumVoxels,
+			int lower,
+			int upper)
 	{
-		// TODO: make possible to select channel
 
 		logger.info( "\n# Thresholding..." );
-		ImagePlus th = Threshold.threshold( resultImage.getWholeImageCopy(), 11, 20 );
+		ImagePlus th = Threshold.threshold( imp, lower, upper );
 		logger.info( "...done." );
 
 		logger.info( "\n# Filtering objects..." );
@@ -1825,7 +1906,7 @@ public class WekaSegmentation {
 		logger.info( "...done." );
 
 		logger.info( "\n# Connected components..." );
-		ImagePlus cc = BinaryImages.componentsLabeling( th_sf, 6, 16);
+		ImagePlus cc = BinaryImages.componentsLabeling( th_sf, 26, 16);
 		logger.info( "...done." );
 
 		return cc;

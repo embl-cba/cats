@@ -3,17 +3,17 @@ package trainableDeepSegmentation.results;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.IntervalUtils;
 
-public class ResultImageFrameSetterMemory implements ResultImageFrameSetter {
+public class ResultImageFrameSetterRAM implements ResultImageFrameSetter {
 
     FinalInterval interval;
-    ResultImageMemory resultImage;
+    ResultImageRAM resultImage;
 
-    public ResultImageFrameSetterMemory( ResultImage resultImage, FinalInterval interval )
+    public ResultImageFrameSetterRAM( ResultImage resultImage, FinalInterval interval )
     {
         assert interval.min( IntervalUtils.T ) == interval.max( IntervalUtils.T );
         
         this.interval = interval;
-        this.resultImage = ( ResultImageMemory ) resultImage;
+        this.resultImage = ( ResultImageRAM ) resultImage;
     }
 
     @Override

@@ -2191,7 +2191,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 		Thread task = new Thread() {
 			public void run()
 			{
-				ImagePlus labelMask = wekaSegmentation.getLabelMask( minNumVoxels );
+				// TODO: make user chose frame
+				/*
+				int frame = 1;
+				ImagePlus labelMask = wekaSegmentation.computeClassLabelMask( frame, minNumVoxels, 11, 20 );
 				labelMask.show();
 
 				ResultsTable rt_bb = GeometricMeasures3D.boundingBox( labelMask.getStack() );
@@ -2201,6 +2204,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				rt_v.show( "Volumes" );
 
 				logger.info( "Number of objects: " + rt_v.size() );
+				*/
 
 				win.setButtonsEnabled( true );
 			}
@@ -2342,6 +2346,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							localRadius,
 							numInstanceSetsPerTilePlaneClass,
 							maxNumInstances,
+							100, // TODO
 							classWeights,
 							directory,
 							interval
@@ -2380,7 +2385,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			public void run()
 			{
-				wekaSegmentation.reportLabelImageTrainingAccuracies();
+				wekaSegmentation.reportLabelImageTrainingAccuracies( "accuracies" );
 
 				wekaSegmentation.isBusy = false;
 				win.setButtonsEnabled( true );

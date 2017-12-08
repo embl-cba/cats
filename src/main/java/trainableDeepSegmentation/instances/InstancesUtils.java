@@ -2,6 +2,7 @@ package trainableDeepSegmentation.instances;
 
 import bigDataTools.logging.Logger;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.Prefs;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
@@ -16,6 +17,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 import java.awt.*;
+import java.awt.image.ColorModel;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -554,6 +556,9 @@ public class InstancesUtils {
             }
         };
     }
+
+
+
 
     private static ArrayList< int[] >[] getLocalClassCoordinates(
             int numClasses,

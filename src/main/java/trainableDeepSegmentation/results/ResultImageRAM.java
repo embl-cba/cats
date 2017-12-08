@@ -1,23 +1,20 @@
 package trainableDeepSegmentation.results;
 
-import bigDataTools.Region5D;
 import bigDataTools.logging.Logger;
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.plugin.Duplicator;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.IntervalUtils;
 import trainableDeepSegmentation.WekaSegmentation;
 
-import java.awt.*;
 import java.awt.image.ColorModel;
 import java.util.ArrayList;
 
 import static bigDataTools.utils.Utils.getDataCubeFromImagePlus;
 import static trainableDeepSegmentation.results.Utils.saveImagePlusAsSeparateImarisChannels;
 
-public class ResultImageMemory implements ResultImage {
+public class ResultImageRAM implements ResultImage {
 
     public static final int CLASS_LUT_WIDTH = 10;
 
@@ -26,8 +23,8 @@ public class ResultImageMemory implements ResultImage {
     Logger logger;
     long[] dimensions;
 
-    public ResultImageMemory( WekaSegmentation wekaSegmentation,
-                              long[] dimensions)
+    public ResultImageRAM( WekaSegmentation wekaSegmentation,
+                           long[] dimensions)
     {
         this.wekaSegmentation = wekaSegmentation;
         this.logger = wekaSegmentation.getLogger();
@@ -68,7 +65,7 @@ public class ResultImageMemory implements ResultImage {
     @Override
     public ResultImageFrameSetter getFrameSetter( FinalInterval interval )
     {
-        return ( new ResultImageFrameSetterMemory( this, interval ) );
+        return ( new ResultImageFrameSetterRAM( this, interval ) );
     }
 
     public void set( long x, long y, long z, long t, int classId, double certainty )
