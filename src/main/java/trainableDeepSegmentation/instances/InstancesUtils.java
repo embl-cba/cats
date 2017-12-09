@@ -318,9 +318,9 @@ public class InstancesUtils {
             if ( total == 0 ) total = -1; // to avoid division by zero
 
             logger.info("Class " + iClass
-                    + "; " + "Total ground truth: " + total
-                    + "; " + "Correct: " + classificationAccuracies[iClass][CORRECT]
                     + "; " + "Percent correct: " + ( 100 * classificationAccuracies[iClass][CORRECT] ) / total
+                    + "; " + "Ground truth: " + total
+                    + "; " + "Correct: " + classificationAccuracies[iClass][CORRECT]
                     + "; " + "False positive: " + classificationAccuracies[iClass][FP]
                     + "; " + "False negative: " + classificationAccuracies[iClass][FN]
             );
@@ -434,6 +434,7 @@ public class InstancesUtils {
     public static long[][] setAccuracies(
             ImagePlus labelImage,
             ResultImage resultImage,
+            int t,
             ImagePlus accuraciesImage,
             FinalInterval interval,
             WekaSegmentation ws)
@@ -458,6 +459,7 @@ public class InstancesUtils {
                             resultImage,
                             accuraciesImage,
                             z,
+                            t,
                             interval,
                             ws
                         )
@@ -478,6 +480,7 @@ public class InstancesUtils {
             ResultImage resultImage,
             ImagePlus accuraciesImage,
             int z,
+            int t,
             FinalInterval interval,
             WekaSegmentation ws )
     {
@@ -490,7 +493,6 @@ public class InstancesUtils {
             {
 
                 int maxProbability = resultImage.getProbabilityRange();
-                int t = (int) interval.min( T );
 
                 if ( ws.stopCurrentTasks ) return;
 

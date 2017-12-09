@@ -2349,6 +2349,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							100, // TODO
 							classWeights,
 							directory,
+							interval,
 							interval
 					);
 
@@ -2385,7 +2386,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			public void run()
 			{
-				wekaSegmentation.reportLabelImageTrainingAccuracies( "accuracies" );
+				wekaSegmentation.reportLabelImageTrainingAccuracies( "accuracies", 0 );
 
 				wekaSegmentation.isBusy = false;
 				win.setButtonsEnabled( true );

@@ -4,6 +4,7 @@ import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import net.imglib2.FinalInterval;
+import net.imglib2.util.Intervals;
 
 import java.util.ArrayList;
 
@@ -13,7 +14,7 @@ public class TestTrainLabelImageHeadless {
 
     final static String ROOT_PATH = "/Users/tischi/Documents/segmentation-challenges--data/brainiac/";
 
-    final static String LOGGING_DIRECTORY = ROOT_PATH + "logging";
+    final static String LOGGING_DIRECTORY = ROOT_PATH + "log";
     final static String INPUT_IMAGE_PATH = ROOT_PATH + "combined-clahe-crop-nz16.tif";
     final static String LABEL_IMAGE_PATH = ROOT_PATH + "train-labels-border2-crop-nz16.tif";
     final static String INSTANCES_DIRECTORY = ROOT_PATH + "instances";
@@ -37,11 +38,11 @@ public class TestTrainLabelImageHeadless {
         ws.setLabelImage( labelImage );
         ws.setResultImageRAM( );
 
-        ws.setLogDir( LOGGING_DIRECTORY );
+        ws.setAndCreateLogDirAbsolute( LOGGING_DIRECTORY );
 
         ws.settings.log2 = false;
         ws.settings.binFactors[0] = 2;
-        ws.settings.binFactors[1] = 2;
+        ws.settings.binFactors[1] = -1;
         ws.settings.binFactors[2] = -1;
         ws.settings.binFactors[3] = -1;
         ws.settings.anisotropy = 5;
@@ -55,23 +56,31 @@ public class TestTrainLabelImageHeadless {
         //IntervalUtils.getIntervalByReplacingValues(
         //       interval, IntervalUtils.Z, 1, 96 );
 
+
         long[] min = new long[ 5 ];
         long[] max = new long[ 5 ];
-        min[ X ] = 0; max[ X ] = 182;
-        min[ Y ] = 0; max[ Y ] = 170;
+        min[ X ] = 0; max[ X ] = inputImage.getWidth() - 1;
+        min[ Y ] = 0; max[ Y ] = inputImage.getHeight() - 1;
         min[ Z ] = 0; max[ Z ] = 15;
         min[ C ] = 0; max[ C ] = 0;
         min[ T ] = 0; max[ T ] = 0;
+        FinalInterval trainInterval = new FinalInterval( min, max );
 
-        FinalInterval interval = new FinalInterval( min, max );
+
+        long[] min2 = Intervals.minAsLongArray( trainInterval );
+        long[] max2 = Intervals.maxAsLongArray( trainInterval );
+        min2[ T ] = 0; max2[ T ] = 1;
+        FinalInterval applyInterval = new FinalInterval( min2, max2 );
+
 
         ArrayList< Double > classWeights = new ArrayList<>(  );
         classWeights.add( 1.0 );
         classWeights.add( 1.0 );
 
-        ws.trainFromLabelImage( "labelImageTraining",
+        ws.trainFromLabelImage(
+                "labelImageTraining",
                 WekaSegmentation.START_NEW_INSTANCES,
-                5,
+                1,
                 4,
                 1,
                 7,
@@ -80,14 +89,9 @@ public class TestTrainLabelImageHeadless {
                 100,
                 classWeights,
                 INSTANCES_DIRECTORY,
-                interval);
+                trainInterval,
+                applyInterval);
 
-        /*
-        ImagePlus result = ws.getResultImage().getWholeImageCopy();
-        result.setTitle( "Final probabilities" );
-        result.show();
-        IJ.run(result, "Enhance Contrast", "saturated=0.35");
-        */
 
         ws.getInputImage().show();
         ws.getLabelImage().show();
