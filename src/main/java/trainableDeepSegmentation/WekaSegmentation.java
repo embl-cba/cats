@@ -19,6 +19,7 @@ import java.util.zip.GZIPOutputStream;
 import bigDataTools.logging.Logger;
 import bigDataTools.logging.IJLazySwingLogger;
 import ij.gui.PolygonRoi;
+import ij.io.FileSaver;
 import ij.measure.ResultsTable;
 import ij.plugin.Duplicator;
 import ij.process.ImageProcessor;
@@ -427,7 +428,9 @@ public class WekaSegmentation {
 			int localRadius,
 			int numInstanceSetsPerTilePlaneClass,
 			long maxNumInstances,
-			int classifierNumTreesDuringEvaluation,
+			int numTrainingTrees,
+			int numClassificationTrees,
+			int minNumVoxels,
 			ArrayList< Double > classWeights,
 			String directory,
 			FinalInterval trainInterval,
@@ -454,6 +457,8 @@ public class WekaSegmentation {
 		int numTrueObjects = -1;
 
 		ArrayList< FinalInterval > tiles = getXYTiles( trainInterval, nxyTiles, getInputImageDimensions() );
+
+		long numInstances = 0;
 
 		iterationLoop:
 		for ( int i = 0; i < numIterations; ++i )
@@ -571,16 +576,19 @@ public class WekaSegmentation {
 					futures = null;
 					exe.shutdown();
 
+
+					// Train classifier
+					//
 					InstancesMetadata instancesAndMetadata =
 							getInstancesManager()
 									.getInstancesAndMetadata( instancesKey );
 
-					if ( instancesAndMetadata == null ) return;
-
+					classifierNumTrees = numTrainingTrees;
 					String classifierKey  = trainClassifier( instancesAndMetadata );
 
-					// TODO: FEATURE_SELECTION
 
+					// Apply classifier to next chunk
+					//
 					int iClassificationChunk = iChunk < ( zChunks.size() - 1 ) ? iChunk + 1 : 0;
 					zChunk = zChunks.get( iClassificationChunk );
 
@@ -614,35 +622,18 @@ public class WekaSegmentation {
 
 					ThreadUtils.joinThreads( classificationFutures, logger );
 
-					long numInstances = instancesManager
+					numInstances = instancesManager
 							.getInstancesAndMetadata( instancesKey )
 							.getInstances().numInstances();
 
-					if ( numInstances >= maxNumInstances )
-					{
-						logger.info( "\nMaximum number of instances reached: "
-								+ numInstances + "/" + maxNumInstances );
+					if ( numInstances >= maxNumInstances ) break;
 
-						if ( directory != null )
-						{
-							logger.info( "\n# Saving final instances..." );
-							InstancesUtils.saveInstancesAndMetadataAsARFF(
-									instancesManager.getInstancesAndMetadata( instancesKey ),
-									directory,
-									"Instances-" + numInstances + ".ARFF" );
-							logger.info( "...done" );
-						}
-
-						break iterationLoop;
-
-					}
 
 				} // chunks
 
-				long numInstances = instancesManager
+				numInstances = instancesManager
 						.getInstancesAndMetadata( instancesKey )
 						.getInstances().numInstances();
-
 
 				if( directory != null )
 				{
@@ -654,11 +645,41 @@ public class WekaSegmentation {
 					logger.info( "...done" );
 				}
 
+				if ( numInstances >= maxNumInstances ) break;
+
 
 			} // tiles
 
 			logger.info( "\n#" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
 					"\n# ----------------------------------- Evaluate current accuracy ------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
+					"\n# --------------------------------------------------------------------------------------------------------" +
 					"\n#" );
 
 			// Classify everything, properly
@@ -667,21 +688,17 @@ public class WekaSegmentation {
 					getInstancesManager()
 							.getInstancesAndMetadata( instancesKey );
 
-			int classifierNumTreesDuringTraining = classifierNumTrees;
-
-			classifierNumTrees = classifierNumTreesDuringEvaluation;
+			classifierNumTrees = numClassificationTrees;
 			String classifierKey  = trainClassifier( instancesAndMetadata );
-			classifierNumTrees = classifierNumTreesDuringTraining;
 
 			applyClassifierWithTiling( classifierKey, applyInterval );
 
 			// Report results from training region
 			//
 
-			int t = 0; // first frame contains the ground truth
-
 			if ( numTrueObjects == -1 )
 			{
+				int t = 0;
 				ImagePlus classLabelMask = computeClassLabelMask(
 						labelImage, t,
 						10, 1, 1 );
@@ -691,62 +708,50 @@ public class WekaSegmentation {
 
 			logger.info( "\n# True number of objects in training image: " + numTrueObjects);
 
-			ImagePlus twoClassImage = computeTwoClassImage( resultImage, t );
-			twoClassImage.setTitle(""+i+"-train-twoClasses");
-			twoClassImage.show();
+			analyseObjects( minNumVoxels, 0 , ""+i+"-train" , directory );
 
-			ImagePlus classLabelMask = computeClassLabelMask( twoClassImage, t,
-					10, 13, 20 );
-			classLabelMask.setTitle( ""+i+"-train-labels" );
-			classLabelMask.show();
-
-			ResultsTable rt = GeometricMeasures3D.volume( classLabelMask.getStack() , new double[]{1,1,1});
-			logger.info( "\n# Classified number of objects in training image: " + rt.size() );
-
-			reportLabelImageTrainingAccuracies( ""+i+"-accuracies" , t );
+			reportLabelImageTrainingAccuracies( ""+i+"-accuracies" , 0 );
 
 			// Report results from test image
 			//
+			analyseObjects( minNumVoxels, 1, ""+i+"-test" , directory );
 
-			t = 1;
 
-			ImagePlus twoClassTestImage = computeTwoClassImage( resultImage, t );
-			twoClassTestImage.setTitle(""+i+"-train-twoClasses");
-			twoClassTestImage.show();
-
-			ImagePlus classLabelMaskTestImage = computeClassLabelMask(
-					twoClassTestImage, t,
-					10, 13, 20 );
-			classLabelMaskTestImage.setTitle( ""+i+"-test-labels" );
-			classLabelMaskTestImage.show();
-
-			rt = GeometricMeasures3D.volume( classLabelMaskTestImage.getStack() , new double[]{1,1,1});
-			logger.info( "\n# Classified number of objects in test image: " + rt.size() );
-
+			if ( numInstances >= maxNumInstances ) break;
 
 
 		} // iterations
 
-
-		// report what happened
 		logger.info( "\n\n# Training from label image: DONE.");
-
-		/*
-		long intervalVolume = interval.dimension( X )
-				* interval.dimension( Y )
-				* interval.dimension( Z );
-
-		for ( int i = 0; i < numInstancesHistory.size(); ++i )
-		{
-			InstancesUtils.reportClassificationAccuracies( labelImageClassificationAccuraciesHistory.get( i ), logger );
-			logger.info( "# Instances: Total: " + numInstancesHistory.get( i )
-					+ String.format("; Percent: %.2f" , ( 100.0 * numInstancesHistory.get( i ) / intervalVolume ) ));
-		}*/
 
 	}
 
 
+	private void analyseObjects( int minNumVoxels, int t, String title, String directory )
+	{
+		ImagePlus twoClassImage = computeTwoClassImage( resultImage, t );
+		twoClassImage.setTitle( title + "-bgfg" );
+		//twoClassImage.show();
+		saveImage( twoClassImage, directory );
 
+		ImagePlus classLabelMask = computeClassLabelMask( twoClassImage, t,
+				minNumVoxels, 13, 20 );
+		classLabelMask.setTitle( title + "-labels" );
+		//classLabelMask.show();
+
+		ResultsTable rt = GeometricMeasures3D.volume( classLabelMask.getStack() , new double[]{1,1,1});
+		logger.info( "\n# Classified number of objects in " + title + ": " + rt.size() );
+	}
+
+	private void saveImage( ImagePlus imp, String directory )
+	{
+		if( directory != null )
+		{
+			FileSaver fileSaver = new FileSaver( imp );
+			fileSaver.saveAsTiff( directory + File.separator + imp.getTitle() + ".tif" );
+		}
+
+	}
 
 	public void reportLabelImageTrainingAccuracies( String title, int t )
 	{
@@ -1942,6 +1947,8 @@ public class WekaSegmentation {
 
 		int conn = 6;
 
+		long start = System.currentTimeMillis();
+
 		logger.info( "\n# Computing label mask..." );
 
 		Duplicator duplicator = new Duplicator();
@@ -1958,7 +1965,7 @@ public class WekaSegmentation {
 		ImagePlus cc = BinaryImages.componentsLabeling( th_sf, conn, 16);
 		//logger.info( "...done." );
 
-		logger.info( "...done." );
+		logger.info( "...done! It took [min]:" + (System.currentTimeMillis() - start ) / ( 1000 * 60) );
 
 		return cc;
 	}

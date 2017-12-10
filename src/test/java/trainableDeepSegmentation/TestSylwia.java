@@ -91,6 +91,9 @@ public class TestSylwia {
         rt_v.save(  savingPath );
         WekaSegmentation.logger.info("...done.");
 
+        System.exit(0);
+        IJ.run("Quit");
+
     }
 
 

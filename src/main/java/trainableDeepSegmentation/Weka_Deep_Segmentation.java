@@ -2347,6 +2347,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 							numInstanceSetsPerTilePlaneClass,
 							maxNumInstances,
 							100, // TODO
+							100,
+							100, // TODO
 							classWeights,
 							directory,
 							interval,
