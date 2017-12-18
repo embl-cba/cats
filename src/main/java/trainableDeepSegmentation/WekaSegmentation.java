@@ -663,9 +663,6 @@ public class WekaSegmentation {
 					"\n# --------------------------------------------------------------------------------------------------------" +
 					"\n# --------------------------------------------------------------------------------------------------------" +
 					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
 					"\n# ----------------------------------- Evaluate current accuracy ------------------------------------------" +
 					"\n# --------------------------------------------------------------------------------------------------------" +
 					"\n# --------------------------------------------------------------------------------------------------------" +
@@ -708,13 +705,13 @@ public class WekaSegmentation {
 
 			logger.info( "\n# True number of objects in training image: " + numTrueObjects);
 
-			analyseObjects( minNumVoxels, 0 , ""+i+"-train" , directory );
+			analyzeObjects( minNumVoxels, 0 , ""+i+"-train" , directory );
 
 			reportLabelImageTrainingAccuracies( ""+i+"-accuracies" , 0 );
 
 			// Report results from test image
 			//
-			analyseObjects( minNumVoxels, 1, ""+i+"-test" , directory );
+			analyzeObjects( minNumVoxels, 1, ""+i+"-test" , directory );
 
 
 			if ( numInstances >= maxNumInstances ) break;
@@ -727,7 +724,7 @@ public class WekaSegmentation {
 	}
 
 
-	private void analyseObjects( int minNumVoxels, int t, String title, String directory )
+	private void analyzeObjects( int minNumVoxels, int t, String title, String directory )
 	{
 		ImagePlus twoClassImage = computeTwoClassImage( resultImage, t );
 		twoClassImage.setTitle( title + "-bgfg" );
@@ -735,7 +732,7 @@ public class WekaSegmentation {
 		saveImage( twoClassImage, directory );
 
 		ImagePlus classLabelMask = computeClassLabelMask( twoClassImage, t,
-				minNumVoxels, 13, 20 );
+				minNumVoxels, 11, 20 );
 		classLabelMask.setTitle( title + "-labels" );
 		//classLabelMask.show();
 
