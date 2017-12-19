@@ -5,37 +5,48 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>14.0.0</version>
+		<version>17.1.1</version>
 		<relativePath />
 	</parent>
 
-	<groupId>sc.fiji</groupId>
-	<artifactId>Trainable_Segmentation</artifactId>
-	<version>3.2.12-SNAPSHOT</version>
+	<groupId>embl.cba</groupId>
+	<artifactId>fiji-plugin-deepSegmentation</artifactId>
+	<version>0.1.0</version>
 
-	<name>Trainable Segmentation</name>
-	<description>Trainable Segmentation plugin for Fiji.</description>
-	<url>https://imagej.net/Trainable_Segmentation</url>
-	<inceptionYear>2010</inceptionYear>
+	<name>Fiji plugin for trainable segmentation using deep convolution</name>
+	<description>A plugin for trainable segmentation using deep convolution.</description>
+	<url>https://github.com/tischi/</url>
+	<inceptionYear>2017</inceptionYear>
 	<organization>
-		<name>Fiji</name>
-		<url>https://fiji.sc/</url>
+		<name>EMBL</name>
+		<url>https://embl.de/</url>
 	</organization>
 	<licenses>
 		<license>
-			<name>GNU General Public License v3+</name>
-			<url>https://www.gnu.org/licenses/gpl.html</url>
+			<name>Simplified BSD License</name>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
 
 	<developers>
 		<developer>
+			<id>tischi</id>
+			<name>Christian Tischer</name>
+			<url>http://imagej.net/User:EMBL-CBA</url>
+			<roles>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+		<developer>
 			<id>iarganda</id>
 			<name>Ignacio Arganda-Carreras</name>
 			<url>http://imagej.net/User:Iarganda</url>
 			<roles>
-				<role>lead</role>
 				<role>developer</role>
 				<role>debugger</role>
 				<role>reviewer</role>
@@ -94,10 +105,6 @@
 			<url>http://imagej.net/User:Lindsey</url>
 			<properties><id>larrylindsey</id></properties>
 		</contributor>
-		<contributor>
-			<name>Christian Tischer</name>
-			<properties><id>tischi</id></properties>
-		</contributor>
 		<contributor><name>Eibe Frank</name></contributor>
 		<contributor><name>Richard Kirkby</name></contributor>
 		<contributor><name>Julien Prados</name></contributor>
@@ -115,19 +122,15 @@
 	</mailingLists>
 
 	<scm>
-		<connection>scm:git:git://github.com/fiji/Trainable_Segmentation</connection>
-		<developerConnection>scm:git:git@github.com:fiji/Trainable_Segmentation</developerConnection>
+		<connection>scm:git:git://github.com/tischi</connection>
+		<developerConnection>scm:git:git@github.com:tischi</developerConnection>
 		<tag>HEAD</tag>
-		<url>https://github.com/fiji/Trainable_Segmentation</url>
+		<url>https://github.com/tischi</url>
 	</scm>
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url>https://github.com/fiji/Trainable_Segmentation/issues</url>
+		<url>https://github.com/tischi</url>
 	</issueManagement>
-	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.org/fiji/Trainable_Segmentation</url>
-	</ciManagement>
 
 	<properties>
 		<package-name>ai</package-name>
@@ -138,7 +141,9 @@
 		<imagescience.version>3.0.0</imagescience.version>
 
 		<!-- TEMP: Until pom-scijava 15.0.0 is released. -->
+		<!--
 		<weka.version>3.9.0</weka.version>
+		-->
 	</properties>
 
 	<repositories>
@@ -148,13 +153,20 @@
 			<url>http://maven.imagej.net/content/groups/public</url>
 		</repository>
 
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+
 
 	</repositories>
 
-
-
 	<dependencies>
 
+		<dependency>
+			<groupId>tischi</groupId>
+			<artifactId>fiji-plugin-bigDataTools</artifactId>
+		</dependency>
 
 		<!-- Fiji dependencies -->
 		<dependency>
