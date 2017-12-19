@@ -158,10 +158,26 @@
 			<url>https://jitpack.io</url>
 		</repository>
 
-
 	</repositories>
 
 	<dependencies>
+
+		<!-- Github 3D image suite dependencies -->
+		<dependency>
+			<groupId>com.github.mcib3d</groupId>
+			<artifactId>mcib3d-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>fr.inra.ijpb</groupId>
+			<artifactId>MorphoLibJ_</artifactId>
+			<version>1.3.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>tischi</groupId>
+			<artifactId>fiji-plugin-bigDataTools</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>tischi</groupId>

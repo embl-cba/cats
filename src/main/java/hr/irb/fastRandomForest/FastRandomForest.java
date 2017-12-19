@@ -23,7 +23,9 @@
 
 package hr.irb.fastRandomForest;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Vector;
 
 import weka.classifiers.AbstractClassifier;
@@ -223,6 +225,21 @@ public class FastRandomForest
   }
 
 
+  Map< Integer, ArrayList< Integer > >[] labelIds = null;
+
+  /**
+   * Tischi: Set list of label ids.
+   *
+   * @return Array of attribute usages.
+   */
+  public void setLabelIds( Map< Integer, ArrayList< Integer > >[] labelIds ){
+
+    this.labelIds = labelIds;
+
+  }
+
+
+
   /**
    * Get how many decision nodes
    * has in the forest.
@@ -345,7 +362,7 @@ public class FastRandomForest
   }
 
   /**
-   * Get the number of simultaneous threads used in training, 0 for autodetect.
+   * Get the number of simultaneous threads used in instances, 0 for autodetect.
    *
    * @return the maximum depth.
    */
@@ -354,7 +371,7 @@ public class FastRandomForest
   }
 
   /**
-   * Set the number of simultaneous threads used in training, 0 for autodetect.
+   * Set the number of simultaneous threads used in instances, 0 for autodetect.
    *
    * @param value the maximum depth.
    */
@@ -721,7 +738,7 @@ public class FastRandomForest
           if ( importances[i]*100.0 > 0.5 ) // TISCHI
           {
             sb.append(String.format("%d\t%s\t%6.4f%%\n", i + 1, this.m_Info.attribute(i).name(),
-                    i == m_Info.classIndex() ? Double.NaN : importances[i] * 100.0)); //bagger.getFeatureNames()[i] );
+                    i == m_Info.classIndex() ? Double.NaN : importances[i] * 100.0)); //bagger.getAllFeatureNames()[i] );
             noImportantFeature = false;
           }
         }

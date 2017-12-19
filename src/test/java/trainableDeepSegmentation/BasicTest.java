@@ -20,7 +20,7 @@ public class BasicTest
 
 		assertTrue("Failed to train classifier", true == segmentator.trainClassifier());
 
-		segmentator.applyClassifier( false );
+		segmentator.applyClassifierWithTiling( false );
 
 		ImagePlus result = segmentator.getClassifiedImage();
 
@@ -31,7 +31,7 @@ public class BasicTest
 		byte[] pixTrue = (byte[]) labels.getProcessor().getPixels();
 		for( int i=0; i<pix.length; i++)
 		{
-			assertTrue("Misclassified training sample", pix[i] * 255 == (pixTrue[i]&0xff) );
+			assertTrue("Misclassified instances sample", pix[i] * 255 == (pixTrue[i]&0xff) );
 		}
 	}
 
@@ -87,7 +87,7 @@ public class BasicTest
 		rf.setSeed( 69 );
 		assertTrue( segmentator.trainClassifier() );
 
-		segmentator.applyClassifier( false );
+		segmentator.applyClassifierWithTiling( false );
 		ImagePlus output = segmentator.getClassifiedImage();
 		new ImageConverter( output ).convertToGray8();
 		return output;

@@ -45,7 +45,7 @@ import weka.core.Utils;
 /**
  * This class implements a Balanced Random Forest classifier,
  * it is an ensemble classifier of random trees where all classes
- * have the same representation in the training process. 
+ * have the same representation in the instances process.
  * 
  * <!-- globalinfo-start -->
  * Class for constructing a balanced forest of random trees.
@@ -215,7 +215,7 @@ public class BalancedRandomForest extends AbstractClassifier implements Randomiz
 		// fill indexSample with the indices of each class
 		for(int i = 0 ; i < numInstances; i++)
 		{
-			//System.out.println("data.get("+i+").classValue() = " + data.get(i).classValue());
+			//System.out.println("data.getInstancesAndMetadata("+i+").classValue() = " + data.getInstancesAndMetadata(i).classValue());
 			indexSample[ (int) data.get(i).classValue() ].add( i );
 		}
 		

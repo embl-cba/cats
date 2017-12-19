@@ -123,11 +123,11 @@ public class InformationGainFunction extends SplitFunction
 				// Calculate entropy
 				for(int nClass = 0; nClass < numClasses; nClass++)
 				{	
-					// Divide by the number of elements to get probabilities
+					// Divide by the number of elements to getInstancesAndMetadata probabilities
 					if(splitPoint != 0)
 						probLeft[nClass] /= (double) splitPoint;
 				
-					// Divide by the number of elements to get probabilities
+					// Divide by the number of elements to getInstancesAndMetadata probabilities
 					if(rightNumElements != 0)
 						probRight[nClass] /= (double) rightNumElements;
 				}

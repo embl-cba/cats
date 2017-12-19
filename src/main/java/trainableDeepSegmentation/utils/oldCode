@@ -1,4 +1,34 @@
 
+
+	public Instances getInstancesFromLabelImage(
+			String instancesName,
+			FinalInterval interval,
+			int labelImageNumInstancesPerClass )
+	{
+		logger.info("Creating instances from label image... ");
+
+		final long start = System.currentTimeMillis();
+
+		Instances instances =
+				InstancesCreator.
+				createInstancesFromLabelImageRegion2(
+						this,
+						inputImage,
+						labelImage,
+						resultImage,
+						instancesName,
+						interval,
+						labelImageNumInstancesPerClass,
+						Prefs.getThreads(),
+						logger);
+
+		final long end = System.currentTimeMillis();
+		logger.info("...created training data from label image in " + (end - start) + " ms");
+
+		return ( instances );
+	}
+
+
 	/**
 	 * Apply current classifier to set of instances
 	 * @param data set of instances
@@ -5439,7 +5469,7 @@
     			{
     				if ( onlyActiveFeatures )
     				{
-    					if ( featureList.get(iFeature++).isActive )
+    					if ( featureListSubset.get(iFeature++).isActive )
     					{
     						values[iActiveFeature++] = featureValues[c][x][y][i];
     					}

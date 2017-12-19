@@ -35,6 +35,7 @@ import java.util.concurrent.Future;
 
 import bigDataTools.logging.IJLazySwingLogger;
 import bigDataTools.logging.Logger;
+import trainableDeepSegmentation.WekaSegmentation;
 import weka.classifiers.Classifier;
 import weka.classifiers.RandomizableIteratedSingleClassifierEnhancer;
 import weka.core.AdditionalMeasureProducer;
@@ -89,7 +90,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
    * the original data, and feeds them to the base classifier (which can only
    * be a FastRandomTree).
    *
-   * @param data         The training set to be used for generating the
+   * @param data         The instances set to be used for generating the
    *                     bagged classifier.
    * @param numThreads   The number of simultaneous threads to use for
    *                     computation. Pass zero (0) for autodetection.
@@ -119,9 +120,9 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
     m_Classifiers = new Classifier[m_NumIterations];
     for (int i = 0; i < m_Classifiers.length; i++) {
       FastRandomTree curTree = new FastRandomTree();
-      // all parameters for training will be looked up in the motherForest (maxDepth, k_Value)
+      // all parameters for instances will be looked up in the motherForest (classifierMaxDepth, k_Value)
       curTree.m_MotherForest = motherForest;
-      // 0.99: reference to these arrays will get passed down all nodes so the array can be re-used 
+      // 0.99: reference to these arrays will getInstancesAndMetadata passed down all nodes so the array can be re-used
       // 0.99: this array is of size two as now all splits are binary - even categorical ones
       curTree.tempProps = new double[2]; 
       curTree.tempDists = new double[2][]; 
@@ -133,7 +134,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       m_Classifiers[i] = curTree;
     }
 
-    // this was SLOW.. takes approx 1/2 time as training the forest afterwards (!!!)
+    // this was SLOW.. takes approx 1/2 time as instances the forest afterwards (!!!)
     // super.buildClassifier(data);
 
 
@@ -163,7 +164,25 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
         // create the in-bag dataset (and be sure to remember what's in bag)
         // for computing the out-of-bag error later
-        DataCache bagData = myData.resample(bagSize, random);
+
+        DataCache bagData;
+
+        // Tischi
+        if ( motherForest.labelIds != null )
+        {
+          WekaSegmentation.logger.progress("Training data resampling:",
+                  "Tree " + (treeIdx + 1) + "/" + m_Classifiers.length );
+          bagData = myData.resampleBalancingLabels(
+                  m_BagSizePercent,
+                  motherForest.labelIds,
+                  random );
+        }
+        else
+        {
+           bagData = myData.resample( bagSize, random );
+        }
+
+
         bagData.reusableRandomGenerator = bagData.getRandomNumberGenerator(
           random.nextInt());
         inBag[treeIdx] = bagData.inBag; // store later for OOB error calculation
@@ -191,7 +210,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       // make sure all trees have been trained before proceeding
       for (int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++) {
         futures.get(treeIdx).get();
-        logger.progress( "Built tree", null, start, treeIdx+1, m_Classifiers.length); // Tischi
+        logger.progress( "Building trees...", null, start, treeIdx+1, m_Classifiers.length); // Tischi
       }
 
       // calc OOB error?
@@ -279,7 +298,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
   /**
    * Compute the out-of-bag error on the instances in a DataCache. This must
-   * be the datacache used for training the FastRandomForest (this is not 
+   * be the datacache used for instances the FastRandomForest (this is not
    * checked in the function!).
    *
    * @param data       the instances (as a DataCache)
@@ -364,7 +383,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
   //private String[] m_FeatureNames; 
   
   /** Available only if feature importances have been computed. */
-  //public String[] getFeatureNames() {
+  //public String[] getAllFeatureNames() {
   //  return m_FeatureNames;
   //}
   
@@ -382,7 +401,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
   }
 
   /**
-   * The size of each bag sample, as a percentage of the training size
+   * The size of each bag sample, as a percentage of the instances size
    */
   protected int m_BagSizePercent = 100;
 
@@ -441,7 +460,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
     newVector.addElement(new Option(
       "\tSize of each bag, as a percentage of the\n"
-        + "\ttraining set size. (default 100)",
+        + "\tinstances set size. (default 100)",
       "P", 1, "-P"));
     newVector.addElement(new Option(
       "\tCalculate the out of bag error.",
@@ -464,7 +483,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
    * </p>
    * <pre> -P
    *  Size of each bag, as a percentage of the
-   *  training set size. (default 100)</pre>
+   *  instances set size. (default 100)</pre>
    * <pre> -O
    *  Calculate the out of bag error.</pre>
    * <pre> -S &lt;num&gt;
@@ -539,11 +558,11 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
    *         displaying in the explorer/experimenter gui
    */
   public String bagSizePercentTipText() {
-    return "Size of each bag, as a percentage of the training set size.";
+    return "Size of each bag, as a percentage of the instances set size.";
   }
 
   /**
-   * Gets the size of each bag, as a percentage of the training set size.
+   * Gets the size of each bag, as a percentage of the instances set size.
    *
    * @return the bag size, as a percentage.
    */
@@ -553,7 +572,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
   }
 
   /**
-   * Sets the size of each bag, as a percentage of the training set size.
+   * Sets the size of each bag, as a percentage of the instances set size.
    *
    * @param newBagSizePercent the bag size, as a percentage.
    */

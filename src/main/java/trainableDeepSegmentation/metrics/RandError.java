@@ -1014,7 +1014,7 @@ public class RandError extends Metrics
 			{
 				binaryLabel.set(   x, y,    
 					label.getPixelValue( x, y ) > binaryThreshold ? 255 : 0);
-				// get inverse thresholded image for the proposal, so borders
+				// getInstancesAndMetadata inverse thresholded image for the proposal, so borders
 				// are white (to later apply watershed)
 				binaryProposal.set(x, y, 
 					proposal.getPixelValue( x, y ) > binaryThreshold ? 0 : 255);
@@ -2101,7 +2101,7 @@ public class RandError extends Metrics
 	 * 
 	 * Note: In the micro-average method, you sum up the individual true 
 	 * positives, false positives, and false negatives of the classification 
-	 * of different slices and the apply them to get the statistics. In the 
+	 * of different slices and the apply them to getInstancesAndMetadata the statistics. In the
 	 * macro-average method we take the average of the score on the different 
 	 * slices.
 	 * 

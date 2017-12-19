@@ -41,7 +41,7 @@ import weka.core.WeightedInstancesHandler;
 /**
  * Based on the "weka.classifiers.trees.RandomTree" class, revision 1.19,
  * by Eibe Frank and Richard Kirkby, with major modifications made to improve
- * the speed of classifier training.
+ * the speed of classifier instances.
  * 
  * Please refer to the Javadoc of buildTree, splitData and distribution
  * function, as well as the changelog.txt, for the details of changes to 
@@ -65,7 +65,7 @@ class FastRandomTree
   protected FastRandomTree[] m_Successors;
   
   /**
-   * For access to parameters of the RF (k, or maxDepth).
+   * For access to parameters of the RF (k, or classifierMaxDepth).
    */
   protected FastRandomForest m_MotherForest;
 
@@ -75,13 +75,13 @@ class FastRandomTree
   /** The split point. */
   protected double m_SplitPoint = Double.NaN;
   
-  /** The proportions of training instances going down each branch. */
+  /** The proportions of instances instances going down each branch. */
   protected double[] m_Prop = null;
 
-  /** Class probabilities from the training vals. */
+  /** Class probabilities from the instances vals. */
   protected double[] m_ClassProbs = null;
 
-  /** The dataset used for training. */
+  /** The dataset used for instances. */
   protected transient DataCache data = null;
   
   /**
@@ -172,7 +172,7 @@ class FastRandomTree
 
   /**
    * This function is not supported by FastRandomTree, as it requires a
-   * DataCache for training.
+   * DataCache for instances.
 
    * @throws Exception every time this function is called
    */
@@ -218,7 +218,18 @@ class FastRandomTree
     data.whatGoesWhere = new int[ data.inBag.length ];
     data.createInBagSortedIndices();
 
-    buildTree(data.sortedIndices, 0, data.sortedIndices[0].length - 1,
+    // TISCHI
+    int endAt = 0;
+    if ( data.classIndex != 0 )
+    {
+      endAt = data.sortedIndices[ 0 ].length - 1;
+    }
+    else
+    {
+      endAt = data.sortedIndices[ 1 ].length - 1;
+    }
+
+    buildTree(data.sortedIndices, 0, endAt,
             classProbs, m_Debug, attIndicesWindow, 0);
 
     this.data = null;
@@ -374,13 +385,13 @@ class FastRandomTree
    * <li>members of dists, splits, props and vals arrays which are not used are
    *     dereferenced prior to recursion to reduce memory requirements
    *
-   * <li>a check for "branch with no training instances" is now (FastRF 0.98)
+   * <li>a check for "branch with no instances instances" is now (FastRF 0.98)
    *     made before recursion; with the current implementation of splitData(),
    *     empty branches can appear only with nominal attributes with more than
    *     two categories
    *
    * <li>each new 'tree' (i.e. node or leaf) is passed a reference to its
-   *     'mother forest', necessary to look up parameters such as maxDepth and K
+   *     'mother forest', necessary to look up parameters such as classifierMaxDepth and K
    *
    * <li>pre-split entropy is not recalculated unnecessarily
    *
@@ -400,7 +411,7 @@ class FastRandomTree
    * 
    * <li>0.99: the temporary arrays splits, props, vals now are not wide
    * as the full number of attributes in the dataset (of which only "k" columns
-   * of randomly chosen attributes get filled). Now, it's just a single array
+   * of randomly chosen attributes getInstancesAndMetadata filled). Now, it's just a single array
    * which gets replaced as the k features are evaluated sequentially, but it
    * gets replaced only if a next feature is better than a previous one.
    * 
@@ -684,7 +695,7 @@ class FastRandomTree
           // decide if instance goes into subset 0 or 1 randomly,
           // with bigger subsets having a greater probability of getting
           // the instance assigned to them
-          // instances with missing values get processed LAST (sort order)
+          // instances with missing values getInstancesAndMetadata processed LAST (sort order)
           // so branch sizes are known by now (and stored in m_Prop)
           double rn = random.nextDouble();
           int branch = ( rn > m_Prop[0] ) ? 1 : 0;
@@ -821,7 +832,7 @@ class FastRandomTree
           // decide if instance goes into subset 0 or 1 randomly,
           // with bigger subsets having a greater probability of getting
           // the instance assigned to them
-          // instances with missing values get processed LAST (sort order)
+          // instances with missing values getInstancesAndMetadata processed LAST (sort order)
           // so branch sizes are known by now (and stored in m_Prop)
           double rn = random.nextDouble();
           int branch = ( rn > m_Prop[0] ) ? 1 : 0;

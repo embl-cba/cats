@@ -27,6 +27,20 @@
     <orderEntry type="library" name="Maven: net.sf.trove4j:trove4j:3.0.3" level="project" />
     <orderEntry type="library" name="Maven: org.scijava:scijava-common:2.65.0" level="project" />
     <orderEntry type="library" name="Maven: org.scijava:parsington:1.0.1" level="project" />
+    <orderEntry type="library" name="mcib3d-core3.9" level="project" />
+    <orderEntry type="library" name="Maven: com.github.mcib3d:mcib3d-core:unknown" level="project" />
+    <orderEntry type="library" name="Maven: fr.inra.ijpb:MorphoLibJ_:1.3.3" level="project" />
+    <orderEntry type="library" name="Maven: gov.nist.math:jama:1.0.3" level="project" />
+    <orderEntry type="library" name="Maven: tischi:fiji-plugin-bigDataTools:unknown" level="project" />
+    <orderEntry type="library" name="Maven: sc.fiji:pal-optimization:2.0.2-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: sc.fiji:fiji-lib:2.1.3-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: net.imagej:ij1-patcher:0.12.5" level="project" />
+    <orderEntry type="library" name="Maven: org.javassist:javassist:3.20.0-GA" level="project" />
+    <orderEntry type="library" name="Maven: net.imglib2:imglib2:3.2.1" level="project" />
+    <orderEntry type="library" name="Maven: net.imglib2:imglib2-ij:2.0.0-beta-35" level="project" />
+    <orderEntry type="library" name="Maven: net.imagej:imagej-common:0.24.3" level="project" />
+    <orderEntry type="library" name="Maven: org.scijava:scijava-common:2.62.1" level="project" />
+    <orderEntry type="library" name="Maven: org.scijava:parsington:1.0.0" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.gentyref:gentyref:1.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.bushe:eventbus:1.4" level="project" />
     <orderEntry type="library" name="Maven: edu.ucar:udunits:4.3.18" level="project" />
