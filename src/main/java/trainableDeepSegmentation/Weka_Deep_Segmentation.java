@@ -39,7 +39,7 @@ import javax.swing.*;
 
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.examples.Example;
-import trainableDeepSegmentation.instances.InstancesMetadata;
+import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import trainableDeepSegmentation.labels.LabelManager;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageDisk;
@@ -133,6 +133,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String IO_LOAD_CLASSIFIER = "Load classifier";
 	public static final String IO_SAVE_CLASSIFIER = "Save classifier";
 	public static final String ADD_CLASS = "Add new class";
+	public static final String CHANGE_CLASS_NAMES = "Change class names";
+	public static final String CHANGE_RESULT_OVERLAY_OPACITY = "Change result overlay opacity";
 	public static final String UPDATE_LABELS_AND_TRAIN = "Update labels and train";
 	public static final String RECOMPUTE_LABELS = "Recompute all labels";
 	public static final String TRAIN_CLASSIFIER = "Train classifier";
@@ -144,8 +146,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier";
 	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
 	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
-	public static final String SHOW_CLASSIFIER_SETTINGS = "Show classifier settings";
-	public static final String SHOW_FEATURE_SETTINGS = "Show feature settings";
+	public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier settings";
+	public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature settings";
 	public static final String GET_LABEL_MASK = "Get label mask";
 
 
@@ -156,13 +158,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private JComboBox actionComboBox = new JComboBox(
 			new String[] {
 					ADD_CLASS,
+					CHANGE_CLASS_NAMES,
 					UPDATE_LABELS_AND_TRAIN,
 					TRAIN_CLASSIFIER,
-					SHOW_CLASSIFIER_SETTINGS,
-					SHOW_FEATURE_SETTINGS,
+					CHANGE_RESULT_OVERLAY_OPACITY,
+					CHANGE_CLASSIFIER_SETTINGS,
+					CHANGE_FEATURE_COMPUTATION_SETTINGS,
 					IO_LOAD_INSTANCES,
 					IO_SAVE_INSTANCES,
-					GET_LABEL_MASK,
 					IO_EXPORT_RESULT_IMAGE,
 					DUPLICATE_RESULT_IMAGE_TO_RAM,
 					IO_LOAD_LABEL_IMAGE,
@@ -171,6 +174,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 					RECOMPUTE_LABELS,
 					IO_LOAD_CLASSIFIER,
 					IO_SAVE_CLASSIFIER,
+					GET_LABEL_MASK
 			} );
 
 
@@ -280,8 +284,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 	public static final String SET_CLASSIFIER = "setClassifier";
 	/** name of the macro method to save the feature stack into a file or files */
 	public static final String SAVE_FEATURE_STACK = "saveFeatureStack";
-	/** name of the macro method to change a class name */
-	public static final String CHANGE_CLASS_NAME = "changeClassName";
 	/** name of the macro method to set the overlay opacity */
 	public static final String SET_OPACITY = "setOpacity";
 	/** boolean flag set to true while instances */
@@ -411,6 +413,8 @@ public class Weka_Deep_Segmentation implements PlugIn
 		wekaButton.setToolTipText("Launch Weka GUI chooser");
 
 		showColorOverlay = false;
+
+		IJ.setTool("freeline");
 	}
 
 	/** Thread that runs the instances. We store it to be able to
@@ -511,10 +515,10 @@ public class Weka_Deep_Segmentation implements PlugIn
 							case GET_LABEL_MASK:
 								analyzeObjects();
 								break;
-							case SHOW_CLASSIFIER_SETTINGS:
+							case CHANGE_CLASSIFIER_SETTINGS:
 								showClassifierSettingsDialog();
 								break;
-							case SHOW_FEATURE_SETTINGS:
+							case CHANGE_FEATURE_COMPUTATION_SETTINGS:
 								showFeatureSettingsDialog();
 								break;
 							case IO_LOAD_CLASSIFIER:
@@ -522,6 +526,12 @@ public class Weka_Deep_Segmentation implements PlugIn
 								break;
 							case ADD_CLASS:
 								addNewClass();
+								break;
+							case CHANGE_CLASS_NAMES:
+								showClassNamesDialog();
+								break;
+							case CHANGE_RESULT_OVERLAY_OPACITY:
+								showResultsOverlayOpacityDialog();
 								break;
 							case IO_SAVE_CLASSIFIER:
 								saveClassifier();
@@ -587,9 +597,6 @@ public class Weka_Deep_Segmentation implements PlugIn
 					}
 					else if(e.getSource() == addClassButton){
 						addNewClass();
-					}
-					else if(e.getSource() == settingsButton){
-						showClassSettingsDialog();
 					}
 					else if(e.getSource() == testThreadsButton){
 						testThreads();
@@ -1197,7 +1204,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			instancesList = new JList( listModel );
 			instancesList.setVisibleRowCount(4);
 			JViewport jv1 = new JViewport();
-			jv1.setView(new JLabel("Training data"));
+			jv1.setView( new JLabel("Training instances") );
 			JScrollPane listScrollPane = new JScrollPane(instancesList);
 			listScrollPane.setPreferredSize( new Dimension( 200,100 ) );
 			listScrollPane.setColumnHeader(jv1);
@@ -2395,7 +2402,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	}
 
 
-	public InstancesMetadata getCombinedSelectedInstancesFromGUI()
+	public InstancesAndMetadata getCombinedSelectedInstancesFromGUI()
 	{
 		List<String> selectedInstances = (List< String >) instancesList.getSelectedValuesList();
 
@@ -2423,7 +2430,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	{
 
 		// getInstancesAndMetadata instances instances
-		InstancesMetadata instancesAndMetadata = getCombinedSelectedInstancesFromGUI();
+		InstancesAndMetadata instancesAndMetadata = getCombinedSelectedInstancesFromGUI();
 
 		if ( instancesAndMetadata == null )
 		{
@@ -2516,7 +2523,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.stopCurrentTasks = false;
 				wekaSegmentation.isBusy = true;
 
-				InstancesMetadata iam = getCombinedSelectedInstancesFromGUI();
+				InstancesAndMetadata iam = getCombinedSelectedInstancesFromGUI();
 				wekaSegmentation.applyBgFgClassification( interval, iam );
 
 				win.updateOverlay();
@@ -2939,28 +2946,49 @@ public class Weka_Deep_Segmentation implements PlugIn
 		chooser.setVisible(true);
 	}
 
-	/**
-	 * Show advanced settings dialog
-	 *
-	 * @return false when canceled
-	 */
-	public boolean showClassSettingsDialog()
+
+	public boolean showResultsOverlayOpacityDialog()
 	{
-		GenericDialogPlus gd = new GenericDialogPlus("Class settings");
-
-		for(int i = 0; i < wekaSegmentation.getNumClasses(); i++)
-			gd.addStringField("Class "+(i+1), wekaSegmentation.getClassName(i), 15);
-
+		GenericDialogPlus gd = new GenericDialogPlus("Result overlay opacity");
 		gd.addSlider("Result overlay opacity", 0, 100, win.overlayOpacity);
-
-		gd.addHelp("http://fiji.sc/Trainable_Weka_Segmentation");
-
 
 		gd.showDialog();
 
 		if ( gd.wasCanceled() )
 			return false;
 
+		final int newOpacity = (int) gd.getNextNumber();
+		if( newOpacity != win.overlayOpacity )
+		{
+			win.overlayOpacity = newOpacity;
+			win.overlayAlpha = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, win.overlayOpacity / 100f);
+			win.resultOverlay.setComposite(win.overlayAlpha);
+
+			if( showColorOverlay )
+				displayImage.updateAndDraw();
+		}
+
+		return true;
+
+
+	}
+
+	/**
+	 * Show class settings dialog
+	 *
+	 * @return false when canceled
+	 */
+	public boolean showClassNamesDialog()
+	{
+		GenericDialogPlus gd = new GenericDialogPlus("Class names");
+
+		for(int i = 0; i < wekaSegmentation.getNumClasses(); i++)
+			gd.addStringField("Class "+(i+1), wekaSegmentation.getClassName(i), 15);
+
+		gd.showDialog();
+
+		if ( gd.wasCanceled() )
+			return false;
 
 		boolean classNameChanged = false;
 
@@ -2980,28 +3008,11 @@ public class Weka_Deep_Segmentation implements PlugIn
 				wekaSegmentation.setClassLabel(i, s);
 				classNameChanged = true;
 				addAnnotationButton[i].setText( s + " [" + (i+1) + "]");
-				// Macro recording
-				record(CHANGE_CLASS_NAME, new String[]{Integer.toString(i), s});
 			}
 		}
 
 		// adapt to changes in class names
 		updateComboBoxes();
-
-		final int newOpacity = (int) gd.getNextNumber();
-		if( newOpacity != win.overlayOpacity )
-		{
-			win.overlayOpacity = newOpacity;
-			win.overlayAlpha = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, win.overlayOpacity / 100f);
-			win.resultOverlay.setComposite(win.overlayAlpha);
-
-			// Macro recording
-			record(SET_OPACITY, new String[] { Integer.toString( win.overlayOpacity )});
-
-			if( showColorOverlay )
-				displayImage.updateAndDraw();
-		}
-
 
 		if(classNameChanged)
 		{

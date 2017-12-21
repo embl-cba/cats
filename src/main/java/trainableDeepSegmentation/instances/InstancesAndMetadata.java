@@ -4,10 +4,9 @@ import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 
-import java.io.Serializable;
 import java.util.*;
 
-public class InstancesMetadata {
+public class InstancesAndMetadata {
 
     Instances instances;
     Map< Metadata, ArrayList< Double > > metadata;
@@ -79,14 +78,14 @@ public class InstancesMetadata {
     }
 
 
-    public InstancesMetadata( Instances instances,
-                              Map< Metadata, ArrayList< Double > > metadata )
+    public InstancesAndMetadata(Instances instances,
+                                Map< Metadata, ArrayList< Double > > metadata )
     {
         this.instances = instances;
         this.metadata = metadata;
     }
 
-    public InstancesMetadata( Instances instances )
+    public InstancesAndMetadata(Instances instances )
     {
         this.instances = instances;
         this.metadata = getEmptyMetadata();
@@ -144,8 +143,8 @@ public class InstancesMetadata {
 
         }
 
-        // set class attribute
-        instances.setClassIndex( instances.numAttributes() - 1 );
+        int classIndex = instances.numAttributes() - 1;
+        instances.setClassIndex( classIndex );
     }
 
     public Instances getInstances()
@@ -158,7 +157,7 @@ public class InstancesMetadata {
         return instances.get( i );
     }
 
-    public synchronized void append( InstancesMetadata instancesAndMetadata )
+    public synchronized void append( InstancesAndMetadata instancesAndMetadata )
     {
 
         for( Instance instance : instancesAndMetadata.instances )

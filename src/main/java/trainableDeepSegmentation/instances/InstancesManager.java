@@ -6,14 +6,14 @@ import java.util.*;
 
 public class InstancesManager {
 
-    SortedMap< String, InstancesMetadata > instancesMap = null;
+    SortedMap< String, InstancesAndMetadata> instancesMap = null;
 
     public InstancesManager()
     {
         instancesMap = new TreeMap<>();
     }
 
-    public synchronized String putInstancesAndMetadata( InstancesMetadata instancesAndMetadata )
+    public synchronized String putInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata )
     {
         String key = getName( instancesAndMetadata.instances );
 
@@ -22,7 +22,7 @@ public class InstancesManager {
         return key;
     }
 
-    public synchronized void putInstancesAndMetadata( String key, InstancesMetadata instancesAndMetadata )
+    public synchronized void putInstancesAndMetadata( String key, InstancesAndMetadata instancesAndMetadata )
     {
         instancesMap.put( key, instancesAndMetadata );
     }
@@ -33,7 +33,7 @@ public class InstancesManager {
         return ( instancesMap.get( key ).instances );
     }
 
-    public InstancesMetadata getInstancesAndMetadata( String key )
+    public InstancesAndMetadata getInstancesAndMetadata(String key )
     {
         return ( instancesMap.get( key ) );
     }
@@ -43,12 +43,12 @@ public class InstancesManager {
         return ( instancesMap.keySet() );
     }
 
-    public InstancesMetadata getCombinedInstancesAndMetadata( List< String > keys )
+    public InstancesAndMetadata getCombinedInstancesAndMetadata(List< String > keys )
     {
         // initialize empty IAM
-        InstancesMetadata combinedIAM = new InstancesMetadata(
+        InstancesAndMetadata combinedIAM = new InstancesAndMetadata(
                 new Instances( getInstances( keys.get( 0 ) ) , 0 ),
-                InstancesMetadata.getEmptyMetadata() );
+                InstancesAndMetadata.getEmptyMetadata() );
 
         for ( String key : keys )
         {

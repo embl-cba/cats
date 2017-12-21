@@ -2,7 +2,7 @@ package trainableDeepSegmentation.classification;
 
 import hr.irb.fastRandomForest.FastRandomForest;
 import trainableDeepSegmentation.WekaSegmentation;
-import trainableDeepSegmentation.instances.InstancesMetadata;
+import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instances;
@@ -23,7 +23,7 @@ public class ClassifierManager {
     {
 
         String key = classifierInstancesMetadata
-                .instancesMetadata
+                .instancesAndMetadata
                 .getInstances()
                 .relationName();
 
@@ -33,10 +33,10 @@ public class ClassifierManager {
     }
 
     public String setClassifier( Classifier classifier,
-                                 InstancesMetadata instancesMetadata )
+                                 InstancesAndMetadata instancesAndMetadata)
     {
         ClassifierInstancesMetadata classifierInstancesMetadata =
-                new ClassifierInstancesMetadata( classifier, instancesMetadata );
+                new ClassifierInstancesMetadata( classifier, instancesAndMetadata);
 
         return setClassifier( classifierInstancesMetadata );
 
@@ -67,7 +67,7 @@ public class ClassifierManager {
         return ( Collections.list(
                 classifiers
                 .get(key)
-                .instancesMetadata
+                .instancesAndMetadata
                 .getInstances()
                 .enumerateAttributes() ) );
 
@@ -76,7 +76,7 @@ public class ClassifierManager {
     public Instances getInstancesHeader( String key )
     {
         Instances instancesHeader =
-                new Instances( classifiers.get(key).instancesMetadata.getInstances() );
+                new Instances( classifiers.get(key).instancesAndMetadata.getInstances() );
 
         return ( instancesHeader );
     }
@@ -112,7 +112,7 @@ public class ClassifierManager {
         WekaSegmentation.logger.info("\n# Saving classifier to " + filepath + " ..." );
 
 
-        classifiers.get(key).instancesMetadata.putMetadataIntoInstances();
+        classifiers.get(key).instancesAndMetadata.putMetadataIntoInstances();
 
         try
         {
@@ -120,7 +120,7 @@ public class ClassifierManager {
             OutputStream os = new FileOutputStream( sFile );
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(os);
             objectOutputStream.writeObject( classifiers.get(key).classifier );
-            objectOutputStream.writeObject( classifiers.get(key).instancesMetadata.getInstances() );
+            objectOutputStream.writeObject( classifiers.get(key).instancesAndMetadata.getInstances() );
             objectOutputStream.flush();
             objectOutputStream.close();
         }
@@ -136,7 +136,7 @@ public class ClassifierManager {
             WekaSegmentation.logger.info("...done!");
         }
 
-        classifiers.get(key).instancesMetadata.moveMetadataFromInstancesToMetadata();
+        classifiers.get(key).instancesAndMetadata.moveMetadataFromInstancesToMetadata();
 
         return saveOK;
     }

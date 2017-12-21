@@ -4,7 +4,6 @@ import de.embl.cba.bigDataTools.dataStreamingTools.DataStreamingTools;
 import ij.IJ;
 import ij.ImageJ;
 import net.imglib2.FinalInterval;
-import trainableDeepSegmentation.instances.InstancesMetadata;
 
 import static trainableDeepSegmentation.IntervalUtils.*;
 import static trainableDeepSegmentation.IntervalUtils.C;

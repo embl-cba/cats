@@ -2,8 +2,7 @@ package trainableDeepSegmentation.classification;
 
 import hr.irb.fastRandomForest.FastRandomForest;
 import trainableDeepSegmentation.WekaSegmentation;
-import trainableDeepSegmentation.instances.InstancesMetadata;
-import weka.classifiers.Classifier;
+import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import weka.core.Attribute;
 import weka.core.Instances;
 
@@ -136,9 +135,9 @@ public class ClassifierUtils {
             ObjectInputStream objectInputStream = new ObjectInputStream(is);
 
             classifierInstancesMetadata.classifier = (FastRandomForest) objectInputStream.readObject();
-            classifierInstancesMetadata.instancesMetadata =
-                    new InstancesMetadata ( (Instances ) objectInputStream.readObject() );
-            classifierInstancesMetadata.instancesMetadata.moveMetadataFromInstancesToMetadata();
+            classifierInstancesMetadata.instancesAndMetadata =
+                    new InstancesAndMetadata( (Instances ) objectInputStream.readObject() );
+            classifierInstancesMetadata.instancesAndMetadata.moveMetadataFromInstancesToMetadata();
 
             objectInputStream.close();
 

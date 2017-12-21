@@ -1,25 +1,24 @@
 package trainableDeepSegmentation.classification;
 
-import trainableDeepSegmentation.instances.InstancesMetadata;
+import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import weka.classifiers.Classifier;
-import weka.core.Instances;
 
 public class ClassifierInstancesMetadata
 {
     public Classifier classifier;
-    public InstancesMetadata instancesMetadata;
+    public InstancesAndMetadata instancesAndMetadata;
 
     public ClassifierInstancesMetadata( )
     {
         this.classifier = null;
-        this.instancesMetadata = null;
+        this.instancesAndMetadata = null;
     }
 
     public ClassifierInstancesMetadata( Classifier classifier,
-                                        InstancesMetadata instancesMetadata )
+                                        InstancesAndMetadata instancesAndMetadata)
     {
         this.classifier = classifier;
-        this.instancesMetadata = instancesMetadata;
+        this.instancesAndMetadata = instancesAndMetadata;
     }
 
 

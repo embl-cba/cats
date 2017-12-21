@@ -2,7 +2,6 @@ package trainableDeepSegmentation.instances;
 
 import de.embl.cba.bigDataTools.logging.Logger;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.Prefs;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
@@ -17,7 +16,6 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 import java.awt.*;
-import java.awt.image.ColorModel;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -27,7 +25,7 @@ import java.util.concurrent.Future;
 
 import static trainableDeepSegmentation.IntervalUtils.*;
 import static trainableDeepSegmentation.WekaSegmentation.*;
-import static trainableDeepSegmentation.instances.InstancesMetadata.Metadata.*;
+import static trainableDeepSegmentation.instances.InstancesAndMetadata.Metadata.*;
 
 public class InstancesUtils {
 
@@ -40,11 +38,12 @@ public class InstancesUtils {
      *
      * @return set of instancesMap (feature vectors in Weka format)
      */
-    public static InstancesMetadata getInstancesAndMetadataFromLabels( ArrayList< Example > examples,
-                                                                       String instancesName,
-                                                                       Settings settings,
-                                                                       ArrayList< String > featureNames,
-                                                                       ArrayList< String > classNames )
+    public static InstancesAndMetadata getInstancesAndMetadataFromLabels(
+            ArrayList< Example > examples,
+            String instancesName,
+            Settings settings,
+            ArrayList< String > featureNames,
+            ArrayList< String > classNames )
     {
 
         Instances instances = getInstancesHeader(
@@ -52,8 +51,8 @@ public class InstancesUtils {
                 featureNames,
                 classNames  );
 
-        InstancesMetadata instancesAndMetadata
-                = new InstancesMetadata( instances );
+        InstancesAndMetadata instancesAndMetadata
+                = new InstancesAndMetadata( instances );
 
         for ( int e = 0; e < examples.size(); ++e )
         {
@@ -79,7 +78,7 @@ public class InstancesUtils {
     }
 
 
-    public static Callable<InstancesMetadata > getUsefulInstancesFromLabelImage(
+    public static Callable<InstancesAndMetadata> getUsefulInstancesFromLabelImage(
             WekaSegmentation wekaSegmentation,
             ImagePlus labelImage,
             ResultImage resultImage,
@@ -92,9 +91,9 @@ public class InstancesUtils {
             int localRadius,
             ArrayList< Double > classWeights )
     {
-        return new Callable< InstancesMetadata >() {
+        return new Callable<InstancesAndMetadata>() {
 
-            public InstancesMetadata call()
+            public InstancesAndMetadata call()
             {
                 double accuracySmoothingSigma = 2.0;
                 int probabilityRange = resultImage.getProbabilityRange();
@@ -118,7 +117,7 @@ public class InstancesUtils {
                         featureProvider.getAllFeatureNames(),
                         wekaSegmentation.getClassNames() );
 
-                InstancesMetadata instancesAndMetadata = new InstancesMetadata( instances );
+                InstancesAndMetadata instancesAndMetadata = new InstancesAndMetadata( instances );
 
                 double[][][] featureSlice;
 
@@ -275,7 +274,7 @@ public class InstancesUtils {
     }
 
 
-    public ArrayList< Integer >[] getLabelIdsPerClass( InstancesMetadata iam )
+    public ArrayList< Integer >[] getLabelIdsPerClass( InstancesAndMetadata iam )
     {
         int numClasses = iam.instances.numClasses();
         ArrayList< Integer >[]  labelIdsPerClass = new ArrayList[numClasses];
@@ -779,8 +778,8 @@ public class InstancesUtils {
 
     }
 
-    public static InstancesMetadata removeAttributes( InstancesMetadata instancesAndMetadata,
-                                                      ArrayList< Integer > goners )
+    public static InstancesAndMetadata removeAttributes(InstancesAndMetadata instancesAndMetadata,
+                                                        ArrayList< Integer > goners )
     {
 
         Instances attributeSubset = new Instances( instancesAndMetadata.instances );
@@ -793,11 +792,11 @@ public class InstancesUtils {
 
         attributeSubset.setClassIndex( attributeSubset.numAttributes() - 1 );
 
-        return ( new InstancesMetadata( attributeSubset, instancesAndMetadata.metadata ) );
+        return ( new InstancesAndMetadata( attributeSubset, instancesAndMetadata.metadata ) );
     }
 
-    public static InstancesMetadata onlyKeepAttributes( InstancesMetadata instancesAndMetadata,
-                                                      ArrayList< Integer > keepers )
+    public static InstancesAndMetadata onlyKeepAttributes(InstancesAndMetadata instancesAndMetadata,
+                                                          ArrayList< Integer > keepers )
     {
 
         Instances attributeSubset = new Instances( instancesAndMetadata.instances );
@@ -813,7 +812,7 @@ public class InstancesUtils {
 
         attributeSubset.setClassIndex( attributeSubset.numAttributes() - 1 );
 
-        return ( new InstancesMetadata( attributeSubset, instancesAndMetadata.metadata ) );
+        return ( new InstancesAndMetadata( attributeSubset, instancesAndMetadata.metadata ) );
     }
 
     public static void logInstancesInformation( Instances instances )
@@ -883,15 +882,15 @@ public class InstancesUtils {
         return null;
     }
 
-    public static InstancesMetadata loadInstancesAndMetadataFromARFF(
+    public static InstancesAndMetadata loadInstancesAndMetadataFromARFF(
             String directory, String filename )
     {
         Instances instances = loadInstancesFromARFF( directory, filename );
 
         if ( instances == null ) return null;
 
-        InstancesMetadata instancesAndMetadata
-                = new InstancesMetadata( instances );
+        InstancesAndMetadata instancesAndMetadata
+                = new InstancesAndMetadata( instances );
 
         instancesAndMetadata.moveMetadataFromInstancesToMetadata();
 
@@ -937,7 +936,7 @@ public class InstancesUtils {
         return true;
     }
 
-    public static boolean saveInstancesAndMetadataAsARFF( InstancesMetadata instancesAndMetadata,
+    public static boolean saveInstancesAndMetadataAsARFF( InstancesAndMetadata instancesAndMetadata,
                                                           String directory,
                                                           String filename)
     {
@@ -952,7 +951,7 @@ public class InstancesUtils {
 
     }
 
-    public static int getNumLabelIds( InstancesMetadata instancesAndMetadata )
+    public static int getNumLabelIds( InstancesAndMetadata instancesAndMetadata )
     {
         Set<Double> uniqueLabelIds = new HashSet<>(instancesAndMetadata.getMetadata( Metadata_Label_Id ));
         return uniqueLabelIds.size();
