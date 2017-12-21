@@ -1,10 +1,10 @@
 package trainableDeepSegmentation.results;
 
-import bigDataTools.Hdf5DataCubeWriter;
-import bigDataTools.ImarisDataSet;
-import bigDataTools.ImarisUtils;
-import bigDataTools.ImarisWriter;
-import bigDataTools.utils.Utils;
+import de.embl.cba.bigDataTools.Hdf5DataCubeWriter;
+import de.embl.cba.bigDataTools.ImarisDataSet;
+import de.embl.cba.bigDataTools.ImarisUtils;
+import de.embl.cba.bigDataTools.ImarisWriter;
+import de.embl.cba.bigDataTools.utils.Utils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;

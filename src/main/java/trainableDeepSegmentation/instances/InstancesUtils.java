@@ -1,6 +1,6 @@
 package trainableDeepSegmentation.instances;
 
-import bigDataTools.logging.Logger;
+import de.embl.cba.bigDataTools.logging.Logger;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.Prefs;

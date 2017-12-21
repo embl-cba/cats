@@ -1,6 +1,6 @@
 package trainableDeepSegmentation;
 
-import bigDataTools.Region5D;
+import de.embl.cba.bigDataTools.Region5D;
 import ij.ImagePlus;
 import ij.ImageStack;
 import javafx.geometry.Point3D;

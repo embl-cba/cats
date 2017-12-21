@@ -21,7 +21,7 @@ package trainableDeepSegmentation;
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
-import bigDataTools.logging.Logger;
+import de.embl.cba.bigDataTools.logging.Logger;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -1145,7 +1145,7 @@ public class FeatureProvider
             }
             else
             {
-                return bigDataTools.utils.Utils.getDataCube( inputImage,
+                return de.embl.cba.bigDataTools.utils.Utils.getDataCube( inputImage,
                         IntervalUtils.convertIntervalToRegion5D( interval ),
                         new int[]{ -1, -1 }, 1 );
             }
@@ -1176,7 +1176,7 @@ public class FeatureProvider
         }
         else
         {
-            impWithinBounds = bigDataTools.utils.Utils.getDataCube(
+            impWithinBounds = de.embl.cba.bigDataTools.utils.Utils.getDataCube(
                     inputImage, IntervalUtils.convertIntervalToRegion5D( intersect5D ),
                     new int[]{ -1, -1 }, 1 );
         }

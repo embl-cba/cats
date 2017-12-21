@@ -1,6 +1,6 @@
 package trainableDeepSegmentation;
 
-import bigDataTools.logging.Logger;
+import de.embl.cba.bigDataTools.logging.Logger;
 import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
 import ij.*;
@@ -8,7 +8,6 @@ import ij.gui.*;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.measure.Calibration;
-import ij.measure.ResultsTable;
 import ij.plugin.MacroInstaller;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.Recorder;
@@ -38,7 +37,6 @@ import java.util.concurrent.Executors;
 
 import javax.swing.*;
 
-import inra.ijpb.measure.GeometricMeasures3D;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.examples.Example;
 import trainableDeepSegmentation.instances.InstancesMetadata;
@@ -176,14 +174,14 @@ public class Weka_Deep_Segmentation implements PlugIn
 			} );
 
 
-	public static final String SEM_IMAGING = "Scanning EM";
-	public static final String FLUORESCENCE_IMAGING = "Fluorescence";
-	public static final String TRANSMISSION_LM_IMAGING = "Transmission LM";
+	public static final String EM_IMAGING = "Electron microscopy";
+	public static final String FLUORESCENCE_IMAGING = "Fluorescence light microscopy";
+	public static final String TRANSMISSION_LM_IMAGING = "Transmission light microscopy";
 
 	private JComboBox imagingModalityComboBox = new JComboBox(
 			new String[] {
 					FLUORESCENCE_IMAGING,
-					SEM_IMAGING,
+					EM_IMAGING,
 					TRANSMISSION_LM_IMAGING
 			} );
 
@@ -1833,9 +1831,9 @@ public class Weka_Deep_Segmentation implements PlugIn
 				gd.addChoice( "Modality" ,
 				new String[]
 						{ FLUORESCENCE_IMAGING,
-								SEM_IMAGING,
+								EM_IMAGING,
 								TRANSMISSION_LM_IMAGING },
-						SEM_IMAGING);
+						EM_IMAGING);
 
 		IJ.run("Set Measurements...", "mean redirect=None decimal=4");
 
@@ -1912,7 +1910,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		displayImage = trainingImage;
 
-		ij.gui.Toolbar.getInstance().setTool(ij.gui.Toolbar.FREELINE);
+		//ij.gui.Toolbar.getInstance().setTool(ij.gui.Toolbar.FREELINE);
 
 		reviewLabelsClassComboBox = new JComboBox( wekaSegmentation.getClassNames().toArray() );
 
@@ -2618,7 +2616,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 			try
 			{
-				int[] range = bigDataTools.utils.Utils.delimitedStringToIntegerArray( rangeString, "," );
+				int[] range = de.embl.cba.bigDataTools.utils.Utils.delimitedStringToIntegerArray( rangeString, "," );
 
 				if ( trainingImage.getNFrames() == 1 )
 				{

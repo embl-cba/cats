@@ -1,6 +1,6 @@
 package trainableDeepSegmentation.examples;
 
-import bigDataTools.logging.Logger;
+import de.embl.cba.bigDataTools.logging.Logger;
 import trainableDeepSegmentation.instances.InstancesMetadata;
 import weka.core.Instances;
 

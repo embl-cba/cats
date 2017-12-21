@@ -153,14 +153,20 @@
 			<url>http://maven.imagej.net/content/groups/public</url>
 		</repository>
 
-		<repository>
-			<id>jitpack.io</id>
-			<url>https://jitpack.io</url>
-		</repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
 
 	</repositories>
 
 	<dependencies>
+
+
+        <dependency>
+            <groupId>net.imagej</groupId>
+            <artifactId>imagej-legacy</artifactId>
+        </dependency>
 
 		<!-- Github 3D image suite dependencies -->
 		<dependency>
@@ -175,14 +181,11 @@
 		</dependency>
 
 		<dependency>
-			<groupId>tischi</groupId>
+			<groupId>com.github.tischi</groupId>
 			<artifactId>fiji-plugin-bigDataTools</artifactId>
+            <version>1c7ca1c92fd4853cdecec8c1045dfdd6a4e71019</version>
 		</dependency>
 
-		<dependency>
-			<groupId>tischi</groupId>
-			<artifactId>fiji-plugin-bigDataTools</artifactId>
-		</dependency>
 
 		<!-- Fiji dependencies -->
 		<dependency>
@@ -214,7 +217,6 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm</artifactId>
-			<version>0.8.1-SNAPSHOT</version>
 		</dependency>
 		
 		<!-- ImageJ dependencies -->
@@ -228,6 +230,12 @@
 			<groupId>org.scijava</groupId>
 			<artifactId>vecmath</artifactId>
 		</dependency>
+
+        <dependency>
+            <groupId>net.java.openjfx.backport</groupId>
+            <artifactId>openjfx-78-backport</artifactId>
+            <version>1.8.0-ea-b96.1</version>
+        </dependency>
 
 		<!-- Third party dependencies -->
 		<dependency>

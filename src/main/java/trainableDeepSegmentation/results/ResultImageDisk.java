@@ -1,9 +1,9 @@
 package trainableDeepSegmentation.results;
 
-import bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
-import bigDataTools.dataStreamingTools.DataStreamingTools;
-import bigDataTools.logging.Logger;
-import bigDataTools.utils.ImageDataInfo;
+import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
+import de.embl.cba.bigDataTools.dataStreamingTools.DataStreamingTools;
+import de.embl.cba.bigDataTools.logging.Logger;
+import de.embl.cba.bigDataTools.utils.ImageDataInfo;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileSaver;
@@ -99,7 +99,7 @@ public class ResultImageDisk implements ResultImage {
 
         String namingPattern = "classified--C<C01-01>--T<T00001-" +
                 tMax + ">--Z<Z00001-"+zMax+">.tif";
-        bigDataTools.utils.ImageDataInfo imageDataInfo = new ImageDataInfo();
+        de.embl.cba.bigDataTools.utils.ImageDataInfo imageDataInfo = new ImageDataInfo();
         imageDataInfo.bitDepth = 8;
         int nIOthreads = 3;
 

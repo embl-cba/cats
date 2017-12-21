@@ -44,7 +44,7 @@ import trainableDeepSegmentation.metrics.ClassificationStatistics;
 import util.FindConnectedRegions;
 import util.FindConnectedRegions.Results;
 
-import bigDataTools.logging.Logger;
+import de.embl.cba.bigDataTools.logging.Logger;
 
 /**
  * This class implements useful methods for the Weka Segmentation library.
@@ -92,6 +92,7 @@ public final class Utils {
 	}
 
 
+	/*
 	public static void filterSmallObjects3D(
 			ImagePlus imp,
 			int[] sizesMinMax)
@@ -101,7 +102,7 @@ public final class Utils {
 		segment3DImage.segment();
 		ImageStack filteredStack = segment3DImage.getBinaryObjectsStack(1);
 		imp.setStack(filteredStack);
-	}
+	}*/
 
 
 

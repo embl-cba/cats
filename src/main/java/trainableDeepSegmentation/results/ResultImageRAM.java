@@ -1,6 +1,6 @@
 package trainableDeepSegmentation.results;
 
-import bigDataTools.logging.Logger;
+import de.embl.cba.bigDataTools.logging.Logger;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
@@ -11,7 +11,7 @@ import trainableDeepSegmentation.WekaSegmentation;
 import java.awt.image.ColorModel;
 import java.util.ArrayList;
 
-import static bigDataTools.utils.Utils.getDataCubeFromImagePlus;
+import static de.embl.cba.bigDataTools.utils.Utils.getDataCubeFromImagePlus;
 import static trainableDeepSegmentation.results.Utils.saveImagePlusAsSeparateImarisChannels;
 
 public class ResultImageRAM implements ResultImage {

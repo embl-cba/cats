@@ -1,10 +1,10 @@
 package trainableDeepSegmentation.results;
 
-import bigDataTools.Hdf5DataCubeWriter;
-import bigDataTools.ImarisDataSet;
-import bigDataTools.ImarisUtils;
-import bigDataTools.ImarisWriter;
-import bigDataTools.logging.Logger;
+import de.embl.cba.bigDataTools.Hdf5DataCubeWriter;
+import de.embl.cba.bigDataTools.ImarisDataSet;
+import de.embl.cba.bigDataTools.ImarisUtils;
+import de.embl.cba.bigDataTools.ImarisWriter;
+import de.embl.cba.bigDataTools.logging.Logger;
 import ij.ImagePlus;
 import ij.plugin.Binner;
 import ij.plugin.Duplicator;
@@ -82,7 +82,7 @@ public abstract class Utils {
 
         int[] intensityGate = new int[]
                 { classId * CLASS_LUT_WIDTH + 1, (classId + 1 ) * CLASS_LUT_WIDTH };
-        bigDataTools.utils.Utils.applyIntensityGate( impClass, intensityGate );
+        de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( impClass, intensityGate );
 
         return ( impClass );
 

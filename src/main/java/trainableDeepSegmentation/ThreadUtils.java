@@ -1,6 +1,6 @@
 package trainableDeepSegmentation;
 
-import bigDataTools.logging.Logger;
+import de.embl.cba.bigDataTools.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;

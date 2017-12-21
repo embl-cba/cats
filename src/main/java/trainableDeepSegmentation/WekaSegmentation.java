@@ -16,8 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPOutputStream;
 
-import bigDataTools.logging.Logger;
-import bigDataTools.logging.IJLazySwingLogger;
+import de.embl.cba.bigDataTools.logging.*;
 import ij.gui.PolygonRoi;
 import ij.io.FileSaver;
 import ij.measure.ResultsTable;

@@ -1,8 +1,9 @@
 package trainableDeepSegmentation;
 
 import ij.IJ;
-import ij.ImageJ;
+//import ij.ImageJ;
 import ij.ImagePlus;
+import net.imagej.ImageJ;
 
 import static ij.IJ.makeRectangle;
 
@@ -22,7 +23,8 @@ public class TestGUI {
 	 */
 	public static void main( final String[] args )
 	{
-		new ImageJ();
+		final net.imagej.ImageJ ij = new net.imagej.ImageJ();
+		ij.ui().showUI();
 
 		// EM
 		/*
@@ -106,8 +108,9 @@ public class TestGUI {
 
 		//IJ.open("/Users/tischi/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
 
-		IJ.run("Image Sequence...", "open=/Users/tischi/Desktop/sylwia/171108_CL13_trial_001/cropped sort");
-		ImagePlus inputImagePlus = IJ.getImage();
+		//IJ.run("Image Sequence...", "open=/Users/tischer/Documents/transmission-3D-stitching-organoid-size-measurement--data/4x_2p7mm_50umsteps_trans_001/data file=P00001 sort");
+		ImagePlus inputImagePlus = IJ.openImage("/Users/tischer/Documents/arjen-jakobi--em-segmentation--data/p62_in_situ_tomo/e_267_16_B5_sec3_pos1.avi");
+		inputImagePlus.show();
 
 		IJ.wait(100);
 		//IJ.run("Properties...", "unit=nm pixel_width=309 pixel_height=309 voxel_depth=1000");

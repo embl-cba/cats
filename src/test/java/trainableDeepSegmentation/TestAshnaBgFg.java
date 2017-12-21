@@ -1,6 +1,6 @@
 package trainableDeepSegmentation;
 
-import bigDataTools.dataStreamingTools.DataStreamingTools;
+import de.embl.cba.bigDataTools.dataStreamingTools.DataStreamingTools;
 import ij.IJ;
 import ij.ImageJ;
 import net.imglib2.FinalInterval;

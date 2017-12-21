@@ -5658,7 +5658,7 @@
 				public void run()
 				{
 
-					int[] sizesMinMax = bigDataTools.utils.Utils.delimitedStringToIntegerArray(sizeRange,",");
+					int[] sizesMinMax = de.embl.cba.bigDataToolsutils.Utils.delimitedStringToIntegerArray(sizeRange,",");
 
 					int zs, ze, zc;
 					if ( zRange.equals("None") )
@@ -5669,7 +5669,7 @@
 					}
 					else
 					{
-						int[] tmp = bigDataTools.utils.Utils.delimitedStringToIntegerArray(zRange,",");
+						int[] tmp = de.embl.cba.bigDataToolsutils.Utils.delimitedStringToIntegerArray(zRange,",");
 						zs = tmp[0] - 1; ze = tmp[1] - 1;
 						zc = ( ze + zs ) / 2;
 					}
