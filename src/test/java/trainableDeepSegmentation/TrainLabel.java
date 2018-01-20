@@ -1,10 +1,6 @@
 package trainableDeepSegmentation;
 
-import trainableDeepSegmentation.*;
-
-
 import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
 import net.imglib2.FinalInterval;
 import net.imglib2.util.Intervals;
@@ -16,11 +12,13 @@ import static trainableDeepSegmentation.IntervalUtils.*;
 
 public class TrainLabel {
 
-    final static String ROOT_PATH = "/Users/tischi/Documents/segmentation-challenges--data/brainiac/";
+    final static String ROOT_PATH = "/Volumes/cba/tischer/segmentation-challenges--data/brainiac/";
     // final static String ROOT_PATH = "/g/cba/tischer/segmentation-challenges--data/brainiac/";
 
     final static String INPUT_IMAGE_PATH = ROOT_PATH + "combined-clahe-nz99.tif";
     final static String LABEL_IMAGE_PATH = ROOT_PATH + "train-labels-border2-nz99.tif";
+
+    final static String INSTANCES_PATH = ROOT_PATH + "output_1_2_3_4/Instances-5491.ARFF";
 
     final static String LOGGING_DIRECTORY = ROOT_PATH + "log";
     final static String OUTPUT_DIRECTORY = ROOT_PATH + "output";
@@ -28,7 +26,8 @@ public class TrainLabel {
     public static void main( final String[] args )
     {
 
-        new ImageJ();
+        final net.imagej.ImageJ ij = new net.imagej.ImageJ();
+        ij.ui().showUI();
 
         // Load image data
         //
@@ -42,6 +41,7 @@ public class TrainLabel {
         ws.setInputImage( inputImage );
         ws.setLabelImage( labelImage );
         ws.setResultImageRAM( );
+        ws.loadInstancesMetadata( INSTANCES_PATH );
 
         ws.setNumThreads( 16 );
 
@@ -75,7 +75,7 @@ public class TrainLabel {
         ws.classifierNumTrees = 100;
         ws.classifierFractionFeaturesPerNode = 0.1;
 
-        FinalInterval inputImageInterval = IntervalUtils.getInterval( inputImage );
+        FinalInterval inputImageInterval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( inputImage );
 
         long[] min = Intervals.minAsLongArray( inputImageInterval );
         long[] max = Intervals.maxAsLongArray( inputImageInterval );
@@ -97,16 +97,18 @@ public class TrainLabel {
         int numTrainingTrees = 75;
         int numClassificationTrees = 500;
         int minNumVoxels = 1000;
+        int minNumInstancesBeforeNewTraining = 5000; // to speed it up a bit
 
         ws.trainFromLabelImage(
                 "brainiac",
-                WekaSegmentation.START_NEW_INSTANCES,
+                WekaSegmentation.APPEND_TO_PREVIOUS_INSTANCES,
                 maxNumIterations,
                 zChunkSize,
                 nxyTiles,
                 localRadius,
                 maxNumInstanceSetsPerTilePlane,
                 maxNumInstances,
+                minNumInstancesBeforeNewTraining,
                 numTrainingTrees,
                 numClassificationTrees,
                 minNumVoxels,

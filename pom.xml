@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>17.1.1</version>
+		<version>19.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -144,6 +144,7 @@
 		<!--
 		<weka.version>3.9.0</weka.version>
 		-->
+
 	</properties>
 
 	<repositories>
@@ -162,7 +163,6 @@
 
 	<dependencies>
 
-
         <dependency>
             <groupId>net.imagej</groupId>
             <artifactId>imagej-legacy</artifactId>
@@ -172,6 +172,7 @@
 		<dependency>
 			<groupId>com.github.mcib3d</groupId>
 			<artifactId>mcib3d-core</artifactId>
+			<version>1204d04b31217a7d14897a4dd93cc0eafc064e01</version>
 		</dependency>
 
 		<dependency>

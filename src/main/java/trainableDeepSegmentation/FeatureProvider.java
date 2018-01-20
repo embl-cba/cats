@@ -55,8 +55,8 @@ import java.util.concurrent.*;
  */
 public class FeatureProvider
 {
-    /** original input image */
-    private ImagePlus inputImage = null;
+
+    private ImagePlus inputImage;
 
     /** the feature images */
     private Map< String, ImagePlus > featureImages = new LinkedHashMap<>();
@@ -92,6 +92,8 @@ public class FeatureProvider
     private int referenceStackIndex = -1;
 
     private Logger logger;
+    private double anisotropy;
+    private int[] binFactors;
 
     public ResultImage getResultImageFgDistBg()
     {
@@ -107,7 +109,6 @@ public class FeatureProvider
     {
         return featureSliceCache.keySet();
     }
-
 
     private ResultImage resultImageFgDistBg;
 
@@ -150,6 +151,13 @@ public class FeatureProvider
         this.inputImage = wekaSegmentation.getInputImage();
         this.resultImageFgDistBg = wekaSegmentation.getResultImageBgFg();
         this.logger = wekaSegmentation.getLogger();
+
+        anisotropy = wekaSegmentation.settings.anisotropy;
+        binFactors = wekaSegmentation.settings.binFactors;
+
+        // TODO: isn't below a job for the feature-provider?
+        featureImageBorderSizes = wekaSegmentation.getFeatureBorderSizes();
+
     }
 
     public void setActiveChannels( Set<Integer> activeChannels )
@@ -1087,10 +1095,7 @@ public class FeatureProvider
 
         for ( int channel : activeChannels )
         {
-            boolean success = computeFeatureImages(
-                    channel,
-                    numThreads,
-                    100 );
+            boolean success = computeFeatureImages( channel, numThreads, 100 );
 
             if ( ! success )
             {
@@ -1098,16 +1103,21 @@ public class FeatureProvider
             }
         }
 
-        if ( isLogging )
-        {
-            logger.info("Active features: " + getNumActiveFeatures() );
-            logger.info("Computed in [ms]: " +
-                    (System.currentTimeMillis() - start) +
-                    ", using " + numThreads + " threads");
-        }
+        logReport( numThreads, start );
 
 
         return true;
+    }
+
+    private void logReport( int numThreads, long start )
+    {
+        if ( isLogging )
+        {
+            logger.info("Anisotropy setting: " +  anisotropy );
+            logger.info("Number of active features: " + getNumActiveFeatures() );
+            logger.info("Features computed in [ms]: " + (System.currentTimeMillis() - start) +
+                    ", using " + numThreads + " threads");
+        }
     }
 
 
@@ -1119,39 +1129,32 @@ public class FeatureProvider
      * @param outOfBoundsStrategy out-of-bounds strategy to use
      * @return data cube with correct voxel values for out-of-bounds positions.
      */
-    public < T extends NumericType< T > & NativeType< T >> ImagePlus getDataCube(
-            FinalInterval interval,
-            int channel,
-            String outOfBoundsStrategy )
+    public < T extends NumericType< T > & NativeType< T >> ImagePlus getDataCube( FinalInterval interval, int channel, String outOfBoundsStrategy )
     {
         assert interval.min( T ) == interval.max( T );
+
         interval = IntervalUtils.fixDimension( interval, C, channel );
 
+        FinalInterval requestedInterval3D = getFinalIntervalForXYZ( interval );
 
-        // check whether there are oob pixels requested
-        FinalInterval interval3D = new FinalInterval(
-                new long[]{ interval.min( X ), interval.min( Y ), interval.min( Z ) },
-                new long[]{ interval.max( X ), interval.max( Y ), interval.max( Z ) } );
-        FinalInterval impInterval3D = new FinalInterval(
-                new long[]{ inputImage.getWidth(), inputImage.getHeight(), inputImage.getNSlices() } );
-        FinalInterval intersect3D = Intervals.intersect( impInterval3D, interval3D );
+        FinalInterval existingInterval3D = new FinalInterval( new long[]{ inputImage.getWidth(), inputImage.getHeight(), inputImage.getNSlices() } );
 
-        if ( Intervals.equals( intersect3D, interval3D ) )
+        FinalInterval intersect3D = Intervals.intersect( existingInterval3D, requestedInterval3D );
+
+        if ( Intervals.equals( intersect3D, requestedInterval3D ) )
         {
-            // everything is within bounds
-            if ( channel == FG_DIST_BG_IMAGE )
-            {
-                return ( resultImageFgDistBg.getDataCubeCopy(interval) );
-            }
-            else
-            {
-                return de.embl.cba.bigDataTools.utils.Utils.getDataCube( inputImage,
-                        IntervalUtils.convertIntervalToRegion5D( interval ),
-                        new int[]{ -1, -1 }, 1 );
-            }
+            return createWithinBoundsDataCube( interval, channel );
+        }
+        else
+        {
+            return createDataCubeIncludingOutOfBoundsPixels( interval, channel, requestedInterval3D, intersect3D );
+
         }
 
+    }
 
+    private < T extends NumericType< T > & NativeType< T > > ImagePlus createDataCubeIncludingOutOfBoundsPixels( FinalInterval interval, int channel, FinalInterval requestedInterval3D, FinalInterval intersect3D )
+    {
         // there are out of bounds pixels
         // read data cube within bounds
 
@@ -1189,7 +1192,7 @@ public class FeatureProvider
 
         // create an infinite view where all values outside of the Interval are
         // the mirrored content, the mirror is the last pixel
-        RandomAccessible< T > infinite = Views.extendMirrorSingle( image );
+        RandomAccessible< T > randomAccessible = Views.extendMirrorSingle( image );
 
         // in order to visualize them, we have to define a new interval
         // on them which can be displayed
@@ -1199,23 +1202,63 @@ public class FeatureProvider
 
         for ( int d = 0; d < image.numDimensions(); ++d )
         {
-            min[d] = interval3D.min(d) - intersect3D.min(d);
-            max[d] = min[d] + interval3D.dimension(d);
+            min[d] = requestedInterval3D.min(d) - intersect3D.min(d);
+            max[d] = min[d] + requestedInterval3D.dimension(d);
         }
 
-        // define the Interval on the infinite random accessible
-        FinalInterval interval2 = new FinalInterval( min, max );
-        ImagePlus impWithMirror = ImageJFunctions.wrap( Views.interval( infinite, interval2 ), "" );
-        impWithMirror.setDimensions(1, (int) interval2.dimension(2), 1 );
+        ImagePlus imagePlusIncludingOutOfBoundsRegions = createImagePlus( randomAccessible, min, max );
 
-        //impWithMirror.show();
+        ImagePlus inRAM = imagePlusIncludingOutOfBoundsRegions.duplicate();  // force into RAM, because it seems too slow otherwise
 
-        // force into RAM, because seems too slow otherwise
-        ImagePlus impWithMirrorDuplicate = impWithMirror.duplicate();
-
-        return ( impWithMirrorDuplicate );
+        return inRAM;
     }
 
+    private < T extends NumericType< T > & NativeType< T > > ImagePlus createImagePlus( RandomAccessible< T > infinite, long[] min, long[] max )
+    {
+        FinalInterval intervalIncludingOutOfBoundsRegions = new FinalInterval( min, max );
+        ImagePlus imagePlusIncludingOutOfBoundsRegions = ImageJFunctions.wrap( Views.interval( infinite, intervalIncludingOutOfBoundsRegions ), "" );
+        setImagePlusDimensions( intervalIncludingOutOfBoundsRegions, imagePlusIncludingOutOfBoundsRegions );
+        return imagePlusIncludingOutOfBoundsRegions;
+    }
+
+    private void setImagePlusDimensions( FinalInterval intervalIncludingOutOfBoundsPixels, ImagePlus impWithMirror )
+    {
+        int numSlicesIncludingOutOfBoundsSlices = 0;
+
+        if ( intervalIncludingOutOfBoundsPixels.numDimensions() == 3 )
+        {
+            numSlicesIncludingOutOfBoundsSlices = (int) intervalIncludingOutOfBoundsPixels.dimension(2);
+        }
+        else if ( intervalIncludingOutOfBoundsPixels.numDimensions() == 2 )
+        {
+            numSlicesIncludingOutOfBoundsSlices = 1;
+        }
+
+
+        impWithMirror.setDimensions(1, numSlicesIncludingOutOfBoundsSlices, 1 );
+    }
+
+    private ImagePlus createWithinBoundsDataCube( FinalInterval interval, int channel )
+    {
+        // everything is within bounds
+        if ( channel == FG_DIST_BG_IMAGE )
+        {
+            return ( resultImageFgDistBg.getDataCubeCopy(interval) );
+        }
+        else
+        {
+            return de.embl.cba.bigDataTools.utils.Utils.getDataCube( inputImage,
+                    IntervalUtils.convertIntervalToRegion5D( interval ),
+                    new int[]{ -1, -1 }, 1 );
+        }
+    }
+
+    private FinalInterval getFinalIntervalForXYZ( FinalInterval interval )
+    {
+        return new FinalInterval(
+                    new long[]{ interval.min( X ), interval.min( Y ), interval.min( Z ) },
+                    new long[]{ interval.max( X ), interval.max( Y ), interval.max( Z ) } );
+    }
 
 
     public static int getNumLevels( int[] binFactors )
@@ -1236,309 +1279,39 @@ public class FeatureProvider
      *
      * @return true if the features are correctly updated
      */
-    public boolean computeFeatureImages(
-            int channel,
-            int numThreads,
-            int maximumMultithreadedLevel )
+    public boolean computeFeatureImages( int channel, int numThreads, int maximumMultithreadedLevel )
     {
-        long start = System.currentTimeMillis();
+        int numLayers = getNumLevels( binFactors );
 
-        // TODO: isn't below a job for the feature-provider?
-        featureImageBorderSizes = wekaSegmentation.getFeatureBorderSizes();
+        double adaptiveAnisotropy = anisotropy;
 
-        double anisotropy = wekaSegmentation.settings.anisotropy;
-        int[] binFactors = wekaSegmentation.settings.binFactors;
-        int numLevels = getNumLevels( binFactors );
+        ImagePlus processedOriginalImage = getProcessedOriginalImage( channel );
 
-        // getInstancesAndMetadata the larger part of original image that is
-        // needed to compute features for requested interval.
-        FinalInterval expandedInterval = addBordersXYZ( interval,
-                featureImageBorderSizes );
+        setCalibration( processedOriginalImage );
 
-        ImagePlus inputImageCrop = getDataCube( expandedInterval,
-                channel, "mirror" );
-
-        // pre-processing
-        if ( wekaSegmentation.settings.log2 && channel != FG_DIST_BG_IMAGE )
-        {
-            // subtract background
-            IJ.run( inputImageCrop, "Subtract...", "value="
-                    + wekaSegmentation.settings.imageBackground + " stack" );
-            // make sure there are no zeros, because the log will give -Infinity
-            IJ.run( inputImageCrop, "Add...", "value=1 stack" );
-
-            // log transformation to go to multiplicative math
-            IJ.run( inputImageCrop, "32-bit", "" );
-            IJ.run( inputImageCrop, "Log", "stack" );
-        }
-
-        inputImageCrop.setTitle( "Orig_ch" + channel );
-
-        // Set a calibration that can be changed during the binning
-        Calibration calibration = new Calibration();
-        calibration.pixelDepth = 1;
-        calibration.pixelWidth = 1;
-        calibration.pixelHeight = 1;
-        calibration.setUnit("um");
-        inputImageCrop.setCalibration( calibration );
-
-        // ResolutionLevelList of ImageList
         ArrayList < ArrayList < ImagePlus > > multiResolutionFeatureImages = new ArrayList<>();
 
         try
         {
 
-            //
-            // BINNING
-            //
-
-            for ( int level = 0; level < numLevels; ++level )
+            for ( int resolutionLayer = 0; resolutionLayer < numLayers; ++resolutionLayer )
             {
 
-                start = System.currentTimeMillis();
+                if ( wekaSegmentation.stopCurrentTasks || Thread.currentThread().isInterrupted() ) return ( false );
 
-                if ( wekaSegmentation.stopCurrentTasks || Thread.currentThread().isInterrupted() )
-                {
-                    return ( false );
-                }
+                long start = System.currentTimeMillis();
 
                 final ArrayList<ImagePlus> featureImagesThisResolution = new ArrayList<>();
-                final ArrayList<ImagePlus> featureImagesPreviousResolution;
 
-                if ( level == 0 )
-                {
-                    featureImagesPreviousResolution = new ArrayList<>(  );
-                    featureImagesPreviousResolution.add( inputImageCrop );
-                }
-                else
-                {
-                    featureImagesPreviousResolution = multiResolutionFeatureImages.get( level - 1 );
-                }
+                adaptiveAnisotropy = setInputImagesForCurrentResolutionLayer( numThreads, numLayers, adaptiveAnisotropy, processedOriginalImage, multiResolutionFeatureImages, resolutionLayer, featureImagesThisResolution );
 
-                int[] binning = getBinning(
-                        featureImagesPreviousResolution.get(0),
-                        anisotropy,
-                        binFactors[ level ] );
+                computeAndAddFeatureImagesForCurrentResolutionLayer( numThreads, maximumMultithreadedLevel, adaptiveAnisotropy, multiResolutionFeatureImages, resolutionLayer, featureImagesThisResolution );
 
-                // add binning information to image title
-                String binningTitle = "Bin" +
-                        binning[0] + "x" +
-                        binning[1] + "x" +
-                        binning[2];
-
-                // adapt settingAnisotropy, which could have changed during
-                // the (anisotropic) binning
-                anisotropy /= 1.0 * binning[0] / binning[2];
-
-                ExecutorService exe = Executors.newFixedThreadPool( numThreads );
-                ArrayList<Future<ImagePlus>> futuresBinning = new ArrayList<>();
-
-                for (ImagePlus featureImage : featureImagesPreviousResolution)
-                {
-                    if ( level == numLevels - 1 )
-                    {
-                        /*
-                        don't bin but smooth last level to better preserve
-                        spatial information.
-                        */
-
-                        // TODO:
-                        // - check again for boundary effects!
-
-                        // TODO:
-                        // - don't compute this feature if not needed
-
-                        // TODO:
-                        // - maybe change below to gaussian smoothing for better
-                        // derivative computation further down
-
-                        /*
-                         currently, below an average filter is computed.
-                         for computing image derivatives this might not be ideal
-                         because the difference of two shifted means only
-                         reflects difference between the two pixels at the edge
-                         of the mean filter, which could be quite noisy.
-                         on the other hand, the hessian and structure themselves
-                         gaussian-smooth a bit before computing the derivatives
-                         such that it actually might be ok.
-                         */
-
-                        int[] radii = new int[ 3 ];
-                        for( int i = 0; i < 3; ++i )
-                        {
-                            radii[i] = (int) Math.ceil ( ( binning[i] - 1 ) / 2.0 );
-                        }
-
-                        futuresBinning.add( exe.submit(
-                                filter3d( featureImage, radii ) ) );
-                    }
-                    else
-                    {
-
-                        if ( isFeatureOrChildrenNeeded(
-                                binningTitle + "_" +
-                                        featureImage.getTitle()) )
-                        {
-
-                            futuresBinning.add( exe.submit(
-                                    bin( featureImage, binning,
-                                            binningTitle, "AVERAGE")
-                                    )
-                            );
-
-                        }
-                    }
-                }
-
-                for ( Future<ImagePlus> f : futuresBinning )
-                {
-                    // getInstancesAndMetadata feature images
-                    featureImagesThisResolution.add( f.get() );
-                }
-                futuresBinning = null;
-                exe.shutdown();
-                System.gc();
-
-
-                Calibration calibrationThisResolution =
-                        featureImagesThisResolution.get(0).getCalibration().copy();
-
-                //
-                // Compute features
-                //
-
-                double smoothingScale = 1.0;
-                double integrationScale = smoothingScale;
-
-                boolean hessianAbsoluteValues = false;
-
-                // Multi-threaded
-                exe = Executors.newFixedThreadPool( numThreads );
-                ArrayList<Future<ArrayList<ImagePlus>>> futuresFeatures = new ArrayList<>();
-
-                // Single threaded
-                ArrayList<ArrayList<ImagePlus>> featureImagesList = new ArrayList<>();
-
-                // Generate a calibration
-                // to account for current anisotropy
-                Calibration calibrationFeatureComp = new Calibration();
-                calibrationFeatureComp.pixelWidth = 1.0;
-                calibrationFeatureComp.pixelHeight = 1.0;
-                calibrationFeatureComp.pixelDepth = 1.0 * anisotropy;
-                calibrationFeatureComp.setUnit("micrometer");
-
-                for ( ImagePlus featureImage : featureImagesThisResolution )
-                {
-
-                    // temporarily change calibration while computing
-                    // hessian and structure
-                    // in order to account for the settingAnisotropy in xz vs z
-                    featureImage.setCalibration( calibrationFeatureComp );
-
-                    /*
-                     The next if statement serves to only compute
-                     features of features up to a certain level; the
-                     reason for this is to keep the number of features
-                     at bay.
-                    */
-                    if ( ! featureImage.getTitle().contains(
-                            CONV_DEPTH + wekaSegmentation.settings.maxDeepConvLevel ) )
-                    {
-                        if (level <= maximumMultithreadedLevel) // multi-threaded
-                        {
-                            if ( isFeatureOrChildrenNeeded( "He_" + featureImage.getTitle()) )
-                                futuresFeatures.add( exe.submit( getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
-
-                            if ( isFeatureOrChildrenNeeded( "St_" + featureImage.getTitle()) )
-                                futuresFeatures.add( exe.submit( getStructure(featureImage, smoothingScale, integrationScale)));
-                        }
-                        else // single-threaded
-                        {
-                            if ( isFeatureOrChildrenNeeded( "He_" + featureImage.getTitle()) )
-                                featureImagesList.add( getHessian(featureImage, smoothingScale, hessianAbsoluteValues).call());
-
-                            if ( isFeatureOrChildrenNeeded( "St_" + featureImage.getTitle()) )
-                                featureImagesList.add( getStructure(featureImage, smoothingScale, integrationScale).call());
-                        }
-                    }
-
-
-                }
-
-                if ( level <= maximumMultithreadedLevel ) // multi-threaded
-                {
-                    for (Future<ArrayList<ImagePlus>> f : futuresFeatures)
-                    {
-                        // getInstancesAndMetadata feature images
-                        featureImagesList.add( f.get() );
-                        wekaSegmentation.totalThreadsExecuted.addAndGet(1);
-                    }
-                }
-                futuresFeatures = null;
-                exe.shutdown();
-                System.gc();
-
-
-                for (ArrayList<ImagePlus> featureImages : featureImagesList )
-                {
-                    for ( ImagePlus featureImage : featureImages )
-                    {
-                        // add feature images to this resolution layer
-                        putDeepConvFeatLevelIntoTitle( featureImage );
-                        featureImagesThisResolution.add( featureImage );
-                    }
-                }
-
-                // (re-)set calibrations of all images at this resolution
-                for (ImagePlus featureImage : featureImagesThisResolution)
-                {
-                    featureImage.setCalibration( calibrationThisResolution.copy() );
-                }
-
-                // and add everything to the multi-resolution array
-                multiResolutionFeatureImages.add( featureImagesThisResolution );
-
-                if ( isLogging )
-                {
-                    logger.info("Image features at level " + level +
-                            " computed in [ms]: " +
-                            (System.currentTimeMillis() - start)
-                            + ", using " + numThreads + " threads." );
-                }
-
+                logProgress( numThreads, start, resolutionLayer );
 
             }
 
-            // put feature images into simple array for easier access
-           // int numFeatures;
-            //for ( ArrayList<ImagePlus> singleResolutionFeatureImages2 : multiResolutionFeatureImages )
-             //   numFeatures += singleResolutionFeatureImages2.size();
-
-
-            //int iFeature = 0;
-            for ( ArrayList<ImagePlus> featureImages : multiResolutionFeatureImages )
-            {
-                for ( ImagePlus featureImage : featureImages )
-                {
-                    /*
-                    if (  showFeatureImages && ( featuresToShow != null ) )
-                    {
-                        if ( featuresToShow.contains( iFeature ) )
-                        {
-                            //ImagePlus imp = interpolateFast(featureImage);
-                            //imp.show();
-                            featureImage.show();
-                        }
-                    }*/
-
-                    if ( isFeatureNeeded( featureImage.getTitle() ) )
-                    {
-                        this.featureImages.put(  featureImage.getTitle(), featureImage );
-                    }
-                }
-            }
-
-
+            putIntoFeatureImagesMap( multiResolutionFeatureImages );
 
         }
         catch (InterruptedException ie)
@@ -1554,6 +1327,273 @@ public class FeatureProvider
         }
 
         return true;
+    }
+
+    private void logProgress( int numThreads, long start, int level )
+    {
+        if ( isLogging )
+        {
+            logger.info("Image features at level " + level + " computed in [ms]: " + (System.currentTimeMillis() - start) + ", using " + numThreads + " threads." );
+        }
+    }
+
+    private void computeAndAddFeatureImagesForCurrentResolutionLayer( int numThreads, int maximumMultithreadedLevel, double adaptiveAnisotropy, ArrayList< ArrayList< ImagePlus > > multiResolutionFeatureImages, int level, ArrayList< ImagePlus > featureImagesThisResolution ) throws Exception
+    {
+        //
+        // Compute features
+        //
+        ExecutorService exe;
+
+        double smoothingScale = 1.0;
+        double integrationScale = smoothingScale;
+        boolean hessianAbsoluteValues = false;
+
+        // Multi-threaded
+        exe = Executors.newFixedThreadPool( numThreads );
+        ArrayList<Future<ArrayList<ImagePlus>> > featureFutures = new ArrayList<>();
+
+        // Single threaded
+        ArrayList<ArrayList<ImagePlus>> featureImagesList = new ArrayList<>();
+
+        // Generate a calibration
+        // to account for current anisotropy
+        Calibration calibrationThisResolution = featureImagesThisResolution.get(0).getCalibration().copy();
+
+        Calibration calibrationFeatureComp = new Calibration();
+        calibrationFeatureComp.pixelWidth = 1.0;
+        calibrationFeatureComp.pixelHeight = 1.0;
+        calibrationFeatureComp.pixelDepth = 1.0 * adaptiveAnisotropy;
+        calibrationFeatureComp.setUnit("micrometer");
+
+        for ( ImagePlus featureImage : featureImagesThisResolution )
+        {
+
+            // temporarily change calibration while computing
+            // hessian and structure
+            // in order to account for the settingAnisotropy in xz vs z
+            featureImage.setCalibration( calibrationFeatureComp );
+
+            /*
+             The next if statement serves to only compute
+             features of features up to a certain level; the
+             reason for this is to keep the number of features
+             at bay.
+            */
+            if ( ! featureImage.getTitle().contains( CONV_DEPTH + wekaSegmentation.settings.maxDeepConvLevel ) )
+            {
+                if (level <= maximumMultithreadedLevel) // multi-threaded
+                {
+                    if ( isFeatureOrChildrenNeeded( "He_" + featureImage.getTitle()) )
+                        featureFutures.add( exe.submit( getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
+
+                    if ( isFeatureOrChildrenNeeded( "St_" + featureImage.getTitle()) )
+                        featureFutures.add( exe.submit( getStructure(featureImage, smoothingScale, integrationScale)));
+                }
+                else // single-threaded
+                {
+                    if ( isFeatureOrChildrenNeeded( "He_" + featureImage.getTitle()) )
+                        featureImagesList.add( getHessian(featureImage, smoothingScale, hessianAbsoluteValues).call());
+
+                    if ( isFeatureOrChildrenNeeded( "St_" + featureImage.getTitle()) )
+                        featureImagesList.add( getStructure(featureImage, smoothingScale, integrationScale).call());
+                }
+            }
+
+
+        }
+
+        collectFeatureImages( maximumMultithreadedLevel, level, exe, featureFutures, featureImagesList );
+
+        addFeatureImagesToMultiResolutionFeatureImageList( multiResolutionFeatureImages, featureImagesThisResolution, calibrationThisResolution, featureImagesList );
+
+    }
+
+    private double setInputImagesForCurrentResolutionLayer( int numThreads, int numLevels, double adaptiveAnisotropy, ImagePlus inputImage, ArrayList< ArrayList< ImagePlus > > multiResolutionFeatureImages, int level, ArrayList< ImagePlus > featureImagesThisResolution ) throws InterruptedException, ExecutionException
+    {
+        final ArrayList<ImagePlus> featureImagesPreviousResolution;
+
+        if ( level == 0 )
+        {
+            featureImagesPreviousResolution = new ArrayList<>(  );
+            featureImagesPreviousResolution.add( inputImage );
+        }
+        else
+        {
+            featureImagesPreviousResolution = multiResolutionFeatureImages.get( level - 1 );
+        }
+
+        int[] binning = getBinning(
+                featureImagesPreviousResolution.get(0),
+                adaptiveAnisotropy,
+                binFactors[ level ] );
+
+        // add binning information to image title
+        String binningTitle = "Bin" + binning[0] + "x" + binning[1] + "x" + binning[2];
+
+        // adapt settingAnisotropy, which could have changed during
+        // the (anisotropic) binning
+        adaptiveAnisotropy /= 1.0 * binning[0] / binning[2];
+
+        ExecutorService exe = Executors.newFixedThreadPool( numThreads );
+        ArrayList<Future<ImagePlus> > futuresBinning = new ArrayList<>();
+
+        for ( ImagePlus featureImage : featureImagesPreviousResolution )
+        {
+            if ( level == numLevels - 1 )
+            {
+                /*
+                don't bin but smooth last level to better preserve
+                spatial information.
+                */
+
+                // TODO:
+                // - check again for boundary effects!
+
+                // TODO:
+                // - don't compute this feature if not needed
+
+                // TODO:
+                // - maybe change below to gaussian smoothing for better
+                // derivative computation further down
+
+                /*
+                 currently, below an average filter is computed.
+                 for computing image derivatives this might not be ideal
+                 because the difference of two shifted means only
+                 reflects difference between the two pixels at the edge
+                 of the mean filter, which could be quite noisy.
+                 on the other hand, the hessian and structure themselves
+                 gaussian-smooth a bit before computing the derivatives
+                 such that it actually might be ok.
+                 */
+
+                int[] radii = new int[ 3 ];
+                for( int i = 0; i < 3; ++i )
+                {
+                    radii[i] = (int) Math.ceil ( ( binning[i] - 1 ) / 2.0 );
+                }
+
+                futuresBinning.add( exe.submit(
+                        filter3d( featureImage, radii ) ) );
+            }
+            else
+            {
+
+                if ( isFeatureOrChildrenNeeded( binningTitle + "_" + featureImage.getTitle()) )
+                {
+
+                    futuresBinning.add( exe.submit( bin( featureImage, binning, binningTitle, "AVERAGE") ) );
+
+                }
+            }
+        }
+
+        for ( Future<ImagePlus> f : futuresBinning )
+        {
+            // getInstancesAndMetadata feature images
+            featureImagesThisResolution.add( f.get() );
+        }
+        futuresBinning = null;
+        exe.shutdown();
+        System.gc();
+        return adaptiveAnisotropy;
+    }
+
+    private void collectFeatureImages( int maximumMultithreadedLevel, int level, ExecutorService exe, ArrayList< Future< ArrayList< ImagePlus > > > futuresFeatures, ArrayList< ArrayList< ImagePlus > > featureImagesList ) throws InterruptedException, ExecutionException
+    {
+        if ( level <= maximumMultithreadedLevel )
+        {
+            for (Future<ArrayList<ImagePlus>> f : futuresFeatures)
+            {
+                featureImagesList.add( f.get() );
+            }
+        }
+        futuresFeatures = null;
+        exe.shutdown();
+        System.gc();
+    }
+
+    private void addFeatureImagesToMultiResolutionFeatureImageList( ArrayList< ArrayList< ImagePlus > > multiResolutionFeatureImages, ArrayList< ImagePlus > featureImagesThisResolution, Calibration calibrationThisResolution, ArrayList< ArrayList< ImagePlus > > featureImagesList )
+    {
+        for (ArrayList<ImagePlus> featureImages : featureImagesList )
+        {
+            for ( ImagePlus featureImage : featureImages )
+            {
+                // add feature images to this resolution layer
+                putDeepConvFeatLevelIntoTitle( featureImage );
+                featureImagesThisResolution.add( featureImage );
+            }
+        }
+
+        // (re-)set calibrations of all images at this resolution
+        for (ImagePlus featureImage : featureImagesThisResolution)
+        {
+            featureImage.setCalibration( calibrationThisResolution.copy() );
+        }
+
+        // and add everything to the multi-resolution array
+        multiResolutionFeatureImages.add( featureImagesThisResolution );
+
+
+    }
+
+    private void putIntoFeatureImagesMap( ArrayList< ArrayList< ImagePlus > > multiResolutionFeatureImages )
+    {
+        for ( ArrayList<ImagePlus> featureImages : multiResolutionFeatureImages )
+        {
+            for ( ImagePlus featureImage : featureImages )
+            {
+                /*
+                if (  showFeatureImages && ( featuresToShow != null ) )
+                {
+                    if ( featuresToShow.contains( iFeature ) )
+                    {
+                        //ImagePlus imp = interpolateFast(featureImage);
+                        //imp.show();
+                        featureImage.show();
+                    }
+                }*/
+
+                if ( isFeatureNeeded( featureImage.getTitle() ) )
+                {
+                    this.featureImages.put(  featureImage.getTitle(), featureImage );
+                }
+            }
+        }
+    }
+
+    private void setCalibration( ImagePlus inputImage )
+    {
+        // Set a calibration that can be changed during the binning
+        Calibration calibration = new Calibration();
+        calibration.pixelDepth = 1;
+        calibration.pixelWidth = 1;
+        calibration.pixelHeight = 1;
+        calibration.setUnit("um");
+        inputImage.setCalibration( calibration );
+    }
+
+    private ImagePlus getProcessedOriginalImage( int channel )
+    {
+        FinalInterval expandedInterval = addBordersXYZ( interval, featureImageBorderSizes );
+        ImagePlus inputImage = getDataCube( expandedInterval, channel, "mirror" );
+
+        // pre-processing
+        if ( wekaSegmentation.settings.log2 && channel != FG_DIST_BG_IMAGE )
+        {
+            // subtract background
+            IJ.run( inputImage, "Subtract...", "value="
+                    + wekaSegmentation.settings.imageBackground + " stack" );
+            // make sure there are no zeros, because the log will give -Infinity
+            IJ.run( inputImage, "Add...", "value=1 stack" );
+
+            // log transformation to go to multiplicative math
+            IJ.run( inputImage, "32-bit", "" );
+            IJ.run( inputImage, "Log", "stack" );
+        }
+
+        inputImage.setTitle( "Orig_ch" + channel );
+        return inputImage;
     }
 
     private void putDeepConvFeatLevelIntoTitle(ImagePlus imp)

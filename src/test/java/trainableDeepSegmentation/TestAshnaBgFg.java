@@ -72,7 +72,7 @@ public class TestAshnaBgFg {
             /*
             ws.recomputeLabelInstances = true;
             ws.settings.log2 = true;
-            ws.putUpdatedExampleInstances( "updated" );
+            ws.updateExamplesInstancesAndMetadata( "updated" );
             ws.saveInstances( "updated",
                     "/Users/tischi/Documents/ashna/instances/",
                     "bin_1_2_3_4--log2--001.ARFF");

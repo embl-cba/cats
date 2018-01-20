@@ -1,6 +1,6 @@
 package trainableDeepSegmentation.classification;
 
-import hr.irb.fastRandomForest.FastRandomForest;
+import tischi.hr.irb.fastRandomForest.FastRandomForest;
 import trainableDeepSegmentation.WekaSegmentation;
 import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import weka.classifiers.Classifier;

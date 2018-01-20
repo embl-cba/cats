@@ -1,6 +1,6 @@
 package trainableDeepSegmentation.classification;
 
-import hr.irb.fastRandomForest.FastRandomForest;
+import tischi.hr.irb.fastRandomForest.FastRandomForest;
 import trainableDeepSegmentation.WekaSegmentation;
 import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import weka.core.Attribute;
@@ -26,8 +26,7 @@ public class ClassifierUtils {
         int numDecisionNodes = classifier.getDecisionNodes();
 
 
-        NamesAndUsages[] namesAndUsages = getAttributesSortedByUsage(
-                classifier, instances );
+        NamesAndUsages[] namesAndUsages = getAttributesSortedByUsage( classifier, instances );
 
         double avgRfTreeSize = 1.0 * numDecisionNodes / classifier.getNumTrees();
 

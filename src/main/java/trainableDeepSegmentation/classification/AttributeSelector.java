@@ -1,12 +1,10 @@
 package trainableDeepSegmentation.classification;
 
 import de.embl.cba.bigDataTools.logging.Logger;
-import hr.irb.fastRandomForest.FastRandomForest;
-import trainableDeepSegmentation.Feature;
+import tischi.hr.irb.fastRandomForest.FastRandomForest;
 import weka.core.Instances;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 
 import static trainableDeepSegmentation.classification.ClassifierUtils.getAttributesSortedByUsage;
 

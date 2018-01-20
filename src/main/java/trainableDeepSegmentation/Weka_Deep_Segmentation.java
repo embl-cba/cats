@@ -2165,13 +2165,13 @@ public class Weka_Deep_Segmentation implements PlugIn
 			public void run()
 			{
 
-				String key = wekaSegmentation.putUpdatedExampleInstances( null );
+				String instancesAndMetadataKey = wekaSegmentation.updateExamplesInstancesAndMetadata();
+
 				updateComboBoxes();
 
-				wekaSegmentation.trainClassifierWithFeatureSelection(
-						wekaSegmentation.
-								getInstancesManager().
-								getInstancesAndMetadata( key ) );
+				InstancesAndMetadata updatedInstancesAndMetadata = wekaSegmentation.getInstancesManager().getInstancesAndMetadata( instancesAndMetadataKey );
+
+				wekaSegmentation.trainClassifierWithFeatureSelection( updatedInstancesAndMetadata );
 
 				win.setButtonsEnabled( true );
 
@@ -2226,7 +2226,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 			public void run()
 			{
 
-				wekaSegmentation.putUpdatedExampleInstances( null );
+				wekaSegmentation.updateExamplesInstancesAndMetadata( null );
 				updateComboBoxes();
 				win.setButtonsEnabled( true );
 
@@ -2351,6 +2351,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 							localRadius,
 							numInstanceSetsPerTilePlaneClass,
 							maxNumInstances,
+							100, // TODO
 							100, // TODO
 							100,
 							100, // TODO
@@ -2582,86 +2583,88 @@ public class Weka_Deep_Segmentation implements PlugIn
 
 		if ( rangeString.equals( WekaSegmentation.WHOLE_DATA_SET) )
 		{
-			return ( IntervalUtils.getInterval(
-					wekaSegmentation.getInputImage() ));
+			return ( IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( wekaSegmentation.getInputImage() ) );
 		}
 		else
 		{
-			Roi roi = displayImage.getRoi();
-
-			if ( roi == null ||
-					!( roi.getType() == Roi.RECTANGLE || roi.getType() == Roi.FREELINE) )
-			{
-				IJ.showMessage( "Please use ImageJ's rectangle or freeline selection tool " +
-						"to select a region." );
-				return ( null );
-			}
-
-			Rectangle rectangle = roi.getBounds();
-
-			long[] min = new long[ 5 ];
-			long[] max = new long[ 5 ];
-
-			min[ X ] = ( int ) rectangle.getX();
-			max[ X ] = min[ 0 ] + ( int ) rectangle.getWidth() - 1;
-
-			min[ Y ] = ( int ) rectangle.getY();
-			max[ Y ] = min[ 1 ] + ( int ) rectangle.getHeight() - 1;
-
-			min[ Z ] = max[ Z ] = displayImage.getZ() - 1;
-
-			if ( rangeString.equals( SELECTION_PM10Z ))
-			{
-				min[ Z ] = displayImage.getZ() - 1 - 10;
-				max[ Z ] = displayImage.getZ() - 1 + 10;
-			}
-
-			min[ T ] = max[ T ] = displayImage.getT() - 1;
-			min[ C ] = max[ C ] = displayImage.getC() - 1;
-
-			// potentially adapt z and t range to user selection
-
-			try
-			{
-				int[] range = de.embl.cba.bigDataTools.utils.Utils.delimitedStringToIntegerArray( rangeString, "," );
-
-				if ( trainingImage.getNFrames() == 1 )
-				{
-					min[ Z ] = range[ 0 ] - 1;
-					max[ Z ] = range[ 1 ] - 1;
-				}
-				else if ( trainingImage.getNSlices() == 1 )
-				{
-					min[ T ] = range[ 0 ] - 1;
-					max[ T ] = range[ 1 ] - 1;
-				}
-				else
-				{
-					min[ Z ] = range[ 0 ] - 1;
-					max[ Z ] = range[ 1 ] - 1;
-
-					if ( range.length == 4 )
-					{
-						min[ T ] = range[ 2 ] - 1;
-						max[ T ] = range[ 3 ] - 1;
-					}
-				}
-				logger.info( "Using selected z and t range: " );
-				logger.info( "..." );
-				// TODO: make function to print range
-			} catch ( NumberFormatException e )
-			{
-				logger.info( "No (or invalid) z and t range selected." );
-			}
-
-			FinalInterval interval = new FinalInterval( min, max );
-
-			return ( interval );
+			return ( getIntervalFromRoi( rangeString ) );
 		}
 
 	}
 
-	private boolean projectIOFlag = false;
+    private FinalInterval getIntervalFromRoi( String rangeString )
+    {
+        Roi roi = displayImage.getRoi();
+
+        if ( roi == null || !( roi.getType() == Roi.RECTANGLE || roi.getType() == Roi.FREELINE) )
+        {
+            IJ.showMessage( "Please use ImageJ's rectangle or freeline selection tool " +
+                    "to select a region." );
+            return null;
+        }
+
+        Rectangle rectangle = roi.getBounds();
+
+        long[] min = new long[ 5 ];
+        long[] max = new long[ 5 ];
+
+        min[ X ] = ( int ) rectangle.getX();
+        max[ X ] = min[ 0 ] + ( int ) rectangle.getWidth() - 1;
+
+        min[ Y ] = ( int ) rectangle.getY();
+        max[ Y ] = min[ 1 ] + ( int ) rectangle.getHeight() - 1;
+
+        min[ Z ] = max[ Z ] = displayImage.getZ() - 1;
+
+        if ( rangeString.equals( SELECTION_PM10Z ))
+        {
+            min[ Z ] = displayImage.getZ() - 1 - 10;
+            max[ Z ] = displayImage.getZ() - 1 + 10;
+        }
+
+        min[ T ] = max[ T ] = displayImage.getT() - 1;
+        min[ C ] = max[ C ] = displayImage.getC() - 1;
+
+        // potentially adapt z and t range to user selection
+
+        try
+        {
+            int[] range = de.embl.cba.bigDataTools.utils.Utils.delimitedStringToIntegerArray( rangeString, "," );
+
+            if ( trainingImage.getNFrames() == 1 )
+            {
+                min[ Z ] = range[ 0 ] - 1;
+                max[ Z ] = range[ 1 ] - 1;
+            }
+            else if ( trainingImage.getNSlices() == 1 )
+            {
+                min[ T ] = range[ 0 ] - 1;
+                max[ T ] = range[ 1 ] - 1;
+            }
+            else
+            {
+                min[ Z ] = range[ 0 ] - 1;
+                max[ Z ] = range[ 1 ] - 1;
+
+                if ( range.length == 4 )
+                {
+                    min[ T ] = range[ 2 ] - 1;
+                    max[ T ] = range[ 3 ] - 1;
+                }
+            }
+            logger.info( "Using selected z and t range: " );
+            logger.info( "..." );
+            // TODO: make function to print range
+        } catch ( NumberFormatException e )
+        {
+            logger.info( "No (or invalid) z and t range selected." );
+        }
+
+        FinalInterval interval = new FinalInterval( min, max );
+        return interval;
+    }
+
+    private boolean projectIOFlag = false;
 
 	/**
 	 * Save current project into a file
@@ -3035,18 +3038,16 @@ public class Weka_Deep_Segmentation implements PlugIn
 		gd.addStringField("Batch size per tree in percent",
 				wekaSegmentation.classifierBatchSizePercent);
 
-		gd.addChoice("Feature selection: method",
-				new String[]
+		gd.addChoice("Feature selection method", new String[]
 						{
 								WekaSegmentation.FEATURE_SELECTION_RELATIVE_USAGE,
 								WekaSegmentation.FEATURE_SELECTION_ABSOLUTE_USAGE,
 								WekaSegmentation.FEATURE_SELECTION_TOTAL_NUMBER,
 								WekaSegmentation.FEATURE_SELECTION_NONE,
 						},
-				WekaSegmentation.FEATURE_SELECTION_RELATIVE_USAGE);
+						WekaSegmentation.FEATURE_SELECTION_RELATIVE_USAGE);
 
-		gd.addNumericField("Feature selection: value",
-				wekaSegmentation.featureSelectionValue, 1);
+		gd.addNumericField("Feature selection value", wekaSegmentation.featureSelectionValue, 1);
 
 		gd.showDialog();
 

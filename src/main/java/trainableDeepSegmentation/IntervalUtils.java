@@ -238,6 +238,20 @@ public abstract class IntervalUtils {
         return new FinalInterval( min, max );
     }
 
+    public static FinalInterval getIntervalWithChannelsDimensionAsSingleton( ImagePlus imp )
+    {
+        long[] min = new long[5];
+        long[] max = new long[5];
+
+        max[ X ] = imp.getWidth() - 1;
+        max[ Y ] = imp.getHeight() - 1;
+        max[ Z ] = imp.getNSlices() - 1;
+        min[ C ] = max[ C ] = 0; // Singleton, because classification result currently can only have one channel
+        max[ T ] = imp.getNFrames() - 1;
+
+        return new FinalInterval( min, max );
+    }
+
     public static FinalInterval getEmptyInterval( )
     {
         long[] min = new long[5];

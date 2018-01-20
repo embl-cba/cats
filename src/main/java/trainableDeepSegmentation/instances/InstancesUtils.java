@@ -38,7 +38,7 @@ public class InstancesUtils {
      *
      * @return set of instancesMap (feature vectors in Weka format)
      */
-    public static InstancesAndMetadata getInstancesAndMetadataFromLabels(
+    public static InstancesAndMetadata createInstancesAndMetadataFromExamples(
             ArrayList< Example > examples,
             String instancesName,
             Settings settings,

@@ -28,7 +28,7 @@ import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
 import javafx.geometry.Point3D;
 
-import hr.irb.fastRandomForest.FastRandomForest;
+import tischi.hr.irb.fastRandomForest.FastRandomForest;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -325,8 +325,7 @@ public class WekaSegmentation {
 
 	public void setBatchSizePercent( String batchSizePercent )
 	{
-		if ( batchSizePercent.equals( "Auto" )
-				|| batchSizePercent.equals( "auto" )  )
+		if ( batchSizePercent.equals( "Auto" ) || batchSizePercent.equals( "auto" )  )
 		{
 			classifierBatchSizePercent = "auto";
 		}
@@ -427,13 +426,14 @@ public class WekaSegmentation {
 			int localRadius,
 			int numInstanceSetsPerTilePlaneClass,
 			long maxNumInstances,
+			int minNumInstancesBeforeNewTraining,
 			int numTrainingTrees,
 			int numClassificationTrees,
 			int minNumVoxels,
 			ArrayList< Double > classWeights,
 			String directory,
 			FinalInterval trainInterval,
-			FinalInterval applyInterval)
+			FinalInterval applyInterval )
 	{
 
 		if ( trainInterval == null ) return;
@@ -454,10 +454,13 @@ public class WekaSegmentation {
 
 		boolean isFirstTime = true;
 		int numTrueObjects = -1;
+		String classifierKey = null;
 
 		ArrayList< FinalInterval > tiles = getXYTiles( trainInterval, nxyTiles, getInputImageDimensions() );
 
 		long numInstances = 0;
+		long numInstancesAtLastTraining = 0;
+
 
 		iterationLoop:
 		for ( int i = 0; i < numIterations; ++i )
@@ -563,7 +566,6 @@ public class WekaSegmentation {
 						}
 						else
 						{
-							// TODO: could it be that this is slooow?
 							instancesManager.
 									getInstancesAndMetadata( instancesKey ).
 									append( instancesAndMetadata );
@@ -578,13 +580,22 @@ public class WekaSegmentation {
 
 					// Train classifier
 					//
+
 					InstancesAndMetadata instancesAndMetadata =
 							getInstancesManager()
-									.getInstancesAndMetadata( instancesKey );
+									.getInstancesAndMetadata(instancesKey);
 
-					classifierNumTrees = numTrainingTrees;
-					String classifierKey  = trainClassifier( instancesAndMetadata );
+					numInstances = instancesAndMetadata.getInstances().numInstances();
+					boolean isEnoughNewInstances =
+							( numInstances - numInstancesAtLastTraining ) >= minNumInstancesBeforeNewTraining;
 
+					if ( classifierKey == null || isEnoughNewInstances)
+					{
+						numInstancesAtLastTraining = numInstances;
+						classifierNumTrees = numTrainingTrees;
+						classifierKey = trainClassifier(instancesAndMetadata);
+
+					}
 
 					// Apply classifier to next chunk
 					//
@@ -685,7 +696,7 @@ public class WekaSegmentation {
 							.getInstancesAndMetadata( instancesKey );
 
 			classifierNumTrees = numClassificationTrees;
-			String classifierKey  = trainClassifier( instancesAndMetadata );
+			classifierKey  = trainClassifier( instancesAndMetadata );
 
 			applyClassifierWithTiling( classifierKey, applyInterval );
 
@@ -758,7 +769,7 @@ public class WekaSegmentation {
 			return;
 		}
 
-		FinalInterval interval = IntervalUtils.getInterval( inputImage );
+		FinalInterval interval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( inputImage );
 		ImagePlus accuraciesImage = IntervalUtils.createImagePlus( interval );
 		accuraciesImage.setTitle( title );
 		accuraciesImage.show();
@@ -1194,17 +1205,9 @@ public class WekaSegmentation {
 
 	public void loadClassifier( String directory, String filename )
 	{
-
-		ClassifierInstancesMetadata classifierInstancesMetadata =
-				ClassifierUtils.loadClassifierInstancesMetadata(
-					directory,
-					filename );
-
-		SettingsUtils.setSettingsFromInstancesMetadata( settings,
-				classifierInstancesMetadata.instancesAndMetadata);
-
+		ClassifierInstancesMetadata classifierInstancesMetadata = ClassifierUtils.loadClassifierInstancesMetadata( directory, filename );
+		SettingsUtils.setSettingsFromInstancesMetadata( settings, classifierInstancesMetadata.instancesAndMetadata );
 		classifierManager.setClassifier( classifierInstancesMetadata );
-
 	}
 
 
@@ -1388,7 +1391,7 @@ public class WekaSegmentation {
 		logger.info( "\n# Recomputing instances including distance image" );
 		String bgFgInstancesKey = "BgFgTraining";
 		recomputeLabelInstances = true;
-		putUpdatedExampleInstances( bgFgInstancesKey );
+		updateExamplesInstancesAndMetadata( bgFgInstancesKey );
 		recomputeLabelInstances = false;
 
 		// Retrain classifier
@@ -1479,45 +1482,145 @@ public class WekaSegmentation {
 		return success;
 	}
 
-
-	public String putUpdatedExampleInstances( String key )
+	public String updateExamplesInstancesAndMetadata( )
 	{
-		InstancesAndMetadata instancesAndMetadata = null;
-		String instancesName;
+		String instancesAndMetadataKey = generateInstancesAndMetadataKeyFromImageTitle( );
+		updateExamplesInstancesAndMetadata( instancesAndMetadataKey );
+		return instancesAndMetadataKey;
+	}
 
-		if ( key != null )
-		{
-			instancesName = key;
-		}
-		else
-		{
-			instancesName = getInputImageTitle();
-		}
 
-		// compute instances data in examples
-		updateExamples();
+	public void updateExamplesInstancesAndMetadata( String instancesAndMetadataKey )
+	{
+		computeUpdatedExamplesInstances();
 
+		putExamplesIntoInstancesAndMetadata( instancesAndMetadataKey );
+	}
+
+
+	public String putExamplesIntoInstancesAndMetadata( String instancesAndMetadataKey )
+	{
 		if ( getNumExamples() > 0 )
 		{
-			instancesAndMetadata = InstancesUtils.getInstancesAndMetadataFromLabels(
+
+			InstancesAndMetadata instancesAndMetadata = InstancesUtils.createInstancesAndMetadataFromExamples(
 					getExamples(),
-					instancesName,
+					instancesAndMetadataKey,
 					settings,
 					examplesFeatureNames,
 					getClassNames() );
+
+				getInstancesManager().putInstancesAndMetadata( instancesAndMetadata );
+
+			return instancesAndMetadataKey;
 		}
 		else
 		{
 			return null;
 		}
 
-		getInstancesManager().
-				putInstancesAndMetadata( instancesAndMetadata );
+	}
+
+
+	private String generateInstancesAndMetadataKeyFromImageTitle( )
+	{
+		String instancesName = getInputImageTitle();
 
 		return instancesName;
 	}
 
-	public void updateExamples()
+	public void computeUpdatedExamplesInstances()
+	{
+		ArrayList< Example > examplesNeedingInstanceUpdate = getExamplesNeedingInstancesUpdate();
+
+		ArrayList< ArrayList< Example > > groupedExamples = groupExamplesBySpatialProximity( examplesNeedingInstanceUpdate );
+
+		updateInstancesValuesOfGroupedExamples( groupedExamples );
+
+	}
+
+	private void updateInstancesValuesOfGroupedExamples( ArrayList< ArrayList< Example > > groupedExamples )
+	{
+		// Compute feature values for examples
+		//
+		ExecutorService exe = Executors.newFixedThreadPool( threadsRegion );
+		ArrayList<Future > futures = new ArrayList<>();
+
+		isUpdatedFeatureList = false;
+
+		for (int i = 0; i < groupedExamples.size(); i++)
+		{
+			ArrayList<Example> neighboringExamples = groupedExamples.get(i);
+			futures.add(
+					exe.submit(
+							setExamplesInstanceValues(
+									neighboringExamples,
+									i, groupedExamples.size() - 1)));
+		}
+
+		ThreadUtils.joinThreads(futures, logger);
+		exe.shutdown();
+
+		if ( groupedExamples.size() > 0 )
+		{
+			logger.info("Computed feature values for " + groupedExamples.size() + " labels; " +
+					"total number of labels is " + getNumExamples() );
+		}
+	}
+
+	private ArrayList< ArrayList< Example > > groupExamplesBySpatialProximity( ArrayList< Example > examplesNeedingInstanceUpdate )
+	{
+		ArrayList<ArrayList<Example>> exampleList = new ArrayList<>();
+
+		for (int iExampleWithoutFeatures = 0; iExampleWithoutFeatures < examplesNeedingInstanceUpdate.size(); iExampleWithoutFeatures++)
+		{
+			// figure out which examples are spatially close,
+			// put them together and compute the feature images
+			// for them in one go; this saves time.
+			ArrayList<Example> neighboringExamples = new ArrayList<>();
+
+			Rectangle exampleBounds = getExampleRectangleBounds(examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures));
+
+			Point3D exampleLocation = new Point3D(
+					exampleBounds.getX(),
+					exampleBounds.getY(),
+					examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures).z
+			);
+
+			neighboringExamples.add( examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures) );
+
+			Boolean includeNextExample = true;
+
+			iExampleWithoutFeatures++;
+			while (includeNextExample && (iExampleWithoutFeatures < examplesNeedingInstanceUpdate.size()))
+			{
+				Rectangle nextExampleBounds = getExampleRectangleBounds(examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures));
+
+				Point3D nextExampleLocation = new Point3D(
+						nextExampleBounds.getX(),
+						nextExampleBounds.getY(),
+						examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures).z
+				);
+
+				if ( exampleLocation.distance(nextExampleLocation) < getFeatureVoxelSizeAtMaximumScale())
+				{
+					neighboringExamples.add(examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures));
+					iExampleWithoutFeatures++;
+				}
+				else
+				{
+					includeNextExample = false;
+					iExampleWithoutFeatures--;
+				}
+
+			}
+
+			exampleList.add( neighboringExamples );
+		}
+		return exampleList;
+	}
+
+	private ArrayList< Example > getExamplesNeedingInstancesUpdate()
 	{
 		ArrayList< Example > examplesWithoutFeatures = new ArrayList<>();
 
@@ -1540,86 +1643,7 @@ public class WekaSegmentation {
 
 		recomputeLabelInstances = false;
 
-		// compute feature values for examples
-		//
-		ArrayList<ArrayList<Example>> exampleList = new ArrayList<>();
-
-		for (int iExampleWithoutFeatures = 0;
-			 iExampleWithoutFeatures < examplesWithoutFeatures.size();
-			 iExampleWithoutFeatures++)
-		{
-			// figure out which examples are spatially close,
-			// put them together and compute the feature images
-			// for them in one go; this saves time.
-			ArrayList<Example> neighboringExamples = new ArrayList<>();
-
-			Rectangle exampleBounds = getExampleRectangleBounds(examplesWithoutFeatures.get(iExampleWithoutFeatures));
-
-			Point3D exampleLocation = new Point3D(
-					exampleBounds.getX(),
-					exampleBounds.getY(),
-					examplesWithoutFeatures.get(iExampleWithoutFeatures).z
-			);
-
-			neighboringExamples.add( examplesWithoutFeatures.get(iExampleWithoutFeatures) );
-
-			Boolean includeNextExample = true;
-
-			iExampleWithoutFeatures++;
-			while (includeNextExample && (iExampleWithoutFeatures < examplesWithoutFeatures.size()))
-			{
-				Rectangle nextExampleBounds = getExampleRectangleBounds(examplesWithoutFeatures.get(iExampleWithoutFeatures));
-
-				Point3D nextExampleLocation = new Point3D(
-						nextExampleBounds.getX(),
-						nextExampleBounds.getY(),
-						examplesWithoutFeatures.get(iExampleWithoutFeatures).z
-				);
-
-				if ( exampleLocation.distance(nextExampleLocation) < getFeatureVoxelSizeAtMaximumScale())
-				{
-					neighboringExamples.add(examplesWithoutFeatures.get(iExampleWithoutFeatures));
-					iExampleWithoutFeatures++;
-				}
-				else
-				{
-					includeNextExample = false;
-					iExampleWithoutFeatures--;
-				}
-
-			}
-
-			exampleList.add(neighboringExamples);
-		}
-
-		// Compute feature values for examples
-		//
-		ExecutorService exe = Executors.newFixedThreadPool( threadsRegion );
-		ArrayList<Future> futures = new ArrayList<>();
-
-		isUpdatedFeatureList = false;
-
-		for (int i = 0; i < exampleList.size(); i++)
-		{
-			ArrayList<Example> neighboringExamples = exampleList.get(i);
-			futures.add(
-					exe.submit(
-							setExamplesInstanceValues(
-									neighboringExamples,
-									i, exampleList.size() - 1)));
-		}
-
-		ThreadUtils.joinThreads(futures, logger);
-		exe.shutdown();
-
-		if ( exampleList.size() > 0 )
-		{
-			logger.info("Computed feature values for " + exampleList.size() + " labels; " +
-					"total number of labels is " + getNumExamples() );
-		}
-
-		return;
-
+		return examplesWithoutFeatures;
 	}
 
 	public ArrayList< String > examplesFeatureNames = null;
@@ -1664,9 +1688,7 @@ public class WekaSegmentation {
 
 
 
-	private Runnable setExamplesInstanceValues(ArrayList<Example> examples,
-											   int counter,
-											   int counterMax )
+	private Runnable setExamplesInstanceValues(ArrayList<Example> examples, int counter, int counterMax )
 	{
 		if (Thread.currentThread().isInterrupted())
 			return null;
@@ -2076,16 +2098,13 @@ public class WekaSegmentation {
 
 	}
 
-	public String trainClassifierWithFeatureSelection (
-			String key )
+	public String trainClassifierWithFeatureSelection ( String key )
 	{
-		return trainClassifierWithFeatureSelection(
-			instancesManager.getInstancesAndMetadata( key ) );
+		return trainClassifierWithFeatureSelection( instancesManager.getInstancesAndMetadata( key ) );
 	}
 
 
-	public String trainClassifierWithFeatureSelection (
-			InstancesAndMetadata instancesAndMetadata )
+	public String trainClassifierWithFeatureSelection ( InstancesAndMetadata instancesAndMetadata )
 	{
 
 		String classifierKey = trainClassifier( instancesAndMetadata );
@@ -2157,13 +2176,12 @@ public class WekaSegmentation {
 	 * and current classifier settings
 	 * and current active features
 	 */
-	public String trainClassifier(
-			InstancesAndMetadata instancesAndMetadata)
+	public String trainClassifier( InstancesAndMetadata instancesAndMetadata )
 	{
 		isTrainingCompleted = false;
 
 		// Train the classifier on the current data
-		logger.info("\n# Train classifier");
+		logger.info( "\n# Train classifier" );
 
 		InstancesUtils.logInstancesInformation( instancesAndMetadata.getInstances() );
 
@@ -2179,6 +2197,7 @@ public class WekaSegmentation {
 		classifierNumRandomFeatures = (int) Math.ceil(1.0 * instancesAndMetadata.getInstances().numAttributes() * classifierFractionFeaturesPerNode );
 
 		FastRandomForest classifier = new FastRandomForest();
+
 		classifier.setSeed( (new Random()).nextInt() );
 		classifier.setMaxDepth( classifierMaxDepth );
 		classifier.setNumTrees( classifierNumTrees );
@@ -2236,7 +2255,7 @@ public class WekaSegmentation {
 	public void applyClassifierWithTiling()
 	{
 		String key = getClassifierManager().getMostRecentClassifierKey();
-		FinalInterval interval = IntervalUtils.getInterval( getInputImage() );
+		FinalInterval interval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( getInputImage() );
 		applyClassifierWithTiling(  key, interval, -1, null , false );
 	}
 
@@ -2276,8 +2295,7 @@ public class WekaSegmentation {
 
 		// submit tiles to executor service
 
-		ExecutorService exe = Executors.newFixedThreadPool(
-				adaptedRegionThreads );
+		ExecutorService exe = Executors.newFixedThreadPool( adaptedRegionThreads );
 		ArrayList<Future> futures = new ArrayList<>();
 
 		pixelsClassified.set(0L);
@@ -2507,6 +2525,7 @@ public class WekaSegmentation {
 			{
 				featureProvider = new FeatureProvider( this );
 				featureProvider.setActiveChannels( settings.activeChannels );
+				featureProvider.setFeatureListSubset( classifierManager.getClassifierAttributeNames( classifierKey ) );
 				featureProvider.setInterval( tileInterval );
 				featureProvider.isLogging( isLogging );
 				featureProvider.computeFeatures( numThreads );
@@ -2514,10 +2533,8 @@ public class WekaSegmentation {
 			else
 			{
 				featureProvider = externalFeatureProvider;
+				featureProvider.setFeatureListSubset( classifierManager.getClassifierAttributeNames( classifierKey ) );
 			}
-
-			featureProvider.setFeatureListSubset(
-					classifierManager.getClassifierAttributeNames( classifierKey ) );
 
 
 			// determine chunking
@@ -2772,8 +2789,7 @@ public class WekaSegmentation {
 
 								double certainty = ( result[ FIRST_CLASS_PROB ] - result[ SECOND_CLASS_PROB ] );
 
-								resultSetter.set( x, y, z,
-										( int ) result[ FIRST_CLASS_ID ], certainty );
+								resultSetter.set( x, y, z, ( int ) result[ FIRST_CLASS_ID ], certainty );
 
 								pixelsClassified.incrementAndGet();
 
