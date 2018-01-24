@@ -1,38 +1,31 @@
 package trainableDeepSegmentation.results;
 
-import de.embl.cba.bigDataTools.Hdf5DataCubeWriter;
-import de.embl.cba.bigDataTools.ImarisDataSet;
 import de.embl.cba.bigDataTools.ImarisUtils;
-import de.embl.cba.bigDataTools.ImarisWriter;
 import de.embl.cba.bigDataTools.utils.Utils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
-import ij.plugin.Binner;
-import ij.plugin.Duplicator;
-import net.imglib2.FinalInterval;
 
 import java.util.ArrayList;
 
 import static trainableDeepSegmentation.WekaSegmentation.logger;
+import static trainableDeepSegmentation.results.Utils.SEPARATE_IMARIS;
+import static trainableDeepSegmentation.results.Utils.SEPARATE_TIFF_FILES;
 import static trainableDeepSegmentation.results.Utils.saveAsImarisChannel;
 
 public abstract class ResultImageGUI {
-
-    private static final String SEPARATE_IMARIS = "Separate Imaris Channels";
 
     public static void showExportGUI( ResultImage resultImage,
                                       ImagePlus rawData,
                                       ArrayList< String > classNames )
     {
-        String[] exportChoices = new String[]
-                {
-                        SEPARATE_IMARIS
-                };
+        String[] exportChoices = new String[]{
+                trainableDeepSegmentation.results.Utils.SEPARATE_IMARIS,
+                trainableDeepSegmentation.results.Utils.SEPARATE_TIFF_FILES
+        };
 
-        ArrayList < Boolean > saveClass = new ArrayList<>();
-
+        ArrayList < Boolean > classesToBeSaved = new ArrayList<>();
 
         GenericDialog gd = new GenericDialogPlus("Export Segmentation Results");
 
@@ -43,39 +36,44 @@ public abstract class ResultImageGUI {
 
         gd.addMessage( "Export class:" );
         for ( String className : classNames ) gd.addCheckbox( className, true );
-        gd.addChoice( "Export as:", exportChoices, SEPARATE_IMARIS );
+        gd.addChoice( "Export as:", exportChoices, trainableDeepSegmentation.results.Utils.SEPARATE_IMARIS );
 
         gd.showDialog();
 
-        if ( gd.wasCanceled() )
-            return;
+        if ( gd.wasCanceled() ) return;
 
-        int[] binning = Utils.delimitedStringToIntegerArray(
-                gd.getNextString().trim(), ",");
-
+        int[] binning = Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
 
         boolean saveRawData = gd.getNextBoolean();
-        for ( String className : classNames ) saveClass.add( gd.getNextBoolean() );
+        for ( String className : classNames ) classesToBeSaved.add( gd.getNextBoolean() );
 
         String exportModality = gd.getNextChoice();
 
         String directory = IJ.getDirectory("Select a directory");
 
-        switch ( exportModality )
+        if ( exportModality.equals( SEPARATE_IMARIS ) )
         {
-            case SEPARATE_IMARIS:
-                resultImage.saveAsSeparateImarisChannels( directory, saveClass, binning );
-                break;
+            saveAsSeparateImaris( resultImage, rawData, classesToBeSaved, binning, saveRawData, exportModality, directory );
         }
+        else if ( exportModality.equals( SEPARATE_TIFF_FILES ) )
+        {
+            resultImage.saveClassesAsFiles( directory, classesToBeSaved, binning, exportModality );
+        }
+
+        logger.info("Created imaris meta file.");
+
+    }
+
+    private static void saveAsSeparateImaris( ResultImage resultImage, ImagePlus rawData, ArrayList< Boolean > classesToBeSaved, int[] binning, boolean saveRawData, String exportModality, String directory )
+    {
+        resultImage.saveClassesAsFiles( directory, classesToBeSaved, binning, exportModality );
 
         if ( saveRawData )
         {
-             saveAsImarisChannel( rawData, "raw-data", directory, binning );
+            saveAsImarisChannel( rawData, "raw-data", directory, binning );
         }
 
         ImarisUtils.createImarisMetaFile( directory );
-        logger.info("Created imaris meta file.");
-
     }
 
 }

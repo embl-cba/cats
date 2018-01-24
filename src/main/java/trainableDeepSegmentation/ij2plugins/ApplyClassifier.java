@@ -25,6 +25,7 @@ import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
 import org.scijava.widget.WidgetService;
 import trainableDeepSegmentation.WekaSegmentation;
+import trainableDeepSegmentation.results.Utils;
 
 import java.io.File;
 
@@ -52,20 +53,28 @@ public class ApplyClassifier<T extends RealType<T>> implements Command
     @Parameter
     public StatusService statusService;
 
+    @Parameter( visibility = ItemVisibility.MESSAGE )
+    private String message
+            = "<html>"  +
+            "<br>Apply Classifier<br>" +
+            "...<br>";
+
     @Parameter (label = "Input image", required = true )
     public File inputImageFile;
 
     @Parameter (label = "Classifier",  required = true )
     public File classifierFile;
 
-    @Parameter( label = "Output folder", style = "directory", required = true )
+    public static final String SHOW_AS_ONE_IMAGE = "Show all probabilities in one image";
+    public static final String SAVE_AS_TIFF_FILES = "Save class probabilities as tiff files";
+    public static final String SAVE_AS_IMARIS = "Save class probabilities as imaris files";
+
+    @Parameter( label = "Output modality", choices = { SHOW_AS_ONE_IMAGE, SAVE_AS_TIFF_FILES, SAVE_AS_IMARIS } , required = true )
+    public String outputModality;
+
+    @Parameter( label = "Output folder", style = "directory" )
     public File outputFolder;
 
-    @Parameter( visibility = ItemVisibility.MESSAGE )
-    private String message02
-            = "<html>"  +
-            "<br>Test<br>" +
-            "Test.<br>";
 
     ImagePlus input;
 
@@ -75,11 +84,25 @@ public class ApplyClassifier<T extends RealType<T>> implements Command
     {
         loadImage();
         applyClassifier();
-        saveProbabilitiesAsTiff();
+
+        if ( outputModality.equals( SHOW_AS_ONE_IMAGE ) )
+        {
+            wekaSegmentation.getResultImage().getWholeImageCopy().show();
+        }
+
+        if ( outputModality.equals( SAVE_AS_TIFF_FILES ) )
+        {
+            saveProbabilitiesAsSeparateTiffFiles();
+        }
+
+        if( outputModality.equals(  SAVE_AS_IMARIS ) )
+        {
+            saveProbabilitiesAsImarisFiles();
+        }
 
     }
 
-    private void saveProbabilitiesAsTiff()
+    private void saveProbabilitiesAsOneTiff()
     {
         ImagePlus result = wekaSegmentation.getResultImage().getWholeImageCopy();
         String savingPath = "" + outputFolder + File.separator + input.getTitle() + "--classified.tif";
@@ -89,9 +112,41 @@ public class ApplyClassifier<T extends RealType<T>> implements Command
         WekaSegmentation.logger.info("...done.");
     }
 
+    private void saveProbabilitiesAsSeparateTiffFiles()
+    {
+        String folder = outputFolder.getPath();
+        wekaSegmentation.getResultImage().saveClassesAsFiles( outputFolder.getPath(), null, null, Utils.SEPARATE_TIFF_FILES );
+    }
+
+    private void saveProbabilitiesAsImarisFiles()
+    {
+        wekaSegmentation.getResultImage().saveClassesAsFiles( outputFolder.getPath(), null, null, Utils.SEPARATE_IMARIS );
+    }
+
     private void loadImage()
     {
+        if ( inputImageFile.getName().contains( ".*" ) )
+        {
+            loadImageWithImportImageSequence();
+        }
+        else
+        {
+            loadImageWithIJOpenImage();
+        }
+    }
+
+    private void loadImageWithIJOpenImage()
+    {
         input = IJ.openImage( inputImageFile.getAbsolutePath() );
+    }
+
+    private void loadImageWithImportImageSequence()
+    {
+        String directory = inputImageFile.getParent();
+        String regExp = inputImageFile.getName();
+        IJ.run("Image Sequence...", "open=["+ directory +"]" +"file=(" + regExp + ") sort");
+        input = IJ.getImage();
+        input.setTitle( regExp );
     }
 
     private void applyClassifier( )

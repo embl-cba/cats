@@ -46,10 +46,7 @@ public class InstancesUtils {
             ArrayList< String > classNames )
     {
 
-        Instances instances = getInstancesHeader(
-                instancesName,
-                featureNames,
-                classNames  );
+        Instances instances = getInstancesHeader( instancesName, featureNames, classNames  );
 
         InstancesAndMetadata instancesAndMetadata
                 = new InstancesAndMetadata( instances );
@@ -754,10 +751,7 @@ public class InstancesUtils {
 
     }
 
-    public static Instances getInstancesHeader(
-            String instancesName,
-            ArrayList< String > featureNames,
-            ArrayList< String > classNames  )
+    public static Instances getInstancesHeader( String instancesName, ArrayList< String > featureNames, ArrayList< String > classNames  )
     {
 
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
@@ -882,15 +876,13 @@ public class InstancesUtils {
         return null;
     }
 
-    public static InstancesAndMetadata loadInstancesAndMetadataFromARFF(
-            String directory, String filename )
+    public static InstancesAndMetadata loadInstancesAndMetadataFromARFF( String directory, String filename )
     {
         Instances instances = loadInstancesFromARFF( directory, filename );
 
         if ( instances == null ) return null;
 
-        InstancesAndMetadata instancesAndMetadata
-                = new InstancesAndMetadata( instances );
+        InstancesAndMetadata instancesAndMetadata = new InstancesAndMetadata( instances );
 
         instancesAndMetadata.moveMetadataFromInstancesToMetadata();
 

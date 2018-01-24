@@ -374,8 +374,7 @@ public class WekaSegmentation {
 
 	public void setImageBackground( int background )
 	{
-		if ( background != settings.imageBackground &&
-				getNumExamples() > 0 )
+		if ( background != settings.imageBackground && getNumExamples() > 0 )
 		{
 			logger.warning( "Image background value has changed. " +
 					"Feature values for labels will thus be recomputed during " +
@@ -551,10 +550,12 @@ public class WekaSegmentation {
 						try
 						{
 							instancesAndMetadata = future.get();
-						} catch ( InterruptedException e )
+						}
+						catch ( InterruptedException e )
 						{
 							e.printStackTrace();
-						} catch ( ExecutionException e )
+						}
+						catch ( ExecutionException e )
 						{
 							e.printStackTrace();
 						}
@@ -566,9 +567,7 @@ public class WekaSegmentation {
 						}
 						else
 						{
-							instancesManager.
-									getInstancesAndMetadata( instancesKey ).
-									append( instancesAndMetadata );
+							instancesManager.getInstancesAndMetadata( instancesKey ).append( instancesAndMetadata );
 						}
 
 
@@ -1060,9 +1059,9 @@ public class WekaSegmentation {
 	 *
 	 * @param classNum class index
 	 */
-	public String getClassName(int classNum)
+	public String getClassName( int classNum )
 	{
-		return getClassNames().get(classNum);
+		return getClassNames().get( classNum );
 	}
 
 
@@ -1422,9 +1421,7 @@ public class WekaSegmentation {
 
 	public String loadInstancesMetadata( String directory, String fileName )
 	{
-		InstancesAndMetadata instancesAndMetadata =
-				InstancesUtils.
-						loadInstancesAndMetadataFromARFF( directory, fileName );
+		InstancesAndMetadata instancesAndMetadata = InstancesUtils.loadInstancesAndMetadataFromARFF( directory, fileName );
 
 		if ( instancesAndMetadata == null )
 		{
@@ -1436,8 +1433,7 @@ public class WekaSegmentation {
 		// create examples, if
 		// - this contains multiple labels
 		// - was the first loaded set
-		if ( InstancesUtils.getNumLabelIds( instancesAndMetadata ) > 1
-				&& getInstancesManager().getKeys().size() == 1  )
+		if ( InstancesUtils.getNumLabelIds( instancesAndMetadata ) > 1 && getInstancesManager().getKeys().size() == 1  )
 		{
 			logger.info( "\nCreating examples from instances..." );
 			setExamples(
@@ -1482,33 +1478,42 @@ public class WekaSegmentation {
 		return success;
 	}
 
-	public String updateExamplesInstancesAndMetadata( )
+	public void updateExamplesInstancesAndMetadata()
 	{
-		String instancesAndMetadataKey = generateInstancesAndMetadataKeyFromImageTitle( );
-		updateExamplesInstancesAndMetadata( instancesAndMetadataKey );
-		return instancesAndMetadataKey;
+        currentLabelInstancesKey =  getKeyFromImageTitle();
+        updateExamplesInstancesAndMetadata( currentLabelInstancesKey );
 	}
 
+	private String currentLabelInstancesKey;
 
-	public void updateExamplesInstancesAndMetadata( String instancesAndMetadataKey )
+	private String getCurrentLabelInstancesKey()
+    {
+        return currentLabelInstancesKey;
+    }
+
+    public InstancesAndMetadata getCurrentLabelInstancesAndMetadata()
+    {
+        return getInstancesManager().getInstancesAndMetadata( currentLabelInstancesKey );
+    }
+
+    public void updateExamplesInstancesAndMetadata( String instancesAndMetadataKey )
 	{
 		computeUpdatedExamplesInstances();
-
 		putExamplesIntoInstancesAndMetadata( instancesAndMetadataKey );
 	}
-
 
 	public String putExamplesIntoInstancesAndMetadata( String instancesAndMetadataKey )
 	{
 		if ( getNumExamples() > 0 )
 		{
 
-			InstancesAndMetadata instancesAndMetadata = InstancesUtils.createInstancesAndMetadataFromExamples(
-					getExamples(),
-					instancesAndMetadataKey,
-					settings,
-					examplesFeatureNames,
-					getClassNames() );
+			InstancesAndMetadata instancesAndMetadata =
+					InstancesUtils.createInstancesAndMetadataFromExamples(
+						getExamples(),
+						instancesAndMetadataKey,
+						settings,
+						examplesFeatureNames,
+						getClassNames() );
 
 				getInstancesManager().putInstancesAndMetadata( instancesAndMetadata );
 
@@ -1521,11 +1526,9 @@ public class WekaSegmentation {
 
 	}
 
-
-	private String generateInstancesAndMetadataKeyFromImageTitle( )
+	private String getKeyFromImageTitle( )
 	{
-		String instancesName = getInputImageTitle();
-
+		String instancesName = getInputImageTitle().split( "--" )[ 0 ];
 		return instancesName;
 	}
 
@@ -1541,8 +1544,6 @@ public class WekaSegmentation {
 
 	private void updateInstancesValuesOfGroupedExamples( ArrayList< ArrayList< Example > > groupedExamples )
 	{
-		// Compute feature values for examples
-		//
 		ExecutorService exe = Executors.newFixedThreadPool( threadsRegion );
 		ArrayList<Future > futures = new ArrayList<>();
 
@@ -1553,9 +1554,7 @@ public class WekaSegmentation {
 			ArrayList<Example> neighboringExamples = groupedExamples.get(i);
 			futures.add(
 					exe.submit(
-							setExamplesInstanceValues(
-									neighboringExamples,
-									i, groupedExamples.size() - 1)));
+							setExamplesInstanceValues( neighboringExamples, i, groupedExamples.size() - 1)));
 		}
 
 		ThreadUtils.joinThreads(futures, logger);
@@ -1563,8 +1562,7 @@ public class WekaSegmentation {
 
 		if ( groupedExamples.size() > 0 )
 		{
-			logger.info("Computed feature values for " + groupedExamples.size() + " labels; " +
-					"total number of labels is " + getNumExamples() );
+			logger.info("Computed feature values for " + groupedExamples.size() + " labels; " + "total number of labels is " + getNumExamples() );
 		}
 	}
 
@@ -1649,9 +1647,7 @@ public class WekaSegmentation {
 	public ArrayList< String > examplesFeatureNames = null;
 
 
-	public ImagePlus computeTwoClassImage(
-			ResultImage resultImage,
-			int t )
+	public ImagePlus computeTwoClassImage( ResultImage resultImage, int t )
 	{
 		ImageStack newStack = null;
 
@@ -1686,8 +1682,6 @@ public class WekaSegmentation {
 		return new ImagePlus("two-classes", newStack);
 	}
 
-
-
 	private Runnable setExamplesInstanceValues(ArrayList<Example> examples, int counter, int counterMax )
 	{
 		if (Thread.currentThread().isInterrupted())
@@ -1695,8 +1689,7 @@ public class WekaSegmentation {
 
 		return () -> {
 
-			logger.info("" + (counter + 1) + "/" + (counterMax + 1) + ": " +
-					"Computing features for " + examples.size() + " labels...");
+			logger.info("" + (counter + 1) + "/" + (counterMax + 1) + ": " + "Computing features for " + examples.size() + " labels...");
 
 			FinalInterval exampleListBoundingInterval = getExampleListBoundingInterval( examples );
 
@@ -1733,8 +1726,7 @@ public class WekaSegmentation {
 					// TODO: check that this extracts  the right values!
 					double[] values = new double[ nf + 1 ];
 
-					featureProvider.setFeatureValuesAndClassIndex(
-							values, x, y, featureSlice, example.classNum);
+					featureProvider.setFeatureValuesAndClassIndex( values, x, y, featureSlice, example.classNum);
 
 					example.instanceValuesArray.add( values );
 
@@ -2270,7 +2262,7 @@ public class WekaSegmentation {
 	public void applyClassifierWithTiling( String classifierKey,
 										   FinalInterval interval,
 										   Integer numTiles,
-										   FeatureProvider featureProvider,
+										   FeatureProvider externalFeatureProvider,
 										   boolean doNotLog )
 	{
 
@@ -2315,7 +2307,7 @@ public class WekaSegmentation {
 									adaptedThreadsPerRegion,
 									++tileCounter,
 									tiles.size(),
-									featureProvider,
+									externalFeatureProvider,
 									doNotLog )
 					)
 			);
@@ -2489,61 +2481,24 @@ public class WekaSegmentation {
 			final int tileCounter,
 			final int tileCounterMax,
 			final FeatureProvider externalFeatureProvider,
-			boolean doNotLog)
+			boolean doNotLog )
 	{
 
 		return () ->
 		{
 
-			if ( ThreadUtils.stopThreads( logger, stopCurrentTasks,
-					tileCounter, tileCounterMax ) ) return;
+			if ( ThreadUtils.stopThreads( logger, stopCurrentTasks, tileCounter, tileCounterMax ) ) return;
 
-			//if ( tileCounter <= threadsRegion )
-		    //	waitMilliseconds( tileCounter * tilingDelay );
+			boolean isLogging = configureLogging( tileCounter, doNotLog );
 
-			boolean isLogging = (tileCounter <= threadsRegion );
-			if( doNotLog ) isLogging = false;
+			checkForBackgroundRegion();
 
-			// TODO: check whether this is a background region
-			/*
-			if ( settings.imageBackground > 0 )
-			{
-				// check whether the region is background
-				if ( isBackgroundRegion( imageToClassify, settings.imageBackground) )
-				{
-					// don't classify, but leave all classification pixels as is, hopefully 0...
-					pixelsClassified.addAndGet( nx * ny * nz  );
-					return;
-				}
-			}*/
+			FeatureProvider featureProvider = configureFeatureProvider( classifierKey, tileInterval, numThreads, externalFeatureProvider, isLogging );
 
-
-			// compute image features if necessary
-			FeatureProvider featureProvider;
-
-			if ( externalFeatureProvider == null )
-			{
-				featureProvider = new FeatureProvider( this );
-				featureProvider.setActiveChannels( settings.activeChannels );
-				featureProvider.setFeatureListSubset( classifierManager.getClassifierAttributeNames( classifierKey ) );
-				featureProvider.setInterval( tileInterval );
-				featureProvider.isLogging( isLogging );
-				featureProvider.computeFeatures( numThreads );
-			}
-			else
-			{
-				featureProvider = externalFeatureProvider;
-				featureProvider.setFeatureListSubset( classifierManager.getClassifierAttributeNames( classifierKey ) );
-			}
-
-
-			// determine chunking
 			ArrayList< long[] > zChunks = getZChunks( numThreads, tileInterval );
 
-			// getInstancesAndMetadata result image setter
 			final ResultImageFrameSetter resultSetter = resultImage.getFrameSetter( tileInterval );
 
-			// spawn threads
 			ExecutorService exe = Executors.newFixedThreadPool( numThreads );
 			ArrayList< Future > futures = new ArrayList<>();
 			//ArrayList< UncertaintyRegion > uncertaintyRegions = new ArrayList<>();
@@ -2592,15 +2547,57 @@ public class WekaSegmentation {
 			ThreadUtils.joinThreads( futures, logger );
 			exe.shutdown();
 
-			// save classification results
-			start = System.currentTimeMillis();
+			// store classification results
 			resultSetter.close();
-			if( isLogging ) logger.info("Saved classification results in [ms]: " + (System.currentTimeMillis() - start) );
 
 			// store uncertainty information
 			//storeUncertainties();
 
 		};
+	}
+
+	private boolean configureLogging( int tileCounter, boolean doNotLog )
+	{
+		boolean isLogging = (tileCounter <= threadsRegion );
+		if( doNotLog ) isLogging = false;
+		return isLogging;
+	}
+
+	private void checkForBackgroundRegion()
+	{
+		// TODO: check whether this is a background region
+			/*
+			if ( settings.imageBackground > 0 )
+			{
+				// check whether the region is background
+				if ( isBackgroundRegion( imageToClassify, settings.imageBackground) )
+				{
+					// don't classify, but leave all classification pixels as is, hopefully 0...
+					pixelsClassified.addAndGet( nx * ny * nz  );
+					return;
+				}
+			}*/
+	}
+
+	private FeatureProvider configureFeatureProvider( String classifierKey, FinalInterval tileInterval, int numThreads, FeatureProvider externalFeatureProvider, boolean isLogging )
+	{
+		FeatureProvider featureProvider;
+
+		if ( externalFeatureProvider == null )
+        {
+            featureProvider = new FeatureProvider( this );
+            featureProvider.setActiveChannels( settings.activeChannels );
+            featureProvider.setFeatureListSubset( classifierManager.getClassifierAttributeNames( classifierKey ) );
+            featureProvider.setInterval( tileInterval );
+            featureProvider.isLogging( isLogging );
+            featureProvider.computeFeatures( numThreads );
+        }
+        else
+        {
+            featureProvider = externalFeatureProvider;
+            featureProvider.setFeatureListSubset( classifierManager.getClassifierAttributeNames( classifierKey ) );
+        }
+		return featureProvider;
 	}
 
 
@@ -2772,9 +2769,6 @@ public class WekaSegmentation {
 							featureSlice = featureProvider.getReusableFeatureSlice();
 							featureProvider.setFeatureSlicesValues( ( int ) z, featureSlice, numThreads );
 						}
-
-						int a = 1;
-
 
 						for ( long y = interval.min( Y ); y <= interval.max( Y ); ++y )
 						{
@@ -2949,16 +2943,6 @@ public class WekaSegmentation {
 				ss += ""+(s+1);
 		}
 		return ss;
-	}
-
-	public void setActiveChannelsFromString( String activeChannels )
-	{
-		String[] ss = activeChannels.split(",");
-		settings.activeChannels = new TreeSet<>();
-		for ( String s : ss)
-		{
-			settings.activeChannels.add(Integer.parseInt(s.trim()) - 1); // zero-based
-		}
 	}
 
 	/**

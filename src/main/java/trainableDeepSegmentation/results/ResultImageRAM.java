@@ -12,7 +12,6 @@ import java.awt.image.ColorModel;
 import java.util.ArrayList;
 
 import static de.embl.cba.bigDataTools.utils.Utils.getDataCubeFromImagePlus;
-import static trainableDeepSegmentation.results.Utils.saveImagePlusAsSeparateImarisChannels;
 
 public class ResultImageRAM implements ResultImage {
 
@@ -32,14 +31,14 @@ public class ResultImageRAM implements ResultImage {
         this.dimensions = dimensions;
     }
 
+
     @Override
-    public void saveAsSeparateImarisChannels( String directory,
-                                              ArrayList< Boolean > saveClass,
-                                              int[] binning)
+    public void saveClassesAsFiles( String directory, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType )
     {
-        saveImagePlusAsSeparateImarisChannels(
+        Utils.saveClassesAsFiles(
                 directory,
-                saveClass,
+                classesToBeSaved,
+                fileType,
                 result,
                 binning,
                 logger,

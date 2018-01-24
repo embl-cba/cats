@@ -157,7 +157,6 @@ public class FeatureProvider
 
         // TODO: isn't below a job for the feature-provider?
         featureImageBorderSizes = wekaSegmentation.getFeatureBorderSizes();
-
     }
 
     public void setActiveChannels( Set<Integer> activeChannels )
@@ -416,7 +415,7 @@ public class FeatureProvider
     /**
      * set all feature values for one z-slice
      * coordinates are relative to within the set interval
-     * @param zGlobal
+     * @param zGlobalx
      * @param featureSlice
      */
     public boolean setFeatureSlicesValues( final int zGlobal,

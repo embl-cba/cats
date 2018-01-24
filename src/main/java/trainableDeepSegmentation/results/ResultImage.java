@@ -8,9 +8,7 @@ import java.util.ArrayList;
 
 public interface ResultImage {
 
-    void saveAsSeparateImarisChannels( String directory,
-                                       ArrayList< Boolean > saveClass,
-                                       int[] binning );
+    void saveClassesAsFiles( String directory, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType );
 
     ImageProcessor getSlice( int slice, int frame );
 

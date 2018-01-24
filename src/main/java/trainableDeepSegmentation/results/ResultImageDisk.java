@@ -16,8 +16,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static trainableDeepSegmentation.results.Utils.saveImagePlusAsSeparateImarisChannels;
-
 public class ResultImageDisk implements ResultImage {
 
     public static final int CLASS_LUT_WIDTH = 10;
@@ -27,9 +25,7 @@ public class ResultImageDisk implements ResultImage {
     Logger logger;
     long[] dimensions;
 
-    public ResultImageDisk( WekaSegmentation wekaSegmentation,
-                            String directory,
-                            long[] dimensions)
+    public ResultImageDisk( WekaSegmentation wekaSegmentation, String directory, long[] dimensions)
     {
         this.wekaSegmentation = wekaSegmentation;
         this.logger = wekaSegmentation.getLogger();
@@ -38,18 +34,16 @@ public class ResultImageDisk implements ResultImage {
         this.result.setCalibration( wekaSegmentation.getInputImage().getCalibration() );
     }
 
-
     @Override
-    public void saveAsSeparateImarisChannels( String directory,
-                                              ArrayList< Boolean > saveClass,
-                                              int[] binning )
+    public void saveClassesAsFiles( String directory, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType )
     {
 
         logger.info("Saving results as separate imaris channels.." );
 
-        saveImagePlusAsSeparateImarisChannels(
+        Utils.saveClassesAsFiles(
                 directory,
-                saveClass,
+                classesToBeSaved,
+                fileType,
                 result,
                 binning,
                 logger,
@@ -139,9 +133,7 @@ public class ResultImageDisk implements ResultImage {
         return ( result );
     }
 
-    public void write3dResultChunk(
-            FinalInterval interval,
-            byte[][][] resultChunk )
+    public void write3dResultChunk( FinalInterval interval, byte[][][] resultChunk )
     {
         assert interval.min( IntervalUtils.T ) == interval.max( IntervalUtils.T );
 
@@ -156,7 +148,6 @@ public class ResultImageDisk implements ResultImage {
                 "ResultImage.write3dResultChunk: " + e.toString() );
         }
     }
-
 
     public ImagePlus getWholeImageCopy()
     {

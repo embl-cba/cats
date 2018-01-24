@@ -40,8 +40,7 @@ public abstract class SettingsUtils {
     }
 
 
-    public static void setSettingsFromInstancesMetadata( Settings settings,
-                                              InstancesAndMetadata instancesAndMetadata)
+    public static void setSettingsFromInstancesMetadata( Settings settings, InstancesAndMetadata instancesAndMetadata)
     {
         settings.imageBackground = ( int ) instancesAndMetadata.getMetadata( Metadata_Settings_ImageBackground, 0 );
         settings.maxDeepConvLevel = ( int ) instancesAndMetadata.getMetadata( Metadata_Settings_MaxDeepConvLevel, 0 );

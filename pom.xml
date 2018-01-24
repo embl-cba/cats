@@ -184,7 +184,7 @@
 		<dependency>
 			<groupId>com.github.tischi</groupId>
 			<artifactId>fiji-plugin-bigDataTools</artifactId>
-            <version>1c7ca1c92fd4853cdecec8c1045dfdd6a4e71019</version>
+            <version>83ec6375d4329f4b5534d0cc70519abce1282a70</version>
 		</dependency>
 
 

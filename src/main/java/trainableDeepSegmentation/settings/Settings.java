@@ -30,5 +30,43 @@ public class Settings {
 
     public ArrayList < String > classNames = new ArrayList<>();
 
+    public boolean equals( Settings settings )
+    {
+        if ( anisotropy != settings.anisotropy ) return false;
+        if ( maxDeepConvLevel != settings.maxDeepConvLevel ) return false;
+        if ( imageBackground != settings.imageBackground ) return false;
+        if ( ! activeChannels.equals( settings.activeChannels ) ) return false;
+        if ( ! binFactors.equals( settings.binFactors ) ) return false;
+        if ( ! classNames.equals( settings.classNames ) ) return false;
 
+        return true;
+    }
+
+    public Settings()
+    {
+    }
+
+    public Settings copy()
+    {
+        Settings settings = new Settings();
+        settings.classNames = new ArrayList<>( classNames );
+        settings.binFactors = binFactors.clone();
+        settings.activeChannels = new TreeSet<>( activeChannels );
+        settings.anisotropy = anisotropy;
+        settings.log2 = log2;
+        settings.maxDeepConvLevel = maxDeepConvLevel;
+        settings.imageBackground = imageBackground;
+        return settings;
+    }
+
+    public void setActiveChannels( String activeChannels )
+    {
+        String[] ss = activeChannels.split(",");
+
+        this.activeChannels = new TreeSet<>();
+        for ( String s : ss)
+        {
+            this.activeChannels.add(Integer.parseInt(s.trim()) - 1); // zero-based
+        }
+    }
 }

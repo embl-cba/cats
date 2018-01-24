@@ -27,7 +27,6 @@ public class InstancesManager {
         instancesMap.put( key, instancesAndMetadata );
     }
 
-
     public Instances getInstances( String key )
     {
         return ( instancesMap.get( key ).instances );
@@ -45,10 +44,8 @@ public class InstancesManager {
 
     public InstancesAndMetadata getCombinedInstancesAndMetadata(List< String > keys )
     {
-        // initialize empty IAM
-        InstancesAndMetadata combinedIAM = new InstancesAndMetadata(
-                new Instances( getInstances( keys.get( 0 ) ) , 0 ),
-                InstancesAndMetadata.getEmptyMetadata() );
+
+        InstancesAndMetadata combinedIAM = new InstancesAndMetadata( new Instances( getInstances( keys.get( 0 ) ) , 0 ), InstancesAndMetadata.getEmptyMetadata() );
 
         for ( String key : keys )
         {
