@@ -11,6 +11,7 @@ import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.IntervalUtils;
 import trainableDeepSegmentation.WekaSegmentation;
+import trainableDeepSegmentation.ij2plugins.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,6 +40,8 @@ public class ResultImageDisk implements ResultImage {
     {
 
         logger.info("Saving results as separate imaris channels.." );
+
+        IOUtils.createDirectoryIfNotExists( directory );
 
         Utils.saveClassesAsFiles(
                 directory,

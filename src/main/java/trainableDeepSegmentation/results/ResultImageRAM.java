@@ -7,6 +7,7 @@ import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.IntervalUtils;
 import trainableDeepSegmentation.WekaSegmentation;
+import trainableDeepSegmentation.ij2plugins.IOUtils;
 
 import java.awt.image.ColorModel;
 import java.util.ArrayList;
@@ -35,6 +36,9 @@ public class ResultImageRAM implements ResultImage {
     @Override
     public void saveClassesAsFiles( String directory, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType )
     {
+
+        IOUtils.createDirectoryIfNotExists( directory );
+
         Utils.saveClassesAsFiles(
                 directory,
                 classesToBeSaved,

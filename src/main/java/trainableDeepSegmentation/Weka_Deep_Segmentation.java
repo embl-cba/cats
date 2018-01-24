@@ -2187,7 +2187,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 				// TODO: make user chose frame
 				/*
 				int frame = 1;
-				ImagePlus labelMask = wekaSegmentation.computeClassLabelMask( frame, minNumVoxels, 11, 20 );
+				ImagePlus labelMask = wekaSegmentation.createLabelMask( frame, minNumVoxels, 11, 20 );
 				labelMask.show();
 
 				ResultsTable rt_bb = GeometricMeasures3D.boundingBox( labelMask.getStack() );

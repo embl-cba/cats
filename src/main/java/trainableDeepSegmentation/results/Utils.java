@@ -2,14 +2,13 @@ package trainableDeepSegmentation.results;
 
 import de.embl.cba.bigDataTools.Hdf5DataCubeWriter;
 import de.embl.cba.bigDataTools.ImarisDataSet;
-import de.embl.cba.bigDataTools.ImarisUtils;
 import de.embl.cba.bigDataTools.ImarisWriter;
 import de.embl.cba.bigDataTools.logging.Logger;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.Binner;
 import ij.plugin.Duplicator;
-import trainableDeepSegmentation.WekaSegmentation;
+import trainableDeepSegmentation.ij2plugins.IOUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -90,6 +89,7 @@ public abstract class Utils {
                 impClass = binner.shrink( impClass, binning[ 0 ], binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
             }
 
+
             String path;
 
             if ( result.getNFrames() > 1 )
@@ -101,6 +101,7 @@ public abstract class Utils {
                 path = directory + File.separator + className + ".tif";
             }
 
+
             IJ.saveAsTiff( impClass, path );
 
             logger.progress( "Wrote " + className+
@@ -108,7 +109,6 @@ public abstract class Utils {
                                 ", path: " + path );
         }
     }
-
 
 
     private static ImagePlus getClassImage( int classId,

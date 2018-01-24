@@ -23,16 +23,15 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
-import org.scijava.widget.WidgetService;
 import trainableDeepSegmentation.WekaSegmentation;
 import trainableDeepSegmentation.results.Utils;
 
 import java.io.File;
 
 @Plugin(type = Command.class,
-        menuPath = "Plugins>Segmentation>Apply Trainable Weka Deep Classifier (Test)" )
+        menuPath = "Plugins>Segmentation>EMBL-CBA>Apply Trainable Weka Deep Classifier" )
 
-public class ApplyClassifier<T extends RealType<T>> implements Command
+public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 {
 
     @Parameter
@@ -60,29 +59,36 @@ public class ApplyClassifier<T extends RealType<T>> implements Command
             "...<br>";
 
     @Parameter (label = "Input image", required = true )
-    public File inputImageFile;
+    public File inputImagePath;
+    public static final String INPUT_IMAGE_PATH = "inputImagePath";
 
     @Parameter (label = "Classifier",  required = true )
-    public File classifierFile;
+    public File classifierPath;
+    public static final String CLASSIFIER_PATH = "classifierPath";
 
-    public static final String SHOW_AS_ONE_IMAGE = "Show all probabilities in one image";
-    public static final String SAVE_AS_TIFF_FILES = "Save class probabilities as tiff files";
-    public static final String SAVE_AS_IMARIS = "Save class probabilities as imaris files";
-
-    @Parameter( label = "Output modality", choices = { SHOW_AS_ONE_IMAGE, SAVE_AS_TIFF_FILES, SAVE_AS_IMARIS } , required = true )
+    @Parameter( label = "Output modality", choices = { ApplyClassifierCommand.SHOW_AS_ONE_IMAGE, ApplyClassifierCommand.SAVE_AS_TIFF_FILES, ApplyClassifierCommand.SAVE_AS_IMARIS } , required = true )
     public String outputModality;
+    public static final String OUTPUT_MODALITY = "outputModality";
+    public static final String SAVE_AS_IMARIS = "Save class probabilities as imaris files";
+    public static final String SAVE_AS_TIFF_FILES = "Save class probabilities as tiff files";
+    public static final String SHOW_AS_ONE_IMAGE = "Show all probabilities in one image";
 
     @Parameter( label = "Output folder", style = "directory" )
-    public File outputFolder;
+    public File outputDirectory;
+    public static final String OUTPUT_DIRECTORY = "outputDirectory";
 
 
-    ImagePlus input;
+    ImagePlus inputImage;
 
     WekaSegmentation wekaSegmentation;
 
     public void run()
     {
-        loadImage();
+
+        logCommand();
+
+        inputImage = IOUtils.loadImage( inputImagePath );
+
         applyClassifier();
 
         if ( outputModality.equals( SHOW_AS_ONE_IMAGE ) )
@@ -102,10 +108,26 @@ public class ApplyClassifier<T extends RealType<T>> implements Command
 
     }
 
+    private void logCommand()
+    {
+        IJ.log( "Command:" );
+
+        String command = "";
+        command += "ApplyClassifierCommand";
+        command += " \"";
+        command += INPUT_IMAGE_PATH + "=" + inputImagePath;
+        command += "," + CLASSIFIER_PATH + "=" + classifierPath;
+        command += "," + OUTPUT_DIRECTORY + "=" + outputDirectory;
+        command += "," + OUTPUT_MODALITY + "=" + outputModality;
+        command += "\" ";
+
+        IJ.log( command );
+    }
+
     private void saveProbabilitiesAsOneTiff()
     {
         ImagePlus result = wekaSegmentation.getResultImage().getWholeImageCopy();
-        String savingPath = "" + outputFolder + File.separator + input.getTitle() + "--classified.tif";
+        String savingPath = "" + outputDirectory + File.separator + inputImage.getTitle() + "--classified.tif";
         WekaSegmentation.logger.info("\n# Saving " + savingPath + "...");
         FileSaver fileSaver = new FileSaver( result );
         fileSaver.saveAsTiff( savingPath );
@@ -114,47 +136,20 @@ public class ApplyClassifier<T extends RealType<T>> implements Command
 
     private void saveProbabilitiesAsSeparateTiffFiles()
     {
-        String folder = outputFolder.getPath();
-        wekaSegmentation.getResultImage().saveClassesAsFiles( outputFolder.getPath(), null, null, Utils.SEPARATE_TIFF_FILES );
+        wekaSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), null, null, Utils.SEPARATE_TIFF_FILES );
     }
 
     private void saveProbabilitiesAsImarisFiles()
     {
-        wekaSegmentation.getResultImage().saveClassesAsFiles( outputFolder.getPath(), null, null, Utils.SEPARATE_IMARIS );
-    }
-
-    private void loadImage()
-    {
-        if ( inputImageFile.getName().contains( ".*" ) )
-        {
-            loadImageWithImportImageSequence();
-        }
-        else
-        {
-            loadImageWithIJOpenImage();
-        }
-    }
-
-    private void loadImageWithIJOpenImage()
-    {
-        input = IJ.openImage( inputImageFile.getAbsolutePath() );
-    }
-
-    private void loadImageWithImportImageSequence()
-    {
-        String directory = inputImageFile.getParent();
-        String regExp = inputImageFile.getName();
-        IJ.run("Image Sequence...", "open=["+ directory +"]" +"file=(" + regExp + ") sort");
-        input = IJ.getImage();
-        input.setTitle( regExp );
+        wekaSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), null, null, Utils.SEPARATE_IMARIS );
     }
 
     private void applyClassifier( )
     {
         wekaSegmentation = new WekaSegmentation( );
-        wekaSegmentation.setInputImage( input );
+        wekaSegmentation.setInputImage( inputImage );
         wekaSegmentation.setResultImageRAM( );
-        wekaSegmentation.loadClassifier( classifierFile.getAbsolutePath() );
+        wekaSegmentation.loadClassifier( classifierPath.getAbsolutePath() );
         wekaSegmentation.applyClassifierWithTiling();
     }
 

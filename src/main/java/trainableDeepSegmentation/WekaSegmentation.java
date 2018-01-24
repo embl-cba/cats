@@ -740,8 +740,7 @@ public class WekaSegmentation {
 		//twoClassImage.show();
 		saveImage( twoClassImage, directory );
 
-		ImagePlus classLabelMask = computeClassLabelMask( twoClassImage, t,
-				minNumVoxels, 11, 20 );
+		ImagePlus classLabelMask = computeClassLabelMask( twoClassImage, t, minNumVoxels, 11, 20 );
 		classLabelMask.setTitle( title + "-labels" );
 		//classLabelMask.show();
 

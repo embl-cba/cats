@@ -52,7 +52,7 @@ public class TestSylwia {
         // Connected components
         //
         ImagePlus labelMask = null;
-        //ImagePlus labelMask = wekaSegmentation.computeClassLabelMask( 1, MIN_VOXELS, 12, 20 );
+        //ImagePlus labelMask = wekaSegmentation.createLabelMask( 1, MIN_VOXELS, 12, 20 );
         //labelMask.show();
 
         //  Object bounding boxes
