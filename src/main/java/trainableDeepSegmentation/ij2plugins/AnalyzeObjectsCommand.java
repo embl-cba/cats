@@ -1,16 +1,10 @@
 package trainableDeepSegmentation.ij2plugins;
 
-import edu.mines.jtk.util.ArrayMath;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
-import ij.plugin.Duplicator;
-import inra.ijpb.binary.BinaryImages;
 import inra.ijpb.measure.GeometricMeasures3D;
-import inra.ijpb.morphology.AttributeFiltering;
-import inra.ijpb.segment.Threshold;
 import net.imagej.DatasetService;
-import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
 import org.scijava.ItemVisibility;
 import org.scijava.app.StatusService;
@@ -20,15 +14,19 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
-import trainableDeepSegmentation.WekaSegmentation;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
+import static trainableDeepSegmentation.ij2plugins.AnalyzeObjectsCommand.PLUGIN_NAME;
 
 
-@Plugin(type = Command.class,
-        menuPath = "Plugins>Segmentation>EMBL-CBA>Analyze Objects" )
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>EMBL-CBA>" + PLUGIN_NAME )
 public class AnalyzeObjectsCommand implements Command
 {
+
+    public static final String PLUGIN_NAME = "Analyze Objects";
 
     @Parameter
     public UIService uiService;
@@ -54,10 +52,9 @@ public class AnalyzeObjectsCommand implements Command
             "<br>Analyse Objects<br>" +
             "...<br>";
 
-
     @Parameter (label = "Input image", required = true )
-    public File inputImageFile;
-    public static final String INPUT_IMAGE_FILE = "inputImagePath";
+    public File inputImagePath;
+    public static final String INPUT_IMAGE_PATH = "inputImagePath";
 
     @Parameter( label = "Lower Threshold", required = true )
     public int lowerThreshold = 1;
@@ -74,28 +71,21 @@ public class AnalyzeObjectsCommand implements Command
     public static final String SHOW = "Show results table";
 
     @Parameter( label = "Output folder", style = "directory" )
-    public File outputFolder;
-    public static final String OUTPUT_FOLDER = "outputDirectory";
+    public File outputDirectory;
+    public static final String OUTPUT_DIRECTORY = "outputDirectory";
+
+    @Parameter( label = "Quit ImageJ after running", required = false )
+    public boolean quitAfterRun = false;
+    public static final String QUIT_AFTER_RUN = "quitAfterRun";
 
     ImagePlus inputImage;
-
 
     public void run()
     {
 
-        IJ.log( "Command:" );
+        logCommandLineCall();
 
-        String command = "";
-        command += "AnalyzeObjectsCommand";
-        command += " \"";
-        command += INPUT_IMAGE_FILE + "=" + inputImageFile;
-        command += "," + LOWER_THRESHOLD + "=" + lowerThreshold;
-        command += "\" ";
-
-        IJ.log( command );
-
-
-        inputImage = IOUtils.loadImage( inputImageFile );
+        inputImage = IOUtils.loadImage( inputImagePath );
 
         ImagePlus labelMask = ObjectSegmentationUtils.createLabelMaskForChannelAndFrame( inputImage, 1, 1, 1, lowerThreshold, upperThreshold );
 
@@ -103,9 +93,9 @@ public class AnalyzeObjectsCommand implements Command
 
         if ( outputModality.equals( SAVE ) )
         {
-            IOUtils.createDirectoryIfNotExists( outputFolder.getPath() );
+            IOUtils.createDirectoryIfNotExists( outputDirectory.getPath() );
 
-            volumes.save( outputFolder + File.separator + inputImage.getTitle() + "--volumes.csv" );
+            volumes.save( outputDirectory + File.separator + inputImage.getTitle() + "--volumes.csv" );
         }
 
         if ( outputModality.equals( SHOW ) )
@@ -113,6 +103,20 @@ public class AnalyzeObjectsCommand implements Command
             volumes.show( inputImage.getTitle() + "--volumes" );
         }
 
+        if ( quitAfterRun )  IJ.run( "Quit" );
+
+    }
+
+    private void logCommandLineCall()
+    {
+        Map<String, Object> parameters = new HashMap<>( );
+        parameters.put( INPUT_IMAGE_PATH, inputImagePath );
+        parameters.put( LOWER_THRESHOLD, lowerThreshold );
+        parameters.put( UPPER_THRESHOLD, upperThreshold );
+        parameters.put( OUTPUT_MODALITY, outputModality );
+        parameters.put( OUTPUT_DIRECTORY, outputDirectory );
+        parameters.put( QUIT_AFTER_RUN, quitAfterRun );
+        IJ.log( CommandLineCall.createCommand( PLUGIN_NAME, parameters ) );
     }
 
 

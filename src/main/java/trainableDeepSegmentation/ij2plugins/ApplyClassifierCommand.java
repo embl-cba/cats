@@ -27,12 +27,15 @@ import trainableDeepSegmentation.WekaSegmentation;
 import trainableDeepSegmentation.results.Utils;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
-@Plugin(type = Command.class,
-        menuPath = "Plugins>Segmentation>EMBL-CBA>Apply Trainable Weka Deep Classifier" )
+import static trainableDeepSegmentation.ij2plugins.ApplyClassifierCommand.PLUGIN_NAME;
 
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>EMBL-CBA>"+PLUGIN_NAME )
 public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 {
+    public static final String PLUGIN_NAME = "Apply Classifier";
 
     @Parameter
     public UIService uiService;
@@ -77,6 +80,9 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     public File outputDirectory;
     public static final String OUTPUT_DIRECTORY = "outputDirectory";
 
+    @Parameter( label = "Quit ImageJ after running", required = false )
+    public boolean quitAfterRun = false;
+    public static final String QUIT_AFTER_RUN = "quitAfterRun";
 
     ImagePlus inputImage;
 
@@ -85,7 +91,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     public void run()
     {
 
-        logCommand();
+        logCommandLineCall();
 
         inputImage = IOUtils.loadImage( inputImagePath );
 
@@ -106,22 +112,8 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
             saveProbabilitiesAsImarisFiles();
         }
 
-    }
+        if ( quitAfterRun )  IJ.run( "Quit" );
 
-    private void logCommand()
-    {
-        IJ.log( "Command:" );
-
-        String command = "";
-        command += "ApplyClassifierCommand";
-        command += " \"";
-        command += INPUT_IMAGE_PATH + "=" + inputImagePath;
-        command += "," + CLASSIFIER_PATH + "=" + classifierPath;
-        command += "," + OUTPUT_DIRECTORY + "=" + outputDirectory;
-        command += "," + OUTPUT_MODALITY + "=" + outputModality;
-        command += "\" ";
-
-        IJ.log( command );
     }
 
     private void saveProbabilitiesAsOneTiff()
@@ -151,6 +143,17 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         wekaSegmentation.setResultImageRAM( );
         wekaSegmentation.loadClassifier( classifierPath.getAbsolutePath() );
         wekaSegmentation.applyClassifierWithTiling();
+    }
+
+    private void logCommandLineCall()
+    {
+        Map<String, Object> parameters = new HashMap<>( );
+        parameters.put( INPUT_IMAGE_PATH, inputImagePath );
+        parameters.put( OUTPUT_MODALITY, outputModality );
+        parameters.put( OUTPUT_DIRECTORY, outputDirectory );
+        parameters.put( QUIT_AFTER_RUN, quitAfterRun );
+        parameters.put( CLASSIFIER_PATH, classifierPath );
+        IJ.log( CommandLineCall.createCommand( PLUGIN_NAME, parameters ) );
     }
 
 
