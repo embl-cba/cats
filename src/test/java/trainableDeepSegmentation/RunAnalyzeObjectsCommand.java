@@ -1,7 +1,7 @@
 package trainableDeepSegmentation;
 
 import net.imagej.ImageJ;
-import trainableDeepSegmentation.ij2plugins.AnalyzeObjectsCommand;
+import trainableDeepSegmentation.commands.AnalyzeObjectsCommand;
 
 import java.io.File;
 import java.util.HashMap;

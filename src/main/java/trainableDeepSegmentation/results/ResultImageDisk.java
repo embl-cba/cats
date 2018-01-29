@@ -9,9 +9,9 @@ import ij.ImageStack;
 import ij.io.FileSaver;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
-import trainableDeepSegmentation.IntervalUtils;
+import trainableDeepSegmentation.utils.IntervalUtils;
 import trainableDeepSegmentation.WekaSegmentation;
-import trainableDeepSegmentation.ij2plugins.IOUtils;
+import trainableDeepSegmentation.commands.IOUtils;
 
 import java.io.File;
 import java.io.IOException;

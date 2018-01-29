@@ -1,4 +1,4 @@
-package trainableDeepSegmentation;
+package trainableDeepSegmentation.ui;
 
 import de.embl.cba.bigDataTools.logging.Logger;
 import fiji.util.gui.GenericDialogPlus;
@@ -38,13 +38,16 @@ import java.util.concurrent.Executors;
 import javax.swing.*;
 
 import net.imglib2.FinalInterval;
-import trainableDeepSegmentation.examples.Example;
+import trainableDeepSegmentation.*;
+import trainableDeepSegmentation.labels.examples.Example;
+import trainableDeepSegmentation.features.ImageScience;
 import trainableDeepSegmentation.instances.InstancesAndMetadata;
 import trainableDeepSegmentation.labels.LabelManager;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageDisk;
 import trainableDeepSegmentation.results.ResultImageGUI;
 import trainableDeepSegmentation.settings.Settings;
+import trainableDeepSegmentation.utils.IntervalUtils;
 import weka.classifiers.AbstractClassifier;
 import weka.core.SerializationHelper;
 import weka.gui.GUIChooserApp;
@@ -206,7 +209,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	private JButton addClassButton = null;
 
 	/** array of roi list overlays to paint the transparent rois of each class */
-	private RoiListOverlay [] roiOverlay = null;
+	private RoiListOverlay[] roiOverlay = null;
 
 	/** available colors for available classes */
 	private Color[] colors = new Color[]{
@@ -3100,7 +3103,7 @@ public class Weka_Deep_Segmentation implements PlugIn
 	 */
 	public static void record(String command, String... args)
 	{
-		command = "call(\"trainableDeepSegmentation.Weka_Deep_Segmentation." + command;
+		command = "call(\"trainableDeepSegmentation.ui.Weka_Deep_Segmentation." + command;
 		for(int i = 0; i < args.length; i++)
 			command += "\", \"" + args[i];
 		command += "\");\n";

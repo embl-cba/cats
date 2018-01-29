@@ -8,7 +8,6 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.Binner;
 import ij.plugin.Duplicator;
-import trainableDeepSegmentation.ij2plugins.IOUtils;
 
 import java.io.File;
 import java.util.ArrayList;

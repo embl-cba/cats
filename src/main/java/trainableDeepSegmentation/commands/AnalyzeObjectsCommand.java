@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.ij2plugins;
+package trainableDeepSegmentation.commands;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -9,21 +9,23 @@ import net.imagej.ops.OpService;
 import org.scijava.ItemVisibility;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
+import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
+import trainableDeepSegmentation.objectanalysis.ObjectAnalysis;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import static trainableDeepSegmentation.ij2plugins.AnalyzeObjectsCommand.PLUGIN_NAME;
+import static trainableDeepSegmentation.commands.AnalyzeObjectsCommand.PLUGIN_NAME;
 
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>EMBL-CBA>" + PLUGIN_NAME )
-public class AnalyzeObjectsCommand implements Command
+public class AnalyzeObjectsCommand extends DynamicCommand
 {
 
     public static final String PLUGIN_NAME = "Analyze Objects";
@@ -83,11 +85,13 @@ public class AnalyzeObjectsCommand implements Command
     public void run()
     {
 
+        Map<String, Object> inputs = getInputs();
+
         logCommandLineCall();
 
         inputImage = IOUtils.loadImage( inputImagePath );
 
-        ImagePlus labelMask = ObjectSegmentationUtils.createLabelMaskForChannelAndFrame( inputImage, 1, 1, 1, lowerThreshold, upperThreshold );
+        ImagePlus labelMask = ObjectAnalysis.createLabelMaskForChannelAndFrame( inputImage, 1, 1, 1, lowerThreshold, upperThreshold );
 
         ResultsTable volumes = GeometricMeasures3D.volume( labelMask.getStack(), new double[]{ 1, 1, 1 } );
 
@@ -116,7 +120,7 @@ public class AnalyzeObjectsCommand implements Command
         parameters.put( OUTPUT_MODALITY, outputModality );
         parameters.put( OUTPUT_DIRECTORY, outputDirectory );
         parameters.put( QUIT_AFTER_RUN, quitAfterRun );
-        IJ.log( CommandLineCall.createCommand( PLUGIN_NAME, parameters ) );
+        IJ.log( Commands.createCommand( PLUGIN_NAME, parameters ) );
     }
 
 

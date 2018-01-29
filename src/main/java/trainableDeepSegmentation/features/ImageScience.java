@@ -1,4 +1,4 @@
-package trainableDeepSegmentation;
+package trainableDeepSegmentation.features;
 
 import ij.ImagePlus;
 import imagescience.feature.Differentiator;

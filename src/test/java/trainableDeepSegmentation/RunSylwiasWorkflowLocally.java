@@ -1,25 +1,21 @@
 package trainableDeepSegmentation;
 
-import ij.IJ;
 import net.imagej.ImageJ;
-import trainableDeepSegmentation.ij2plugins.AnalyzeObjectsCommand;
-import trainableDeepSegmentation.ij2plugins.ApplyClassifierCommand;
-import trainableDeepSegmentation.ij2plugins.IOUtils;
+import trainableDeepSegmentation.commands.AnalyzeObjectsCommand;
+import trainableDeepSegmentation.commands.ApplyClassifierCommand;
+import trainableDeepSegmentation.commands.IOUtils;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import static trainableDeepSegmentation.ij2plugins.CommandLineCall.createCommand;
-
-public class RunSylwiaWorkflow
+public class RunSylwiasWorkflowLocally
 {
 
     public static void main(final String... args) throws Exception {
 
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
-
 
         String outputRootDirectory = TestingUtils.TEST_RESOURCES;
         String dataSetPattern = ".*--W00016--P00004--.*";
@@ -28,7 +24,6 @@ public class RunSylwiaWorkflow
         String outputDirectory = outputRootDirectory + File.separator + dataSetName;
 
         Map< String, Object > parameters = new HashMap<>(  );
-
 
         parameters.clear();
         parameters.put( ApplyClassifierCommand.INPUT_IMAGE_PATH, new File( TestingUtils.TEST_RESOURCES + "/image-sequence/" + dataSetPattern ) );

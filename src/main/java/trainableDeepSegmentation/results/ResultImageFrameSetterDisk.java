@@ -1,7 +1,7 @@
 package trainableDeepSegmentation.results;
 
 import net.imglib2.FinalInterval;
-import trainableDeepSegmentation.IntervalUtils;
+import trainableDeepSegmentation.utils.IntervalUtils;
 
 public class ResultImageFrameSetterDisk implements ResultImageFrameSetter {
 

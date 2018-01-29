@@ -1,4 +1,4 @@
-package trainableDeepSegmentation;
+package trainableDeepSegmentation.utils;
 
 import de.embl.cba.bigDataTools.logging.Logger;
 

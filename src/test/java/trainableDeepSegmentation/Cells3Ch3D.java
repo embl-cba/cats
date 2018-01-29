@@ -2,6 +2,7 @@ package trainableDeepSegmentation;
 
 import ij.IJ;
 import ij.ImagePlus;
+import trainableDeepSegmentation.ui.Weka_Deep_Segmentation;
 
 public class Cells3Ch3D
 {

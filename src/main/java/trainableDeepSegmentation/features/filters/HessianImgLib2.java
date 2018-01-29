@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.filters;
+package trainableDeepSegmentation.features.filters;
 
 /**
  * Created by tischi on 02/06/17.

@@ -149,14 +149,19 @@
 
 	<repositories>
 
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+
 		<repository>
 			<id>imagej.public</id>
 			<url>http://maven.imagej.net/content/groups/public</url>
 		</repository>
 
         <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <id>central</id>
+            <url>http://central.maven.org/maven2/</url>
         </repository>
 
 	</repositories>
@@ -184,12 +189,20 @@
 		<dependency>
 			<groupId>com.github.tischi</groupId>
 			<artifactId>fiji-plugin-bigDataTools</artifactId>
-            <version>83ec6375d4329f4b5534d0cc70519abce1282a70</version>
+            <version>ed723a3e1038e5f525e3eb6e0e1f04022e2d16d3</version>
 		</dependency>
 
-
-		<!-- Fiji dependencies -->
+        <!--
 		<dependency>
+			<groupId>com.github.tischi</groupId>
+			<artifactId>fiji-slurm</artifactId>
+            <version>0124351e8a86ac8ab7fad43e3cef904b2865641f</version>
+		</dependency>
+		-->
+
+
+        <!-- Fiji dependencies -->
+        <dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>Anisotropic_Diffusion_2D</artifactId>
 		</dependency>

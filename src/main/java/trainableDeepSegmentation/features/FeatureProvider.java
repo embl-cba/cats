@@ -1,4 +1,4 @@
-package trainableDeepSegmentation;
+package trainableDeepSegmentation.features;
 
 /**
  *
@@ -40,7 +40,10 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
+import trainableDeepSegmentation.WekaSegmentation;
 import trainableDeepSegmentation.results.ResultImage;
+import trainableDeepSegmentation.utils.IntervalUtils;
+import trainableDeepSegmentation.utils.ThreadUtils;
 
 import java.util.*;
 import java.util.concurrent.*;

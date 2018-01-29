@@ -1,4 +1,4 @@
-package trainableDeepSegmentation;
+package trainableDeepSegmentation.instances;
 
 import weka.core.DenseInstance;
 

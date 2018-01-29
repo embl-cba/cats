@@ -1,14 +1,14 @@
-package trainableDeepSegmentation.ij2plugins;
+package trainableDeepSegmentation.commands;
 
 import ij.IJ;
 
 import java.util.Iterator;
 import java.util.Map;
 
-public class CommandLineCall
+public abstract class Commands
 {
 
-    public static String createCommand( String pluginName, Map<String, Object> parameters)
+    public static String createCommand( String pluginName, Map<String, Object> parameters )
     {
         IJ.log( "\n# Command line call:" );
 
@@ -26,4 +26,5 @@ public class CommandLineCall
         command += "\" ";
         return command;
     }
+
 }

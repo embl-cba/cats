@@ -4,11 +4,12 @@ import ij.IJ;
 import ij.ImagePlus;
 import net.imglib2.FinalInterval;
 import net.imglib2.util.Intervals;
+import trainableDeepSegmentation.utils.IntervalUtils;
 
 import java.io.File;
 import java.util.ArrayList;
 
-import static trainableDeepSegmentation.IntervalUtils.*;
+import static trainableDeepSegmentation.utils.IntervalUtils.*;
 
 public class TrainLabel {
 

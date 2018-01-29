@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.examples;
+package trainableDeepSegmentation.labels.examples;
 
 import de.embl.cba.bigDataTools.logging.Logger;
 import trainableDeepSegmentation.instances.InstancesAndMetadata;

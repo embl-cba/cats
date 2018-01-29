@@ -1,4 +1,4 @@
-package trainableDeepSegmentation;
+package trainableDeepSegmentation.utils;
 
 import de.embl.cba.bigDataTools.Region5D;
 import ij.ImagePlus;
@@ -6,6 +6,7 @@ import ij.ImageStack;
 import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
+import trainableDeepSegmentation.WekaSegmentation;
 
 import java.util.ArrayList;
 

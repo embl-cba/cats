@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.examples;
+package trainableDeepSegmentation.labels.examples;
 
 import java.awt.*;
 import java.io.Serializable;

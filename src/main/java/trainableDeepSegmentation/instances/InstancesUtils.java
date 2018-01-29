@@ -6,10 +6,13 @@ import ij.Prefs;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import trainableDeepSegmentation.*;
-import trainableDeepSegmentation.examples.Example;
+import trainableDeepSegmentation.labels.examples.Example;
+import trainableDeepSegmentation.features.FeatureProvider;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.settings.Settings;
 import trainableDeepSegmentation.settings.SettingsUtils;
+import trainableDeepSegmentation.utils.IntervalUtils;
+import trainableDeepSegmentation.utils.ThreadUtils;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -23,7 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static trainableDeepSegmentation.IntervalUtils.*;
+import static trainableDeepSegmentation.utils.IntervalUtils.*;
 import static trainableDeepSegmentation.WekaSegmentation.*;
 import static trainableDeepSegmentation.instances.InstancesAndMetadata.Metadata.*;
 

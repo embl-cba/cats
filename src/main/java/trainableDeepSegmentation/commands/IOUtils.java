@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.ij2plugins;
+package trainableDeepSegmentation.commands;
 
 import ij.IJ;
 import ij.ImagePlus;

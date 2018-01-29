@@ -17,7 +17,7 @@
  * 
  */
 
-package trainableDeepSegmentation;
+package trainableDeepSegmentation.ui;
 
 import fiji.util.gui.OverlayedImageCanvas.Overlay;
 import ij.gui.Roi;

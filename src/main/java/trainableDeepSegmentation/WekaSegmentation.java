@@ -39,9 +39,11 @@ import trainableDeepSegmentation.classification.AttributeSelector;
 import trainableDeepSegmentation.classification.ClassifierInstancesMetadata;
 import trainableDeepSegmentation.classification.ClassifierManager;
 import trainableDeepSegmentation.classification.ClassifierUtils;
-import trainableDeepSegmentation.examples.Example;
-import trainableDeepSegmentation.examples.ExamplesUtils;
+import trainableDeepSegmentation.labels.examples.Example;
+import trainableDeepSegmentation.labels.examples.ExamplesUtils;
+import trainableDeepSegmentation.features.FeatureProvider;
 import trainableDeepSegmentation.instances.InstancesAndMetadata;
+import trainableDeepSegmentation.instances.ReusableDenseInstance;
 import trainableDeepSegmentation.results.ResultImage;
 import trainableDeepSegmentation.results.ResultImageDisk;
 import trainableDeepSegmentation.results.ResultImageFrameSetter;
@@ -53,13 +55,16 @@ import trainableDeepSegmentation.settings.SettingsUtils;
 
 //import inra.ijpb.segment.Threshold;
 
+import trainableDeepSegmentation.ui.Weka_Deep_Segmentation;
+import trainableDeepSegmentation.utils.IntervalUtils;
+import trainableDeepSegmentation.utils.ThreadUtils;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
 
-import static trainableDeepSegmentation.IntervalUtils.*;
+import static trainableDeepSegmentation.utils.IntervalUtils.*;
 
 
 /**
@@ -412,9 +417,8 @@ public class WekaSegmentation {
 		}
 	}
 
-	final static String START_NEW_INSTANCES = "Start new instances";
-	final static String APPEND_TO_PREVIOUS_INSTANCES = "Append to previous instances";
-
+	public final static String START_NEW_INSTANCES = "Start new instances";
+	public final static String APPEND_TO_PREVIOUS_INSTANCES = "Append to previous instances";
 
 	public void trainFromLabelImage(
 			String instancesKey,

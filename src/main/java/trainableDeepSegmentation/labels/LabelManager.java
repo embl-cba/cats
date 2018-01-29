@@ -5,7 +5,7 @@ import ij.gui.GenericDialog;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.plugin.frame.RoiManager;
-import trainableDeepSegmentation.examples.Example;
+import trainableDeepSegmentation.labels.examples.Example;
 
 import java.util.*;
 

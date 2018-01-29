@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.ij2plugins;
+package trainableDeepSegmentation.commands;
 
 /*
  * To the extent possible under law, the ImageJ developers have waived
@@ -18,6 +18,7 @@ import net.imglib2.type.numeric.RealType;
 import org.scijava.ItemVisibility;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
+import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -30,10 +31,10 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import static trainableDeepSegmentation.ij2plugins.ApplyClassifierCommand.PLUGIN_NAME;
+import static trainableDeepSegmentation.commands.ApplyClassifierCommand.PLUGIN_NAME;
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>EMBL-CBA>"+PLUGIN_NAME )
-public class ApplyClassifierCommand<T extends RealType<T>> implements Command
+public class ApplyClassifierCommand<T extends RealType<T>> extends DynamicCommand
 {
     public static final String PLUGIN_NAME = "Apply Classifier";
 
@@ -147,13 +148,16 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
     private void logCommandLineCall()
     {
+
+        Map<String,Object> inputs = getInputs();
+
         Map<String, Object> parameters = new HashMap<>( );
         parameters.put( INPUT_IMAGE_PATH, inputImagePath );
         parameters.put( OUTPUT_MODALITY, outputModality );
         parameters.put( OUTPUT_DIRECTORY, outputDirectory );
         parameters.put( QUIT_AFTER_RUN, quitAfterRun );
         parameters.put( CLASSIFIER_PATH, classifierPath );
-        IJ.log( CommandLineCall.createCommand( PLUGIN_NAME, parameters ) );
+        IJ.log( Commands.createCommand( PLUGIN_NAME, parameters ) );
     }
 
 

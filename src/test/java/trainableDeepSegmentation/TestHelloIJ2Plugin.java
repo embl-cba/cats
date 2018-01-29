@@ -1,7 +1,7 @@
 package trainableDeepSegmentation;
 
 import net.imagej.ImageJ;
-import trainableDeepSegmentation.ij2plugins.Hello;
+import trainableDeepSegmentation.commands.HelloCommand;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +18,7 @@ public class TestHelloIJ2Plugin
         Map< String, Object > parameters = new HashMap<>(  );
         parameters.put( "name", "Frida" );
 
-        ij.command().run( Hello.class, false, parameters );
+        ij.command().run( HelloCommand.class, false, parameters );
 
     }
 }

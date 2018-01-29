@@ -1,4 +1,4 @@
-package trainableDeepSegmentation.ij2plugins;
+package trainableDeepSegmentation.objectanalysis;
 
 import ij.ImagePlus;
 import ij.plugin.Duplicator;
@@ -6,7 +6,7 @@ import inra.ijpb.binary.BinaryImages;
 import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
 
-public class ObjectSegmentationUtils
+public class ObjectAnalysis
 {
     public static ImagePlus createLabelMaskForChannelAndFrame(
             ImagePlus image,

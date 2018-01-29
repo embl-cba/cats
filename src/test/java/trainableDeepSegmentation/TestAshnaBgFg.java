@@ -4,10 +4,11 @@ import de.embl.cba.bigDataTools.dataStreamingTools.DataStreamingTools;
 import ij.IJ;
 import ij.ImageJ;
 import net.imglib2.FinalInterval;
+import trainableDeepSegmentation.ui.Weka_Deep_Segmentation;
 
-import static trainableDeepSegmentation.IntervalUtils.*;
-import static trainableDeepSegmentation.IntervalUtils.C;
-import static trainableDeepSegmentation.IntervalUtils.T;
+import static trainableDeepSegmentation.utils.IntervalUtils.*;
+import static trainableDeepSegmentation.utils.IntervalUtils.C;
+import static trainableDeepSegmentation.utils.IntervalUtils.T;
 
 public class TestAshnaBgFg {
 
