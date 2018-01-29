@@ -19,7 +19,7 @@ Examples:
 
 Download below files and place them in your Fiji plugins folder:
 - https://git.embl.de/grp-almf/fiji-plugin-deep-segmentation/blob/master/out/artifacts/fiji_plugin_trainableDeepSegmentation.jar
-- https://github.com/tischi/fiji-plugin-bigDataTools/blob/master/out/artifacts/fiji_plugin_bigDataTools.jar
+- https://github.com/de.embl.cba.trainableDeepSegmentation.weka/fiji-plugin-bigDataTools/blob/master/out/artifacts/fiji_plugin_bigDataTools.jar
 - install the ImageScience plugins:
 	- [Fiji > Help > Update ...] 
 	- [Manage update sites]

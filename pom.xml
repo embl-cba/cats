@@ -9,9 +9,9 @@
 		<relativePath />
 	</parent>
 
-	<groupId>embl.cba</groupId>
-	<artifactId>fiji-plugin-deepSegmentation</artifactId>
-	<version>0.1.0</version>
+	<groupId>de.embl.cba</groupId>
+	<artifactId>fiji_plugin_deepSegmentation</artifactId>
+	<version>0.4.0</version>
 
 	<name>Fiji plugin for trainable segmentation using deep convolution</name>
 	<description>A plugin for trainable segmentation using deep convolution.</description>
@@ -27,6 +27,21 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>${main-class}</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 	<developers>
 		<developer>
@@ -121,31 +136,32 @@
 		</mailingList>
 	</mailingLists>
 
+    <!--
 	<scm>
-		<connection>scm:git:git://github.com/tischi</connection>
-		<developerConnection>scm:git:git@github.com:tischi</developerConnection>
+		<connection>scm:git:git://github.com/de.embl.cba.trainableDeepSegmentation.wekaconnection>
+		<developerConnection>scm:git:git@github.com:de.embl.cba.trainableDeepSegmentation.wekadeveloperConnection>
 		<tag>HEAD</tag>
 		<url>https://github.com/tischi</url>
+
 	</scm>
+
 	<issueManagement>
 		<system>GitHub Issues</system>
 		<url>https://github.com/tischi</url>
 	</issueManagement>
+    -->
 
 	<properties>
-		<package-name>ai</package-name>
-		<license.licenseName>gpl_v3</license.licenseName>
-		<license.copyrightOwners>Fiji developers.</license.copyrightOwners>
-		<license.projectName>Fiji distribution of ImageJ for the life sciences.</license.projectName>
-
+		<package-name>de.embl.cba.trainableDeepSegmentation</package-name>
+        <license.licenseName>bsd_2</license.licenseName>
+        <license.copyrightOwners>EMBL</license.copyrightOwners>
+        <imagej.app.directory>/Applications/Fiji.app/</imagej.app.directory>
+        <license.projectName>Fiji distribution of ImageJ for the life sciences.</license.projectName>
 		<imagescience.version>3.0.0</imagescience.version>
-
-		<!-- TEMP: Until pom-scijava 15.0.0 is released. -->
-		<!--
 		<weka.version>3.9.0</weka.version>
-		-->
-
+        <enforcer.skip>true</enforcer.skip>
 	</properties>
+
 
 	<repositories>
 
@@ -194,7 +210,7 @@
 
         <!--
 		<dependency>
-			<groupId>com.github.tischi</groupId>
+			<groupId>com.github.de.embl.cba.trainableDeepSegmentation.wekagroupId>
 			<artifactId>fiji-slurm</artifactId>
             <version>0124351e8a86ac8ab7fad43e3cef904b2865641f</version>
 		</dependency>
@@ -251,7 +267,6 @@
             <version>1.8.0-ea-b96.1</version>
         </dependency>
 
-		<!-- Third party dependencies -->
 		<dependency>
 			<groupId>nz.ac.waikato.cms.weka</groupId>
 			<artifactId>weka-dev</artifactId>
@@ -272,8 +287,15 @@
 					<groupId>com.googlecode.netlib-java</groupId>
 					<artifactId>netlib-java</artifactId>
 				</exclusion>
+                <exclusion>
+                    <groupId>weka</groupId>
+                    <artifactId>weka</artifactId>
+                </exclusion>
 			</exclusions>
 		</dependency>
+
+
+
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math3</artifactId>
@@ -284,10 +306,9 @@
 			<groupId>sc.fiji</groupId>
 			<artifactId>imagescience</artifactId>
 			<version>${imagescience.version}</version>
-			<optional>true</optional>
 		</dependency>
 
-		<!-- Test scope dependencies -->
+        <!-- Test scope dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
