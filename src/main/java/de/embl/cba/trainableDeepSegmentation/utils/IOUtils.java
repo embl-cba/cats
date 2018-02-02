@@ -1,4 +1,4 @@
-package de.embl.cba.trainableDeepSegmentation.commands;
+package de.embl.cba.trainableDeepSegmentation.utils;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 public class IOUtils
 {
 
-    static ImagePlus loadImage( File imageFile )
+    public static ImagePlus loadImage( File imageFile )
     {
 
         ImagePlus image;

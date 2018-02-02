@@ -1,5 +1,7 @@
 package de.embl.cba.trainableDeepSegmentation.commands;
 
+import de.embl.cba.cluster.commands.Commands;
+import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
@@ -9,7 +11,6 @@ import net.imagej.ops.OpService;
 import org.scijava.ItemVisibility;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
-import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -25,7 +26,7 @@ import static de.embl.cba.trainableDeepSegmentation.commands.AnalyzeObjectsComma
 
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>EMBL-CBA>" + PLUGIN_NAME )
-public class AnalyzeObjectsCommand extends DynamicCommand
+public class AnalyzeObjectsCommand implements Command
 {
 
     public static final String PLUGIN_NAME = "Analyze Objects";
@@ -85,21 +86,25 @@ public class AnalyzeObjectsCommand extends DynamicCommand
     public void run()
     {
 
-        Map<String, Object> inputs = getInputs();
-
+        logService.info( "# " + PLUGIN_NAME );
         logCommandLineCall();
 
+        logService.info( "Loading image " + inputImagePath );
         inputImage = IOUtils.loadImage( inputImagePath );
 
+        logService.info( "Creating label mask");
         ImagePlus labelMask = ObjectAnalysis.createLabelMaskForChannelAndFrame( inputImage, 1, 1, 1, lowerThreshold, upperThreshold );
 
+        logService.info( "Measure volumes");
         ResultsTable volumes = GeometricMeasures3D.volume( labelMask.getStack(), new double[]{ 1, 1, 1 } );
+
 
         if ( outputModality.equals( SAVE ) )
         {
+            String tablePath = outputDirectory + File.separator + inputImage.getTitle() + "--volumes.csv";
+            logService.info( "Saving results table " + tablePath );
             IOUtils.createDirectoryIfNotExists( outputDirectory.getPath() );
-
-            volumes.save( outputDirectory + File.separator + inputImage.getTitle() + "--volumes.csv" );
+            volumes.save( tablePath );
         }
 
         if ( outputModality.equals( SHOW ) )
@@ -107,7 +112,7 @@ public class AnalyzeObjectsCommand extends DynamicCommand
             volumes.show( inputImage.getTitle() + "--volumes" );
         }
 
-        if ( quitAfterRun )  IJ.run( "Quit" );
+        if ( quitAfterRun ) Commands.quitImageJ( logService );
 
     }
 

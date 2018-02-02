@@ -7,7 +7,7 @@ import ij.ImageStack;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
-import de.embl.cba.trainableDeepSegmentation.commands.IOUtils;
+import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 
 import java.awt.image.ColorModel;
 import java.util.ArrayList;

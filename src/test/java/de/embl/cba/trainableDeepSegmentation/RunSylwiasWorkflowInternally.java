@@ -3,13 +3,13 @@ package de.embl.cba.trainableDeepSegmentation;
 import net.imagej.ImageJ;
 import de.embl.cba.trainableDeepSegmentation.commands.AnalyzeObjectsCommand;
 import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierCommand;
-import de.embl.cba.trainableDeepSegmentation.commands.IOUtils;
+import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RunSylwiasWorkflowLocally
+public class RunSylwiasWorkflowInternally
 {
 
     public static void main(final String... args) throws Exception {

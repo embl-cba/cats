@@ -9,16 +9,16 @@ package de.embl.cba.trainableDeepSegmentation.commands;
  */
 
 
+import de.embl.cba.cluster.commands.Commands;
+import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.io.FileSaver;
 import net.imagej.*;
 import net.imagej.ops.OpService;
 import net.imglib2.type.numeric.RealType;
-import org.scijava.ItemVisibility;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
-import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -34,7 +34,7 @@ import java.util.Map;
 import static de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierCommand.PLUGIN_NAME;
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>EMBL-CBA>"+PLUGIN_NAME )
-public class ApplyClassifierCommand<T extends RealType<T>> extends DynamicCommand
+public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 {
     public static final String PLUGIN_NAME = "Apply Classifier";
 
@@ -56,17 +56,11 @@ public class ApplyClassifierCommand<T extends RealType<T>> extends DynamicComman
     @Parameter
     public StatusService statusService;
 
-    @Parameter( visibility = ItemVisibility.MESSAGE )
-    private String message
-            = "<html>"  +
-            "<br>Apply Classifier<br>" +
-            "...<br>";
-
-    @Parameter (label = "Input image", required = true )
+    @Parameter (label = "Input image" )
     public File inputImagePath;
     public static final String INPUT_IMAGE_PATH = "inputImagePath";
 
-    @Parameter (label = "Classifier",  required = true )
+    @Parameter (label = "Classifier" )
     public File classifierPath;
     public static final String CLASSIFIER_PATH = "classifierPath";
 
@@ -89,13 +83,20 @@ public class ApplyClassifierCommand<T extends RealType<T>> extends DynamicComman
 
     DeepSegmentation deepSegmentation;
 
+    // /Applications/Fiji.app/Contents/MacOS/ImageJ-macosx --run "Apply Classifier" "quitAfterRun='true',inputImagePath='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/image-sequence/.*--W00016--P00003--.*',classifierPath='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/transmission-cells-3d.classifier',outputModality='Save class probabilities as tiff files',outputDirectory='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/image-sequence--classified'"
+
+    // xvfb-run -a /g/almf/software/Fiji.app/ImageJ-linux64 --run "Apply Classifier" "quitAfterRun='true',inputImagePath='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences/.*--W00016--P00004--.*',classifierPath='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/transmission-cells-3d.classifier',outputDirectory='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences--classified/DataSet--W00016--P00004--',outputModality='Save class probabilities as tiff files'"
+
     public void run()
     {
 
+        logService.info( "# " + PLUGIN_NAME );
         logCommandLineCall();
 
+        logService.info( "Loading: " + inputImagePath );
         inputImage = IOUtils.loadImage( inputImagePath );
 
+        logService.info( "Applying classifier: " + classifierPath );
         applyClassifier();
 
         if ( outputModality.equals( SHOW_AS_ONE_IMAGE ) )
@@ -113,14 +114,15 @@ public class ApplyClassifierCommand<T extends RealType<T>> extends DynamicComman
             saveProbabilitiesAsImarisFiles();
         }
 
-        if ( quitAfterRun )  IJ.run( "Quit" );
-
+        if ( quitAfterRun )  if ( quitAfterRun ) Commands.quitImageJ( logService );
+        
     }
 
     private void saveProbabilitiesAsOneTiff()
     {
         ImagePlus result = deepSegmentation.getResultImage().getWholeImageCopy();
         String savingPath = "" + outputDirectory + File.separator + inputImage.getTitle() + "--classified.tif";
+        logService.info( "Save results: " + savingPath);
         DeepSegmentation.logger.info("\n# Saving " + savingPath + "...");
         FileSaver fileSaver = new FileSaver( result );
         fileSaver.saveAsTiff( savingPath );
@@ -148,16 +150,13 @@ public class ApplyClassifierCommand<T extends RealType<T>> extends DynamicComman
 
     private void logCommandLineCall()
     {
-
-        Map<String,Object> inputs = getInputs();
-
         Map<String, Object> parameters = new HashMap<>( );
         parameters.put( INPUT_IMAGE_PATH, inputImagePath );
         parameters.put( OUTPUT_MODALITY, outputModality );
         parameters.put( OUTPUT_DIRECTORY, outputDirectory );
         parameters.put( QUIT_AFTER_RUN, quitAfterRun );
         parameters.put( CLASSIFIER_PATH, classifierPath );
-        IJ.log( de.embl.cba.trainableDeepSegmentation.commands.Commands.createImageJPluginCommandLineCall( "ImageJ", PLUGIN_NAME, parameters ) );
+        IJ.log( Commands.createImageJPluginCommandLineCall( "ImageJ", PLUGIN_NAME, parameters ) );
     }
 
 

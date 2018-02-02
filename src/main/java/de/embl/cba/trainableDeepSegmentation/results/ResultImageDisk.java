@@ -11,7 +11,7 @@ import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import de.embl.cba.trainableDeepSegmentation.*;
-import de.embl.cba.trainableDeepSegmentation.commands.IOUtils;
+import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 
 import java.io.File;
 import java.io.IOException;

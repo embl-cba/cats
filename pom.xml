@@ -158,8 +158,7 @@
         <imagej.app.directory>/Applications/Fiji.app/</imagej.app.directory>
         <license.projectName>Fiji distribution of ImageJ for the life sciences.</license.projectName>
 		<imagescience.version>3.0.0</imagescience.version>
-		<weka.version>3.9.0</weka.version>
-        <enforcer.skip>true</enforcer.skip>
+		<enforcer.skip>true</enforcer.skip>
 	</properties>
 
 
@@ -268,30 +267,39 @@
         </dependency>
 
 		<dependency>
+
 			<groupId>nz.ac.waikato.cms.weka</groupId>
 			<artifactId>weka-dev</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>com.github.fommil.netlib</groupId>
-					<artifactId>all</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>nz.ac.waikato.cms.weka.thirdparty</groupId>
-					<artifactId>java-cup-11b</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>nz.ac.waikato.cms.weka.thirdparty</groupId>
-					<artifactId>java-cup-11b-runtime</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.googlecode.netlib-java</groupId>
-					<artifactId>netlib-java</artifactId>
-				</exclusion>
+
+            <groupId>nz.ac.waikato.cms.weka</groupId>
+            <artifactId>weka</artifactId>
+            <version>3.9.1</version>
+
+
+            <!--
+            <exclusions>
+                <exclusion>
+                    <groupId>com.github.fommil.netlib</groupId>
+                    <artifactId>all</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>nz.ac.waikato.cms.weka.thirdparty</groupId>
+                    <artifactId>java-cup-11b</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>nz.ac.waikato.cms.weka.thirdparty</groupId>
+                    <artifactId>java-cup-11b-runtime</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.googlecode.netlib-java</groupId>
+                    <artifactId>netlib-java</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>weka</groupId>
                     <artifactId>weka</artifactId>
                 </exclusion>
-			</exclusions>
+            </exclusions>
+            -->
 		</dependency>
 
 

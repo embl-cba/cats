@@ -1,9 +1,7 @@
 package de.embl.cba.trainableDeepSegmentation;
 
-import de.embl.cba.cluster.SlurmCommandSubmitter;
-import de.embl.cba.cluster.SlurmJobFuture;
-import de.embl.cba.cluster.SlurmJobSubmitter;
-import de.embl.cba.cluster.job.ImageJCommandSlurmJob;
+import de.embl.cba.cluster.ImageJCommandsSubmitter;
+import de.embl.cba.cluster.JobFuture;
 import de.embl.cba.cluster.logger.Logger;
 import net.imagej.ImageJ;
 import org.scijava.command.Command;
@@ -12,7 +10,7 @@ import org.scijava.plugin.Plugin;
 import org.scijava.widget.TextWidget;
 import de.embl.cba.trainableDeepSegmentation.commands.AnalyzeObjectsCommand;
 import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierCommand;
-import de.embl.cba.trainableDeepSegmentation.commands.Commands;
+import weka.knowledgeflow.steps.Job;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -20,9 +18,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 
-@Plugin(type = Command.class, menuPath = "Plugins>Development>EMBL-CBA>Slurm Classification" )
+// /g/almf/software/Fiji.app/ImageJ-linux64 --run "Apply Classifier" "quitAfterRun='true',inputImagePath='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences/.*--W00016--P00004--.*',classifierPath='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/01.classifier',outputDirectory='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences--analysis/.*--W00016--P00004--.*',outputModality='Save class probabilities as tiff files'"
+
+@Plugin(type = Command.class, menuPath = "Plugins>Development>EMBL-CBA>Sylwia Slurm" )
 public class RunSylwiasWorkflowOnSlurm implements Command
 {
 
@@ -32,71 +33,98 @@ public class RunSylwiasWorkflowOnSlurm implements Command
     @Parameter(label = "Password", style = TextWidget.PASSWORD_STYLE, persist = false )
     private String password;
 
-    @Parameter (label = "Directory", style = "directory", required = false )
+    @Parameter (label = "Data directory", style = "directory", required = false )
     public File inputDirectory;
+
+    @Parameter (label = "Job directory", style = "directory", required = false )
+    public File jobDirectory;
 
     @Parameter (label = "Classifier", required = false  )
     public File classifierFile;
 
-    @Parameter (label = "ImageJ", required = false  )
-    public String imageJ;
-
     public void run()
     {
 
-        String imageJ = ImageJCommandSlurmJob.ALMF_CLUSTER_IMAGEJ_XVFB;
+        inputDirectory = new File( "/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences/" );
 
-        Path classifierPath = Paths.get( "/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/01.classifier" );
+        jobDirectory = new File( "/g/cba/cluster/sylwia" );
+
+        Path classifierPath = Paths.get( "/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/transmission-cells-3d.classifier" );
 
         ArrayList< Path > dataSetPatterns = getDataSetPatterns( inputDirectory );
 
-        ArrayList< SlurmJobFuture > jobFutures = submitJobs( imageJ, classifierPath, dataSetPatterns );
+        String imageJ = ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_XVFB;
 
-        for ( SlurmJobFuture jobFuture : jobFutures )
+        ArrayList< JobFuture > jobFutures = submitJobsOnSlurm( imageJ, jobDirectory, classifierPath, dataSetPatterns );
+
+        monitorJobProgress( jobFutures );
+
+    }
+
+    private void monitorJobProgress( ArrayList< JobFuture > jobFutures )
+    {
+
+        for ( JobFuture jobFuture : jobFutures )
         {
-            Logger.log( jobFuture.getStatus() );
-            if ( jobFuture.isDone() )
+            try
             {
-                Logger.log( jobFuture.getOutput() );
-                Logger.log( jobFuture.getError() );
-                jobFutures.remove( jobFuture );
+                HashMap< String, Object > output = jobFuture.get();
+                Logger.log( (String) output.get( JobFuture.STD_OUT ) );
             }
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+            catch ( ExecutionException e )
+            {
+                e.printStackTrace();
+            }
+
         }
 
         Logger.log( "All jobs finished." );
-
     }
 
-    private ArrayList< SlurmJobFuture > submitJobs( String imageJ, Path classifierPath, ArrayList< Path > dataSetPatterns )
+    private ArrayList< JobFuture > submitJobsOnSlurm( String imageJ, File jobDirectory, Path classifierPath, ArrayList< Path > dataSetPatterns )
     {
-        ArrayList< SlurmJobFuture > jobFutures = new ArrayList<>( );
+
+        ImageJCommandsSubmitter commandsSubmitter = new ImageJCommandsSubmitter(
+                ImageJCommandsSubmitter.EXECUTION_SYSTEM_EMBL_SLURM,
+                jobDirectory.getAbsolutePath(),
+                ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_XVFB,
+                username, password );
+
+        ArrayList< JobFuture > jobFutures = new ArrayList<>( );
+
         for ( Path dataSetPattern : dataSetPatterns )
         {
-            ArrayList< String > commands = createCommands( imageJ, dataSetPattern, classifierPath );
-            jobFutures.add( SlurmJobSubmitter.submit( commands, username, password ) );
+            commandsSubmitter.clearCommands();
+            setCommandAndParameterStrings( commandsSubmitter, dataSetPattern, classifierPath );
+            jobFutures.add( commandsSubmitter.submitCommands() );
         }
+
         return jobFutures;
     }
+
+
 
     private ArrayList< Path > getDataSetPatterns( File inputDirectory )
     {
         ArrayList< Path > patterns =  new ArrayList<>( );
-        String directory = "/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/4x_2p7mm_100umsteps_trans_001/data";
 
-        patterns.add( Paths.get( directory + "/" + ".*--W00016--P00003--.*" ) );
-        patterns.add( Paths.get( directory + "/" + ".*--W00016--P00004--.*" ) );
+        patterns.add( Paths.get( inputDirectory.getAbsolutePath() + "/" + ".*--W00016--P00003--.*" ) );
+        patterns.add( Paths.get( inputDirectory.getAbsolutePath() + "/" + ".*--W00016--P00004--.*" ) );
 
         return patterns;
     }
 
-    private static ArrayList< String > createCommands( String imageJ, Path inputImagePath, Path classifierPath )
+    private static void setCommandAndParameterStrings( ImageJCommandsSubmitter commandsSubmitter, Path inputImagePath, Path classifierPath )
     {
 
-        String outputDirectory = inputImagePath.getParent() + "--analysis" + "/" + inputImagePath.getFileName();
+        String dataSetName = inputImagePath.getFileName().toString().replace( ".*", "" ).trim();
+        String outputDirectory = inputImagePath.getParent() + "--analysis" + "/" + "DataSet" + dataSetName;
 
         Map< String, Object > parameters = new HashMap<>();
-
-        ArrayList< String > commands = new ArrayList<>( );
 
         parameters.clear();
         parameters.put( ApplyClassifierCommand.INPUT_IMAGE_PATH, inputImagePath );
@@ -104,18 +132,16 @@ public class RunSylwiasWorkflowOnSlurm implements Command
         parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, new File( outputDirectory ) );
         parameters.put( ApplyClassifierCommand.OUTPUT_MODALITY, ApplyClassifierCommand.SAVE_AS_TIFF_FILES );
         parameters.put( AnalyzeObjectsCommand.QUIT_AFTER_RUN, true );
-        commands.add( Commands.createImageJPluginCommandLineCall( imageJ,"ApplyClassifierCommand" , parameters ) );
+        commandsSubmitter.addCommand( ApplyClassifierCommand.PLUGIN_NAME , parameters );
 
         parameters.clear();
         parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_PATH, new File( outputDirectory + "/foreground.tif" ) );
         parameters.put( AnalyzeObjectsCommand.LOWER_THRESHOLD, 1 );
         parameters.put( AnalyzeObjectsCommand.UPPER_THRESHOLD, 255 );
         parameters.put( AnalyzeObjectsCommand.OUTPUT_DIRECTORY, new File( outputDirectory ) );
-        parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, AnalyzeObjectsCommand.SHOW );
+        parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, AnalyzeObjectsCommand.SAVE );
         parameters.put( AnalyzeObjectsCommand.QUIT_AFTER_RUN, true );
-        commands.add( Commands.createImageJPluginCommandLineCall( imageJ,"AnalyzeObjectsCommand" , parameters ) );
-
-        return commands;
+        commandsSubmitter.addCommand( AnalyzeObjectsCommand.PLUGIN_NAME , parameters );
     }
 
 

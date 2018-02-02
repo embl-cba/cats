@@ -116,9 +116,7 @@ public class ClassifierUtils {
      * @param pathName complete path and file name
      * @return false if error
      */
-    public static ClassifierInstancesMetadata loadClassifierInstancesMetadata(
-            String directory,
-            String filename )
+    public static ClassifierInstancesMetadata loadClassifierInstancesMetadata( String directory, String filename )
     {
         String filepath = directory + File.separator + filename;
 
