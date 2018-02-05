@@ -181,14 +181,14 @@
 
 	</repositories>
 
-	<dependencies>
+    <dependencies>
 
         <dependency>
             <groupId>net.imagej</groupId>
             <artifactId>imagej-legacy</artifactId>
         </dependency>
 
-		<!-- Github 3D image suite dependencies -->
+		<!-- Github dependencies -->
 		<dependency>
 			<groupId>com.github.mcib3d</groupId>
 			<artifactId>mcib3d-core</artifactId>
@@ -207,13 +207,17 @@
             <version>ed723a3e1038e5f525e3eb6e0e1f04022e2d16d3</version>
 		</dependency>
 
-        <!--
-		<dependency>
-			<groupId>com.github.de.embl.cba.trainableDeepSegmentation.wekagroupId>
-			<artifactId>fiji-slurm</artifactId>
-            <version>0124351e8a86ac8ab7fad43e3cef904b2865641f</version>
-		</dependency>
-		-->
+        <dependency>
+            <groupId>com.github.ssgpers</groupId>
+            <artifactId>java-utils--embl-cba</artifactId>
+            <version>38315bceac840445b6bc1b907cb58839c0ca75c1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.tischi</groupId>
+            <artifactId>fiji-slurm</artifactId>
+            <version>ae84a04c7284654d657062a4225f18b0ce4c521e</version>
+        </dependency>
 
 
         <!-- Fiji dependencies -->
@@ -221,10 +225,12 @@
 			<groupId>sc.fiji</groupId>
 			<artifactId>Anisotropic_Diffusion_2D</artifactId>
 		</dependency>
-		<dependency>
+
+        <dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>VIB-lib</artifactId>
 		</dependency>
+
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>fiji-lib</artifactId>
@@ -235,15 +241,18 @@
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
 		</dependency>
-		<dependency>
+
+        <dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-ij</artifactId>
 		</dependency>
-		<dependency>
+
+        <dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm-gpl</artifactId>
 		</dependency>
-		<dependency>
+
+        <dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm</artifactId>
 		</dependency>
@@ -267,41 +276,10 @@
         </dependency>
 
 		<dependency>
-
 			<groupId>nz.ac.waikato.cms.weka</groupId>
 			<artifactId>weka-dev</artifactId>
-
-            <groupId>nz.ac.waikato.cms.weka</groupId>
-            <artifactId>weka</artifactId>
-            <version>3.9.1</version>
-
-
-            <!--
-            <exclusions>
-                <exclusion>
-                    <groupId>com.github.fommil.netlib</groupId>
-                    <artifactId>all</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>nz.ac.waikato.cms.weka.thirdparty</groupId>
-                    <artifactId>java-cup-11b</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>nz.ac.waikato.cms.weka.thirdparty</groupId>
-                    <artifactId>java-cup-11b-runtime</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.googlecode.netlib-java</groupId>
-                    <artifactId>netlib-java</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>weka</groupId>
-                    <artifactId>weka</artifactId>
-                </exclusion>
-            </exclusions>
-            -->
-		</dependency>
-
+            <version>3.9.2</version>
+        </dependency>
 
 
 		<dependency>
@@ -336,4 +314,32 @@
 		</dependency>
 
 	</dependencies>
+
 </project>
+
+
+        <!--
+          <exclusions>
+              <exclusion>
+                  <groupId>com.github.fommil.netlib</groupId>
+                  <artifactId>all</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>nz.ac.waikato.cms.weka.thirdparty</groupId>
+                  <artifactId>java-cup-11b</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>nz.ac.waikato.cms.weka.thirdparty</groupId>
+                  <artifactId>java-cup-11b-runtime</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>com.googlecode.netlib-java</groupId>
+                  <artifactId>netlib-java</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>weka</groupId>
+                  <artifactId>weka</artifactId>
+              </exclusion>
+          </exclusions>
+          -->
+

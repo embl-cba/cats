@@ -21,7 +21,7 @@ package de.embl.cba.trainableDeepSegmentation.features;
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
-import de.embl.cba.bigDataTools.logging.Logger;
+import embl.cba.logging.Logger;
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
 import ij.IJ;
 import ij.ImagePlus;

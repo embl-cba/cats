@@ -1,6 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.utils;
 
-import de.embl.cba.bigDataTools.logging.Logger;
+import embl.cba.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;

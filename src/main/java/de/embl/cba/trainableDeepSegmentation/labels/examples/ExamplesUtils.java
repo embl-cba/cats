@@ -1,6 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.labels.examples;
 
-import de.embl.cba.bigDataTools.logging.Logger;
+import embl.cba.logging.Logger;
 import de.embl.cba.trainableDeepSegmentation.instances.InstancesAndMetadata;
 import weka.core.Instances;
 

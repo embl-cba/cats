@@ -1,6 +1,8 @@
 package de.embl.cba.trainableDeepSegmentation.ui;
 
-import de.embl.cba.bigDataTools.logging.Logger;
+import embl.cba.logging.Logger;
+
+
 import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
 import ij.*;

@@ -16,7 +16,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPOutputStream;
 
-import de.embl.cba.bigDataTools.logging.*;
+import embl.cba.logging.IJLazySwingLogger;
+import embl.cba.logging.Logger;
+
 import de.embl.cba.trainableDeepSegmentation.weka.fastRandomForest.FastRandomForest;
 import ij.gui.PolygonRoi;
 import ij.io.FileSaver;
@@ -57,6 +59,7 @@ import de.embl.cba.trainableDeepSegmentation.settings.SettingsUtils;
 
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.ThreadUtils;
+import org.scijava.log.DefaultLogger;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -108,9 +111,7 @@ public class DeepSegmentation
 
 	public void setResultImageBgFgRAM( )
 	{
-		resultImageBgFg = new ResultImageRAM(
-				this,
-				getInputImageDimensions() );
+		resultImageBgFg = new ResultImageRAM( this, getInputImageDimensions() );
 
 		logger.info("Allocated memory for result image." );
 
@@ -847,7 +848,6 @@ public class DeepSegmentation
 		rf.setComputeImportances(true);
 		classifier = rf;
 
-
 		// initialize the examples
 		examples = new ArrayList<Example>();
 
@@ -858,8 +858,14 @@ public class DeepSegmentation
 	 *
 	 * @param imp instances image
 	 */
-	public void setInputImage(ImagePlus imp)
+	public void setInputImage( ImagePlus imp )
 	{
+		if ( imp == null )
+		{
+			logger.error( "Input image is NULL." );
+			return;
+		}
+
 		this.inputImage = imp;
 		setInputImageDimensions();
 	}

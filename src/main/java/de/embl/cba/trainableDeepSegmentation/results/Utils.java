@@ -3,7 +3,7 @@ package de.embl.cba.trainableDeepSegmentation.results;
 import de.embl.cba.bigDataTools.Hdf5DataCubeWriter;
 import de.embl.cba.bigDataTools.ImarisDataSet;
 import de.embl.cba.bigDataTools.ImarisWriter;
-import de.embl.cba.bigDataTools.logging.Logger;
+import embl.cba.logging.Logger;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.Binner;

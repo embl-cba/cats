@@ -44,7 +44,7 @@ import de.embl.cba.trainableDeepSegmentation.metrics.ClassificationStatistics;
 import util.FindConnectedRegions;
 import util.FindConnectedRegions.Results;
 
-import de.embl.cba.bigDataTools.logging.Logger;
+import embl.cba.logging.Logger;
 
 /**
  * This class implements useful methods for the Weka Segmentation library.

@@ -2,7 +2,7 @@ package de.embl.cba.trainableDeepSegmentation.results;
 
 import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import de.embl.cba.bigDataTools.dataStreamingTools.DataStreamingTools;
-import de.embl.cba.bigDataTools.logging.Logger;
+import embl.cba.logging.Logger;
 import de.embl.cba.bigDataTools.utils.ImageDataInfo;
 import ij.ImagePlus;
 import ij.ImageStack;

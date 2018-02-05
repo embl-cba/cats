@@ -1,6 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.classification;
 
-import de.embl.cba.bigDataTools.logging.Logger;
+import embl.cba.logging.Logger;
 import de.embl.cba.trainableDeepSegmentation.weka.fastRandomForest.*;
 import weka.core.Instances;
 

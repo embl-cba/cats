@@ -1,6 +1,7 @@
 package de.embl.cba.trainableDeepSegmentation.results;
 
-import de.embl.cba.bigDataTools.logging.Logger;
+import embl.cba.logging.Logger;
+
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
 import ij.ImagePlus;
 import ij.ImageStack;

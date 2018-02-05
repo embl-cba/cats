@@ -115,7 +115,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         }
 
         if ( quitAfterRun )  if ( quitAfterRun ) Commands.quitImageJ( logService );
-        
+
     }
 
     private void saveProbabilitiesAsOneTiff()
