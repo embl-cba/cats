@@ -18,9 +18,10 @@ public abstract class IntervalUtils {
     public static int Y = 1;
     public static int C = 2;
     public static int Z = 3;
+    public static int T = 4;
+
     public static int[] XY = new int[]{X, Y};
     public static int[] XYZ = new int[]{X, Y, Z};
-    public static int T = 4;
     public static int[] XYZT = new int[]{X, Y, Z, T};
 
     // TODO: move to Utils
@@ -147,14 +148,17 @@ public abstract class IntervalUtils {
 
     public static ArrayList<FinalInterval> getTiles( FinalInterval interval,
                                                      Integer numTiles,
-                                                     DeepSegmentation ws)
+                                                     DeepSegmentation deepSegmentation )
     {
 
+        DeepSegmentation.logger.info( "# Generating tiles" );
         logInterval( interval );
+        DeepSegmentation.logger.info( "Memory [GB]: " + 1.0 * deepSegmentation.getMaxMemory() / 1000000000L );
+        DeepSegmentation.logger.info( "Threads: " + deepSegmentation.numThreads );
 
         ArrayList<FinalInterval> tiles = new ArrayList<>();
 
-        long[] imgDims = ws.getInputImageDimensions();
+        long[] imgDims = deepSegmentation.getInputImageDimensions();
         long[] tileSizes = new long[5];
 
         for ( int d : XYZ )
@@ -163,7 +167,7 @@ public abstract class IntervalUtils {
             {
                 tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / Math.pow( numTiles, 1.0/3.0 ) );
             }
-            else if ( interval.dimension(d) <= ws.getMaximalRegionSize() )
+            else if ( interval.dimension(d) <= deepSegmentation.getMaximalRegionSize() )
             {
                 // everything can be computed at once
                 tileSizes[d] = interval.dimension(d);
@@ -171,7 +175,7 @@ public abstract class IntervalUtils {
             else
             {
                 // we need to tile
-                int n = (int) Math.ceil( (1.0 * interval.dimension(d)) / ws.getMaximalRegionSize());
+                int n = (int) Math.ceil( (1.0 * interval.dimension(d)) / deepSegmentation.getMaximalRegionSize());
                 tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / n );
             }
 

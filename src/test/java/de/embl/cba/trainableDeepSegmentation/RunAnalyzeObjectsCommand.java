@@ -1,5 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation;
 
+import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import net.imagej.ImageJ;
 import de.embl.cba.trainableDeepSegmentation.commands.AnalyzeObjectsCommand;
 
@@ -21,7 +22,7 @@ public class RunAnalyzeObjectsCommand
         parameters.put( AnalyzeObjectsCommand.LOWER_THRESHOLD, 1 );
         parameters.put( AnalyzeObjectsCommand.UPPER_THRESHOLD, 255 );
         parameters.put( AnalyzeObjectsCommand.OUTPUT_DIRECTORY, new File( TestingUtils.TEST_RESOURCES ) );
-        parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, AnalyzeObjectsCommand.SHOW );
+        parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, IOUtils.SHOW_RESULTS_TABLE );
         ij.command().run( AnalyzeObjectsCommand.class, false, parameters );
 
 

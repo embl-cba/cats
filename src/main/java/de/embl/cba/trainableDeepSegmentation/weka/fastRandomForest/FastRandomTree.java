@@ -382,7 +382,7 @@ class FastRandomTree
    * <li>m_Distribution has been removed
    *
    * <li>members of dists, splits, props and vals arrays which are not used are
-   *     dereferenced prior to recursion to reduce memory requirements
+   *     dereferenced prior to recursion to reduce memoryMB requirements
    *
    * <li>a check for "branch with no instances instances" is now (FastRF 0.98)
    *     made before recursion; with the current implementation of splitData(),

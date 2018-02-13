@@ -11,7 +11,7 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>fiji_plugin_deepSegmentation</artifactId>
-	<version>0.4.0</version>
+	<version>0.4.25</version>
 
 	<name>Fiji plugin for trainable segmentation using deep convolution</name>
 	<description>A plugin for trainable segmentation using deep convolution.</description>
@@ -21,6 +21,7 @@
 		<name>EMBL</name>
 		<url>https://embl.de/</url>
 	</organization>
+
 	<licenses>
 		<license>
 			<name>Simplified BSD License</name>
@@ -159,6 +160,7 @@
         <license.projectName>Fiji distribution of ImageJ for the life sciences.</license.projectName>
 		<imagescience.version>3.0.0</imagescience.version>
 		<enforcer.skip>true</enforcer.skip>
+
 	</properties>
 
 
@@ -189,11 +191,13 @@
         </dependency>
 
 		<!-- Github dependencies -->
+        <!--
 		<dependency>
 			<groupId>com.github.mcib3d</groupId>
 			<artifactId>mcib3d-core</artifactId>
 			<version>1204d04b31217a7d14897a4dd93cc0eafc064e01</version>
 		</dependency>
+		-->
 
 		<dependency>
 			<groupId>fr.inra.ijpb</groupId>
@@ -204,19 +208,19 @@
 		<dependency>
 			<groupId>com.github.tischi</groupId>
 			<artifactId>fiji-plugin-bigDataTools</artifactId>
-            <version>ed723a3e1038e5f525e3eb6e0e1f04022e2d16d3</version>
+            <version>master-SNAPSHOT</version>
 		</dependency>
 
         <dependency>
             <groupId>com.github.ssgpers</groupId>
-            <artifactId>java-utils--embl-cba</artifactId>
-            <version>38315bceac840445b6bc1b907cb58839c0ca75c1</version>
+            <artifactId>java-utils-embl</artifactId>
+            <version>master-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>com.github.tischi</groupId>
             <artifactId>fiji-slurm</artifactId>
-            <version>ae84a04c7284654d657062a4225f18b0ce4c521e</version>
+            <version>master-SNAPSHOT</version>
         </dependency>
 
 
@@ -279,10 +283,15 @@
 			<groupId>nz.ac.waikato.cms.weka</groupId>
 			<artifactId>weka-dev</artifactId>
             <version>3.9.2</version>
+            <exclusions>
+                <exclusion>  <!-- declare the exclusion here -->
+                    <groupId>sample.ProjectB</groupId>
+                    <artifactId>Project-B</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-
-		<dependency>
+        <dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math3</artifactId>
 		</dependency>

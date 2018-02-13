@@ -1,6 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.utils;
 
-import embl.cba.logging.Logger;
+import de.embl.cba.utils.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
@@ -59,8 +59,8 @@ public class ThreadUtils {
             }
             catch (OutOfMemoryError err)
             {
-                logger.error("Out of memory. Please, "
-                        + "provide more memory and/or use less threads " +
+                logger.error("Out of memoryMB. Please, "
+                        + "provide more memoryMB and/or use less threads " +
                         "[ImageJ > Edit > Options > Memory & Threads].");
                 err.printStackTrace();
                 return;

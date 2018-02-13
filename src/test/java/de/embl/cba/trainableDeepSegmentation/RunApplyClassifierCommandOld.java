@@ -1,5 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation;
 
+import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import net.imagej.ImageJ;
 import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierCommand;
 
@@ -7,7 +8,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RunApplyClassifierCommand
+public class RunApplyClassifierCommandOld
 {
 
     public static void main(final String... args) throws Exception {
@@ -26,7 +27,7 @@ public class RunApplyClassifierCommand
         parameters.put( "inputDirectory", new File( TestingUtils.TEST_RESOURCES + "/image-sequence/.*--W00016--P00004--.*" ) );
         parameters.put( "classifierFile", new File( TestingUtils.TEST_RESOURCES + "/transmission-cells-3d.classifier" ) );
         parameters.put( "outputDirectory", new File( TestingUtils.TEST_RESOURCES ) );
-        parameters.put( "outputModality", ApplyClassifierCommand.SAVE_AS_TIFF_FILES );
+        parameters.put( "outputModality", IOUtils.SAVE_AS_TIFF_STACKS );
 
         ij.command().run( ApplyClassifierCommand.class, false, parameters );
 

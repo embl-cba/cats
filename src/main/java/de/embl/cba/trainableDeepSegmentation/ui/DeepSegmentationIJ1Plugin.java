@@ -1,6 +1,10 @@
 package de.embl.cba.trainableDeepSegmentation.ui;
 
-import embl.cba.logging.Logger;
+import de.embl.cba.cluster.ImageJCommandsSubmitter;
+import de.embl.cba.cluster.SlurmQueue;
+import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierCommand;
+import de.embl.cba.utils.logging.IJLazySwingLogger;
+import de.embl.cba.utils.logging.Logger;
 
 
 import fiji.util.gui.GenericDialogPlus;
@@ -32,6 +36,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -146,6 +151,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	public static final String IO_SAVE_INSTANCES = "Save instances";
 	public static final String IO_EXPORT_RESULT_IMAGE = "Export result image";
 	public static final String TRAIN_FROM_LABEL_IMAGE = "Train from label image";
+	public static final String APPLY_CLASSIFIER_ON_SLURM = "Apply classifier on Slurm";
 	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier";
 	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
 	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
@@ -483,18 +489,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 					}
 					else if( e.getSource() == applyClassifierButton )
 					{
-
-						// TODO: maybe there is only one classifier at a time??
-						String classifierKey = deepSegmentation.getClassifierManager().getMostRecentClassifierKey();
-
-						if ( classifierKey != null )
-						{
-							applyClassifier( classifierKey );
-						}
-						else
-						{
-							logger.error( "No classifier trained yet..." );
-						}
+						applyClassifier();
 					}
 					else if( e.getSource() == doButton || e.getSource() == actionComboBox )
 					{
@@ -537,9 +532,13 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 								break;
 							case IO_EXPORT_RESULT_IMAGE:
 								ResultImageGUI.showExportGUI(
+										getDeepSegmentation().getInputImage().getTitle(),
 										deepSegmentation.getResultImage(),
 										deepSegmentation.getInputImage(),
 										deepSegmentation.getClassNames() );
+								break;
+							case APPLY_CLASSIFIER_ON_SLURM:
+								applyClassifierOnSlurm();
 								break;
 							case APPLY_BG_FG_CLASSIFIER:
 								applyBgFgClassification();
@@ -751,7 +750,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 		}
 	}
 
-	public DeepSegmentation getWekaSegmentation()
+	public DeepSegmentation getDeepSegmentation()
 	{
 		return deepSegmentation;
 	}
@@ -1938,7 +1937,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 			deepSegmentation.setResultImageRAM();
 
-			logger.info("Allocated memory for classification result image." );
+			logger.info("Allocated memoryMB for classification result image." );
 
 		}
 
@@ -2496,10 +2495,17 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 	}
 
-	public void applyClassifier( String classifierKey )
+	public void applyClassifier( )
 	{
 
 		showMemoryMonitor();
+
+		String classifierKey = deepSegmentation.getClassifierManager().getMostRecentClassifierKey();
+
+		if ( classifierKey == null )
+		{
+			logger.error( "No classifier trained yet..." );
+		}
 
 		if ( deepSegmentation.getResultImage() == null )
 		{
@@ -2530,10 +2536,64 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 				win.setButtonsEnabled( true );
 				deepSegmentation.isBusy = false;
+
 			}
 		}; thread.start();
 
 	}
+
+
+	public void applyClassifierOnSlurm( )
+	{
+
+		String mostRecentClassifierKey = deepSegmentation.getClassifierManager().getMostRecentClassifierKey();
+
+		if ( mostRecentClassifierKey == null )
+		{
+			logger.error( "No classifier trained yet..." );
+		}
+
+		if ( deepSegmentation.getResultImage() == null )
+		{
+			logger.error("Classification result image yet assigned.\n" + "Please [Assign result image].");
+			return;
+		}
+
+		FinalInterval interval = getIntervalFromGUI( );
+		if ( interval == null )
+		{
+			logger.error("Could not determine the interval to be classified.");
+			return;
+		}
+
+		logger.info("\n# Classifying selected region...");
+
+
+
+		Thread thread = new Thread() {
+			public void run()
+			{
+
+				win.setButtonsEnabled( false );
+				deepSegmentation.stopCurrentTasks = false;
+				deepSegmentation.isBusy = true;
+				deepSegmentation.resetUncertaintyRegions();
+
+				//deepSegmentation.applyClassifierOnSlurm( mostRecentClassifierKey, interval );
+
+				if (showColorOverlay)
+					win.toggleOverlay();
+
+				win.toggleOverlay();
+
+				win.setButtonsEnabled( true );
+				deepSegmentation.isBusy = false;
+
+			}
+		}; thread.start();
+
+	}
+
 
 	private FinalInterval getIntervalFromGUI( )
 	{

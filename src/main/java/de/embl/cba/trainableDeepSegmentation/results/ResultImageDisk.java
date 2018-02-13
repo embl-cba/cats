@@ -2,7 +2,7 @@ package de.embl.cba.trainableDeepSegmentation.results;
 
 import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import de.embl.cba.bigDataTools.dataStreamingTools.DataStreamingTools;
-import embl.cba.logging.Logger;
+import de.embl.cba.utils.logging.Logger;
 import de.embl.cba.bigDataTools.utils.ImageDataInfo;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -36,7 +36,7 @@ public class ResultImageDisk implements ResultImage {
     }
 
     @Override
-    public void saveClassesAsFiles( String directory, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType )
+    public void saveClassesAsFiles( String directory, String fileNamePrefix, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType )
     {
 
         logger.info("Saving results as separate imaris channels.." );
@@ -45,6 +45,7 @@ public class ResultImageDisk implements ResultImage {
 
         Utils.saveClassesAsFiles(
                 directory,
+                fileNamePrefix,
                 classesToBeSaved,
                 fileType,
                 result,
@@ -147,8 +148,7 @@ public class ResultImageDisk implements ResultImage {
         }
         catch( IOException e)
         {
-            deepSegmentation.logger.warning(
-                "ResultImage.write3dResultChunk: " + e.toString() );
+            deepSegmentation.logger.warning( "ResultImage.write3dResultChunk: " + e.toString() );
         }
     }
 

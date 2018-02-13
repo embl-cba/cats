@@ -5959,3 +5959,27 @@ private static Runnable setClassificationResult(
 
                 }
             }
+
+
+    public static void saveResultImagePlusAsSeparateTiffFiles(
+            String directory,
+            ArrayList< Boolean > saveClass,
+            ImagePlus result,
+            int[] binning,
+            Logger logger,
+            ArrayList< String > classNames,
+            int CLASS_LUT_WIDTH)
+    {
+
+        if ( checkMaximalVolume( result, binning, logger ) ) return;
+
+        for ( int classIndex = 0; classIndex < saveClass.size(); ++classIndex )
+        {
+            if ( saveClass.get( classIndex ) )
+            {
+                saveClassAsTiff( classIndex, directory, result, binning, logger, classNames, CLASS_LUT_WIDTH );
+            }
+        }
+
+
+    }

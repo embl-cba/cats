@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public interface ResultImage {
 
-    void saveClassesAsFiles( String directory, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType );
+    void saveClassesAsFiles( String directory, String fileNamePrefix, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType );
 
     ImageProcessor getSlice( int slice, int frame );
 

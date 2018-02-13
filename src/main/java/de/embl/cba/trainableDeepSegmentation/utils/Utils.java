@@ -34,6 +34,7 @@ import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 
 import java.awt.Color;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -44,7 +45,7 @@ import de.embl.cba.trainableDeepSegmentation.metrics.ClassificationStatistics;
 import util.FindConnectedRegions;
 import util.FindConnectedRegions.Results;
 
-import embl.cba.logging.Logger;
+import de.embl.cba.utils.logging.Logger;
 
 /**
  * This class implements useful methods for the Weka Segmentation library.
@@ -824,5 +825,16 @@ public final class Utils {
 		
 		return maxPool;
 	}
-	
+
+    public static String getSimpleString( String inputString )
+    {
+        String dataSetName = inputString.toString().replace( ".*", "" ).trim();
+        String trimmedDataSetName = dataSetName.replaceAll("\\(.*?\\)" , "" );
+        trimmedDataSetName = trimmedDataSetName.replace("\\" , "" );
+        trimmedDataSetName = trimmedDataSetName.replace(".tif" , "" );
+		trimmedDataSetName = trimmedDataSetName.replaceAll( "--$", "" );
+		trimmedDataSetName = trimmedDataSetName.replaceAll( "^--", "" );
+
+		return trimmedDataSetName;
+    }
 }

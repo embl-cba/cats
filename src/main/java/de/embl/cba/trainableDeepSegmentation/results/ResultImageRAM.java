@@ -1,6 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.results;
 
-import embl.cba.logging.Logger;
+import de.embl.cba.utils.logging.Logger;
 
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
 import ij.ImagePlus;
@@ -35,13 +35,14 @@ public class ResultImageRAM implements ResultImage {
 
 
     @Override
-    public void saveClassesAsFiles( String directory, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType )
+    public void saveClassesAsFiles( String directory, String fileNamePrefix, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType )
     {
 
         IOUtils.createDirectoryIfNotExists( directory );
 
         Utils.saveClassesAsFiles(
                 directory,
+                fileNamePrefix,
                 classesToBeSaved,
                 fileType,
                 result,
@@ -50,6 +51,7 @@ public class ResultImageRAM implements ResultImage {
                 deepSegmentation.getClassNames(),
                 CLASS_LUT_WIDTH
         );
+
     }
 
     @Override

@@ -16,8 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPOutputStream;
 
-import embl.cba.logging.IJLazySwingLogger;
-import embl.cba.logging.Logger;
+import de.embl.cba.utils.logging.IJLazySwingLogger;
+import de.embl.cba.utils.logging.Logger;
 
 import de.embl.cba.trainableDeepSegmentation.weka.fastRandomForest.FastRandomForest;
 import ij.gui.PolygonRoi;
@@ -99,6 +99,18 @@ public class DeepSegmentation
 
 	private ResultImage resultImage = null;
 
+	public void setMaxMemory( long maxMemory )
+	{
+		this.maxMemory = maxMemory;
+	}
+
+	public long getMaxMemory( )
+	{
+		return maxMemory;
+	}
+
+	private long maxMemory;
+
 	public ResultImage getResultImageBgFg()
 	{
 		return resultImageBgFg;
@@ -113,7 +125,7 @@ public class DeepSegmentation
 	{
 		resultImageBgFg = new ResultImageRAM( this, getInputImageDimensions() );
 
-		logger.info("Allocated memory for result image." );
+		logger.info("Allocated memoryMB for result image." );
 
 	}
 
@@ -130,7 +142,6 @@ public class DeepSegmentation
 
 
 	}
-
 
 	private ResultImage resultImageBgFg = null;
 
@@ -209,13 +220,11 @@ public class DeepSegmentation
 		threadsClassifierTraining = numThreads;
 	}
 
-	public int numThreads = Prefs.getThreads();
+	public int numThreads;
+	public int threadsRegion;
+	public int threadsPerRegion;
+	public int threadsClassifierTraining;
 
-	public int threadsRegion = (int) ( Math.sqrt( Prefs.getThreads() ) + 0.5 );
-
-	public int threadsPerRegion = (int) ( Math.sqrt( Prefs.getThreads() ) + 0.5 );
-
-	public int threadsClassifierTraining = Prefs.getThreads();
 
 	public int tilingDelay = 2000; // milli-seconds
 
@@ -799,7 +808,7 @@ public class DeepSegmentation
 	 *
 	 * @param trainingImage The image to be segmented/trained
 	 */
-	public DeepSegmentation( ImagePlus trainingImage)
+	public DeepSegmentation( ImagePlus trainingImage )
 	{
 		initialize();
 		setInputImage(trainingImage);
@@ -851,7 +860,16 @@ public class DeepSegmentation
 		// initialize the examples
 		examples = new ArrayList<Example>();
 
+		maxMemory = IJ.maxMemory();
+
+		setNumThreads( Prefs.getThreads() );
+
+		int a = 1;
+
 	}
+
+
+
 
 	/**
 	 * Set the instances image (single image or stack)
@@ -1768,7 +1786,6 @@ public class DeepSegmentation
 
 	public long getMaximalNumberOfVoxelsPerRegion()
 	{
-		long maxMemory = IJ.maxMemory();
 		long currentMemory = IJ.currentMemory();
 		long freeMemory = maxMemory - currentMemory;
 
@@ -1778,7 +1795,7 @@ public class DeepSegmentation
 		long maxNumRegionWidth = (long) Math.pow(maxNumVoxelsPerRegion, 1.0 / 3);
 
 		//log.setShowDebug(true);
-		//log.debug("memory factor " + memoryFactor);
+		//log.debug("memoryMB factor " + memoryFactor);
 		//log.debug("maxNumVoxelsPerRegion " + maxNumVoxelsPerRegion);
 		//log.debug("memoryPerRegionMemoryEstimate [MB] " +
 		//		(maxNumVoxelsPerRegion * getNeededBytesPerVoxel() / 1000000));
@@ -1789,12 +1806,12 @@ public class DeepSegmentation
 	public int getMaximalRegionSize()
 	{
 		// TODO: this is wrong if the regions are not cubic...
-		int maxNumRegionWidth = (int) Math.pow(getMaximalNumberOfVoxelsPerRegion(), 1.0 / 3);
+		int maxNumRegionWidth = (int) Math.pow( getMaximalNumberOfVoxelsPerRegion(), 1.0 / 3 );
 		// to keep it kind of interactive limit the maximal size
 		// to something (500 is arbitrary)
-		maxNumRegionWidth = Math.min(maxNumRegionWidth, 500);
+		maxNumRegionWidth = Math.min( maxNumRegionWidth, 500 );
 
-		// remove borders, which go into the memory
+		// remove borders, which go into the memoryMB
 		// considerations, but should not be explicitely
 		// asked for
 		maxNumRegionWidth -= 2 * getFeatureBorderSizes()[ X];
@@ -2234,24 +2251,24 @@ public class DeepSegmentation
 
 	public void applyClassifierWithTiling()
 	{
-		String key = getClassifierManager().getMostRecentClassifierKey();
+		String mostRecentClassifierKey = getClassifierManager().getMostRecentClassifierKey();
 		FinalInterval interval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( getInputImage() );
-		applyClassifierWithTiling(  key, interval, -1, null , false );
+		applyClassifierWithTiling(  mostRecentClassifierKey, interval, -1, null , false );
+	}
+	public void applyClassifierWithTiling( FinalInterval interval )
+	{
+		String mostRecentClassifierKey = getClassifierManager().getMostRecentClassifierKey();
+		applyClassifierWithTiling( mostRecentClassifierKey, interval, -1, null , false );
 	}
 
 
-	public void applyClassifierWithTiling( String classifierKey,
-										   FinalInterval interval )
+	public void applyClassifierWithTiling( String classifierKey, FinalInterval interval )
 	{
 		applyClassifierWithTiling(  classifierKey, interval, -1, null , false );
 	}
 
 
-	public void applyClassifierWithTiling( String classifierKey,
-										   FinalInterval interval,
-										   Integer numTiles,
-										   FeatureProvider externalFeatureProvider,
-										   boolean doNotLog )
+	public void applyClassifierWithTiling( String classifierKey, FinalInterval interval, Integer numTiles, FeatureProvider externalFeatureProvider, boolean doNotLog )
 	{
 
 		logger.info("\n# Apply classifier");
@@ -2270,8 +2287,8 @@ public class DeepSegmentation
 			adaptedRegionThreads = 1;
 		}
 
-		logger.info("Tile threads: " + adaptedRegionThreads);
-		logger.info("Threads per tile: " + adaptedThreadsPerRegion);
+		logger.info( "Tile threads: " + adaptedRegionThreads );
+		logger.info( "Threads per tile: " + adaptedThreadsPerRegion );
 
 		// submit tiles to executor service
 
@@ -2489,27 +2506,20 @@ public class DeepSegmentation
 
 			ExecutorService exe = Executors.newFixedThreadPool( numThreads );
 			ArrayList< Future > futures = new ArrayList<>();
-			//ArrayList< UncertaintyRegion > uncertaintyRegions = new ArrayList<>();
-
-			long start = System.currentTimeMillis();
 
 			if ( isLogging ) logger.info("Classifying pixels...");
 
-			// typically there are multiple chunks,
-			// so we better split of the threads amongst them.
+
 			int numThreadsPerZChunk = 1;
 
 			if ( zChunks.size() == 1 )
 			{
-				// only one zChunk => use all threads for this one
 				numThreadsPerZChunk = numThreads;
 			}
 
-
 			for (long[] zChunk : zChunks)
 			{
-				if ( ThreadUtils.stopThreads( logger, exe, stopCurrentTasks,
-						tileCounter, tileCounterMax ) ) return;
+				if ( ThreadUtils.stopThreads( logger, exe, stopCurrentTasks, tileCounter, tileCounterMax ) ) return;
 
 				UncertaintyRegion uncertaintyRegion = new UncertaintyRegion();
 				uncertaintyRegions.add(uncertaintyRegion);

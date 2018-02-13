@@ -13,6 +13,19 @@ import java.util.List;
 public class IOUtils
 {
 
+    public static final String SAVE_RESULTS_TABLE = "Save results table";
+    public static final String SHOW_RESULTS_TABLE = "Show results table";
+    public static final String INPUT_MODALITY = "inputModality";
+    public static final String OPEN_USING_IMAGE_J1 = "Open using ImageJ1";
+    public static final String OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE = "Open using ImageJ1 ImageSequence";
+    public static final String OUTPUT_MODALITY = "outputModality";
+    public static final String SAVE_AS_IMARIS = "Save class probabilities as imaris files";
+    public static final String SAVE_AS_TIFF_STACKS = "Save class probabilities as Tiff stacks";
+    public static final String SHOW_AS_ONE_IMAGE = "Show all probabilities in one image";
+    public static final String SAVE_AS_TIFF_SLICES = "Save class probabilities as Tiff slices";
+    public static final String OUTPUT_DIRECTORY = "outputDirectory";
+    public static final String INPUT_IMAGE_PATH = "inputImagePath";
+
     public static ImagePlus loadImage( File imageFile )
     {
 
@@ -72,19 +85,19 @@ public class IOUtils
         return path;
     }
 
-    public static List< Path > asEMBLClusterMounted( List< Path > paths )
+    public static List< Path > clusterMounted( List< Path > paths )
     {
         ArrayList< Path > newPaths = new ArrayList<>();
 
         for ( Path path : paths )
         {
-            newPaths.add( asEMBLClusterMounted( path ) );
+            newPaths.add( clusterMounted( path ) );
         }
 
         return newPaths;
     }
 
-    public static Path asEMBLClusterMounted( Path path )
+    public static Path clusterMounted( Path path )
     {
 
         String pathString = path.toString();

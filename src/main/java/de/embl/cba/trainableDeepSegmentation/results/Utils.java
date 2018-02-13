@@ -3,7 +3,7 @@ package de.embl.cba.trainableDeepSegmentation.results;
 import de.embl.cba.bigDataTools.Hdf5DataCubeWriter;
 import de.embl.cba.bigDataTools.ImarisDataSet;
 import de.embl.cba.bigDataTools.ImarisWriter;
-import embl.cba.logging.Logger;
+import de.embl.cba.utils.logging.Logger;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.Binner;
@@ -23,6 +23,7 @@ public abstract class Utils {
 
     private static void saveClassAsImaris( int classId,
                                            String directory,
+                                           String fileNamePrefix,
                                            ImagePlus result,
                                            int[] binning,
                                            Logger logger,
@@ -41,10 +42,7 @@ public abstract class Utils {
 
         imarisDataSet.setChannelNames( channelNames  );
 
-        ImarisWriter.writeHeader( imarisDataSet,
-                directory,
-                className + ".ims"
-        );
+        ImarisWriter.writeHeader( imarisDataSet, directory, fileNamePrefix + className + ".ims" );
 
         Hdf5DataCubeWriter writer = new Hdf5DataCubeWriter();
 
@@ -56,8 +54,7 @@ public abstract class Utils {
             if ( binning[0]*binning[1]*binning[2] > 1 )
             {
                 Binner binner = new Binner();
-                impClass = binner.shrink( impClass, binning[ 0 ],
-                        binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
+                impClass = binner.shrink( impClass, binning[ 0 ], binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
             }
 
             writer.writeImarisCompatibleResolutionPyramid( impClass, imarisDataSet, 0, t );
@@ -69,11 +66,12 @@ public abstract class Utils {
 
     private static void saveClassAsTiff( int classId,
                                          String directory,
+                                         String fileNamePrefix,
                                          ImagePlus result,
                                          int[] binning,
                                          Logger logger,
                                          ArrayList< String > classNames,
-                                         int CLASS_LUT_WIDTH)
+                                         int CLASS_LUT_WIDTH )
     {
 
         String className = classNames.get( classId );
@@ -93,20 +91,18 @@ public abstract class Utils {
 
             if ( result.getNFrames() > 1 )
             {
-                path = directory + File.separator + className + "--T" + String.format( "%05d", t ) + ".tif";
+                path = directory + File.separator + fileNamePrefix + className + "--T" + String.format( "%05d", t ) + ".tif";
             }
             else
             {
-                path = directory + File.separator + className + ".tif";
+                path = directory + File.separator + fileNamePrefix + className + ".tif";
             }
-
 
             IJ.saveAsTiff( impClass, path );
 
-            logger.progress( "Wrote " + className+
-                                ", frame:", (t + 1) + "/" + result.getNFrames() +
-                                ", path: " + path );
+            logger.progress( "Wrote " + className + ", frame:", (t + 1) + "/" + result.getNFrames() + ", path: " + path );
         }
+
     }
 
 
@@ -169,14 +165,14 @@ public abstract class Utils {
                     imarisDataSet,
                     0, t );
 
-            logger.progress( "Wrote " + name + ", frame:",
-                    (t+1) + "/" + rawData.getNFrames() );
+            logger.progress( "Wrote " + name + ", frame:", (t+1) + "/" + rawData.getNFrames() );
         }
     }
 
 
     public static void saveClassesAsFiles(
             String directory,
+            String fileNamePrefix,
             ArrayList< Boolean > classesToBeSaved,
             String fileType,
             ImagePlus result,
@@ -204,11 +200,11 @@ public abstract class Utils {
             {
                 if ( fileType.equals( Utils.SEPARATE_IMARIS ) )
                 {
-                    saveClassAsImaris( classIndex, directory, result, binning, logger, classNames, CLASS_LUT_WIDTH );
+                    saveClassAsImaris( classIndex, directory, fileNamePrefix, result, binning, logger, classNames, CLASS_LUT_WIDTH );
                 }
                 else if ( fileType.equals( Utils.SEPARATE_TIFF_FILES ) )
                 {
-                    saveClassAsTiff( classIndex, directory, result, binning, logger, classNames, CLASS_LUT_WIDTH );
+                    saveClassAsTiff( classIndex, directory, fileNamePrefix, result, binning, logger, classNames, CLASS_LUT_WIDTH );
                 }
             }
         }
@@ -216,29 +212,6 @@ public abstract class Utils {
 
     }
 
-
-    public static void saveResultImagePlusAsSeparateTiffFiles(
-            String directory,
-            ArrayList< Boolean > saveClass,
-            ImagePlus result,
-            int[] binning,
-            Logger logger,
-            ArrayList< String > classNames,
-            int CLASS_LUT_WIDTH)
-    {
-
-        if ( checkMaximalVolume( result, binning, logger ) ) return;
-
-        for ( int classIndex = 0; classIndex < saveClass.size(); ++classIndex )
-        {
-            if ( saveClass.get( classIndex ) )
-            {
-                saveClassAsTiff( classIndex, directory, result, binning, logger, classNames, CLASS_LUT_WIDTH );
-            }
-        }
-
-
-    }
 
     private static boolean checkMaximalVolume( ImagePlus result, int[] binning, Logger logger )
     {

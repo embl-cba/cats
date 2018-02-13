@@ -16,18 +16,19 @@ import static de.embl.cba.trainableDeepSegmentation.results.Utils.saveAsImarisCh
 
 public abstract class ResultImageGUI {
 
-    public static void showExportGUI( de.embl.cba.trainableDeepSegmentation.results.ResultImage resultImage,
-                                      ImagePlus rawData,
-                                      ArrayList< String > classNames )
+    public static void showExportGUI(
+            String inputImageTitle,
+            ResultImage resultImage,
+            ImagePlus rawData,
+            ArrayList< String > classNames )
     {
-        String[] exportChoices = new String[]{
-                de.embl.cba.trainableDeepSegmentation.results.Utils.SEPARATE_IMARIS,
-                de.embl.cba.trainableDeepSegmentation.results.Utils.SEPARATE_TIFF_FILES
-        };
+        String[] exportChoices = new String[]{ SEPARATE_IMARIS, SEPARATE_TIFF_FILES };
 
         ArrayList < Boolean > classesToBeSaved = new ArrayList<>();
 
         GenericDialog gd = new GenericDialogPlus("Export Segmentation Results");
+
+        gd.addStringField( "Filename prefix: ", inputImageTitle + "--", 10  );
 
         gd.addStringField( "Binning: ", "1,1,1", 10  );
 
@@ -42,9 +43,12 @@ public abstract class ResultImageGUI {
 
         if ( gd.wasCanceled() ) return;
 
+        String fileNamePrefix = gd.getNextString();
+
         int[] binning = Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
 
         boolean saveRawData = gd.getNextBoolean();
+
         for ( String className : classNames ) classesToBeSaved.add( gd.getNextBoolean() );
 
         String exportModality = gd.getNextChoice();
@@ -53,24 +57,21 @@ public abstract class ResultImageGUI {
 
         if ( exportModality.equals( SEPARATE_IMARIS ) )
         {
-            saveAsSeparateImaris( resultImage, rawData, classesToBeSaved, binning, saveRawData, exportModality, directory );
+            saveAsSeparateImaris( directory, fileNamePrefix, resultImage, rawData, classesToBeSaved, binning, saveRawData, exportModality );
         }
         else if ( exportModality.equals( SEPARATE_TIFF_FILES ) )
         {
-            resultImage.saveClassesAsFiles( directory, classesToBeSaved, binning, exportModality );
+            resultImage.saveClassesAsFiles( directory, fileNamePrefix, classesToBeSaved, binning, exportModality );
         }
-
-        logger.info("Created imaris meta file.");
-
     }
 
-    private static void saveAsSeparateImaris( ResultImage resultImage, ImagePlus rawData, ArrayList< Boolean > classesToBeSaved, int[] binning, boolean saveRawData, String exportModality, String directory )
+    private static void saveAsSeparateImaris( String directory, String fileNamePrefix, ResultImage resultImage, ImagePlus rawData, ArrayList< Boolean > classesToBeSaved, int[] binning, boolean saveRawData, String exportModality )
     {
-        resultImage.saveClassesAsFiles( directory, classesToBeSaved, binning, exportModality );
+        resultImage.saveClassesAsFiles( directory, fileNamePrefix, classesToBeSaved, binning, exportModality );
 
         if ( saveRawData )
         {
-            saveAsImarisChannel( rawData, "raw-data", directory, binning );
+            saveAsImarisChannel( rawData, fileNamePrefix + "raw-data", directory, binning );
         }
 
         ImarisUtils.createImarisMetaFile( directory );

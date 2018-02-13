@@ -21,7 +21,7 @@ package de.embl.cba.trainableDeepSegmentation.features;
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
-import embl.cba.logging.Logger;
+import de.embl.cba.utils.logging.Logger;
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
 import ij.IJ;
 import ij.ImagePlus;
@@ -1019,7 +1019,7 @@ public class FeatureProvider
         if ( featureImages == null )
         {
             logger.error("Something went wrong during the feature computation; " +
-                    "probably a memory issue. Please try increasing your RAM " +
+                    "probably a memoryMB issue. Please try increasing your RAM " +
                     "and/or got to [Settings] and reduce the " +
                     "'Maximum resolution level'");
             System.gc();

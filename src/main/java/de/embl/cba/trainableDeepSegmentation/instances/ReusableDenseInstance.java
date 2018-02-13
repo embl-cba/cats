@@ -4,7 +4,7 @@ import weka.core.DenseInstance;
 
 /**
  * This class extends the WEKA DenseInstance so it can be reused. This is an 
- * important feature to save time and memory when classifying iteratively many 
+ * important feature to save time and memoryMB when classifying iteratively many
  * new instancesComboBox.
  * 
  * @author Ignacio Arganda-Carreras (iargandacarreras@gmail.com)

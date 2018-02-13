@@ -228,7 +228,7 @@ public final class FastRfUtils {
   }
 
   /**
-   * Load a dataset into memory.
+   * Load a dataset into memoryMB.
    *
    * @param location the location of the dataset
    *

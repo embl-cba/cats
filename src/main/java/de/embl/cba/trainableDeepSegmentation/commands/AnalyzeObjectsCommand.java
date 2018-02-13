@@ -25,7 +25,7 @@ import java.util.Map;
 import static de.embl.cba.trainableDeepSegmentation.commands.AnalyzeObjectsCommand.PLUGIN_NAME;
 
 
-@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>EMBL-CBA>" + PLUGIN_NAME )
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>" + PLUGIN_NAME )
 public class AnalyzeObjectsCommand implements Command
 {
 
@@ -67,11 +67,9 @@ public class AnalyzeObjectsCommand implements Command
     public int upperThreshold = 255;
     public static final String UPPER_THRESHOLD = "upperThreshold";
 
-    @Parameter( label = "Output modality", choices = { SHOW, SAVE } )
+    @Parameter( label = "Output modality", choices = { IOUtils.SHOW_RESULTS_TABLE, IOUtils.SAVE_RESULTS_TABLE } )
     public String outputModality;
     public static final String OUTPUT_MODALITY = "outputModality";
-    public static final String SAVE = "Save results table";
-    public static final String SHOW = "Show results table";
 
     @Parameter( label = "Output folder", style = "directory" )
     public File outputDirectory;
@@ -80,6 +78,11 @@ public class AnalyzeObjectsCommand implements Command
     @Parameter( label = "Quit ImageJ after running", required = false )
     public boolean quitAfterRun = false;
     public static final String QUIT_AFTER_RUN = "quitAfterRun";
+
+    @Parameter( label = "Dataset ID" )
+    public String dataSetID;
+    public static final String DATASET_ID = "dataSetID";
+
 
     ImagePlus inputImage;
 
@@ -96,24 +99,41 @@ public class AnalyzeObjectsCommand implements Command
         ImagePlus labelMask = ObjectAnalysis.createLabelMaskForChannelAndFrame( inputImage, 1, 1, 1, lowerThreshold, upperThreshold );
 
         logService.info( "Measure volumes");
-        ResultsTable volumes = GeometricMeasures3D.volume( labelMask.getStack(), new double[]{ 1, 1, 1 } );
+        ResultsTable resultsTable = GeometricMeasures3D.volume( labelMask.getStack(), new double[]{ 1, 1, 1 } );
 
+        addInputImageFileAndPathName( resultsTable );
 
-        if ( outputModality.equals( SAVE ) )
+        if ( outputModality.equals( IOUtils.SAVE_RESULTS_TABLE ) )
         {
-            String tablePath = outputDirectory + File.separator + inputImage.getTitle() + "--volumes.csv";
+            String tablePath = outputDirectory + File.separator + inputImage.getTitle() + "--AnalyzeObjects.csv";
             logService.info( "Saving results table " + tablePath );
             IOUtils.createDirectoryIfNotExists( outputDirectory.getPath() );
-            volumes.save( tablePath );
+            resultsTable.save( tablePath );
         }
 
-        if ( outputModality.equals( SHOW ) )
+        if ( outputModality.equals( IOUtils.SHOW_RESULTS_TABLE ) )
         {
-            volumes.show( inputImage.getTitle() + "--volumes" );
+            resultsTable.show( inputImage.getTitle() + "--volumes" );
         }
 
         if ( quitAfterRun ) Commands.quitImageJ( logService );
 
+    }
+
+    private void addInputImageFileAndPathName( ResultsTable resultsTable )
+    {
+
+        resultsTable.addValue( "DataSetID", dataSetID );
+        resultsTable.addValue( "FileName_AnalyzeObjects_InputImage", inputImagePath.getName() );
+        resultsTable.addValue( "PathName_AnalyzeObjects_InputImage", inputImagePath.getParent() );
+
+        for ( int i = 0; i < resultsTable.size(); ++i )
+        {
+            resultsTable.setValue( "DataSetID", i, dataSetID );
+            resultsTable.setValue("FileName_AnalyzeObjects_InputImage", i, inputImagePath.getName()  );
+            resultsTable.setValue("PathName_AnalyzeObjects_InputImage", i, inputImagePath.getParent()  );
+
+        }
     }
 
     private void logCommandLineCall()
