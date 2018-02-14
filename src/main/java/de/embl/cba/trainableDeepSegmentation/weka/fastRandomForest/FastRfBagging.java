@@ -58,7 +58,7 @@ import weka.core.WeightedInstancesHandler;
  * <li>Not a TechnicalInformationHandler anymore</li>
  * <li>The classifiers are trained in separate "tasks" which are handled by
  * an ExecutorService (the FixedThreadPool) which runs the tasks in
- * more threads in parallel. If the number of threads is not specified,
+ * more numWorkers in parallel. If the number of numWorkers is not specified,
  * it will be set automatically to the available number of cores.</li>
  * <li>Estimating the out-of-bag (OOB) error is also multithreaded, using
  * the VotesCollector class</li>
@@ -92,7 +92,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
    *
    * @param data         The instances set to be used for generating the
    *                     bagged classifier.
-   * @param numThreads   The number of simultaneous threads to use for
+   * @param numThreads   The number of simultaneous numWorkers to use for
    *                     computation. Pass zero (0) for autodetection.
    * @param motherForest A reference to the FastRandomForest object that
    *                     invoked this.
@@ -255,7 +255,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
    *
    * @param data       the instances
    * @param inBag      numTrees x numInstances indicating out-of-bag instances
-   * @param threadPool the pool of threads
+   * @param threadPool the pool of numWorkers
    *
    * @return the oob error
    */
@@ -303,7 +303,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
    *
    * @param data       the instances (as a DataCache)
    * @param inBag      numTrees x numInstances indicating out-of-bag instances
-   * @param threadPool the pool of threads
+   * @param threadPool the pool of numWorkers
    *
    * @return the oob error
    */

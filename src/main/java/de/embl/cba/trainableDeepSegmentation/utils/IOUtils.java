@@ -1,5 +1,7 @@
 package de.embl.cba.trainableDeepSegmentation.utils;
 
+import de.embl.cba.bigDataTools.dataStreamingTools.DataStreamingTools;
+import de.embl.cba.utils.fileutils.FileRegMatcher;
 import ij.IJ;
 import ij.ImagePlus;
 
@@ -16,8 +18,15 @@ public class IOUtils
     public static final String SAVE_RESULTS_TABLE = "Save results table";
     public static final String SHOW_RESULTS_TABLE = "Show results table";
     public static final String INPUT_MODALITY = "inputModality";
+    public static final String INPUT_IMAGE_VSS_DIRECTORY = "inputImageVSSDirectory";
+    public static final String INPUT_IMAGE_VSS_SCHEME = "inputImageVSSScheme";
+    public static final String INPUT_IMAGE_VSS_PATTERN = "inputImageVSSPattern";
+    public static final String INPUT_IMAGE_VSS_HDF5_DATA_SET_NAME = "inputImageVSSHdf5DataSetName";
+
     public static final String OPEN_USING_IMAGE_J1 = "Open using ImageJ1";
+    public static final String OPEN_USING_IMAGE_J1_VIRTUAL = "Open using ImageJ1 virtual";
     public static final String OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE = "Open using ImageJ1 ImageSequence";
+    public static final String OPEN_USING_LAZY_LOADING_TOOLS = "Open using Lazy Loading Tools";
     public static final String OUTPUT_MODALITY = "outputModality";
     public static final String SAVE_AS_IMARIS = "Save class probabilities as imaris files";
     public static final String SAVE_AS_TIFF_STACKS = "Save class probabilities as Tiff stacks";
@@ -26,30 +35,20 @@ public class IOUtils
     public static final String OUTPUT_DIRECTORY = "outputDirectory";
     public static final String INPUT_IMAGE_PATH = "inputImagePath";
 
-    public static ImagePlus loadImage( File imageFile )
-    {
 
-        ImagePlus image;
-
-        if ( imageFile.getName().contains( ".*" ) || imageFile.getName().contains( "?" ) )
-        {
-            image = loadImageWithImportImageSequence( imageFile );
-        }
-        else
-        {
-            image = loadImageWithIJOpenImage( imageFile);
-        }
-
-        return image;
-    }
-
-    private static ImagePlus loadImageWithIJOpenImage( File imageFile )
+    public static ImagePlus openImageWithIJOpenImage( File imageFile )
     {
         ImagePlus input = IJ.openImage( imageFile.getAbsolutePath() );
         return input;
     }
 
-    private static ImagePlus loadImageWithImportImageSequence( File imageFile  )
+    public static ImagePlus openImageWithIJOpenVirtualImage( File imageFile )
+    {
+        ImagePlus input = IJ.openVirtual( imageFile.getAbsolutePath() );
+        return input;
+    }
+
+    public static ImagePlus openImageWithIJImportImageSequence( File imageFile  )
     {
         String directory = imageFile.getParent();
         String regExp = imageFile.getName();
@@ -58,6 +57,28 @@ public class IOUtils
         image.setTitle( regExp );
         return image;
     }
+
+    public static ImagePlus openImageWithLazyLoadingTools( String directory, String namingScheme, String filePattern, String hdf5DataSetName  )
+    {
+
+        DataStreamingTools dst = new DataStreamingTools();
+        ImagePlus image = dst.openFromDirectory(
+                directory,
+                namingScheme,
+                filePattern,
+                hdf5DataSetName,
+                null,
+                3,
+                false,
+                false);
+
+        image.setTitle( namingScheme );
+        IJ.wait( 1000 );
+
+        return image;
+    }
+
+
 
     public static String createDataSetNameFromPattern( String dataSetPattern )
     {
@@ -97,9 +118,18 @@ public class IOUtils
         return newPaths;
     }
 
+    public static String clusterMounted( String string )
+    {
+        return clusterMounted( Paths.get( string ) ).toString();
+    }
+
+    public static File clusterMounted( File file )
+    {
+        return clusterMounted( file.toPath() ).toFile();
+    }
+
     public static Path clusterMounted( Path path )
     {
-
         String pathString = path.toString();
         String newPathString = null;
 
@@ -172,4 +202,25 @@ public class IOUtils
         }
     }
 
+    public static List< Path > getDataSetPatterns( String directory, String regExpMaster, String[] regExpGroups )
+    {
+
+        FileRegMatcher regMatcher = new FileRegMatcher();
+
+        regMatcher.setParameters( regExpMaster, regExpGroups );
+
+        regMatcher.matchFiles( directory );
+
+        List< File > filePatterns = regMatcher.getMatchedFilesList();
+
+        List< Path > filePatternPaths = new ArrayList<>();
+
+        for ( File f : filePatterns )
+        {
+            String pattern = f.getAbsolutePath();
+            filePatternPaths.add( Paths.get( pattern) );
+        }
+
+        return filePatternPaths;
+    }
 }

@@ -60,7 +60,7 @@ public class ThreadUtils {
             catch (OutOfMemoryError err)
             {
                 logger.error("Out of memoryMB. Please, "
-                        + "provide more memoryMB and/or use less threads " +
+                        + "provide more memoryMB and/or use less numWorkers " +
                         "[ImageJ > Edit > Options > Memory & Threads].");
                 err.printStackTrace();
                 return;

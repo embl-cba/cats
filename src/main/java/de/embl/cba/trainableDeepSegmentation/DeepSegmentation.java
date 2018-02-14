@@ -16,11 +16,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPOutputStream;
 
+import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
+import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierAsSlurmJobsCommand;
+import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import de.embl.cba.utils.logging.Logger;
 
 import de.embl.cba.trainableDeepSegmentation.weka.fastRandomForest.FastRandomForest;
+import ij.*;
 import ij.gui.PolygonRoi;
+import ij.io.FileInfo;
 import ij.io.FileSaver;
 import ij.measure.ResultsTable;
 import ij.plugin.Duplicator;
@@ -31,10 +36,6 @@ import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
 import javafx.geometry.Point3D;
 
-import ij.IJ;
-import ij.ImagePlus;
-import ij.ImageStack;
-import ij.Prefs;
 import ij.gui.Roi;
 import net.imglib2.FinalInterval;
 import de.embl.cba.trainableDeepSegmentation.classification.AttributeSelector;
@@ -59,7 +60,8 @@ import de.embl.cba.trainableDeepSegmentation.settings.SettingsUtils;
 
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.ThreadUtils;
-import org.scijava.log.DefaultLogger;
+import org.scijava.Context;
+import org.scijava.command.CommandService;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -132,13 +134,9 @@ public class DeepSegmentation
 	public void setResultImageBgFgDisk( String directory )
 	{
 
-		resultImageBgFg = new ResultImageDisk(
-				this,
-				directory,
-				getInputImageDimensions() );
+		resultImageBgFg = new ResultImageDisk( this, directory, getInputImageDimensions() );
 
-		logger.info("Created disk-resident result image: " +
-				directory);
+		logger.info("Created disk-resident result image: " + directory);
 
 
 	}
@@ -263,6 +261,16 @@ public class DeepSegmentation
 	{
 		return inputImage;
 	}
+
+
+	public File getInputImageFile()
+    {
+        FileInfo fileInfo = inputImage.getOriginalFileInfo();
+
+        File inputImageFile =  new File(fileInfo.directory + File.separator + fileInfo.fileName );
+
+        return inputImageFile;
+    }
 
 	/**
 	 * @param logFileName
@@ -504,7 +512,7 @@ public class DeepSegmentation
 					if ( stopCurrentTasks ) return;
 
 					numSlicesInCurrentChunk = ( int ) ( zChunk[ 1 ] - zChunk[ 0 ] + 1 );
-					numThreadsPerSlice = 1; // (int) ( 1.0 * Prefs.getThreads() / numSlicesInCurrentChunk );
+					numThreadsPerSlice = 1;
 
 					// create new instances
 					exe = Executors.newFixedThreadPool( numSlicesInCurrentChunk );
@@ -595,14 +603,14 @@ public class DeepSegmentation
 					zChunk = zChunks.get( iClassificationChunk );
 
 					numSlicesInCurrentChunk = ( int ) ( zChunk[ 1 ] - zChunk[ 0 ] + 1 );
-					numThreadsPerSlice = 1; // (int) ( 1.0 * Prefs.getThreads() / numSlicesInCurrentChunk );
+					numThreadsPerSlice = 1;
 
 					exe = Executors.newFixedThreadPool( numSlicesInCurrentChunk );
 					ArrayList< Future > classificationFutures = new ArrayList<>();
 
 					logger.info( "\n# Applying classifier to: zMin " + zChunk[ 0 ]
 							+ "; zMax " + zChunk[ 1 ]
-							+ "; using " + numSlicesInCurrentChunk + " threads." );
+							+ "; using " + numSlicesInCurrentChunk + " workers." );
 
 					for ( int z = ( int ) zChunk[ 0 ]; z <= zChunk[ 1 ]; ++z )
 					{
@@ -814,18 +822,11 @@ public class DeepSegmentation
 		setInputImage(trainingImage);
 	}
 
-	private void setInputImageDimensions()
-	{
-		imgDims[ X ] = inputImage.getWidth();
-		imgDims[ Y ] = inputImage.getHeight();
-		imgDims[ C ] = inputImage.getNChannels();
-		imgDims[ Z ] = inputImage.getNSlices();
-		imgDims[ T ] = inputImage.getNFrames();
-	}
-
 	public long[] getInputImageDimensions()
 	{
-		return (imgDims);
+		long[] dimensions = new long[5];
+		IntervalUtils.getInterval(  inputImage ).dimensions( dimensions );
+		return dimensions;
 	}
 
 	/**
@@ -864,8 +865,6 @@ public class DeepSegmentation
 
 		setNumThreads( Prefs.getThreads() );
 
-		int a = 1;
-
 	}
 
 
@@ -885,7 +884,6 @@ public class DeepSegmentation
 		}
 
 		this.inputImage = imp;
-		setInputImageDimensions();
 	}
 
 	/**
@@ -1776,32 +1774,24 @@ public class DeepSegmentation
 		};
 	}
 
-	public long getNeededBytesPerVoxel()
-	{
-		long oneByte = 8;
-		long floatingPointImp = 32;
-		long mem = (long) memoryFactor * floatingPointImp / oneByte;
-		return (mem);
-	}
-
 	public long getMaximalNumberOfVoxelsPerRegion()
 	{
 		long currentMemory = IJ.currentMemory();
 		long freeMemory = maxMemory - currentMemory;
 
-		long maxNumVoxelsPerRegion = (long) 1.0 * freeMemory /
-				(getNeededBytesPerVoxel() * threadsRegion * threadsPerRegion);
+		long maxNumVoxelsPerRegion = (long) 1.0 * freeMemory / ( getApproximateNeededBytesPerVoxel( memoryFactor ) * threadsRegion * threadsPerRegion);
 
-		long maxNumRegionWidth = (long) Math.pow(maxNumVoxelsPerRegion, 1.0 / 3);
+		long maxNumRegionWidth = (long) Math.pow( maxNumVoxelsPerRegion, 1.0 / 3 );
 
 		//log.setShowDebug(true);
 		//log.debug("memoryMB factor " + memoryFactor);
 		//log.debug("maxNumVoxelsPerRegion " + maxNumVoxelsPerRegion);
 		//log.debug("memoryPerRegionMemoryEstimate [MB] " +
-		//		(maxNumVoxelsPerRegion * getNeededBytesPerVoxel() / 1000000));
+		//		(maxNumVoxelsPerRegion * getApproximateNeededBytesPerVoxel() / 1000000));
 
 		return maxNumVoxelsPerRegion;
 	}
+
 
 	public int getMaximalRegionSize()
 	{
@@ -2267,14 +2257,63 @@ public class DeepSegmentation
 		applyClassifierWithTiling(  classifierKey, interval, -1, null , false );
 	}
 
+	public void applyClassifierOnSlurm(  FinalInterval interval )
+    {
 
-	public void applyClassifierWithTiling( String classifierKey, FinalInterval interval, Integer numTiles, FeatureProvider externalFeatureProvider, boolean doNotLog )
+        Map< String, Object > parameters = new HashMap<>();
+
+        configureInputImageLoading( parameters );
+
+        parameters.put( IOUtils.OUTPUT_DIRECTORY, ((ResultImageDisk)resultImage).getDirectory() );
+
+        parameters.put( ApplyClassifierAsSlurmJobsCommand.INTERVAL, interval );
+
+        parameters.put( ApplyClassifierAsSlurmJobsCommand.WORKERS, 16 );
+
+        runSlurmCommand( parameters );
+
+	}
+
+    private void runSlurmCommand( Map< String, Object > parameters )
+    {
+        Context ctx = (Context ) IJ.runPlugIn("org.scijava.Context", "");
+        CommandService commandService = ctx.service(CommandService.class);
+        commandService.run( ApplyClassifierAsSlurmJobsCommand.class, true, parameters );
+    }
+
+    private void configureInputImageLoading( Map< String, Object > parameters )
+    {
+
+        if ( inputImage.getStack() instanceof VirtualStackOfStacks )
+		{
+			parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_LAZY_LOADING_TOOLS );
+			VirtualStackOfStacks vss = ( VirtualStackOfStacks ) inputImage.getStack();
+			parameters.put( IOUtils.INPUT_IMAGE_VSS_DIRECTORY, vss.getDirectory() );
+            parameters.put( IOUtils.INPUT_IMAGE_VSS_PATTERN, vss.getFilterPattern() );
+            parameters.put( IOUtils.INPUT_IMAGE_VSS_SCHEME, vss.getNamingScheme() );
+            parameters.put( IOUtils.INPUT_IMAGE_VSS_HDF5_DATA_SET_NAME, vss.getH5DataSet() );
+			parameters.put( IOUtils.INPUT_IMAGE_PATH, new File("") ) ;
+        }
+		else if ( inputImage.getStack() instanceof VirtualStack )
+		{
+			parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGE_J1_VIRTUAL );
+			parameters.put( IOUtils.INPUT_IMAGE_PATH, getInputImageFile() );
+		}
+		else
+        {
+            parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGE_J1 );
+			parameters.put( IOUtils.INPUT_IMAGE_PATH, getInputImageFile() );
+		}
+    }
+
+
+    public void applyClassifierWithTiling( String classifierKey, FinalInterval interval, Integer numTiles, FeatureProvider externalFeatureProvider, boolean doNotLog )
 	{
 
 		logger.info("\n# Apply classifier");
 
 		// set up tiling
-		ArrayList<FinalInterval> tiles = getTiles( interval, numTiles, this );
+		ArrayList<FinalInterval> tiles = createTiles( interval, IntervalUtils.getInterval( inputImage ), numTiles,false, this );
 
 		// set up multi-threading
 
@@ -2283,7 +2322,7 @@ public class DeepSegmentation
 
 		if ( tiles.size() == 1 )
 		{
-			adaptedThreadsPerRegion = Prefs.getThreads();
+			adaptedThreadsPerRegion = numThreads;
 			adaptedRegionThreads = 1;
 		}
 
@@ -2472,10 +2511,10 @@ public class DeepSegmentation
 	/**
 	 * Apply current classifier to a set of feature vectors (given in a feature
 	 * stack array). The classification if performed in a multi-threaded way
-	 * using as many threads as defined by the user.
+	 * using as many numWorkers as defined by the user.
 	 *
 	 * @param featureImages   feature stack array
-	 * @param numThreads      The number of threads to use. Set to zero for auto-detection.
+	 * @param numThreads      The number of numWorkers to use. Set to zero for auto-detection.
 	 * @param probabilityMaps probability flag. Tue: probability maps are calculated, false: binary classification
 	 * @return result image containing the probability maps or the binary classification
 	 */

@@ -93,7 +93,7 @@ public class AnalyzeObjectsCommand implements Command
         logCommandLineCall();
 
         logService.info( "Loading image " + inputImagePath );
-        inputImage = IOUtils.loadImage( inputImagePath );
+        inputImage = IOUtils.openImageWithIJOpenImage( inputImagePath );
 
         logService.info( "Creating label mask");
         ImagePlus labelMask = ObjectAnalysis.createLabelMaskForChannelAndFrame( inputImage, 1, 1, 1, lowerThreshold, upperThreshold );
@@ -123,15 +123,15 @@ public class AnalyzeObjectsCommand implements Command
     private void addInputImageFileAndPathName( ResultsTable resultsTable )
     {
 
-        resultsTable.addValue( "DataSetID", dataSetID );
-        resultsTable.addValue( "FileName_AnalyzeObjects_InputImage", inputImagePath.getName() );
-        resultsTable.addValue( "PathName_AnalyzeObjects_InputImage", inputImagePath.getParent() );
+        resultsTable.addValue( "DataSetID_FACT", dataSetID );
+        resultsTable.addValue( "FileName_AnalyzeObjects_InputImage_IMG", inputImagePath.getName() );
+        resultsTable.addValue( "PathName_AnalyzeObjects_InputImage_IMG", inputImagePath.getParent() );
 
         for ( int i = 0; i < resultsTable.size(); ++i )
         {
-            resultsTable.setValue( "DataSetID", i, dataSetID );
-            resultsTable.setValue("FileName_AnalyzeObjects_InputImage", i, inputImagePath.getName()  );
-            resultsTable.setValue("PathName_AnalyzeObjects_InputImage", i, inputImagePath.getParent()  );
+            resultsTable.setValue( "DataSetID_FACT", i, dataSetID );
+            resultsTable.setValue("FileName_AnalyzeObjects_InputImage_IMG", i, inputImagePath.getName()  );
+            resultsTable.setValue("PathName_AnalyzeObjects_InputImage_IMG", i, inputImagePath.getParent()  );
 
         }
     }

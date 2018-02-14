@@ -51,7 +51,7 @@ import weka.core.WeightedInstancesHandler;
  * <li>uses FastRfBagger with FastRandomTree, instead of Bagger with RandomTree.</li>
  * <li>stores dataset header (instead of every Tree storing its own header)</li>
  * <li>checks if only ZeroR model is possible (instead of each Tree checking)</li>
- * <li>added "-threads" option</li>
+ * <li>added "-numWorkers" option</li>
  * </ul>
  * <!-- globalinfo-start -->
  * <p>
@@ -126,7 +126,7 @@ public class FastRandomForest
   /** Final number of features that were considered in last build. */
   protected int m_KValue = 0;
 
-  /** Number of simultaneous threads to use in computation (0 = autodetect). */
+  /** Number of simultaneous numWorkers to use in computation (0 = autodetect). */
   protected int m_NumThreads = 0;
 
   /** The bagger. */
@@ -358,11 +358,11 @@ public class FastRandomForest
    *         displaying in the explorer/experimenter gui
    */
   public String numThreadsTipText(){
-    return "Number of simultaneous threads to use in computation (0 = autodetect).";
+    return "Number of simultaneous numWorkers to use in computation (0 = autodetect).";
   }
 
   /**
-   * Get the number of simultaneous threads used in instances, 0 for autodetect.
+   * Get the number of simultaneous numWorkers used in instances, 0 for autodetect.
    *
    * @return the maximum depth.
    */
@@ -371,7 +371,7 @@ public class FastRandomForest
   }
 
   /**
-   * Set the number of simultaneous threads used in instances, 0 for autodetect.
+   * Set the number of simultaneous numWorkers used in instances, 0 for autodetect.
    *
    * @param value the maximum depth.
    */
@@ -480,9 +480,9 @@ public class FastRandomForest
       "depth", 1, "-depth <num>"));
 
     newVector.addElement(new Option(
-      "\tThe number of simultaneous threads to use for computation, 0 for autodetect.\n"
+      "\tThe number of simultaneous numWorkers to use for computation, 0 for autodetect.\n"
         + "\t(default 0)",
-      "threads", 1, "-threads <num>"));
+      "numWorkers", 1, "-numWorkers <num>"));
 
     newVector.addElement(new Option(
       "\tWhether to compute feature importances.\n",
@@ -523,7 +523,7 @@ public class FastRandomForest
     }
 
     if(getNumThreads() > 0){
-      result.add("-threads");
+      result.add("-numWorkers");
       result.add(String.valueOf(getNumThreads()));
     }
     
@@ -556,8 +556,8 @@ public class FastRandomForest
    * <pre> -depth &lt;num&gt;
    *  The maximum depth of the trees, 0 for unlimited.
    *  (default 0)</pre>
-   * <pre> -threads
-   *  Number of simultaneous threads to use.
+   * <pre> -numWorkers
+   *  Number of simultaneous numWorkers to use.
    *  (default 0 = autodetect number of available cores)</pre>
    * <pre> -import
    *  Compute and output RF feature importances (slow).</pre>
@@ -601,7 +601,7 @@ public class FastRandomForest
       setMaxDepth(0);
     }
 
-    tmpStr = Utils.getOption("threads", options);
+    tmpStr = Utils.getOption("numWorkers", options);
     if ( tmpStr.length() != 0 ){
       setNumThreads(Integer.parseInt(tmpStr));
     } else {
@@ -673,7 +673,7 @@ public class FastRandomForest
     FastRandomTree rTree = new FastRandomTree();
     rTree.m_MotherForest = this; // allows to retrieve KValue and MaxDepth
     // some temporary arrays which need to be separate for every tree, so
-    // that the trees can be trained in parallel in different threads
+    // that the trees can be trained in parallel in different numWorkers
     
     // set up the bagger and build the forest
     m_bagger.setClassifier(rTree);

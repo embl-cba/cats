@@ -50,7 +50,7 @@ import weka.experiment.PairedStatsCorrected;
  * (-I parameter for the classifiers).
  *
  * As third command-line parameter, supply a comma separated list of number of
- * threads to use, eg. "1,2,4". If ommited, default value is assumed (autodetect
+ * numWorkers to use, eg. "1,2,4". If ommited, default value is assumed (autodetect
  * number of cores in machine).
  * 
  * @author Fran Supek (fran.supek[AT]irb.hr)
@@ -91,7 +91,7 @@ public final class Benchmark {
       
       classifiers[i+1] = new FastRandomForest();
       classifiers[i+1].setOptions(new String[]{"-I", args[1], // "-import",
-        "-threads", Integer.toString(threadNums.get(i)) });
+        "-numWorkers", Integer.toString(threadNums.get(i)) });
       
     }
 
@@ -183,7 +183,7 @@ public final class Benchmark {
       
       // the t-test for accuracy is always performed only between classifier 0 and classifier 1 
       // meaning, the first instance of Weka RF and first instance of FastRF
-      // the following instances use a different # of threads but that doesn't affect results
+      // the following instances use a different # of numWorkers but that doesn't affect results
       double testTrainRatio = 1 / (double) (numFolds - 1);
       PairedStatsCorrected pscAuc = new PairedStatsCorrected(0.05, testTrainRatio);
       pscAuc.add(aucScore[0], aucScore[1]);

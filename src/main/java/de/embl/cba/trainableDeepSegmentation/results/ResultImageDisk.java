@@ -15,6 +15,8 @@ import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class ResultImageDisk implements ResultImage {
@@ -25,9 +27,11 @@ public class ResultImageDisk implements ResultImage {
     DeepSegmentation deepSegmentation;
     Logger logger;
     long[] dimensions;
+    File directory;
 
     public ResultImageDisk( DeepSegmentation deepSegmentation, String directory, long[] dimensions)
     {
+        this.directory = new File( directory );
         this.deepSegmentation = deepSegmentation;
         this.logger = deepSegmentation.getLogger();
         this.result = createStream( directory, dimensions );
@@ -95,12 +99,10 @@ public class ResultImageDisk implements ResultImage {
         String tMax = String.format( "%05d", dimensions[ IntervalUtils.T ] );
         String zMax = String.format( "%05d", dimensions[ IntervalUtils.Z ] );
 
-        String namingPattern = "classified--C<C01-01>--T<T00001-" +
-                tMax + ">--Z<Z00001-"+zMax+">.tif";
+        String namingPattern = "classified--C<C01-01>--T<T00001-" + tMax + ">--Z<Z00001-"+zMax+">.tif";
         de.embl.cba.bigDataTools.utils.ImageDataInfo imageDataInfo = new ImageDataInfo();
         imageDataInfo.bitDepth = 8;
         int nIOthreads = 3;
-
 
         String[] list = new File(directory).list();
         if (list == null || list.length == 0)
@@ -112,8 +114,7 @@ public class ResultImageDisk implements ResultImage {
                     1, 8 );
             ImagePlus impC0T0Z0 = new ImagePlus( "", stack );
             FileSaver fileSaver = new FileSaver( impC0T0Z0 );
-            fileSaver.saveAsTiff( directory + "/" +
-                    "classified--C01--T00001--Z00001.tif" );
+            fileSaver.saveAsTiff( directory + "/" + "classified--C01--T00001--Z00001.tif" );
         }
 
         ImagePlus result = dst.openFromDirectory(
@@ -126,11 +127,7 @@ public class ResultImageDisk implements ResultImage {
                 false,
                 true);
 
-        result.setDimensions(
-                1,
-                (int) dimensions[ IntervalUtils.Z ],
-                (int) dimensions[ IntervalUtils.T ]);
-
+        result.setDimensions( 1, (int) dimensions[ IntervalUtils.Z ], (int) dimensions[ IntervalUtils.T ]);
         result.setOpenAsHyperStack(true);
         result.setTitle("classification_result");
 
@@ -158,5 +155,9 @@ public class ResultImageDisk implements ResultImage {
         return null;
     }
 
+    public File getDirectory()
+    {
+        return directory;
+    }
 
 }

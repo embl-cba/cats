@@ -35,7 +35,7 @@ import weka.core.Utils;
  * index of the dominant class.
  * </p>
  * <p>
- * Implements callable so it can be run in multiple threads.
+ * Implements callable so it can be run in multiple numWorkers.
  * </p>
  *
  * @author Fran Supek

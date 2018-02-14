@@ -74,7 +74,7 @@ public class VariationOfInformation extends Metrics
 
 		double vi = 0;
 
-		// Executor service to produce concurrent threads
+		// Executor service to produce concurrent numWorkers
 		final ExecutorService exe = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 		final ArrayList< Future<Double> > futures = new ArrayList< Future<Double> >();
@@ -119,7 +119,7 @@ public class VariationOfInformation extends Metrics
 
 		double vi = 0;
 
-		// Executor service to produce concurrent threads
+		// Executor service to produce concurrent numWorkers
 		final ExecutorService exe = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 		final ArrayList< Future<Double> > futures = new ArrayList< Future<Double> >();
@@ -896,7 +896,7 @@ public class VariationOfInformation extends Metrics
 
 		double fScore = 0;
 
-		// Executor service to produce concurrent threads
+		// Executor service to produce concurrent numWorkers
 		final ExecutorService exe = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 		final ArrayList< Future<Double> > futures = new ArrayList< Future<Double> >();
@@ -942,7 +942,7 @@ public class VariationOfInformation extends Metrics
 
 		double fScore = 0;
 
-		// Executor service to produce concurrent threads
+		// Executor service to produce concurrent numWorkers
 		final ExecutorService exe = Executors.newFixedThreadPool( 
 								Runtime.getRuntime().availableProcessors() );
 
@@ -1083,7 +1083,7 @@ public class VariationOfInformation extends Metrics
 
 		double fScore = 0;
 
-		// Executor service to produce concurrent threads
+		// Executor service to produce concurrent numWorkers
 		final ExecutorService exe = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 		final ArrayList< Future<Double> > futures = new ArrayList< Future<Double> >();

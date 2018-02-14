@@ -152,7 +152,7 @@ public class InstancesUtils {
                     {
                         logLabelImageTrainingProgress( logger, z, interval,
                                 "getting feature slice... (using " +
-                                numThreads + " threads)." );
+                                numThreads + " numWorkers)." );
                         featureSlice = featureProvider.getReusableFeatureSlice();
                         featureProvider.setFeatureSlicesValues( z, featureSlice, numThreads );
                     }

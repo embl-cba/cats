@@ -97,7 +97,7 @@ public class AdjustedRandError extends Metrics
 
 		double randError = 0;
 
-		// Executor service to produce concurrent threads
+		// Executor service to produce concurrent numWorkers
 		final ExecutorService exe = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 		final ArrayList< Future<Double> > futures = new ArrayList< Future<Double> >();

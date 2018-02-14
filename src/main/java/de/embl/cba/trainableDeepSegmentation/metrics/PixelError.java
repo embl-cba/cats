@@ -65,7 +65,7 @@ public class PixelError extends Metrics
 
 		double pixelError = 0;
 
-		// Executor service to produce concurrent threads
+		// Executor service to produce concurrent numWorkers
 		final ExecutorService exe = Executors.newFixedThreadPool(Prefs.getThreads());
 
 		final ArrayList< Future<Double> > futures = new ArrayList< Future<Double> >();
@@ -143,7 +143,7 @@ public class PixelError extends Metrics
 
 		double pixelError = 0;
 
-		// Executor service to produce concurrent threads
+		// Executor service to produce concurrent numWorkers
 		final ExecutorService exe = Executors.newFixedThreadPool(Prefs.getThreads());
 
 		final ArrayList< Future<Double> > futures = new ArrayList< Future<Double> >();
@@ -273,7 +273,7 @@ public class PixelError extends Metrics
 		double fp = 0;
 		double fn = 0;
 
-		// Executor service to produce concurrent threads
+		// Executor service to produce concurrent numWorkers
 		final ExecutorService exe = Executors.newFixedThreadPool(Prefs.getThreads());
 
 		final ArrayList< Future<ClassificationStatistics> > futures = new ArrayList< Future<ClassificationStatistics> >();
@@ -386,7 +386,7 @@ public class PixelError extends Metrics
 		double fp = 0;
 		double fn = 0;
 
-		// Executor service to produce concurrent threads
+		// Executor service to produce concurrent numWorkers
 		final ExecutorService exe = Executors.newFixedThreadPool(Prefs.getThreads());
 
 		final ArrayList< Future<ClassificationStatistics> > futures = new ArrayList< Future<ClassificationStatistics> >();

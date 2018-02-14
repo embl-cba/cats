@@ -58,22 +58,29 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     @Parameter
     public StatusService statusService;
 
-    @Parameter( label = "Input modality", choices = { IOUtils.OPEN_USING_IMAGE_J1, IOUtils.OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE } , required = true )
+    @Parameter( label = "Input modality", choices = {
+            IOUtils.OPEN_USING_IMAGE_J1,
+            IOUtils.OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE,
+            IOUtils.OPEN_USING_LAZY_LOADING_TOOLS } , required = true )
     public String inputModality;
 
     @Parameter ( label = "Input image path" )
     public File inputImagePath;
 
-    @Parameter (label = "Input image interval", required = false )
-    public String inputImageInterval = WHOLE_IMAGE;
-    public static final String INPUT_IMAGE_INTERVAL = "inputImageIntervalXYZT";
+    @Parameter (label = "Classification interval [x0,x1,y0,y1,z0,z1,t0,t1]", required = false )
+    public String classificationIntervalXYZT = WHOLE_IMAGE;
+    public static final String CLASSIFICATION_INTERVAL = "classificationIntervalXYZT";
     public static final String WHOLE_IMAGE = "Whole image";
 
     @Parameter (label = "Classifier" )
     public File classifierFile;
     public static final String CLASSIFIER_FILE = "classifierFile";
 
-    @Parameter( label = "Output modality", choices = { IOUtils.SHOW_AS_ONE_IMAGE, IOUtils.SAVE_AS_TIFF_STACKS, IOUtils.SAVE_AS_IMARIS } , required = true )
+    @Parameter( label = "Output modality", choices = {
+            IOUtils.SHOW_AS_ONE_IMAGE,
+            IOUtils.SAVE_AS_TIFF_STACKS,
+            IOUtils.SAVE_AS_IMARIS } , required = true )
+
     public String outputModality;
 
     @Parameter( label = "Output folder", style = "directory" )
@@ -85,23 +92,36 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     public static final String QUIT_AFTER_RUN = "quitAfterRun";
 
     @Parameter( label = "Memory [MB]" )
-    public long memory;
-    public static final String MEMORY = "memoryMB";
+    public long memoryMB;
+    public static final String MEMORY_MB = "memoryMB";
 
     @Parameter( label = "Threads" )
-    public int threads;
-    public static final String THREADS = "threads";
+    public int numWorkers;
+    public static final String NUM_WORKERS = "numWorkers";
 
     @Parameter( label = "Dataset ID" )
-    public String dataSetID;
+    public String dataSetID = "dataSet";
     public static final String DATASET_ID = "dataSetID";
+
+    @Parameter( required = false )
+    public String inputImageVSSDirectory;
+
+    @Parameter( required = false )
+    public String inputImageVSSScheme;
+
+    @Parameter( required = false )
+    public String inputImageVSSPattern;
+
+    @Parameter( required = false )
+    public String inputImageVSSHdf5DataSetName;
+
+    @Parameter( required = false )
+    public boolean saveResultsTable = false;
+    public static final String SAVE_RESULTS_TABLE = "saveResultsTable";
 
     ImagePlus inputImage;
     DeepSegmentation deepSegmentation;
     String outputFileType;
-    String outputFilesPrefix;
-
-    private String outputFilenamesPrefix = "";
 
     // /Applications/Fiji.app/Contents/MacOS/ImageJ-macosx --run "Apply Classifier" "quitAfterRun='true',inputImagePath='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/image-sequence/.*--W00016--P00003--.*',classifierFile='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/transmission-cells-3d.classifier',outputModality='Save class probabilities as tiff files',outputDirectory='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/image-sequence--classified'"
 
@@ -114,11 +134,27 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         logCommandLineCall();
 
         logService.info( "Loading: " + inputImagePath );
-        inputImage = IOUtils.loadImage( inputImagePath );
-        inputImage.setTitle( dataSetID );
-        outputFilesPrefix = dataSetID + "--";
 
-        logService.info( "Applying classifier: " + classifierFile );
+        if ( inputModality.equals( IOUtils.OPEN_USING_IMAGE_J1 ) )
+        {
+            inputImage = IOUtils.openImageWithIJOpenImage( inputImagePath );
+        }
+        else if ( inputModality.equals( IOUtils.OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE ) )
+        {
+            inputImage = IOUtils.openImageWithIJImportImageSequence( inputImagePath );
+        }
+        else if ( inputModality.equals( IOUtils.OPEN_USING_LAZY_LOADING_TOOLS ) )
+        {
+            logService.info( "Opening with Lazy Loading Tools" );
+            logService.info( "Directory: " + inputImageVSSDirectory );
+            logService.info( "Naming scheme: " + inputImageVSSScheme );
+            logService.info( "Exclusion: " + inputImageVSSPattern );
+            logService.info( "Hdf5 data set name: " + inputImageVSSHdf5DataSetName );
+            inputImage = IOUtils.openImageWithLazyLoadingTools( inputImageVSSDirectory, inputImageVSSScheme, inputImageVSSPattern, inputImageVSSHdf5DataSetName );
+        }
+
+        inputImage.setTitle( dataSetID );
+
         applyClassifier();
 
         saveOutputImages();
@@ -151,21 +187,24 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
     private void saveResultsTable()
     {
-        ij.measure.ResultsTable resultsTable = new ij.measure.ResultsTable();
-        resultsTable.incrementCounter();
-
-        resultsTable.addValue( "DataSetID", dataSetID );
-
-        resultsTable.addValue( "FileName_ApplyClassifier_InputImage", inputImagePath.getName() );
-        resultsTable.addValue( "PathName_ApplyClassifier_InputImage", inputImagePath.getParent() );
-
-        for ( String className : deepSegmentation.getClassNames() )
+        if ( saveResultsTable )
         {
-            resultsTable.addValue( "FileName_ApplyClassifier_" + className, outputFilesPrefix + className + outputFileType );
-            resultsTable.addValue( "PathName_ApplyClassifier_" + className, outputDirectory.getPath() );
-        }
+            ij.measure.ResultsTable resultsTable = new ij.measure.ResultsTable();
+            resultsTable.incrementCounter();
 
-        resultsTable.save( outputDirectory.getPath() + "/" + dataSetID + "--ApplyClassifier.csv" );
+            resultsTable.addValue( "DataSetID_FACT", dataSetID );
+
+            resultsTable.addValue( "FileName_ApplyClassifier_InputImage_IMGR", inputImagePath.getName() );
+            resultsTable.addValue( "PathName_ApplyClassifier_InputImage_IMGR", inputImagePath.getParent() );
+
+            for ( String className : deepSegmentation.getClassNames() )
+            {
+                resultsTable.addValue( "FileName_ApplyClassifier_" + className + "_IMG", dataSetID + "--" + className + outputFileType );
+                resultsTable.addValue( "PathName_ApplyClassifier_" + className + "_IMG", outputDirectory.getPath() );
+            }
+
+            resultsTable.save( outputDirectory.getPath() + "/" + dataSetID + "--ApplyClassifier.csv" );
+        }
     }
 
     /*
@@ -182,19 +221,21 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
     private void saveProbabilitiesAsSeparateTiffFiles()
     {
-        deepSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), outputFilesPrefix, null, null, Utils.SEPARATE_TIFF_FILES );
+        deepSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), dataSetID + "--", null, null, Utils.SEPARATE_TIFF_FILES );
     }
 
     private void saveProbabilitiesAsImarisFiles()
     {
-        deepSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), outputFilesPrefix, null, null, Utils.SEPARATE_IMARIS );
+        deepSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), dataSetID + "--", null, null, Utils.SEPARATE_IMARIS );
     }
 
     private void applyClassifier( )
     {
-        deepSegmentation = new DeepSegmentation( );
-        deepSegmentation.setNumThreads( threads );
-        deepSegmentation.setMaxMemory( memory * 1000000L ); // MB -> Byte
+        logService.info( "Applying classifier: " + classifierFile );
+
+        deepSegmentation = new DeepSegmentation();
+        deepSegmentation.setNumThreads( numWorkers );
+        deepSegmentation.setMaxMemory( memoryMB * 1000000L ); // MB -> Byte
         deepSegmentation.setInputImage( inputImage );
 
         if ( outputModality.equals( IOUtils.SAVE_AS_TIFF_SLICES ) )
@@ -208,7 +249,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
         deepSegmentation.loadClassifier( classifierFile.getAbsolutePath() );
 
-        if ( inputImageInterval.equals( WHOLE_IMAGE ) )
+        if ( classificationIntervalXYZT.equals( WHOLE_IMAGE ) )
         {
             deepSegmentation.applyClassifierWithTiling();
         }
@@ -223,7 +264,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
     private FinalInterval getInterval()
     {
-        int[] minMaxXYZT = StringUtils.delimitedStringToIntegerArray( inputImageInterval, "," );
+        int[] minMaxXYZT = StringUtils.delimitedStringToIntegerArray( classificationIntervalXYZT, "," );
         long[] min = new long[5];
         long[] max = new long[5];
 

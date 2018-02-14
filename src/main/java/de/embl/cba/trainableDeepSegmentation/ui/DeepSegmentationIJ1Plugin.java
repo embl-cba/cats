@@ -55,6 +55,10 @@ import de.embl.cba.trainableDeepSegmentation.results.ResultImageDisk;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageGUI;
 import de.embl.cba.trainableDeepSegmentation.settings.Settings;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
+import org.scijava.command.Command;
+import org.scijava.command.CommandService;
+import org.scijava.event.EventService;
+import org.scijava.plugin.Parameter;
 import weka.classifiers.AbstractClassifier;
 import weka.core.SerializationHelper;
 import weka.gui.GUIChooserApp;
@@ -86,8 +90,13 @@ import weka.gui.GUIChooserApp;
 /**
  * Segmentation plugin based on the machine learning library Weka
  */
+
+// TODO: make IJ2 plugin?!
+
+
 public class DeepSegmentationIJ1Plugin implements PlugIn
 {
+
 	/** plugin's name */
 	public static final String PLUGIN_NAME = "Trainable Deep Weka Segmentation";
 	/** plugin's current version */
@@ -109,7 +118,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	private int[] traceCounter = new int[ DeepSegmentation.MAX_NUM_CLASSES];
 	/** flag to display the overlay image */
 	private boolean showColorOverlay = false;
-	/** executor service to launch threads for the plugin methods and events */
+	/** executor service to launch numWorkers for the plugin methods and events */
 	private final ExecutorService exec = Executors.newFixedThreadPool(1);
 
 	/** train classifier button */
@@ -178,6 +187,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
                     CHANGE_FEATURE_COMPUTATION_SETTINGS,
                     CHANGE_RESULT_OVERLAY_OPACITY,
                     TRAIN_CLASSIFIER,
+					APPLY_CLASSIFIER_ON_SLURM,
 					CHANGE_CLASSIFIER_SETTINGS,
 					IO_LOAD_INSTANCES,
 					IO_SAVE_INSTANCES,
@@ -413,7 +423,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 		settingsButton.setToolTipText("Display settings dialog");
 
 		testThreadsButton = new JButton ("Thread test");
-		testThreadsButton.setToolTipText("Tests how many threads this PC will concurrently handle.");
+		testThreadsButton.setToolTipText("Tests how many numWorkers this PC will concurrently handle.");
 
 		/** The Weka icon image */
 		//ImageIcon icon = new ImageIcon( de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin.class.getResource("/trainableDeepSegmentation/images/weka.png"));
@@ -441,7 +451,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 			final String command = e.getActionCommand();
 
-			// listen to the buttons on separate threads not to block
+			// listen to the buttons on separate numWorkers not to block
 			// the event dispatch thread
 			new Thread(new Runnable(){
 			//exec.submit(new Runnable() {
@@ -684,6 +694,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 		labelManager.reviewLabelsInRoiManager( classNum, order );
 	};
 
+
 	/**
 	 * Custom canvas to deal with zooming an panning
 	 */
@@ -757,7 +768,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 	private void testThreads()
 	{
-		logger.info("Testing maximum number of threads...");
+		logger.info("Testing maximum number of numWorkers...");
 		int i = 0;
 		while(true){
 			new Thread(new Runnable(){
@@ -1845,6 +1856,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	 */
 	public void run(String arg)
 	{
+
 		// START
 		// instantiate segmentation backend
 		deepSegmentation = new DeepSegmentation();
@@ -2543,21 +2555,32 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	}
 
 
-	public void applyClassifierOnSlurm( )
+	public void applyClassifierOnSlurm()
 	{
 
+		/*
 		String mostRecentClassifierKey = deepSegmentation.getClassifierManager().getMostRecentClassifierKey();
 
 		if ( mostRecentClassifierKey == null )
 		{
 			logger.error( "No classifier trained yet..." );
 		}
+		*/
 
 		if ( deepSegmentation.getResultImage() == null )
 		{
 			logger.error("Classification result image yet assigned.\n" + "Please [Assign result image].");
 			return;
 		}
+
+
+		/*
+		if ( ! (deepSegmentation.getResultImage() instanceof ResultImageDisk) )
+		{
+			logger.error( "Result image type not supported: must be disk resident." );
+			return;
+		}
+		*/
 
 		FinalInterval interval = getIntervalFromGUI( );
 		if ( interval == null )
@@ -2579,7 +2602,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 				deepSegmentation.isBusy = true;
 				deepSegmentation.resetUncertaintyRegions();
 
-				//deepSegmentation.applyClassifierOnSlurm( mostRecentClassifierKey, interval );
+				deepSegmentation.applyClassifierOnSlurm( interval );
 
 				if (showColorOverlay)
 					win.toggleOverlay();

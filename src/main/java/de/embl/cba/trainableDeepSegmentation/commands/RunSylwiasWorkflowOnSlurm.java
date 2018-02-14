@@ -5,29 +5,28 @@ import de.embl.cba.cluster.JobFuture;
 import de.embl.cba.cluster.SlurmQueue;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
-import de.embl.cba.utils.logging.Logger;
 import net.imagej.ImageJ;
 import org.scijava.command.Command;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.TextWidget;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.embl.cba.utils.fileutils.FileRegMatcher;
-
 import static de.embl.cba.trainableDeepSegmentation.utils.IOUtils.clusterMounted;
 import static de.embl.cba.trainableDeepSegmentation.utils.Utils.getSimpleString;
 
-@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>Sylwia Slurm" )
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>Batch Classification On Cluster" )
 public class RunSylwiasWorkflowOnSlurm implements Command
 {
+    @Parameter
+    public LogService logService;
 
     @Parameter(label = "Username" )
     private String username;
@@ -62,12 +61,14 @@ public class RunSylwiasWorkflowOnSlurm implements Command
 
     static String[] datasetGroups={"treatment","well","position"};
 
-    Logger logger = new IJLazySwingLogger();
+    IJLazySwingLogger logger = new IJLazySwingLogger();
 
     public void run()
     {
 
-        List< Path > dataSetPatterns = getDataSetPatterns( inputDirectory.toString() );
+        logger.setLogService( logService );
+
+        List< Path > dataSetPatterns = getDataSetPatterns();
 
         ArrayList< JobFuture > jobFutures = submitJobsOnSlurm(
                 imageJ,
@@ -79,29 +80,16 @@ public class RunSylwiasWorkflowOnSlurm implements Command
 
     }
 
-    public static List< Path > getDataSetPatterns( String directory )
+    private List< Path > getDataSetPatterns()
     {
-
-        FileRegMatcher regMatcher = new FileRegMatcher();
-
-        regMatcher.setParameters( masterRegExp, datasetGroups );
-
-        regMatcher.matchFiles( directory );
-
-        List< File > filePatterns = regMatcher.getMatchedFilesList();
-
-        List< Path > filePatternPaths = new ArrayList<>();
-
-        for ( File f : filePatterns )
+        logger.info( "Extracting data sets from directory: " + inputDirectory );
+        logger.info( "Using regular expression: " + masterRegExp );
+        List< Path > dataSetPatterns = IOUtils.getDataSetPatterns( inputDirectory.toString(), masterRegExp, datasetGroups );
+        for ( Path dataSetPattern : dataSetPatterns )
         {
-            String pattern = f.getAbsolutePath();
-            //pattern = pattern.replaceAll( "\\(.*?\\)" , ".*" );
-            //System.out.println( f.getAbsolutePath() );
-            //System.out.println( pattern );
-            filePatternPaths.add( Paths.get( pattern) );
+            logger.info( "Data set pattern: " + dataSetPattern );
         }
-
-        return filePatternPaths;
+        return dataSetPatterns;
     }
 
     private void monitorJobProgress( ArrayList< JobFuture > jobFutures )
@@ -209,25 +197,26 @@ public class RunSylwiasWorkflowOnSlurm implements Command
         parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, classifierPath );
         parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, new File( outputDirectory ) );
         parameters.put( IOUtils.OUTPUT_MODALITY, IOUtils.SAVE_AS_TIFF_STACKS );
-        parameters.put( ApplyClassifierCommand.MEMORY, memoryMB );
-        parameters.put( ApplyClassifierCommand.THREADS, numWorkers );
-        parameters.put( ApplyClassifierCommand.INPUT_IMAGE_INTERVAL, ApplyClassifierCommand.WHOLE_IMAGE );
+        parameters.put( ApplyClassifierCommand.NUM_WORKERS, numWorkers );
+        parameters.put( ApplyClassifierCommand.MEMORY_MB, memoryMB );
+        parameters.put( ApplyClassifierCommand.CLASSIFICATION_INTERVAL, ApplyClassifierCommand.WHOLE_IMAGE );
         parameters.put( ApplyClassifierCommand.QUIT_AFTER_RUN, true );
+        parameters.put( ApplyClassifierCommand.SAVE_RESULTS_TABLE, true );
 
         commandsSubmitter.addIJCommandWithParameters( ApplyClassifierCommand.PLUGIN_NAME , parameters );
 
-        /*
+
         parameters.clear();
         parameters.put( AnalyzeObjectsCommand.DATASET_ID, dataSetID );
         parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_PATH, new File( outputDirectory + "/" + dataSetID + "--foreground.tif" ) );
         parameters.put( AnalyzeObjectsCommand.LOWER_THRESHOLD, 1 );
         parameters.put( AnalyzeObjectsCommand.UPPER_THRESHOLD, 255 );
         parameters.put( AnalyzeObjectsCommand.OUTPUT_DIRECTORY, new File( outputDirectory ) );
-        parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, AnalyzeObjectsCommand.SAVE_RESULTS_TABLE );
+        parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, IOUtils.SHOW_RESULTS_TABLE );
         parameters.put( AnalyzeObjectsCommand.QUIT_AFTER_RUN, true );
 
         commandsSubmitter.addIJCommandWithParameters( AnalyzeObjectsCommand.PLUGIN_NAME , parameters );
-        */
+
 
         commandsSubmitter.addLinuxCommand( "ELAPSED_TIME=$(($SECONDS - $START_TIME))" );
 

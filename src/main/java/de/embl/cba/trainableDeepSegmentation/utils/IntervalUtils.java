@@ -146,58 +146,71 @@ public abstract class IntervalUtils {
         return ( region5D );
     }
 
-    public static ArrayList<FinalInterval> getTiles( FinalInterval interval,
-                                                     Integer numTiles,
-                                                     DeepSegmentation deepSegmentation )
+    public static ArrayList<FinalInterval> createTiles( FinalInterval classificationInterval,
+                                                        FinalInterval wholeImageInterval,
+                                                        Integer numTiles,
+                                                        boolean doNotTileInXY,
+                                                        DeepSegmentation deepSegmentation )
     {
 
-        DeepSegmentation.logger.info( "# Generating tiles" );
-        logInterval( interval );
-        DeepSegmentation.logger.info( "Memory [GB]: " + 1.0 * deepSegmentation.getMaxMemory() / 1000000000L );
-        DeepSegmentation.logger.info( "Threads: " + deepSegmentation.numThreads );
+        DeepSegmentation.logger.info( "# Generating tiles for interval:" );
+        logInterval( classificationInterval );
 
         ArrayList<FinalInterval> tiles = new ArrayList<>();
 
-        long[] imgDims = deepSegmentation.getInputImageDimensions();
         long[] tileSizes = new long[5];
+
+        double numTilesPerTimePoint = 1.0 * numTiles / classificationInterval.dimension( T );
+
+        int volumeDimensionality = 3;
+        if ( classificationInterval.dimension( Z ) == 1 ) volumeDimensionality = 2;
+
+        if ( doNotTileInXY )
+        {
+            tileSizes[ X ] = classificationInterval.dimension( X );
+            tileSizes[ Y ] = classificationInterval.dimension( Y );
+            tileSizes[ Z ] = ( int ) Math.ceil( 1.0 * classificationInterval.dimension( Z ) / numTilesPerTimePoint );
+        }
+        else
+        {
+            for ( int d : XYZ )
+            {
+                if ( numTiles > 0 )
+                {
+                    tileSizes[ d ] = ( int ) Math.ceil( 1.0 * classificationInterval.dimension( d ) / Math.pow( numTilesPerTimePoint, 1.0 / volumeDimensionality ) );
+                }
+                else if ( classificationInterval.dimension( d ) <= deepSegmentation.getMaximalRegionSize() )
+                {
+                    // everything can be computed at once
+                    tileSizes[ d ] = classificationInterval.dimension( d );
+                }
+                else
+                {
+                    // we need to tile
+                    int n = ( int ) Math.ceil( ( 1.0 * classificationInterval.dimension( d ) ) / deepSegmentation.getMaximalRegionSize() );
+                    tileSizes[ d ] = ( int ) Math.ceil( 1.0 * classificationInterval.dimension( d ) / n );
+                }
+            }
+        }
 
         for ( int d : XYZ )
         {
-            if ( numTiles > 0 )
-            {
-                tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / Math.pow( numTiles, 1.0/3.0 ) );
-            }
-            else if ( interval.dimension(d) <= deepSegmentation.getMaximalRegionSize() )
-            {
-                // everything can be computed at once
-                tileSizes[d] = interval.dimension(d);
-            }
-            else
-            {
-                // we need to tile
-                int n = (int) Math.ceil( (1.0 * interval.dimension(d)) / deepSegmentation.getMaximalRegionSize());
-                tileSizes[ d ] = (int) Math.ceil ( 1.0 * interval.dimension(d) / n );
-            }
-
             // make sure sizes fit into image
-            tileSizes[d] = Math.min( tileSizes[d], imgDims[d] );
+            tileSizes[ d ] = Math.min( tileSizes[ d ], wholeImageInterval.dimension( d ) );
         }
 
-        tileSizes[ T ] = 1;
 
-        DeepSegmentation.logger.info("Tile sizes [x,y,z]: "
-                + tileSizes[ X]
-                + ", " + tileSizes[ Y]
-                + ", " + tileSizes[ Z]);
+            tileSizes[ T ] = 1;
 
+        DeepSegmentation.logger.info("Tile sizes [x,y,z]: " + tileSizes[ X] + ", " + tileSizes[ Y]  + ", " + tileSizes[ Z ]);
 
-        for ( int t = (int) interval.min( T); t <= interval.max( T); t += 1)
+        for ( int t = (int) classificationInterval.min( T ); t <= classificationInterval.max( T ); t += 1)
         {
-            for ( int z = (int) interval.min( Z); z <= interval.max( Z); z += tileSizes[ Z])
+            for ( int z = (int) classificationInterval.min( Z ); z <= classificationInterval.max( Z ); z += tileSizes[ Z ])
             {
-                for ( int y = (int) interval.min( Y); y <= interval.max( Y); y += tileSizes[ Y])
+                for ( int y = (int) classificationInterval.min( Y ); y <= classificationInterval.max( Y ); y += tileSizes[ Y ])
                 {
-                    for ( int x = (int) interval.min( X); x <= interval.max( X); x += tileSizes[ X])
+                    for ( int x = (int) classificationInterval.min( X ); x <= classificationInterval.max( X ); x += tileSizes[ X ])
                     {
                         long[] min = new long[5];
                         min[ X ] = x;
@@ -214,7 +227,7 @@ public abstract class IntervalUtils {
                         // make sure to stay within image bounds
                         for ( int d : XYZT )
                         {
-                            max[ d ] = Math.min( interval.max( d ), max[ d ] );
+                            max[ d ] = Math.min( classificationInterval.max( d ), max[ d ] );
                         }
 
                         tiles.add( new FinalInterval(min, max) );
@@ -224,9 +237,9 @@ public abstract class IntervalUtils {
             }
         }
 
-        DeepSegmentation.logger.info("Number of tiles: " + tiles.size());
+        DeepSegmentation.logger.info( "Number of tiles: " + tiles.size() );
 
-        return (tiles);
+        return ( tiles );
     }
 
     public static FinalInterval getInterval( ImagePlus imp )
@@ -277,4 +290,35 @@ public abstract class IntervalUtils {
         return new ImagePlus( "empty", stack );
     }
 
+    public static int[] getDimensions( ImagePlus imp )
+    {
+        int[] imgDims = new int[5];
+        imgDims[ X ] = imp.getWidth();
+        imgDims[ Y ] = imp.getHeight();
+        imgDims[ C ] = imp.getNChannels();
+        imgDims[ Z ] = imp.getNSlices();
+        imgDims[ T ] = imp.getNFrames();
+        return imgDims;
+    }
+
+    public static long getApproximateNeededBytesPerVoxel( double memoryFactor )
+    {
+        long oneByte = 8;
+        long floatingPointImp = 32;
+        long mem = (long) ( memoryFactor * floatingPointImp / oneByte );
+        return mem;
+    }
+
+    public static long getApproximateNeededBytes( FinalInterval interval, double memoryFactor )
+    {
+        long bytes = getApproximateNeededBytesPerVoxel( memoryFactor );
+
+        for ( int d = 0; d < interval.numDimensions(); ++d )
+        {
+            bytes *= interval.dimension( d );
+        }
+
+        return bytes;
+
+    }
 }

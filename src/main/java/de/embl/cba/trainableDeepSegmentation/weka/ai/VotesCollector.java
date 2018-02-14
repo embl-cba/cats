@@ -10,7 +10,7 @@ import weka.core.Utils;
  * instance. In classification, does not return the class distribution but only
  * class index of the dominant class.
  *
- * Implements callable so it can be run in multiple threads.
+ * Implements callable so it can be run in multiple numWorkers.
  *
  * Adapted by Ignacio Arganda-Carreras from the Fran Supek's version to work on BalancedRandomTree objects
  */

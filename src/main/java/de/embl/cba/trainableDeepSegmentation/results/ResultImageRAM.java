@@ -24,8 +24,7 @@ public class ResultImageRAM implements ResultImage {
     Logger logger;
     long[] dimensions;
 
-    public ResultImageRAM( DeepSegmentation deepSegmentation,
-                           long[] dimensions)
+    public ResultImageRAM( DeepSegmentation deepSegmentation, long[] dimensions)
     {
         this.deepSegmentation = deepSegmentation;
         this.logger = deepSegmentation.getLogger();
