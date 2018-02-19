@@ -2293,6 +2293,7 @@ public class DeepSegmentation
             parameters.put( IOUtils.INPUT_IMAGE_VSS_SCHEME, vss.getNamingScheme() );
             parameters.put( IOUtils.INPUT_IMAGE_VSS_HDF5_DATA_SET_NAME, vss.getH5DataSet() );
 			parameters.put( IOUtils.INPUT_IMAGE_PATH, new File("") ) ;
+			System.out.println( "IOUtils.INPUT_IMAGE_VSS_DIRECTORY: " + vss.getDirectory() );
         }
 		else if ( inputImage.getStack() instanceof VirtualStack )
 		{

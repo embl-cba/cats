@@ -28,7 +28,15 @@ public class SlurmUtils
                         logger.info( "Current last line of job output: " + lastLine );
                     }
 
-                    if ( jobFuture.isDone() )
+
+                    String resubmissionNeeded = jobFuture.needsResubmission();
+
+                    if ( ! resubmissionNeeded.equals( jobFuture) )
+                    {
+                        logger.info( "KNOWN ERROR IN: " + jobFuture.getJobID() + ": " + resubmissionNeeded );
+                        logger.info( "RESUBMITTING: " + jobFuture.getJobID() );
+                    }
+                    else if ( jobFuture.isDone() )
                     {
 
                         logger.info("Final and full job output:" );

@@ -4,6 +4,7 @@ import de.embl.cba.cluster.ImageJCommandsSubmitter;
 import de.embl.cba.cluster.JobFuture;
 import de.embl.cba.cluster.SlurmQueue;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
+import de.embl.cba.utils.fileutils.PathMapper;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import net.imagej.ImageJ;
 import org.scijava.command.Command;
@@ -14,13 +15,15 @@ import org.scijava.widget.TextWidget;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static de.embl.cba.trainableDeepSegmentation.utils.IOUtils.clusterMounted;
 import static de.embl.cba.trainableDeepSegmentation.utils.Utils.getSimpleString;
+
+import de.embl.cba.utils.fileutils.PathMapper.*;
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>Batch Classification On Cluster" )
 public class RunSylwiasWorkflowOnSlurm implements Command
@@ -56,7 +59,6 @@ public class RunSylwiasWorkflowOnSlurm implements Command
     @Parameter (label = "ImageJ" )
     public String imageJ = ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_XVFB;
 
-
     static String masterRegExp="(?<treatment>.+)--W(?<well>\\d+)--P(?<position>\\d+)--Z(?<slice>\\d+)--T(?<timePoint>\\d+)--(?<channel>.+)\\.tif";
 
     static String[] datasetGroups={"treatment","well","position"};
@@ -70,11 +72,12 @@ public class RunSylwiasWorkflowOnSlurm implements Command
 
         List< Path > dataSetPatterns = getDataSetPatterns();
 
+
         ArrayList< JobFuture > jobFutures = submitJobsOnSlurm(
                 imageJ,
-                clusterMounted( jobDirectory.toPath() ) ,
-                clusterMounted( classifierFile.toPath() ),
-                clusterMounted( dataSetPatterns ) );
+                jobDirectory.toPath() ,
+                classifierFile.toPath(),
+                dataSetPatterns );
 
         monitorJobProgress( jobFutures );
 
@@ -159,7 +162,7 @@ public class RunSylwiasWorkflowOnSlurm implements Command
 
         ImageJCommandsSubmitter commandsSubmitter = new ImageJCommandsSubmitter(
                 ImageJCommandsSubmitter.EXECUTION_SYSTEM_EMBL_SLURM,
-                jobDirectory.toString(),
+                PathMapper.asEMBLClusterMounted( jobDirectory.toString() ),
                 ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_XVFB,
                 username, password );
 
@@ -179,23 +182,23 @@ public class RunSylwiasWorkflowOnSlurm implements Command
     private void setCommandAndParameterStrings( ImageJCommandsSubmitter commandsSubmitter, Path inputImagePath, Path classifierPath )
     {
 
-        String outputDirectory = inputImagePath.getParent() + "--analysis" + "/"; //+ "DataSet--" + simpleDataSetName;
-        String dataSetID = getSimpleString( inputImagePath.getFileName().toString() );
-
-        commandsSubmitter.addLinuxCommand( "hostname" );
-        commandsSubmitter.addLinuxCommand( "lscpu" );
-        commandsSubmitter.addLinuxCommand( "free -m" );
-        commandsSubmitter.addLinuxCommand( "START_TIME=$SECONDS" );
-
         Map< String, Object > parameters = new HashMap<>();
+
+        //
+        // 1st step
+        //
+
+
+        Path outputDirectory = Paths.get ( inputImagePath.getParent() + "--analysis" + "/" ); //+ "DataSet--" + simpleDataSetName;
+        String dataSetID = getSimpleString( inputImagePath.getFileName().toString() );
 
         parameters.clear();
         parameters.put( ApplyClassifierCommand.DATASET_ID, dataSetID );
 
         parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE );
-        parameters.put( IOUtils.INPUT_IMAGE_PATH, inputImagePath );
-        parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, classifierPath );
-        parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, new File( outputDirectory ) );
+        parameters.put( IOUtils.INPUT_IMAGE_PATH, PathMapper.asEMBLClusterMounted( inputImagePath ) );
+        parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, PathMapper.asEMBLClusterMounted( classifierPath ) );
+        parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, PathMapper.asEMBLClusterMounted( outputDirectory ) );
         parameters.put( IOUtils.OUTPUT_MODALITY, IOUtils.SAVE_AS_TIFF_STACKS );
         parameters.put( ApplyClassifierCommand.NUM_WORKERS, numWorkers );
         parameters.put( ApplyClassifierCommand.MEMORY_MB, memoryMB );
@@ -205,24 +208,22 @@ public class RunSylwiasWorkflowOnSlurm implements Command
 
         commandsSubmitter.addIJCommandWithParameters( ApplyClassifierCommand.PLUGIN_NAME , parameters );
 
+        //
+        // 2nd step
+        //
+
+        inputImagePath = Paths.get( outputDirectory + "/" + dataSetID + "--foreground.tif" );
 
         parameters.clear();
         parameters.put( AnalyzeObjectsCommand.DATASET_ID, dataSetID );
-        parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_PATH, new File( outputDirectory + "/" + dataSetID + "--foreground.tif" ) );
+        parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_PATH, PathMapper.asEMBLClusterMounted( inputImagePath ) );
         parameters.put( AnalyzeObjectsCommand.LOWER_THRESHOLD, 1 );
         parameters.put( AnalyzeObjectsCommand.UPPER_THRESHOLD, 255 );
-        parameters.put( AnalyzeObjectsCommand.OUTPUT_DIRECTORY, new File( outputDirectory ) );
-        parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, IOUtils.SHOW_RESULTS_TABLE );
+        parameters.put( AnalyzeObjectsCommand.OUTPUT_DIRECTORY, PathMapper.asEMBLClusterMounted( outputDirectory ) );
+        parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, IOUtils.SAVE_RESULTS_TABLE );
         parameters.put( AnalyzeObjectsCommand.QUIT_AFTER_RUN, true );
 
         commandsSubmitter.addIJCommandWithParameters( AnalyzeObjectsCommand.PLUGIN_NAME , parameters );
-
-
-        commandsSubmitter.addLinuxCommand( "ELAPSED_TIME=$(($SECONDS - $START_TIME))" );
-
-        commandsSubmitter.addLinuxCommand( "echo \"Elapsed time [s]:\"" );
-        commandsSubmitter.addLinuxCommand( "echo $ELAPSED_TIME" );
-
 
     }
 

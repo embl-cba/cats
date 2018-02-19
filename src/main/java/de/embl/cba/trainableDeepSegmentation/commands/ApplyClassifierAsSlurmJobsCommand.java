@@ -6,6 +6,7 @@ import de.embl.cba.cluster.SlurmQueue;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.SlurmUtils;
+import de.embl.cba.utils.fileutils.PathMapper;
 import net.imagej.ImageJ;
 import net.imglib2.FinalInterval;
 import org.scijava.command.Command;
@@ -22,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import static de.embl.cba.trainableDeepSegmentation.DeepSegmentation.logger;
-import static de.embl.cba.trainableDeepSegmentation.utils.IOUtils.clusterMounted;
 import static de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils.T;
 import static de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils.XYZT;
 import static de.embl.cba.trainableDeepSegmentation.utils.Utils.getSimpleString;
@@ -88,27 +88,24 @@ public class ApplyClassifierAsSlurmJobsCommand implements Command
     public void run()
     {
 
-        Path jobDirectory = Paths.get( "/g/cba/cluster/" + username );
+        String jobDirectory = "/g/cba/cluster/" + username;
 
         List< Path > dataSets = new ArrayList<>();
         dataSets.add( inputImagePath.toPath() );
 
-        ArrayList< JobFuture > jobFutures = submitJobsOnSlurm( imageJ,
-                clusterMounted( jobDirectory ) ,
-                clusterMounted( classifierFile.toPath() ),
-                clusterMounted( dataSets ) );
+        ArrayList< JobFuture > jobFutures = submitJobsOnSlurm( imageJ, jobDirectory, classifierFile.toPath(), dataSets );
 
         SlurmUtils.monitorJobProgress( jobFutures, logger );
 
     }
 
 
-    private ArrayList< JobFuture > submitJobsOnSlurm( String imageJ, Path jobDirectory, Path classifierPath, List< Path > dataSets )
+    private ArrayList< JobFuture > submitJobsOnSlurm( String imageJ, String jobDirectory, Path classifierPath, List< Path > dataSets )
     {
 
         ImageJCommandsSubmitter commandsSubmitter = new ImageJCommandsSubmitter(
                 ImageJCommandsSubmitter.EXECUTION_SYSTEM_EMBL_SLURM,
-                jobDirectory.toString(),
+                jobDirectory ,
                 imageJ,
                 username, password );
 
@@ -145,17 +142,8 @@ public class ApplyClassifierAsSlurmJobsCommand implements Command
             FinalInterval tile )
     {
 
-        String dataSetID = getSimpleString( inputImagePath.getFileName().toString() );
-        if ( dataSetID.equals( "" ) )
-        {
-            dataSetID = "dataSet";
-        }
+        String dataSetID = getDataSetID( inputImagePath );
 
-        // TODO: put to fiji-slurm
-        commandsSubmitter.addLinuxCommand( "hostname" );
-        commandsSubmitter.addLinuxCommand( "lscpu" );
-        commandsSubmitter.addLinuxCommand( "free -m" );
-        commandsSubmitter.addLinuxCommand( "START_TIME=$SECONDS" );
 
         Map< String, Object > parameters = new HashMap<>();
 
@@ -170,33 +158,41 @@ public class ApplyClassifierAsSlurmJobsCommand implements Command
         parameters.put( ApplyClassifierCommand.DATASET_ID, dataSetID );
 
         parameters.put( IOUtils.INPUT_MODALITY, inputModality );
-        parameters.put( IOUtils.INPUT_IMAGE_PATH, inputImagePath );
+        parameters.put( IOUtils.INPUT_IMAGE_PATH, PathMapper.asEMBLClusterMounted( inputImagePath ) );
 
-        parameters.put( IOUtils.INPUT_IMAGE_VSS_DIRECTORY, clusterMounted( inputImageVSSDirectory ) );
+        parameters.put( IOUtils.INPUT_IMAGE_VSS_DIRECTORY, PathMapper.asEMBLClusterMounted( inputImageVSSDirectory ));
         parameters.put( IOUtils.INPUT_IMAGE_VSS_PATTERN, inputImageVSSPattern );
         parameters.put( IOUtils.INPUT_IMAGE_VSS_SCHEME, inputImageVSSScheme );
         parameters.put( IOUtils.INPUT_IMAGE_VSS_HDF5_DATA_SET_NAME, inputImageVSSHdf5DataSetName );
 
         parameters.put( ApplyClassifierCommand.CLASSIFICATION_INTERVAL, intervalXYZT );
 
-        parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, classifierPath );
+        parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, PathMapper.asEMBLClusterMounted( classifierPath ) );
 
         parameters.put( IOUtils.OUTPUT_MODALITY, IOUtils.SAVE_AS_TIFF_SLICES );
-        parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, clusterMounted( outputDirectory ) );
+        parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, PathMapper.asEMBLClusterMounted( outputDirectory ) );
 
         parameters.put( ApplyClassifierCommand.NUM_WORKERS, numWorkers );
         parameters.put( ApplyClassifierCommand.MEMORY_MB, getApproximatelyNeededMemoryMB( tile ) );
 
+        parameters.put( ApplyClassifierCommand.SAVE_RESULTS_TABLE, false );
         parameters.put( ApplyClassifierCommand.QUIT_AFTER_RUN, true );
 
 
         commandsSubmitter.addIJCommandWithParameters( ApplyClassifierCommand.PLUGIN_NAME , parameters );
 
-        commandsSubmitter.addLinuxCommand( "ELAPSED_TIME=$(($SECONDS - $START_TIME))" );
 
-        commandsSubmitter.addLinuxCommand( "echo \"Elapsed time [s]:\"" );
-        commandsSubmitter.addLinuxCommand( "echo $ELAPSED_TIME" );
+    }
 
+    private String getDataSetID( Path inputImagePath )
+    {
+        String dataSetID = getSimpleString( inputImagePath.getFileName().toString()  );
+
+        if ( dataSetID.equals( "" ) )
+        {
+            dataSetID = "dataSet";
+        }
+        return dataSetID;
     }
 
 

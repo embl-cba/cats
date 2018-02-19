@@ -167,6 +167,8 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
     private void saveOutputImages()
     {
+        logService.info( "Saving classification output images..." );
+
         if ( outputModality.equals( IOUtils.SHOW_AS_ONE_IMAGE ) )
         {
             deepSegmentation.getResultImage().getWholeImageCopy().show();
@@ -183,12 +185,17 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
             saveProbabilitiesAsImarisFiles();
             outputFileType = ".ims";
         }
+
+        logService.info( "Saving classification output images: done!" );
+
     }
 
     private void saveResultsTable()
     {
         if ( saveResultsTable )
         {
+            logService.info( "Saving results table..." );
+
             ij.measure.ResultsTable resultsTable = new ij.measure.ResultsTable();
             resultsTable.incrementCounter();
 
@@ -203,7 +210,10 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
                 resultsTable.addValue( "PathName_ApplyClassifier_" + className + "_IMG", outputDirectory.getPath() );
             }
 
+            logService.info( "Saving results table to + " + outputDirectory.getPath() + "/" + dataSetID + "--ApplyClassifier.csv" );
             resultsTable.save( outputDirectory.getPath() + "/" + dataSetID + "--ApplyClassifier.csv" );
+            logService.info( "Saving results table: done!" );
+
         }
     }
 
