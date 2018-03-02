@@ -139,14 +139,8 @@ public class ResultImageDisk implements ResultImage {
         assert interval.min( IntervalUtils.T ) == interval.max( IntervalUtils.T );
 
         VirtualStackOfStacks stack = ( VirtualStackOfStacks ) result.getStack();
-        try
-        {
-            stack.saveByteCube( resultChunk, interval );
-        }
-        catch( IOException e)
-        {
-            deepSegmentation.logger.warning( "ResultImage.write3dResultChunk: " + e.toString() );
-        }
+        stack.saveByteCube( resultChunk, interval );
+
     }
 
     public ImagePlus getWholeImageCopy()

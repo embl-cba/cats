@@ -2156,6 +2156,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 		Thread task = new Thread() {
 			public void run()
 			{
+
 				deepSegmentation.updateExamplesInstancesAndMetadata();
 
 				updateComboBoxes();
@@ -2165,6 +2166,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 				deepSegmentation.trainClassifierWithFeatureSelection( updatedInstancesAndMetadata );
 
 				win.setButtonsEnabled( true );
+
 			}
 
 		}; task.start();
@@ -2399,9 +2401,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 		}
 		else
 		{
-			return deepSegmentation
-					.getInstancesManager()
-					.getCombinedInstancesAndMetadata( selectedInstances );
+			return deepSegmentation.getInstancesManager().getCombinedInstancesAndMetadata( selectedInstances );
 		}
 
 	}
@@ -2776,17 +2776,18 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	 */
 	public void saveInstances( String key )
 	{
-
-		win.setButtonsEnabled( false );
-		deepSegmentation.isBusy = true;
-
 		String[] dirFile = getSaveDirFile( "Save instance file", ".ARFF" );
 
-		boolean status = deepSegmentation.saveInstances( key, dirFile[0], dirFile[1] );
+		if ( dirFile != null )
+		{
+			win.setButtonsEnabled( false );
+			deepSegmentation.isBusy = true;
 
-		win.setButtonsEnabled( true );
-		deepSegmentation.isBusy = false;
+			deepSegmentation.saveInstances( key, dirFile[ 0 ], dirFile[ 1 ] );
 
+			win.setButtonsEnabled( true );
+			deepSegmentation.isBusy = false;
+		}
 
 	}
 
@@ -2794,7 +2795,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	{
 		SaveDialog sd = new SaveDialog("Save as...", "", extension);
 
-		if (sd.getFileName() == null) return null;
+		if ( sd.getFileName() == null ) return null;
 
 		String[] dirFile = new String[] { sd.getDirectory(), sd.getFileName() };
 
@@ -2829,17 +2830,20 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 	    String[] dirFile = getOpenDirFile( "Please choose instance file" );
 
-		win.setButtonsEnabled( false );
-		deepSegmentation.isBusy = true;
+	    if ( dirFile != null )
+		{
+			win.setButtonsEnabled( false );
+			deepSegmentation.isBusy = true;
 
-		deepSegmentation.loadInstancesMetadata( dirFile[0], dirFile[1] );
+			deepSegmentation.loadInstancesMetadata( dirFile[ 0 ], dirFile[ 1 ] );
 
-        updateUI();
+			updateUI();
 
-		win.setButtonsEnabled( true );
-		deepSegmentation.isBusy = false;
+			win.setButtonsEnabled( true );
+			deepSegmentation.isBusy = false;
 
-		logger.info("Loading instances finished.");
+			logger.info( "Loading instances finished." );
+		}
 
 	}
 
@@ -2857,15 +2861,18 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 		String[] dirFile = getOpenDirFile( "Please choose a classifier file" );
 
-		win.setButtonsEnabled( false );
-		deepSegmentation.isBusy = true;
+		if ( dirFile != null )
+		{
+			win.setButtonsEnabled( false );
+			deepSegmentation.isBusy = true;
 
-		deepSegmentation.loadClassifier( dirFile[0], dirFile[1] );
+			deepSegmentation.loadClassifier( dirFile[ 0 ], dirFile[ 1 ] );
 
-        updateClassNamesInUI();
+			updateClassNamesInUI();
 
-        win.setButtonsEnabled( true );
-		deepSegmentation.isBusy = false;
+			win.setButtonsEnabled( true );
+			deepSegmentation.isBusy = false;
+		}
 
 	}
 
@@ -2889,16 +2896,18 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	public void saveClassifier()
 	{
 
-		String[] dirFile =
-				getSaveDirFile("Please choose a output file", ".classifier" );
+		String[] dirFile = getSaveDirFile("Please choose a output file", ".classifier" );
 
-		win.setButtonsEnabled( false );
-		deepSegmentation.isBusy = true;
+		if ( dirFile != null )
+		{
+			win.setButtonsEnabled( false );
+			deepSegmentation.isBusy = true;
 
-		deepSegmentation.saveClassifier( dirFile[0], dirFile[1] );
+			deepSegmentation.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
 
-		win.setButtonsEnabled( true );
-		deepSegmentation.isBusy = false;
+			win.setButtonsEnabled( true );
+			deepSegmentation.isBusy = false;
+		}
 
 	}
 

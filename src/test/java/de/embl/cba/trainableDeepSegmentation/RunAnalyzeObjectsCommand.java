@@ -18,13 +18,13 @@ public class RunAnalyzeObjectsCommand
         ij.ui().showUI();
 
         Map< String, Object > parameters = new HashMap<>(  );
-        parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_PATH, new File( TestingUtils.TEST_RESOURCES + "/foreground.tif" ) );
+        parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_PATH, new File( TestingUtils.TEST_RESOURCES + "/image-sequence--classified/foreground.tif" ) );
         parameters.put( AnalyzeObjectsCommand.LOWER_THRESHOLD, 1 );
         parameters.put( AnalyzeObjectsCommand.UPPER_THRESHOLD, 255 );
-        parameters.put( AnalyzeObjectsCommand.OUTPUT_DIRECTORY, new File( TestingUtils.TEST_RESOURCES ) );
-        parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, IOUtils.SHOW_RESULTS_TABLE );
-        ij.command().run( AnalyzeObjectsCommand.class, false, parameters );
+        parameters.put( AnalyzeObjectsCommand.OUTPUT_DIRECTORY, new File( TestingUtils.TEST_RESOURCES + "/image-sequence--classified/" ) );
+        parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, IOUtils.SAVE_RESULTS_TABLE );
 
+        ij.command().run( AnalyzeObjectsCommand.class, false, parameters );
 
     }
 }

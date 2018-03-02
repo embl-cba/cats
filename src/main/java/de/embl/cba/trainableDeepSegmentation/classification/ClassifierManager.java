@@ -22,29 +22,23 @@ public class ClassifierManager {
     public String setClassifier( ClassifierInstancesMetadata classifierInstancesMetadata )
     {
 
-        String key = classifierInstancesMetadata
-                .instancesAndMetadata
-                .getInstances()
-                .relationName();
+        String key = classifierInstancesMetadata.instancesAndMetadata.getInstances().relationName();
 
         classifiers.put( key , classifierInstancesMetadata );
 
         return key;
     }
 
-    public String setClassifier( Classifier classifier,
-                                 InstancesAndMetadata instancesAndMetadata)
+    public String setClassifier( Classifier classifier, InstancesAndMetadata instancesAndMetadata)
     {
-        ClassifierInstancesMetadata classifierInstancesMetadata =
-                new ClassifierInstancesMetadata( classifier, instancesAndMetadata);
+        ClassifierInstancesMetadata classifierInstancesMetadata = new ClassifierInstancesMetadata( classifier, instancesAndMetadata );
 
         return setClassifier( classifierInstancesMetadata );
-
     }
 
     public FastRandomForest getClassifier( String key )
     {
-        return ( ( FastRandomForest) classifiers.get(key).classifier );
+        return ( ( FastRandomForest) classifiers.get( key ).classifier );
     }
 
     public String getMostRecentClassifierKey( )
@@ -75,8 +69,7 @@ public class ClassifierManager {
 
     public Instances getInstancesHeader( String key )
     {
-        Instances instancesHeader =
-                new Instances( classifiers.get(key).instancesAndMetadata.getInstances() );
+        Instances instancesHeader = new Instances( classifiers.get(key).instancesAndMetadata.getInstances() );
 
         return ( instancesHeader );
     }
@@ -110,7 +103,6 @@ public class ClassifierManager {
         boolean saveOK = true;
 
         DeepSegmentation.logger.info("\n# Saving classifier to " + filepath + " ..." );
-
 
         classifiers.get(key).instancesAndMetadata.putMetadataIntoInstances();
 

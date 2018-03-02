@@ -28,7 +28,7 @@ import static de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils.XYZT;
 import static de.embl.cba.trainableDeepSegmentation.utils.Utils.getSimpleString;
 
 
-@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>Apply Classifier Test" )
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>Apply Classifier On Slurm" )
 public class ApplyClassifierAsSlurmJobsCommand implements Command
 {
 
@@ -177,7 +177,6 @@ public class ApplyClassifierAsSlurmJobsCommand implements Command
 
         parameters.put( ApplyClassifierCommand.SAVE_RESULTS_TABLE, false );
         parameters.put( ApplyClassifierCommand.QUIT_AFTER_RUN, true );
-
 
         commandsSubmitter.addIJCommandWithParameters( ApplyClassifierCommand.PLUGIN_NAME , parameters );
 

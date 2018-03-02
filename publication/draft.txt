@@ -1,6 +1,6 @@
 Title:
 
-Trainable automated big image data segmentation using deep convolutional image features.
+Trainable image segmentation combining deep convolution and random forest classification.
 
 Authors/Affiliations:
 
@@ -40,47 +40,22 @@ Analysis of scientific images typically requires the segmentation of structures 
 
 Introduction
 
-Analysis of scientific image data typically requires partitioning of images into objects such as, e.g., cell nuclei and intracellular organelles in biological research. While it is in principle possible to perform such image segmentation manually, the amount of image data produced by modern imaging modalities such as high-throughput, light-sheet and focused-ion-beam scanning electron microscopy is on the order of gigabytes to terabytes, rendering manual segmentation almost impossible. Thus, automated image segmentation approaches are of great interest. In fluorescence microscopy (FM), automated image segmentation can sometimes be achieved using simple intensity thresholding, which can be performed, e.g. using freely available software packages such as ImageJ or CellProfiler [Ref_IJ, Ref_CP]. However, already distinguishing tubular from dot-like structures in FM images requires more sophisticated image processing procedures that might not be known to the broader scientific community. Automated segmentation of electron microscopy (EM) images typically poses an even bigger challenge as there can be many different structures with albeit similar gray level distribution.  
+Analysis of scientific image data typically requires partitioning of images into objects such as for instance cell nuclei and intracellular organelles in biological research. It is in principle possible to perform such image segmentation manually. However, the amount of data produced by modern imaging modalities such as high-throughput, light-sheet and focused-ion-beam scanning electron microscopy is on the order of Giga- to Tera-bytes, rendering manual segmentation almost impossible. Thus, automated image segmentation approaches are of great interest. In fluorescence microscopy (FM) automated image segmentation can sometimes be achieved using simple intensity thresholding that can be readily performed using freely available software packages such as ImageJ or CellProfiler [Ref_IJ, Ref_CP]. However, already distinguishing tubular from dot-like structures in FM images requires more sophisticated image processing procedures that might not be known to the broader scientific community. Automated segmentation of electron microscopy (EM) images typically poses an even bigger challenge as there can be many different structures with albeit very similar gray level distributions. In order to segment such images automatically it is typically necessary to combine tens to hundreds of various local image features, which, e.g., compute local intensity edges, ridges, or more complex textures. Even for an image analyst expert, finding the right combination of image features for segmenting different objects can be extremely time consuming. However, there exist user friendly machine learning solutions such as ilastik [Ref_Ilastik] and ImageJÕs Trainable Weka Segmentation Plugin [Ref_IJTWS]. In both tools several predefined image features are computed automatically and, based on sparse human annotations, a random forest (RF) classifier [Ref_Breiman] is trained to combine those feature values to assign each image pixel to a different structure (class). While this approach is very powerful and has proven useful in several occasions (@All: Examples?) deep convolutional neural networks (DCNN) seem even more promising in terms of image segmentation capabilities as they have achieved high ranking results in segmentation challenges [Ref_UNet, Ref_3DUNet]. However, one disadvantage of DCNNs is that a full training of the neural network using current algorithms and graphic cards still takes hours to days [Ref_3DUNet]. This is in stark contrast to RF classifiers which can be trained in seconds to minutes. Current user friendly approaches thus consist of partly pre-trained NNs in order to keep training times at bay [Ref_ZEISS, Ref_American_Company] 
 
+In this article we describe an alternative approach combining the power of deep convolution with the convenience of training of a random forest classifier. Our tool is freely available as a user friendly and big image data compatible Fiji plugin [Ref_FijiPlugin].
 
-machine learning approaches that learn segmentation rules from sparse human annotations are of great interest. because a human needs to segment only a subset of the data set (the annotations) while the remainder is automatically segmented by the machine.  
+Implementation and reasoning
 
-- Current user friendly machine learning solutions comprise the segmentation toolkit ilastik [Ref_ilastik] and the Trainable Weka Segmentation (TWS) Fiji plugin [Ref_TWS] (@Anna: Shall we mentioned something else here?). Both tools compute for each pixel a feature vector, comprising the values of several image features such as, e.g., Gaussian blurring or Hessian matrix eigenvalues. Subsequently, a random forest algorithm [Ref_Breiman] is trained to segment image pixels based on their feature vectors into different structures (classes). While this approach is very powerful and has proven useful in several occasions (@All: Examples?) deep convolutional neural networks (DCNN) seem even more promising in terms of image segmentation capabilities. DCNNs have achieved high ranking results in segmentation challenges and, in fact, seem conceptually more powerful because of the deep convolution capabilities which are currently lacking in ilastik and TWS. However, as far as we know there currently is no user friendly DCNN implementation that could be used by scientist without programming experience. The reason for this may partly be that, given perfectly annotated data, it currently takes hours to days [Ref_3DUNet] until the NN parameters converge during learning by backpropagation. This is in stark contrast to random forest classifier which can be trained in seconds or few minutes.
+Our deep convolutional random forest (DCRF) image segmentation tool is implemented in Java as a Fiji plugin and can be readily installed via Fiji's update manager [Ref_FijiPlugin]. The graphical user interface and some of the underlying code is based on the Trainable Weka Segmentation (TWS) ImageJ plugin [Ref_TWS]. Our image feature computation scheme is depicted in figure Fig_DeepFeatScheme. Starting from the input image we compute the eigenvalues of the structure tensor (ST) and the hessian matrix (HM) [Ref_ImageScience], where both the ST and HM implementation accommodate anisotropic input data. Choosing ST and HM eigenvalues next to (down-sampled) input images as features was motivated two-fold. Frist, ST and HM are based on 1st and 2nd image derivatives, respectively. Together with the input image these features thus mathematically mimic the beginning of a Taylor expansion, which is known to be a powerful approximation to any smooth function. Second, ST and HM eigenvalues are rotationally invariant, making them particularly suited for biological data which typically had no distinct orientation relative to the coordinate system of the image acquisition device.
+Similar to conventional DCNN architectures, the ST and HM eigenvalue (feature) images are binned and again subjected to ST and HM eigenvalue computation (see Figure). This process is repeated L times, where at each step the size of the down-sampling kernel can be adapted to accommodate the spatial length scales of the input image (Fig_DeepFeatUI). For 3-D data, there are 3 ST and 3 HM eigenvalues for each input image, yielding in principle 7^L (1 input + 3 ST + 3 HM = 7 images) images at down-sampling level L. Since this is a very quickly growing number we decided to decouple the convolutional depth D from the down-sampling level L in the user interface. For instance, it is possible to choose 3 down-sampling levels at a maximal convolutional depth of only 2 (see Suppl. Mat. for details). 
 
-- We therefore felt that it is useful to develop a novel user-friendly tool that combines the power of deep convolution with the speed of a random forest classifier. Here, we present the implementation of such a tool as well as some example applications.
+Discussion
 
+Our general DCRF scheme is compatible with any kind of image features. One could readily add more features or make the features user selectable. However, we opted for a fixed and rather small feature set of raw data, ST and HM eigenvalues for multiple reasons. Firstly, it is in practice confusing having too much choice at the feature selection step, especially for non-expert users, which are not familiar with, e.g. ST and HM eigenvalues. Secondly, using more features leads to an exponential explosion of the number of features in any deep convolutional computation scheme. 
 
+We decided to keep convolution depth N and down-sampling scheme flexible in order to allow the user to adapt the feature computation scheme to the different spatial lengths scales in the different input data.
 
-
-
-
-## Tables
-
-
-## Figure legends
-
-### Figure_Scheme
-
-Schematic depiction of our deep convolutional feature random forest image segmentation algorithm. To go one resolution layer deeper, images are down-sampled by NxN average binning. At each resolution layer hessian matrix and structure tensor eigenvalue images are computed (HS) of all images coming from the previous resolution. For training and classification, binned images are upsampled using bilinear interpolation before they are fed into the random forest classifier. Widths of boxes indicate number of images, numbers inside boxes are the actual number of images for the example scenario of one 3-D input image. Heights of boxes indicate number of pixels per image.  
-
-### Figure_LineOfDots
-
-Examples of how deep convolution using hessian matrix and structure tensor combined with decision trees segments images.
-A) Line of dots.
-
-
-## Abstract
-
-
-## Implementation
-
-The DFRF segmentation tool is implemented as a Fiji plugin and can be installed via Fiji's update manager. The DFRF plugin is based on the Trainable Weka Segmentation (TWS) plugin [Ref_TWS]. Just like the TWS our novel tool shares many features with ilastik (@Ignacio: something else?!). To guide potential users and future developers it is very important to outline similarities and differences of these tools, however, for the sake of readabilty we decided to omit those comparisons in the main text, but opted for a tabular form (see Table_CompareImplementations). 
-
-## Deep feature computation
-
-The scheme by which we compute deep features is depicted in figure Fig_DeepFeat. Starting from an input image we compute the eigenvalues of the hessian matrix (HME) and of the structure tensor (STE) at a fixed small smoothing scale (see Section_Anisotropy for details). These images are average binned by a user-selectable factor (typically 2 or 3) and then again HME and STE are computed on the binned images. This process can be repeated a user-selectable number of times. At the highest depth D the images are typically already very small such that we opted to actually not bin from D-1 to D but rather apply a mean filter in order to preserve more spatial information.
-
-Following our scheme for a 3-D input image the number of images at depth N is 7^N. In order to be able to go deep without an explosion of the number of feature images, we introduced a maximal feature depth (MFD) parameter. With this parameter one can control how many "features of features" are allowed. For example, chosing a value of two would only allow features of the following structure: Orig_HME_Bin_Bin_STE or Orig_STE_Bin_HME but not Orig_HME_Bin_STE_Bin_STE. Like this the number of features at depth N is (@TODO: figure out the formula).
+Following our scheme for a 3-D input image the number of images at depth N is 7^N. In order to be able to go deep without an explosion of the number of feature images, we introduced a maximal feature depth (MFD) parameter. With this parameter one can control how many "features of features" are allowed. For example, choosing a value of two would only allow features of the following structure: Orig_HME_Bin_Bin_STE or Orig_STE_Bin_HME but not Orig_HME_Bin_STE_Bin_STE. Like this the number of features at depth N is (@TODO: figure out the formula).
  
 ### Feature importance and subsetting
 
@@ -173,5 +148,26 @@ We thank ...
 - ilastik
 - fiji-tws
 - imagescience.org
+
+
+
+## Figure legends
+
+### Figure_Scheme
+
+Schematic depiction of our deep convolutional feature random forest image segmentation algorithm. To go one resolution layer deeper, images are down-sampled by NxN average binning. At each resolution layer hessian matrix and structure tensor eigenvalue images are computed (HS) of all images coming from the previous resolution. For training and classification, binned images are upsampled using bilinear interpolation before they are fed into the random forest classifier. Widths of boxes indicate number of images, numbers inside boxes are the actual number of images for the example scenario of one 3-D input image. Heights of boxes indicate number of pixels per image.  
+
+### Figure_LineOfDots
+
+Examples of how deep convolution using hessian matrix and structure tensor combined with decision trees segments images.
+A) Line of dots.
+
+
+Supplemental Material
+
+Down-sampling and convolution
+
+This, e.g., means that an image that already is the eigenvalue of an eigenvalue cannot be subjected to yet another eigenvalue computation at a lower resolution level. In our intuition this enables a compromise of covering many spatial length scales while keeping the number of feature images at bay.
+
 
 

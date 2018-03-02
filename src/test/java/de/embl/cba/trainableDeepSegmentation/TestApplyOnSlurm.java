@@ -45,7 +45,7 @@ public class TestApplyOnSlurm
         parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, classifierFile );
 
         parameters.put( IOUtils.INPUT_IMAGE_PATH, inputImagePath );
-        parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGE_J1 );
+        parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGEJ1 );
 
         parameters.put( ApplyClassifierAsSlurmJobsCommand.WORKERS, 16 );
 

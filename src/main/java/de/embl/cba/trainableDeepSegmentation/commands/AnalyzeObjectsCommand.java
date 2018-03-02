@@ -6,6 +6,8 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
 import inra.ijpb.measure.GeometricMeasures3D;
+
+
 import net.imagej.DatasetService;
 import net.imagej.ops.OpService;
 import org.scijava.ItemVisibility;
@@ -19,6 +21,7 @@ import org.scijava.ui.UIService;
 import de.embl.cba.trainableDeepSegmentation.objectanalysis.ObjectAnalysis;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,17 +58,21 @@ public class AnalyzeObjectsCommand implements Command
             "<br>Analyse Objects<br>" +
             "...<br>";
 
-    @Parameter (label = "Input image", required = true )
+    @Parameter ( label = "Input image" )
     public File inputImagePath;
     public static final String INPUT_IMAGE_PATH = "inputImagePath";
 
-    @Parameter( label = "Lower Threshold", required = true )
+    @Parameter( label = "Lower threshold", required = true )
     public int lowerThreshold = 1;
     public static final String LOWER_THRESHOLD = "lowerThreshold";
 
-    @Parameter( label = "Upper Threshold", required = true )
+    @Parameter( label = "Upper threshold", required = true )
     public int upperThreshold = 255;
     public static final String UPPER_THRESHOLD = "upperThreshold";
+
+    @Parameter( label = "Minimum number of voxels per object" )
+    public int minNumVoxels = 10;
+    public static final String MIN_NUM_VOXELS = "minNumVoxels";
 
     @Parameter( label = "Output modality", choices = { IOUtils.SHOW_RESULTS_TABLE, IOUtils.SAVE_RESULTS_TABLE } )
     public String outputModality;
@@ -80,7 +87,7 @@ public class AnalyzeObjectsCommand implements Command
     public static final String QUIT_AFTER_RUN = "quitAfterRun";
 
     @Parameter( label = "Dataset ID" )
-    public String dataSetID;
+    public String dataSetID = "dataSet";
     public static final String DATASET_ID = "dataSetID";
 
 
@@ -96,24 +103,43 @@ public class AnalyzeObjectsCommand implements Command
         inputImage = IOUtils.openImageWithIJOpenImage( inputImagePath );
 
         logService.info( "Creating label mask");
-        ImagePlus labelMask = ObjectAnalysis.createLabelMaskForChannelAndFrame( inputImage, 1, 1, 1, lowerThreshold, upperThreshold );
+        ImagePlus labelMask = ObjectAnalysis.createLabelMaskForChannelAndFrame( inputImage, 1, 1, minNumVoxels, lowerThreshold, upperThreshold );
 
-        logService.info( "Measure volumes");
-        ResultsTable resultsTable = GeometricMeasures3D.volume( labelMask.getStack(), new double[]{ 1, 1, 1 } );
+        ArrayList< ResultsTable > resultsTables = new ArrayList<>(  );
+        ArrayList< String > resultsTableNames = new ArrayList<>(  );
 
-        addInputImageFileAndPathName( resultsTable );
+        logService.info( "Measuring object geometries");
+
+        resultsTables.add( GeometricMeasures3D.volume( labelMask.getStack(), new double[]{ 1, 1, 1 } ) );
+        resultsTableNames.add( "Volume" );
+        addInputImageFileAndPathName( resultsTables.get( 0 ) );
+
+        resultsTables.add( GeometricMeasures3D.boundingBox( labelMask.getStack() ) );
+        resultsTableNames.add( "BoundingBox" );
+
+        resultsTables.add( GeometricMeasures3D.inertiaEllipsoid( labelMask.getStack(), new double[]{ 1, 1, 1 } ) );
+        resultsTableNames.add( "Ellipsoid" );
+
+
 
         if ( outputModality.equals( IOUtils.SAVE_RESULTS_TABLE ) )
         {
-            String tablePath = outputDirectory + File.separator + inputImage.getTitle() + "--AnalyzeObjects.csv";
-            logService.info( "Saving results table " + tablePath );
-            IOUtils.createDirectoryIfNotExists( outputDirectory.getPath() );
-            resultsTable.save( tablePath );
+            for ( int i = 0; i < resultsTables.size(); ++i )
+            {
+                String tablePath = outputDirectory + File.separator + inputImage.getTitle() + "--" + resultsTableNames.get( i ) + "--AnalyzeObjects.csv";
+                logService.info( "Saving results table " + tablePath );
+                IOUtils.createDirectoryIfNotExists( outputDirectory.getPath() );
+                addDataSetId( resultsTables.get( i ) );
+                resultsTables.get( i ).save( tablePath );
+            }
         }
 
         if ( outputModality.equals( IOUtils.SHOW_RESULTS_TABLE ) )
         {
-            resultsTable.show( inputImage.getTitle() + "--volumes" );
+            for ( int i = 0; i < resultsTables.size(); ++i )
+            {
+                resultsTables.get( i ).show( resultsTableNames.get( i ) );
+            }
         }
 
         if ( quitAfterRun ) Commands.quitImageJ( logService );
@@ -123,18 +149,27 @@ public class AnalyzeObjectsCommand implements Command
     private void addInputImageFileAndPathName( ResultsTable resultsTable )
     {
 
-        resultsTable.addValue( "DataSetID_FACT", dataSetID );
         resultsTable.addValue( "FileName_AnalyzeObjects_InputImage_IMG", inputImagePath.getName() );
         resultsTable.addValue( "PathName_AnalyzeObjects_InputImage_IMG", inputImagePath.getParent() );
 
         for ( int i = 0; i < resultsTable.size(); ++i )
         {
-            resultsTable.setValue( "DataSetID_FACT", i, dataSetID );
             resultsTable.setValue("FileName_AnalyzeObjects_InputImage_IMG", i, inputImagePath.getName()  );
             resultsTable.setValue("PathName_AnalyzeObjects_InputImage_IMG", i, inputImagePath.getParent()  );
-
         }
     }
+
+    private void addDataSetId( ResultsTable resultsTable )
+    {
+
+        resultsTable.addValue( "DataSetID_FACT", dataSetID );
+
+        for ( int i = 0; i < resultsTable.size(); ++i )
+        {
+            resultsTable.setValue( "DataSetID_FACT", i, dataSetID );
+        }
+    }
+
 
     private void logCommandLineCall()
     {

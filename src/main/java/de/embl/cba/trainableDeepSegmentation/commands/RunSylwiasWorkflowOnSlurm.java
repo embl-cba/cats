@@ -46,6 +46,9 @@ public class RunSylwiasWorkflowOnSlurm implements Command
     @Parameter (label = "Classifier" )
     public File classifierFile;
 
+    @Parameter (label = "Minimum number of voxels per object" )
+    public int minNumVoxels;
+
     @Parameter (label = "Queue", required = false, choices = { SlurmQueue.DEFAULT_QUEUE, SlurmQueue.ONE_DAY_QUEUE, SlurmQueue.ONE_WEEK_QUEUE, SlurmQueue.BIGMEM_QUEUE, SlurmQueue.GPU_QUEUE } )
     public String queue = SlurmQueue.DEFAULT_QUEUE;
     public static final String SLURM_QUEUE = "queue";
@@ -163,7 +166,7 @@ public class RunSylwiasWorkflowOnSlurm implements Command
         ImageJCommandsSubmitter commandsSubmitter = new ImageJCommandsSubmitter(
                 ImageJCommandsSubmitter.EXECUTION_SYSTEM_EMBL_SLURM,
                 PathMapper.asEMBLClusterMounted( jobDirectory.toString() ),
-                ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_XVFB,
+                imageJ,
                 username, password );
 
         ArrayList< JobFuture > jobFutures = new ArrayList<>( );
@@ -219,6 +222,8 @@ public class RunSylwiasWorkflowOnSlurm implements Command
         parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_PATH, PathMapper.asEMBLClusterMounted( inputImagePath ) );
         parameters.put( AnalyzeObjectsCommand.LOWER_THRESHOLD, 1 );
         parameters.put( AnalyzeObjectsCommand.UPPER_THRESHOLD, 255 );
+        parameters.put( AnalyzeObjectsCommand.MIN_NUM_VOXELS, minNumVoxels );
+
         parameters.put( AnalyzeObjectsCommand.OUTPUT_DIRECTORY, PathMapper.asEMBLClusterMounted( outputDirectory ) );
         parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, IOUtils.SAVE_RESULTS_TABLE );
         parameters.put( AnalyzeObjectsCommand.QUIT_AFTER_RUN, true );
@@ -227,13 +232,4 @@ public class RunSylwiasWorkflowOnSlurm implements Command
 
     }
 
-
-    public static void main(final String... args) throws Exception
-    {
-        final ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-
-        ij.command().run( RunSylwiasWorkflowOnSlurm.class, true );
-
-    }
 }

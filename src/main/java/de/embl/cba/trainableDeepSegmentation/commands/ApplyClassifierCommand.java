@@ -59,8 +59,9 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     public StatusService statusService;
 
     @Parameter( label = "Input modality", choices = {
-            IOUtils.OPEN_USING_IMAGE_J1,
+            IOUtils.OPEN_USING_IMAGEJ1,
             IOUtils.OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE,
+            IOUtils.OPEN_USING_IMAGE_J1_VIRTUAL,
             IOUtils.OPEN_USING_LAZY_LOADING_TOOLS } , required = true )
     public String inputModality;
 
@@ -135,9 +136,13 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
         logService.info( "Loading: " + inputImagePath );
 
-        if ( inputModality.equals( IOUtils.OPEN_USING_IMAGE_J1 ) )
+        if ( inputModality.equals( IOUtils.OPEN_USING_IMAGEJ1 ) )
         {
             inputImage = IOUtils.openImageWithIJOpenImage( inputImagePath );
+        }
+        else if ( inputModality.equals( IOUtils.OPEN_USING_IMAGE_J1_VIRTUAL ) )
+        {
+            inputImage = IOUtils.openImageWithIJOpenVirtualImage( inputImagePath );
         }
         else if ( inputModality.equals( IOUtils.OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE ) )
         {
@@ -152,6 +157,9 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
             logService.info( "Hdf5 data set name: " + inputImageVSSHdf5DataSetName );
             inputImage = IOUtils.openImageWithLazyLoadingTools( inputImageVSSDirectory, inputImageVSSScheme, inputImageVSSPattern, inputImageVSSHdf5DataSetName );
         }
+
+        logService.info( "Loaded image: " + inputImage.getTitle() );
+        logService.info( "Image dimensions: X = " + inputImage.getWidth() + "; Y = " + inputImage.getHeight() );
 
         inputImage.setTitle( dataSetID );
 

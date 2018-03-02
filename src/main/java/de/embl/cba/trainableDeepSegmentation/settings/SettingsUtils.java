@@ -44,7 +44,7 @@ public abstract class SettingsUtils {
     {
         settings.imageBackground = ( int ) instancesAndMetadata.getMetadata( Metadata_Settings_ImageBackground, 0 );
         settings.maxDeepConvLevel = ( int ) instancesAndMetadata.getMetadata( Metadata_Settings_MaxDeepConvLevel, 0 );
-        settings.anisotropy = ( int ) instancesAndMetadata.getMetadata( Metadata_Settings_Anisotropy, 0 );
+        settings.anisotropy = (double) instancesAndMetadata.getMetadata( Metadata_Settings_Anisotropy, 0 );
         settings.log2 = (( int ) instancesAndMetadata.getMetadata( Metadata_Settings_Log2, 0 ) == 1 );
 
         settings.binFactors[0] = (int) instancesAndMetadata.getMetadata( Metadata_Settings_Binning_0, 0 );

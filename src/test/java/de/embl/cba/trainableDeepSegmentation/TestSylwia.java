@@ -35,9 +35,7 @@ public class TestSylwia {
         String posString = String.format( "%05d", POS_NUM );
         String regExp = ".*--W" + wellString + "--P" + posString + "--Z.*--T00000--Trans.tif";
 
-        IJ.run("Image Sequence...",
-                "open=["+ INPUT_DIR +"]"
-                +"file=("+regExp+") sort");
+        IJ.run("Image Sequence...", "open=["+ INPUT_DIR +"]" +"file=("+regExp+") sort");
 
         ImagePlus inputImagePlus = IJ.getImage();
 

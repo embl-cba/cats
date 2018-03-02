@@ -1462,13 +1462,9 @@ public class DeepSegmentation
 	{
 		logger.info("\n# Saving instances to " + directory + File.separator + filename );
 
-		InstancesAndMetadata instancesAndMetadata =
-				getInstancesManager().
-						getInstancesAndMetadata( key );
+		InstancesAndMetadata instancesAndMetadata = getInstancesManager().getInstancesAndMetadata( key );
 
-		boolean success = InstancesUtils.
-				saveInstancesAndMetadataAsARFF( instancesAndMetadata,
-						directory, filename );
+		boolean success = InstancesUtils.saveInstancesAndMetadataAsARFF( instancesAndMetadata, directory, filename );
 
 		if ( success )
 		{
@@ -1484,7 +1480,7 @@ public class DeepSegmentation
 
 	public void updateExamplesInstancesAndMetadata()
 	{
-		currentLabelInstancesKey =  getKeyFromImageTitle();
+		currentLabelInstancesKey = getKeyFromImageTitle();
 		updateExamplesInstancesAndMetadata( currentLabelInstancesKey );
 	}
 
@@ -1510,7 +1506,6 @@ public class DeepSegmentation
 	{
 		if ( getNumExamples() > 0 )
 		{
-
 			InstancesAndMetadata instancesAndMetadata =
 					InstancesUtils.createInstancesAndMetadataFromExamples(
 							getExamples(),
@@ -1532,6 +1527,7 @@ public class DeepSegmentation
 
 	private String getKeyFromImageTitle( )
 	{
+	    // TODO: does this make sense??
 		String instancesName = getInputImageTitle().split( "--" )[ 0 ];
 		return instancesName;
 	}
@@ -1913,15 +1909,7 @@ public class DeepSegmentation
 
 	}
 
-	/**
-	 * Add instances samples from a FreeRoi with thickness of 1 pixel
-	 *
-	 * @param trainingData set of instances to add to
-	 * @param classIndex   class index value
-	 * @param sliceNum     number of 2d slice being processed
-	 * @param r            thin free line roi
-	 * @return number of instances added
-	 */
+
 	public int getFeatureVoxelSizeAtMaximumScale()
 	{
 
@@ -1974,20 +1962,18 @@ public class DeepSegmentation
 
 	public int[] getFeatureBorderSizes()
 	{
-		// TODO:
-		// - check whether this is too conservative
 		int[] borderSize = new int[5];
 
 		borderSize[ X ] = borderSize[ Y ] = getFeatureVoxelSizeAtMaximumScale();
 
 		// Z: deal with 2-D case and anisotropy
-		if (imgDims[ Z ] == 1)
+		if ( imgDims[ Z ] == 1 )
 		{
 			borderSize[ Z ] = 0;
 		}
 		else
 		{
-			borderSize[ Z ] = (int) (1.0 * getFeatureVoxelSizeAtMaximumScale() / settings.anisotropy);
+			borderSize[ Z ] = (int) Math.ceil(( 1.0 * getFeatureVoxelSizeAtMaximumScale() / settings.anisotropy ) );
 		}
 
 		return (borderSize);
@@ -2112,8 +2098,7 @@ public class DeepSegmentation
 									-1,
 									logger );
 
-					instancesWithFeatureSelection =
-							InstancesUtils.removeAttributes( instancesAndMetadata, goners );
+					instancesWithFeatureSelection = InstancesUtils.removeAttributes( instancesAndMetadata, goners );
 					break;
 
 				case FEATURE_SELECTION_TOTAL_NUMBER:
@@ -2124,8 +2109,7 @@ public class DeepSegmentation
 									( int ) featureSelectionValue,
 									logger );
 
-					instancesWithFeatureSelection
-							= InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers );
+					instancesWithFeatureSelection = InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers );
 					break;
 
 				case FEATURE_SELECTION_ABSOLUTE_USAGE:
@@ -2136,8 +2120,7 @@ public class DeepSegmentation
 									( int ) featureSelectionValue,
 									logger );
 
-					instancesWithFeatureSelection
-							= InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers2 );
+					instancesWithFeatureSelection = InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers2 );
 					break;
 
 
@@ -2224,16 +2207,13 @@ public class DeepSegmentation
 
 		final long end = System.currentTimeMillis();
 
-		ClassifierUtils.reportClassifierCharacteristics( classifier,
-				instancesAndMetadata.getInstances() );
+		ClassifierUtils.reportClassifierCharacteristics( classifier, instancesAndMetadata.getInstances() );
 
 		logger.info("Trained classifier in " + (end - start) + " ms.");
 
 		isTrainingCompleted = true;
 
-		String key = getClassifierManager().setClassifier(
-				classifier,
-				instancesAndMetadata);
+		String key = getClassifierManager().setClassifier( classifier, instancesAndMetadata );
 
 		return key;
 	}
@@ -2302,7 +2282,7 @@ public class DeepSegmentation
 		}
 		else
         {
-            parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGE_J1 );
+            parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGEJ1 );
 			parameters.put( IOUtils.INPUT_IMAGE_PATH, getInputImageFile() );
 		}
     }
@@ -2413,22 +2393,20 @@ public class DeepSegmentation
 			long tileCounter,
 			ArrayList<FinalInterval> tiles)
 	{
+		if ( tileCounter == 0 || pixelsClassified.get() == 0 )  return;
 
 		long timeUsed = (System.currentTimeMillis() - startTime);
 		double timeUsedPerTile = 1.0 * timeUsed / tileCounter;
 		long regionsLeft = tiles.size() - tileCounter;
 		double minutesLeft = 1.0 * regionsLeft * timeUsedPerTile / (1000 * 60);
 		double minutesCurr = 1.0 * timeUsed / (1000 * 60);
-		double rate = 1.0 * pixelsClassified.get() /
-				timeUsed;
+		double rate = 1.0 * pixelsClassified.get() / timeUsed;
 
-		String timeInfo = String.format("Time (spent, left) [min]: " +
-				"%.1f, %.1f", minutesCurr, minutesLeft);
+		String timeInfo = String.format("Time (spent, left) [min]: " + "%.1f, %.1f", minutesCurr, minutesLeft);
 		timeInfo += " (" + (int) (rate) + " kv/s)";
 
 
-		long avgTreesUsed = (long) 1.0 * rfStatsTreesEvaluated.get() /
-				pixelsClassified.get();
+		long avgTreesUsed = (long) 1.0 * rfStatsTreesEvaluated.get() / pixelsClassified.get();
 
 		long currentMemoryUsage = IJ.currentMemory();
 

@@ -23,7 +23,7 @@ public class IOUtils
     public static final String INPUT_IMAGE_VSS_PATTERN = "inputImageVSSPattern";
     public static final String INPUT_IMAGE_VSS_HDF5_DATA_SET_NAME = "inputImageVSSHdf5DataSetName";
 
-    public static final String OPEN_USING_IMAGE_J1 = "Open using ImageJ1";
+    public static final String OPEN_USING_IMAGEJ1 = "Open using ImageJ1";
     public static final String OPEN_USING_IMAGE_J1_VIRTUAL = "Open using ImageJ1 virtual";
     public static final String OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE = "Open using ImageJ1 ImageSequence";
     public static final String OPEN_USING_LAZY_LOADING_TOOLS = "Open using Lazy Loading Tools";

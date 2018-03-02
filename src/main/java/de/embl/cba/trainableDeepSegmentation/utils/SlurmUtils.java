@@ -28,27 +28,23 @@ public class SlurmUtils
                         logger.info( "Current last line of job output: " + lastLine );
                     }
 
-
                     String resubmissionNeeded = jobFuture.needsResubmission();
 
-                    if ( ! resubmissionNeeded.equals( jobFuture) )
+                    if ( ! resubmissionNeeded.equals( JobFuture.NO_EVERYTHING_FINE ) )
                     {
                         logger.info( "KNOWN ERROR IN: " + jobFuture.getJobID() + ": " + resubmissionNeeded );
                         logger.info( "RESUBMITTING: " + jobFuture.getJobID() );
+                        jobFuture.resubmit();
                     }
                     else if ( jobFuture.isDone() )
                     {
-
                         logger.info("Final and full job output:" );
                         logger.info( currentOutput );
-
                         doneJobs.add( jobFuture );
-
                         if ( doneJobs.size() == jobFutures.size() )
                         {
                             break;
                         }
-
                     }
                 }
                 else

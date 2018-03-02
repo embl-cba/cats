@@ -47,12 +47,12 @@ public class InstancesUtils {
             Settings settings,
             ArrayList< String > featureNames,
             ArrayList< String > classNames )
+
     {
 
         Instances instances = getInstancesHeader( instancesName, featureNames, classNames  );
 
-        InstancesAndMetadata instancesAndMetadata
-                = new InstancesAndMetadata( instances );
+        InstancesAndMetadata instancesAndMetadata = new InstancesAndMetadata( instances );
 
         for ( int e = 0; e < examples.size(); ++e )
         {

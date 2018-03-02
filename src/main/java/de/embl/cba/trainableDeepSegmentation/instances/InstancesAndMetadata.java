@@ -78,14 +78,18 @@ public class InstancesAndMetadata {
     }
 
 
-    public InstancesAndMetadata(Instances instances,
-                                Map< Metadata, ArrayList< Double > > metadata )
+    public Map< Metadata, ArrayList< Double > > getMetaData( )
+    {
+        return metadata;
+    }
+
+    public InstancesAndMetadata( Instances instances, Map< Metadata, ArrayList< Double > > metadata )
     {
         this.instances = instances;
         this.metadata = metadata;
     }
 
-    public InstancesAndMetadata(Instances instances )
+    public InstancesAndMetadata( Instances instances )
     {
         this.instances = instances;
         this.metadata = getEmptyMetadata();
@@ -106,7 +110,16 @@ public class InstancesAndMetadata {
 
     public double getMetadata( Metadata aMetadata, int i )
     {
-        return metadata.get( aMetadata ).get( i );
+        if ( ! metadata.keySet().contains( aMetadata ) )
+        {
+            System.out.println( "ERROR: Metadata is not contained: " + aMetadata );
+            return -1;
+        }
+        else
+        {
+            double value = metadata.get( aMetadata ).get( i );
+            return value;
+        }
     }
 
     public ArrayList< Double > getMetadata( Metadata aMetadata )

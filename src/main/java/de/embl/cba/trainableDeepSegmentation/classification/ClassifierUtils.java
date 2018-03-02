@@ -132,8 +132,7 @@ public class ClassifierUtils {
             ObjectInputStream objectInputStream = new ObjectInputStream(is);
 
             classifierInstancesMetadata.classifier = (FastRandomForest) objectInputStream.readObject();
-            classifierInstancesMetadata.instancesAndMetadata =
-                    new InstancesAndMetadata( (Instances ) objectInputStream.readObject() );
+            classifierInstancesMetadata.instancesAndMetadata = new InstancesAndMetadata( (Instances ) objectInputStream.readObject() );
             classifierInstancesMetadata.instancesAndMetadata.moveMetadataFromInstancesToMetadata();
 
             objectInputStream.close();

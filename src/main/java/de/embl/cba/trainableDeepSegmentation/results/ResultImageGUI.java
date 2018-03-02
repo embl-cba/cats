@@ -53,15 +53,20 @@ public abstract class ResultImageGUI {
 
         String exportModality = gd.getNextChoice();
 
+        // save
+
         String directory = IJ.getDirectory("Select a directory");
 
-        if ( exportModality.equals( SEPARATE_IMARIS ) )
+        if ( directory != null )
         {
-            saveAsSeparateImaris( directory, fileNamePrefix, resultImage, rawData, classesToBeSaved, binning, saveRawData, exportModality );
-        }
-        else if ( exportModality.equals( SEPARATE_TIFF_FILES ) )
-        {
-            resultImage.saveClassesAsFiles( directory, fileNamePrefix, classesToBeSaved, binning, exportModality );
+            if ( exportModality.equals( SEPARATE_IMARIS ) )
+            {
+                saveAsSeparateImaris( directory, fileNamePrefix, resultImage, rawData, classesToBeSaved, binning, saveRawData, exportModality );
+            }
+            else if ( exportModality.equals( SEPARATE_TIFF_FILES ) )
+            {
+                resultImage.saveClassesAsFiles( directory, fileNamePrefix, classesToBeSaved, binning, exportModality );
+            }
         }
     }
 

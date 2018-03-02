@@ -73,7 +73,7 @@ public class FeatureProvider
     private int[] XYZ = new int[]{ X, Y, Z};
     private int[] XYZT = new int[]{ X, Y, Z, T};
 
-    private int[] featureImageBorderSizes = new int[5];
+    private int[] featureImageBorderSizes;
 
     public DeepSegmentation deepSegmentation = null;
 
@@ -87,8 +87,7 @@ public class FeatureProvider
             };
 
     /** names of available filters */
-    public static final String[] availableFeatures
-            = new String[]{	"Hessian", "Structure", "Minimum", "Maximum", "Mean" };
+    public static final String[] availableFeatures = new String[]{	"Hessian", "Structure", "Minimum", "Maximum", "Mean" };
 
     /** index of the feature stack that is used as reference (to read attribute, etc.).
      * -1 if not defined yet. */
@@ -129,8 +128,7 @@ public class FeatureProvider
 
     public int cacheSize = 0;
 
-    final LinkedHashMap< Integer, double[][][] > featureSliceCache
-            = new LinkedHashMap< Integer, double[][][]>() {
+    final LinkedHashMap< Integer, double[][][] > featureSliceCache = new LinkedHashMap< Integer, double[][][]>() {
         @Override
         protected boolean removeEldestEntry(final Map.Entry eldest) {
             return size() > cacheSize;
@@ -307,30 +305,30 @@ public class FeatureProvider
             {
 
                 // Get channel(s) to process
-                ImagePlus[] channels = extractChannels(originalImage);
+                ImagePlus[] channels = extractChannels( originalImage );
 
                 String filterBaseName = "He"; //+(int)(sigma);
 
                 ArrayList<ImagePlus>[] results = new ArrayList[ channels.length ];
 
-                for(int ch=0; ch < channels.length; ch++)
+                for( int ch = 0; ch < channels.length; ch++ )
                 {
                     results[ch] = new ArrayList<ImagePlus>();
 
                     final ImagePlus channel = channels[ch].duplicate();
 
-                    if (channel.getNSlices() > 1)
+                    if ( channel.getNSlices() > 1 )
                     {
                         // pad 3-D image on the back and the front
                         channel.getImageStack().addSlice("pad-back", channels[ch].getImageStack().getProcessor(channels[ch].getImageStackSize()));
                         channel.getImageStack().addSlice("pad-front", channels[ch].getImageStack().getProcessor(1), 1);
                     }
 
-                    final ArrayList<ImagePlus> result = ImageScience.computeHessianImages(sigma, absolute, channel);
+                    final ArrayList<ImagePlus> result = ImageScience.computeHessianImages( sigma, absolute, channel );
                     final ImageStack largest = result.get(0).getImageStack();
                     final ImageStack middle = result.get(1).getImageStack();
 
-                    if (channel.getNSlices() > 1) // 3D
+                    if ( channel.getNSlices() > 1 ) // 3D
                     {
                         // remove pad
                         largest.deleteLastSlice();
@@ -1289,6 +1287,15 @@ public class FeatureProvider
 
         ImagePlus processedOriginalImage = getProcessedOriginalImage( channel );
 
+        if ( processedOriginalImage.getNSlices() == 1 )
+        {
+            int a = 1;
+        }
+        else
+        {
+            int b = 1;
+        }
+
         setCalibration( processedOriginalImage );
 
         ArrayList < ArrayList < ImagePlus > > multiResolutionFeatureImages = new ArrayList<>();
@@ -1298,19 +1305,17 @@ public class FeatureProvider
 
             for ( int resolutionLayer = 0; resolutionLayer < numLayers; ++resolutionLayer )
             {
-
                 if ( deepSegmentation.stopCurrentTasks || Thread.currentThread().isInterrupted() ) return ( false );
 
                 long start = System.currentTimeMillis();
 
                 final ArrayList<ImagePlus> featureImagesThisResolution = new ArrayList<>();
 
-                adaptiveAnisotropy = setInputImagesForCurrentResolutionLayer( numThreads, numLayers, adaptiveAnisotropy, processedOriginalImage, multiResolutionFeatureImages, resolutionLayer, featureImagesThisResolution );
+                adaptiveAnisotropy = binImagesForCurrentResolutionLayer( numThreads, numLayers, adaptiveAnisotropy, processedOriginalImage, multiResolutionFeatureImages, resolutionLayer, featureImagesThisResolution );
 
                 computeAndAddFeatureImagesForCurrentResolutionLayer( numThreads, maximumMultithreadedLevel, adaptiveAnisotropy, multiResolutionFeatureImages, resolutionLayer, featureImagesThisResolution );
 
                 logProgress( numThreads, start, resolutionLayer );
-
             }
 
             putIntoFeatureImagesMap( multiResolutionFeatureImages );
@@ -1386,7 +1391,7 @@ public class FeatureProvider
                 if (level <= maximumMultithreadedLevel) // multi-threaded
                 {
                     if ( isFeatureOrChildrenNeeded( "He_" + featureImage.getTitle()) )
-                        featureFutures.add( exe.submit( getHessian(featureImage, smoothingScale, hessianAbsoluteValues)));
+                        featureFutures.add( exe.submit( getHessian( featureImage, smoothingScale, hessianAbsoluteValues ) ));
 
                     if ( isFeatureOrChildrenNeeded( "St_" + featureImage.getTitle()) )
                         featureFutures.add( exe.submit( getStructure(featureImage, smoothingScale, integrationScale)));
@@ -1394,7 +1399,7 @@ public class FeatureProvider
                 else // single-threaded
                 {
                     if ( isFeatureOrChildrenNeeded( "He_" + featureImage.getTitle()) )
-                        featureImagesList.add( getHessian(featureImage, smoothingScale, hessianAbsoluteValues).call());
+                        featureImagesList.add( getHessian( featureImage, smoothingScale, hessianAbsoluteValues).call());
 
                     if ( isFeatureOrChildrenNeeded( "St_" + featureImage.getTitle()) )
                         featureImagesList.add( getStructure(featureImage, smoothingScale, integrationScale).call());
@@ -1410,7 +1415,7 @@ public class FeatureProvider
 
     }
 
-    private double setInputImagesForCurrentResolutionLayer( int numThreads, int numLevels, double adaptiveAnisotropy, ImagePlus inputImage, ArrayList< ArrayList< ImagePlus > > multiResolutionFeatureImages, int level, ArrayList< ImagePlus > featureImagesThisResolution ) throws InterruptedException, ExecutionException
+    private double binImagesForCurrentResolutionLayer( int numThreads, int numLevels, double adaptiveAnisotropy, ImagePlus inputImage, ArrayList< ArrayList< ImagePlus > > multiResolutionFeatureImages, int level, ArrayList< ImagePlus > featureImagesThisResolution ) throws InterruptedException, ExecutionException
     {
         final ArrayList<ImagePlus> featureImagesPreviousResolution;
 
@@ -1424,10 +1429,7 @@ public class FeatureProvider
             featureImagesPreviousResolution = multiResolutionFeatureImages.get( level - 1 );
         }
 
-        int[] binning = getBinning(
-                featureImagesPreviousResolution.get(0),
-                adaptiveAnisotropy,
-                binFactors[ level ] );
+        int[] binning = getBinning( featureImagesPreviousResolution.get(0), adaptiveAnisotropy, binFactors[ level ] );
 
         // add binning information to image title
         String binningTitle = "Bin" + binning[0] + "x" + binning[1] + "x" + binning[2];
@@ -1438,6 +1440,7 @@ public class FeatureProvider
 
         ExecutorService exe = Executors.newFixedThreadPool( numThreads );
         ArrayList<Future<ImagePlus> > futuresBinning = new ArrayList<>();
+
 
         for ( ImagePlus featureImage : featureImagesPreviousResolution )
         {
@@ -1475,17 +1478,13 @@ public class FeatureProvider
                     radii[i] = (int) Math.ceil ( ( binning[i] - 1 ) / 2.0 );
                 }
 
-                futuresBinning.add( exe.submit(
-                        filter3d( featureImage, radii ) ) );
+                futuresBinning.add( exe.submit( filter3d( featureImage, radii ) ) );
             }
             else
             {
-
-                if ( isFeatureOrChildrenNeeded( binningTitle + "_" + featureImage.getTitle()) )
+                if ( isFeatureOrChildrenNeeded( binningTitle + "_" + featureImage.getTitle() ) )
                 {
-
                     futuresBinning.add( exe.submit( bin( featureImage, binning, binningTitle, "AVERAGE") ) );
-
                 }
             }
         }
@@ -1495,6 +1494,7 @@ public class FeatureProvider
             // getInstancesAndMetadata feature images
             featureImagesThisResolution.add( f.get() );
         }
+
         futuresBinning = null;
         exe.shutdown();
         System.gc();
@@ -1578,24 +1578,24 @@ public class FeatureProvider
     private ImagePlus getProcessedOriginalImage( int channel )
     {
         FinalInterval expandedInterval = addBordersXYZ( interval, featureImageBorderSizes );
-        ImagePlus inputImage = getDataCube( expandedInterval, channel, "mirror" );
+
+        ImagePlus processedInputImage = getDataCube( expandedInterval, channel, "mirror" );
 
         // pre-processing
         if ( deepSegmentation.settings.log2 && channel != FG_DIST_BG_IMAGE )
         {
             // subtract background
-            IJ.run( inputImage, "Subtract...", "value="
-                    + deepSegmentation.settings.imageBackground + " stack" );
+            IJ.run( processedInputImage, "Subtract...", "value=" + deepSegmentation.settings.imageBackground + " stack" );
             // make sure there are no zeros, because the log will give -Infinity
-            IJ.run( inputImage, "Add...", "value=1 stack" );
+            IJ.run( processedInputImage, "Add...", "value=1 stack" );
 
             // log transformation to go to multiplicative math
-            IJ.run( inputImage, "32-bit", "" );
-            IJ.run( inputImage, "Log", "stack" );
+            IJ.run( processedInputImage, "32-bit", "" );
+            IJ.run( processedInputImage, "Log", "stack" );
         }
 
-        inputImage.setTitle( "Orig_ch" + channel );
-        return inputImage;
+        processedInputImage.setTitle( "Orig_ch" + channel );
+        return processedInputImage;
     }
 
     private void putDeepConvFeatLevelIntoTitle(ImagePlus imp)
