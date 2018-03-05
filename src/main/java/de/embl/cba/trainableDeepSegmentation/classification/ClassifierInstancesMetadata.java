@@ -22,11 +22,6 @@ public class ClassifierInstancesMetadata
     public ClassifierInstancesMetadata( Classifier classifier, InstancesAndMetadata instancesAndMetadata)
     {
         this.classifier = classifier;
-
-        // TODO: save only one instance and corresponding metadata
-        //        final Instances oneInstance = new Instances( instancesAndMetadata.getInstances(), 1 );
-        //     Map< InstancesAndMetadata.Metadata, ArrayList< Double > > metaData = instancesAndMetadata.getMetaData( );
-
         this.instancesAndMetadata = instancesAndMetadata;
     }
 

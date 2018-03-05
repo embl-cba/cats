@@ -66,8 +66,7 @@ public abstract class ExamplesUtils {
 
 
 
-    public static ArrayList< Example > getExamplesFromInstancesAndMetadata(
-            InstancesAndMetadata instancesAndMetadata )
+    public static ArrayList< Example > getExamplesFromInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata )
     {
         ArrayList< Example > examples = new ArrayList<>(  );
 

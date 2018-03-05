@@ -69,7 +69,7 @@ public class ClassifierManager {
 
     public Instances getInstancesHeader( String key )
     {
-        Instances instancesHeader = new Instances( classifiers.get(key).instancesAndMetadata.getInstances() );
+        Instances instancesHeader = new Instances( classifiers.get(key).instancesAndMetadata.getInstances(), 1 );
 
         return ( instancesHeader );
     }
@@ -104,15 +104,13 @@ public class ClassifierManager {
 
         DeepSegmentation.logger.info("\n# Saving classifier to " + filepath + " ..." );
 
-        classifiers.get(key).instancesAndMetadata.putMetadataIntoInstances();
-
         try
         {
             sFile = new File( filepath );
             OutputStream os = new FileOutputStream( sFile );
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(os);
             objectOutputStream.writeObject( classifiers.get(key).classifier );
-            objectOutputStream.writeObject( classifiers.get(key).instancesAndMetadata.getInstances() );
+            objectOutputStream.writeObject( classifiers.get(key).instancesAndMetadata.getOneInstanceWithMetadata() );
             objectOutputStream.flush();
             objectOutputStream.close();
         }
@@ -128,7 +126,7 @@ public class ClassifierManager {
             DeepSegmentation.logger.info("...done!");
         }
 
-        classifiers.get(key).instancesAndMetadata.moveMetadataFromInstancesToMetadata();
+
 
         return saveOK;
     }

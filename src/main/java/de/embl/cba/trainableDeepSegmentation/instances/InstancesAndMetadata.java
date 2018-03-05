@@ -160,6 +160,17 @@ public class InstancesAndMetadata {
         instances.setClassIndex( classIndex );
     }
 
+
+    public Instances getOneInstanceWithMetadata()
+    {
+        putMetadataIntoInstances();
+        Instances oneInstanceWithMetadata = new Instances( instances, 0 );
+        oneInstanceWithMetadata.add( instances.get( 0 ) );
+        moveMetadataFromInstancesToMetadata();
+
+        return oneInstanceWithMetadata;
+    }
+
     public Instances getInstances()
     {
         return instances;
