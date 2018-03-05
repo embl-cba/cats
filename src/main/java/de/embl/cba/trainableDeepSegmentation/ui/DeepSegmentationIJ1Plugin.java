@@ -158,7 +158,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	public static final String IO_LOAD_LABEL_IMAGE = "Load label image";
 	public static final String IO_LOAD_INSTANCES = "Load instances";
 	public static final String IO_SAVE_INSTANCES = "Save instances";
-	public static final String IO_EXPORT_RESULT_IMAGE = "Export result image";
+	public static final String IO_EXPORT_RESULT_IMAGE = "Export results";
 	public static final String TRAIN_FROM_LABEL_IMAGE = "Train from label image";
 	public static final String APPLY_CLASSIFIER_ON_SLURM = "Apply classifier on Slurm";
 	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier";
@@ -2146,7 +2146,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 		if ( firstLabelUpdate )
 		{
 			if ( ! showFeatureSettingsDialog() ) return;
-			if ( ! showClassifierSettingsDialog() ) return;
+			// if ( ! showClassifierSettingsDialog() ) return;
 			firstLabelUpdate = false;
 		}
 
@@ -2316,8 +2316,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 					String directory = null;
 
-					if ( ! showClassifierSettingsDialog() ) return;
 					if ( ! showFeatureSettingsDialog() ) return;
+					//if ( ! showClassifierSettingsDialog() ) return;
 
 					if ( autoSaveInstances )
 					{

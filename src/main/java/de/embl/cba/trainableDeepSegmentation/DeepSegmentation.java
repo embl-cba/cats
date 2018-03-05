@@ -648,10 +648,7 @@ public class DeepSegmentation
 				if( directory != null )
 				{
 					logger.info( "\n# Saving instances..." );
-					InstancesUtils.saveInstancesAndMetadataAsARFF(
-							instancesManager.getInstancesAndMetadata( instancesKey ),
-							directory,
-							"Instances-" + numInstances + ".ARFF" );
+					InstancesUtils.saveInstancesAndMetadataAsARFF( instancesManager.getInstancesAndMetadata( instancesKey ), directory, "Instances-" + numInstances + ".ARFF" );
 					logger.info( "...done" );
 				}
 
@@ -2823,7 +2820,6 @@ public class DeepSegmentation
 			}
 		};
 	}
-
 
 	public UncertaintyRegion getUncertaintyRegion( int i )
 	{

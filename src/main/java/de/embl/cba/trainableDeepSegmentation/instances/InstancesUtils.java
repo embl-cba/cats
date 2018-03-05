@@ -893,19 +893,16 @@ public class InstancesUtils {
     }
 
 
-    public static boolean saveInstancesAsARFF( Instances instances,
-                                        String directory,
-                                        String filename )
+    public static boolean saveInstancesAsARFF( Instances instances, String directory, String filename )
     {
 
         BufferedWriter out = null;
         try{
             out = new BufferedWriter(
                     new OutputStreamWriter(
-                            new FileOutputStream( directory
-                                    + File.separator + filename ) ) );
+                            new FileOutputStream( directory + File.separator + filename ) ) );
 
-            final Instances header = new Instances(instances, 0);
+            final Instances header = new Instances( instances, 0 );
             out.write( header.toString() );
 
             for(int i = 0; i < instances.numInstances(); i++)
@@ -931,9 +928,7 @@ public class InstancesUtils {
         return true;
     }
 
-    public static boolean saveInstancesAndMetadataAsARFF( InstancesAndMetadata instancesAndMetadata,
-                                                          String directory,
-                                                          String filename)
+    public static boolean saveInstancesAndMetadataAsARFF( InstancesAndMetadata instancesAndMetadata, String directory, String filename)
     {
 
         instancesAndMetadata.putMetadataIntoInstances();

@@ -1,6 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.results;
 
-import de.embl.cba.bigDataTools.ImarisUtils;
+import de.embl.cba.bigDataTools.imaris.ImarisUtils;
 import de.embl.cba.bigDataTools.utils.Utils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
@@ -9,10 +9,9 @@ import ij.gui.GenericDialog;
 
 import java.util.ArrayList;
 
-import static de.embl.cba.trainableDeepSegmentation.DeepSegmentation.logger;
 import static de.embl.cba.trainableDeepSegmentation.results.Utils.SEPARATE_IMARIS;
 import static de.embl.cba.trainableDeepSegmentation.results.Utils.SEPARATE_TIFF_FILES;
-import static de.embl.cba.trainableDeepSegmentation.results.Utils.saveAsImarisChannel;
+import static de.embl.cba.trainableDeepSegmentation.results.Utils.saveAsImarisChannels;
 
 public abstract class ResultImageGUI {
 
@@ -76,7 +75,7 @@ public abstract class ResultImageGUI {
 
         if ( saveRawData )
         {
-            saveAsImarisChannel( rawData, fileNamePrefix + "raw-data", directory, binning );
+            saveAsImarisChannels( rawData, fileNamePrefix + "raw-data", directory, binning );
         }
 
         ImarisUtils.createImarisMetaFile( directory );

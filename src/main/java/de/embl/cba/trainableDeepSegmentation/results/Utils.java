@@ -1,8 +1,8 @@
 package de.embl.cba.trainableDeepSegmentation.results;
 
 import de.embl.cba.bigDataTools.Hdf5DataCubeWriter;
-import de.embl.cba.bigDataTools.ImarisDataSet;
-import de.embl.cba.bigDataTools.ImarisWriter;
+import de.embl.cba.bigDataTools.imaris.ImarisDataSet;
+import de.embl.cba.bigDataTools.imaris.ImarisWriter;
 import de.embl.cba.utils.logging.Logger;
 import ij.IJ;
 import ij.ImagePlus;
@@ -124,48 +124,45 @@ public abstract class Utils {
 
     }
 
-    public static void saveAsImarisChannel( ImagePlus rawData,
-                                            String name,
-                                            String directory,
-                                            int[] binning )
+    public static void saveAsImarisChannels( ImagePlus rawData,
+                                             String name,
+                                             String directory,
+                                             int[] binning )
     {
         // Set everything up
         ImarisDataSet imarisDataSet = new ImarisDataSet();
-                imarisDataSet.setFromImagePlus( rawData,
-                binning, directory, name, "/");
+        imarisDataSet.setFromImagePlus( rawData, binning, directory, name, "/");
 
         // Channels
-        ArrayList< String > channelNames = new ArrayList<>();
-                channelNames.add( name );
-                imarisDataSet.setChannelNames( channelNames  );
+        //ArrayList< String > channelNames = new ArrayList<>();
+        //channelNames.add( name );
+        //imarisDataSet.setChannelNames( channelNames  );
 
         // Header
-                ImarisWriter.writeHeader( imarisDataSet,
-                        directory,
-                        name + ".ims"
-                );
+        ImarisWriter.writeHeader( imarisDataSet, directory, name + ".ims" );
 
         Hdf5DataCubeWriter writer = new Hdf5DataCubeWriter();
 
-                for ( int t = 0; t < rawData.getNFrames(); ++t )
+        for ( int t = 0; t < rawData.getNFrames(); ++t )
         {
 
-            Duplicator duplicator = new Duplicator();
-            ImagePlus rawDataFrame = duplicator.run( rawData, 1, 1, 1, rawData.getNSlices(), t+1, t+1 );
-
-            if ( binning[0]*binning[1]*binning[2] > 1 )
+            for ( int c = 0; c < rawData.getNChannels(); ++c )
             {
-                Binner binner = new Binner();
-                rawDataFrame = binner.shrink( rawDataFrame, binning[ 0 ],
-                        binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
+                Duplicator duplicator = new Duplicator();
+                ImagePlus rawDataFrame = duplicator.run( rawData, c + 1, c + 1, 1, rawData.getNSlices(), t + 1, t + 1 );
+
+                if ( binning[ 0 ] * binning[ 1 ] * binning[ 2 ] > 1 )
+                {
+                    Binner binner = new Binner();
+                    rawDataFrame = binner.shrink( rawDataFrame, binning[ 0 ], binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
+                }
+
+                writer.writeImarisCompatibleResolutionPyramid( rawDataFrame, imarisDataSet, c, t );
+
+                logger.progress( "Wrote " + name + ", channel:" + ( c + 1 ) + "/" + rawData.getNChannels() + ", frame:", ( t + 1 ) + "/" + rawData.getNFrames() );
+
             }
 
-            writer.writeImarisCompatibleResolutionPyramid(
-                    rawDataFrame,
-                    imarisDataSet,
-                    0, t );
-
-            logger.progress( "Wrote " + name + ", frame:", (t+1) + "/" + rawData.getNFrames() );
         }
     }
 
