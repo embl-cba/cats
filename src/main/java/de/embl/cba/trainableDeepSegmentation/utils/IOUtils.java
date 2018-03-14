@@ -33,7 +33,7 @@ public class IOUtils
     public static final String SHOW_AS_ONE_IMAGE = "Show all probabilities in one image";
     public static final String SAVE_AS_TIFF_SLICES = "Save class probabilities as Tiff slices";
     public static final String OUTPUT_DIRECTORY = "outputDirectory";
-    public static final String INPUT_IMAGE_PATH = "inputImagePath";
+    public static final String INPUT_IMAGE_FILE = "inputImageFile";
 
 
     public static ImagePlus openImageWithIJOpenImage( File imageFile )

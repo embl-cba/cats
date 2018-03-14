@@ -14,12 +14,12 @@ import java.util.ArrayList;
 
 import static de.embl.cba.trainableDeepSegmentation.DeepSegmentation.logger;
 
-public abstract class Utils {
+public abstract class ResultUtils
+{
 
-
-    public static final String SEPARATE_IMARIS = "Separate Imaris Channels";
-
-    public static final String SEPARATE_TIFF_FILES = "Separate Tiff Files";
+    public static final String SEPARATE_IMARIS = "Save as Imaris";
+    public static final String SEPARATE_TIFF_FILES = "Save as Tiff";
+    public static final String SEPARATE_IMAGES = "Show images";
 
     private static void saveClassAsImaris( int classId,
                                            String directory,
@@ -78,6 +78,8 @@ public abstract class Utils {
 
         for ( int t = 0; t < result.getNFrames(); ++t )
         {
+            logger.progress( "Preparing " + className + ", frame:", (t + 1) + "/" + result.getNFrames() );
+
             ImagePlus impClass = getClassImage( classId, t, result, CLASS_LUT_WIDTH );
 
             if ( binning[0] * binning[1] * binning[2] > 1 )
@@ -85,7 +87,6 @@ public abstract class Utils {
                 Binner binner = new Binner();
                 impClass = binner.shrink( impClass, binning[ 0 ], binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
             }
-
 
             String path;
 
@@ -106,6 +107,35 @@ public abstract class Utils {
     }
 
 
+    private static void showClassAsImage( int classId,
+                                          ImagePlus result,
+                                          int[] binning,
+                                          Logger logger,
+                                          String imageNamePrefix,
+                                          ArrayList< String > classNames,
+                                          int CLASS_LUT_WIDTH )
+    {
+
+        String className = classNames.get( classId );
+
+        for ( int t = 0; t < result.getNFrames(); ++t )
+        {
+            ImagePlus impClass = getClassImage( classId, t, result, CLASS_LUT_WIDTH );
+
+            if ( binning[0] * binning[1] * binning[2] > 1 )
+            {
+                Binner binner = new Binner();
+                impClass = binner.shrink( impClass, binning[ 0 ], binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
+            }
+
+            impClass.setTitle( imageNamePrefix + className + "--T" + ( t + 1 ) );
+            impClass.show();
+
+            logger.progress( "Displayed " + className + ", frame:", (t + 1) + "/" + result.getNFrames() );
+        }
+
+    }
+
     private static ImagePlus getClassImage( int classId,
                                             int t,
                                             ImagePlus result,
@@ -114,10 +144,10 @@ public abstract class Utils {
         ImagePlus impClass;
 
         Duplicator duplicator = new Duplicator();
-        impClass = duplicator.run( result, 1, 1, 1, result.getNSlices(), t+1, t+1 );
+        impClass = duplicator.run( result, 1, 1, 1, result.getNSlices(), t + 1, t + 1 );
 
-        int[] intensityGate = new int[]
-                { classId * CLASS_LUT_WIDTH + 1, (classId + 1 ) * CLASS_LUT_WIDTH };
+        int[] intensityGate = new int[]{ classId * CLASS_LUT_WIDTH + 1, (classId + 1 ) * CLASS_LUT_WIDTH };
+
         de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( impClass, intensityGate );
 
         return ( impClass );
@@ -195,33 +225,47 @@ public abstract class Utils {
         {
             if ( classesToBeSaved.get( classIndex ) )
             {
-                if ( fileType.equals( Utils.SEPARATE_IMARIS ) )
+                if ( fileType.equals( ResultUtils.SEPARATE_IMARIS ) )
                 {
                     saveClassAsImaris( classIndex, directory, fileNamePrefix, result, binning, logger, classNames, CLASS_LUT_WIDTH );
                 }
-                else if ( fileType.equals( Utils.SEPARATE_TIFF_FILES ) )
+                else if ( fileType.equals( ResultUtils.SEPARATE_TIFF_FILES ) )
                 {
                     saveClassAsTiff( classIndex, directory, fileNamePrefix, result, binning, logger, classNames, CLASS_LUT_WIDTH );
                 }
             }
         }
-
-
     }
 
 
-    private static boolean checkMaximalVolume( ImagePlus result, int[] binning, Logger logger )
+    public static void showClassesAsImages(
+            String imageNamePrefix,
+            ArrayList< Boolean > classesToBeShown,
+            ImagePlus resultImage,
+            int[] binning,
+            Logger logger,
+            ArrayList< String > classNames,
+            int CLASS_LUT_WIDTH)
     {
-        long volume = (long) 1.0 * result.getWidth() / binning[0] * result.getHeight() / binning[1] * result.getNSlices() / binning[2];
 
-        if ( volume > Integer.MAX_VALUE - 10 )
+        if ( classesToBeShown == null )
         {
-            logger.error( "Your image (after binning) is too large [voxels]: " + volume
-                    + "\nDue to java indexing issues the maximum currently is around " + Integer.MAX_VALUE +
-                    "\nPlease use more binning.");
-            return true;
+            classesToBeShown = selectAllClasses( classNames );
         }
-        return false;
+
+        if ( binning == null )
+        {
+            binning = new int[] { 1, 1, 1 };
+        }
+
+        for ( int classIndex = 0; classIndex < classesToBeShown.size(); ++classIndex )
+        {
+            if ( classesToBeShown.get( classIndex ) )
+            {
+                showClassAsImage( classIndex, resultImage, binning, logger, imageNamePrefix, classNames, CLASS_LUT_WIDTH );
+            }
+        }
+
     }
 
     public static final ArrayList< Boolean > selectAllClasses( ArrayList<String> classNames )

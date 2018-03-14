@@ -10,6 +10,7 @@ package de.embl.cba.trainableDeepSegmentation.commands;
 
 
 import de.embl.cba.cluster.commands.Commands;
+import de.embl.cba.trainableDeepSegmentation.results.ResultUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.StringUtils;
 import ij.IJ;
@@ -26,7 +27,6 @@ import org.scijava.plugin.Plugin;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
 import de.embl.cba.trainableDeepSegmentation.*;
-import de.embl.cba.trainableDeepSegmentation.results.Utils;
 
 import java.io.File;
 import java.util.HashMap;
@@ -66,7 +66,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     public String inputModality;
 
     @Parameter ( label = "Input image path" )
-    public File inputImagePath;
+    public File inputImageFile;
 
     @Parameter (label = "Classification interval [x0,x1,y0,y1,z0,z1,t0,t1]", required = false )
     public String classificationIntervalXYZT = WHOLE_IMAGE;
@@ -124,9 +124,9 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     DeepSegmentation deepSegmentation;
     String outputFileType;
 
-    // /Applications/Fiji.app/Contents/MacOS/ImageJ-macosx --run "Apply Classifier" "quitAfterRun='true',inputImagePath='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/image-sequence/.*--W00016--P00003--.*',classifierFile='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/transmission-cells-3d.classifier',outputModality='Save class probabilities as tiff files',outputDirectory='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/image-sequence--classified'"
+    // /Applications/Fiji.app/Contents/MacOS/ImageJ-macosx --run "Apply Classifier" "quitAfterRun='true',inputImageFile='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/image-sequence/.*--W00016--P00003--.*',classifierFile='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/transmission-cells-3d.classifier',outputModality='Save class probabilities as tiff files',outputDirectory='/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/image-sequence--classified'"
 
-    // xvfb-run -a /g/almf/software/Fiji.app/ImageJ-linux64 --run "Apply Classifier" "quitAfterRun='true',inputImagePath='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences/.*--W00016--P00004--.*',classifierFile='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/transmission-cells-3d.classifier',outputDirectory='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences--classified/DataSet--W00016--P00004--',outputModality='Save class probabilities as tiff files'"
+    // xvfb-run -a /g/almf/software/Fiji.app/ImageJ-linux64 --run "Apply Classifier" "quitAfterRun='true',inputImageFile='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences/.*--W00016--P00004--.*',classifierFile='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/transmission-cells-3d.classifier',outputDirectory='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences--classified/DataSet--W00016--P00004--',outputModality='Save class probabilities as tiff files'"
 
     public void run()
     {
@@ -134,19 +134,19 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         logService.info( "# " + PLUGIN_NAME );
         logCommandLineCall();
 
-        logService.info( "Loading: " + inputImagePath );
+        logService.info( "Loading: " + inputImageFile );
 
         if ( inputModality.equals( IOUtils.OPEN_USING_IMAGEJ1 ) )
         {
-            inputImage = IOUtils.openImageWithIJOpenImage( inputImagePath );
+            inputImage = IOUtils.openImageWithIJOpenImage( inputImageFile );
         }
         else if ( inputModality.equals( IOUtils.OPEN_USING_IMAGE_J1_VIRTUAL ) )
         {
-            inputImage = IOUtils.openImageWithIJOpenVirtualImage( inputImagePath );
+            inputImage = IOUtils.openImageWithIJOpenVirtualImage( inputImageFile );
         }
         else if ( inputModality.equals( IOUtils.OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE ) )
         {
-            inputImage = IOUtils.openImageWithIJImportImageSequence( inputImagePath );
+            inputImage = IOUtils.openImageWithIJImportImageSequence( inputImageFile );
         }
         else if ( inputModality.equals( IOUtils.OPEN_USING_LAZY_LOADING_TOOLS ) )
         {
@@ -209,8 +209,8 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
             resultsTable.addValue( "DataSetID_FACT", dataSetID );
 
-            resultsTable.addValue( "FileName_ApplyClassifier_InputImage_IMGR", inputImagePath.getName() );
-            resultsTable.addValue( "PathName_ApplyClassifier_InputImage_IMGR", inputImagePath.getParent() );
+            resultsTable.addValue( "FileName_ApplyClassifier_InputImage_IMGR", inputImageFile.getName() );
+            resultsTable.addValue( "PathName_ApplyClassifier_InputImage_IMGR", inputImageFile.getParent() );
 
             for ( String className : deepSegmentation.getClassNames() )
             {
@@ -239,12 +239,12 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
     private void saveProbabilitiesAsSeparateTiffFiles()
     {
-        deepSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), dataSetID + "--", null, null, Utils.SEPARATE_TIFF_FILES );
+        deepSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), dataSetID + "--", null, null, ResultUtils.SEPARATE_TIFF_FILES );
     }
 
     private void saveProbabilitiesAsImarisFiles()
     {
-        deepSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), dataSetID + "--", null, null, Utils.SEPARATE_IMARIS );
+        deepSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), dataSetID + "--", null, null, ResultUtils.SEPARATE_IMARIS );
     }
 
     private void applyClassifier( )
@@ -299,7 +299,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     private void logCommandLineCall()
     {
         Map<String, Object> parameters = new HashMap<>( );
-        parameters.put( IOUtils.INPUT_IMAGE_PATH, inputImagePath );
+        parameters.put( IOUtils.INPUT_IMAGE_FILE, inputImageFile );
         parameters.put( IOUtils.OUTPUT_MODALITY, outputModality );
         parameters.put( OUTPUT_DIRECTORY, outputDirectory );
         parameters.put( QUIT_AFTER_RUN, quitAfterRun );

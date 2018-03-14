@@ -39,7 +39,7 @@ public class ResultImageRAM implements ResultImage {
 
         IOUtils.createDirectoryIfNotExists( directory );
 
-        Utils.saveClassesAsFiles(
+        ResultUtils.saveClassesAsFiles(
                 directory,
                 fileNamePrefix,
                 classesToBeSaved,
@@ -52,6 +52,24 @@ public class ResultImageRAM implements ResultImage {
         );
 
     }
+
+
+
+    @Override
+    public void showClassesAsImages( String imageNamePrefix, ArrayList< Boolean > classesToBeShown, int[] binning )
+    {
+
+        ResultUtils.showClassesAsImages(
+                imageNamePrefix,
+                classesToBeShown,
+                result,
+                binning,
+                logger,
+                deepSegmentation.getClassNames(),
+                CLASS_LUT_WIDTH );
+
+    }
+
 
     @Override
     public ImageProcessor getSlice( int slice, int frame )

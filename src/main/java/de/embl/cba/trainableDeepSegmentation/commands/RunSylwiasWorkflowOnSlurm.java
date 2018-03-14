@@ -6,7 +6,6 @@ import de.embl.cba.cluster.SlurmQueue;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.utils.fileutils.PathMapper;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
-import net.imagej.ImageJ;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -22,8 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import static de.embl.cba.trainableDeepSegmentation.utils.Utils.getSimpleString;
-
-import de.embl.cba.utils.fileutils.PathMapper.*;
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>Batch Classification On Cluster" )
 public class RunSylwiasWorkflowOnSlurm implements Command
@@ -199,7 +196,7 @@ public class RunSylwiasWorkflowOnSlurm implements Command
         parameters.put( ApplyClassifierCommand.DATASET_ID, dataSetID );
 
         parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE );
-        parameters.put( IOUtils.INPUT_IMAGE_PATH, PathMapper.asEMBLClusterMounted( inputImagePath ) );
+        parameters.put( IOUtils.INPUT_IMAGE_FILE, PathMapper.asEMBLClusterMounted( inputImagePath ) );
         parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, PathMapper.asEMBLClusterMounted( classifierPath ) );
         parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, PathMapper.asEMBLClusterMounted( outputDirectory ) );
         parameters.put( IOUtils.OUTPUT_MODALITY, IOUtils.SAVE_AS_TIFF_STACKS );
@@ -219,7 +216,7 @@ public class RunSylwiasWorkflowOnSlurm implements Command
 
         parameters.clear();
         parameters.put( AnalyzeObjectsCommand.DATASET_ID, dataSetID );
-        parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_PATH, PathMapper.asEMBLClusterMounted( inputImagePath ) );
+        parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_FILE, PathMapper.asEMBLClusterMounted( inputImagePath ) );
         parameters.put( AnalyzeObjectsCommand.LOWER_THRESHOLD, 1 );
         parameters.put( AnalyzeObjectsCommand.UPPER_THRESHOLD, 255 );
         parameters.put( AnalyzeObjectsCommand.MIN_NUM_VOXELS, minNumVoxels );

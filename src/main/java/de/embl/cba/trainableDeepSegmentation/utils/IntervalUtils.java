@@ -24,7 +24,7 @@ public abstract class IntervalUtils {
     public static int[] XYZ = new int[]{X, Y, Z};
     public static int[] XYZT = new int[]{X, Y, Z, T};
 
-    // TODO: move to Utils
+    // TODO: move to ResultUtils
     public static FinalInterval fixDimension( Interval interval, int d, long value)
     {
 
@@ -40,7 +40,7 @@ public abstract class IntervalUtils {
         return new FinalInterval(min, max);
     }
 
-    // TODO: move to Utils
+    // TODO: move to ResultUtils
     public static FinalInterval getIntervalByReplacingValues( Interval interval, int d, long minValue, long maxValue)
     {
 

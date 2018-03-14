@@ -1,9 +1,5 @@
 package de.embl.cba.trainableDeepSegmentation.ui;
 
-import de.embl.cba.cluster.ImageJCommandsSubmitter;
-import de.embl.cba.cluster.SlurmQueue;
-import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierCommand;
-import de.embl.cba.utils.logging.IJLazySwingLogger;
 import de.embl.cba.utils.logging.Logger;
 
 
@@ -14,9 +10,11 @@ import ij.gui.*;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.measure.Calibration;
+import ij.plugin.Duplicator;
 import ij.plugin.MacroInstaller;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.Recorder;
+import ij.plugin.frame.RoiManager;
 import ij.process.*;
 
 import java.awt.*;
@@ -36,7 +34,6 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.File;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -55,10 +52,6 @@ import de.embl.cba.trainableDeepSegmentation.results.ResultImageDisk;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageGUI;
 import de.embl.cba.trainableDeepSegmentation.settings.Settings;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
-import org.scijava.command.Command;
-import org.scijava.command.CommandService;
-import org.scijava.event.EventService;
-import org.scijava.plugin.Parameter;
 import weka.classifiers.AbstractClassifier;
 import weka.core.SerializationHelper;
 import weka.gui.GUIChooserApp;
@@ -94,7 +87,7 @@ import weka.gui.GUIChooserApp;
 // TODO: make IJ2 plugin?!
 
 
-public class DeepSegmentationIJ1Plugin implements PlugIn
+public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 {
 
 	/** plugin's name */
@@ -229,14 +222,15 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 	/** available colors for available classes */
 	private Color[] colors = new Color[]{
-			Color.blue,
+			Color.gray,
 			Color.green,
 			Color.red,
-			Color.magenta,
+			Color.blue,
 			Color.cyan,
 			Color.pink,
 			Color.yellow,
             Color.orange,
+			Color.magenta,
 			Color.black,
 			Color.white
 	};
@@ -323,6 +317,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 	private boolean isFirstTime = true;
 
+	private boolean reviewLabelsFlag = false;
+
 	private Logger logger;
 
 	/**
@@ -351,6 +347,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 				+ "macro 'shortcut n [n]' {};"
 				+ "macro 'shortcut b [b]' {};"
 				+ "macro 'shortcut d [d]' {};"
+				+ "macro 'shortcut s [s]' {};"
 				;
 		new MacroInstaller().install(macros);
 
@@ -432,6 +429,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 		showColorOverlay = false;
 
+		Roi.addRoiListener( this );
+
 		IJ.setTool("freeline");
 	}
 
@@ -484,6 +483,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 							win.setButtonsEnabled( false );
 							reviewLabelsButton.setEnabled( true );
 							reviewLabelsButton.setText( REVIEW_END );
+							reviewLabelsFlag = true;
 
 							reviewLabels( reviewLabelsClassComboBox.getSelectedIndex() );
 						}
@@ -494,6 +494,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 							deepSegmentation.setExamples( approvedExamples );
 							labelManager.close();
 							reviewLabelsButton.setText( REVIEW_START );
+							reviewLabelsFlag = false;
+							imageAroundCurrentSelection.close();
+
 							win.setButtonsEnabled( true );
 						}
 					}
@@ -695,6 +698,37 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	};
 
 
+	Roi currentlyDisplayedRoi;
+	@Override
+	public void roiModified( ImagePlus imagePlus, int i )
+	{
+		if ( imagePlus == displayImage )
+		{
+			if ( i == RoiListener.CREATED && reviewLabelsFlag )
+			{
+				if ( currentlyDisplayedRoi == null)
+				{
+					currentlyDisplayedRoi = displayImage.getRoi();
+					showImageAroundCurrentSelection();
+				}
+				else
+				{
+					int x = displayImage.getRoi().getBounds().x;
+					int x2 = currentlyDisplayedRoi.getBounds().x;
+					if ( x != x2 )
+					{
+						currentlyDisplayedRoi = displayImage.getRoi();
+						showImageAroundCurrentSelection();
+					}
+				}
+
+
+
+			}
+		}
+	}
+
+
 	/**
 	 * Custom canvas to deal with zooming an panning
 	 */
@@ -786,6 +820,68 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 		}
 	}
 
+	ImagePlus imageAroundCurrentSelection;
+
+	private void showImageAroundCurrentSelection()
+	{
+
+		Roi roi = displayImage.getRoi(); if ( roi == null ) return;
+
+		int margin = getMargin( roi );
+
+		setImageAroundRoi( roi, margin );
+
+		showImageAroundRoi( roi, margin );
+
+		IJ.selectWindow( displayImage.getID() );
+
+
+	}
+
+	private int getMargin( Roi roi )
+	{
+		return (int) ( Math.max( roi.getBounds().width, roi.getBounds().height ) / 2.0 );
+	}
+
+	private void showImageAroundRoi( Roi roi, int margin )
+	{
+		if ( ! imageAroundCurrentSelection.isVisible() )
+		{
+			imageAroundCurrentSelection.show();
+		}
+		imageAroundCurrentSelection.updateAndDraw();
+
+		Roi zoomedInROI = (Roi) roi.clone();
+		zoomedInROI.setLocation( margin, margin );
+		imageAroundCurrentSelection.setRoi( zoomedInROI );
+	}
+
+	private void setImageAroundRoi( Roi roi, int margin )
+	{
+		Rectangle r = roi.getBounds();
+
+		Roi rectangleRoi = new Roi( r.x - margin, r.y - margin, r.width + 2 * margin, r.height + 2 * margin  );
+
+		reviewLabelsFlag = false;
+
+		displayImage.setRoi( rectangleRoi );
+
+		Duplicator duplicator = new Duplicator();
+
+		if ( imageAroundCurrentSelection != null )
+		{
+			imageAroundCurrentSelection.close();
+		}
+
+		imageAroundCurrentSelection = duplicator.run( displayImage, displayImage.getC(), displayImage.getC(), displayImage.getZ(), displayImage.getZ(), displayImage.getT(), displayImage.getT() );
+
+		displayImage.setRoi( roi );
+
+		reviewLabelsFlag = true;
+
+	}
+
+
 	/**
 	 * Custom window to define the Trainable Weka Segmentation GUI
 	 */
@@ -837,10 +933,10 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 		 *
 		 * @param imp input image
 		 */
-		CustomWindow(ImagePlus imp)
+		CustomWindow( ImagePlus imp )
 		{
-			super(imp, new CustomCanvas(imp));
-			final CustomCanvas canvas = (CustomCanvas) getCanvas();
+			super( imp, new CustomCanvas( imp ) );
+			final CustomCanvas canvas = ( CustomCanvas ) getCanvas();
 
 			// add roi list overlays (one per class)
 			for( int i = 0; i < DeepSegmentation.MAX_NUM_CLASSES; i++)
@@ -850,277 +946,22 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 				((OverlayedImageCanvas)ic).addOverlay(roiOverlay[i]);
 			}
 
-			// add result overlay
-			resultOverlay = new ImageOverlay();
-			resultOverlay.setComposite( overlayAlpha );
-			((OverlayedImageCanvas)ic).addOverlay(resultOverlay);
+			addResultOverlay();
 
-			// Remove the canvas from the window, to add it later
 			removeAll();
 
 			setTitle( de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin.PLUGIN_NAME + ": " + trainingImage.getTitle() );
 
-			// Annotations panel
-			annotationsConstraints.anchor = GridBagConstraints.NORTHWEST;
-			annotationsConstraints.fill = GridBagConstraints.HORIZONTAL;
-			annotationsConstraints.gridwidth = 1;
-			annotationsConstraints.gridheight = 1;
-			annotationsConstraints.gridx = 0;
-			annotationsConstraints.gridy = 0;
+			addAnnotationsPanel();
 
-			annotationsPanel.setBorder( BorderFactory.createTitledBorder("Labels") );
-			annotationsPanel.setLayout( boxAnnotation );
+			addButtonListeners();
 
-			for( int i = 0; i < deepSegmentation.getNumClasses(); i++)
-			{
-				exampleList[i].addActionListener(listener);
-				exampleList[i].addItemListener(itemListener);
+			addStackListeners( imp );
 
-				addAnnotationButton[i] = createAnnotationButton( i );
-
-				annotationsConstraints.insets = new Insets(5, 5, 6, 6);
-
-				annotationsPanel.add( addAnnotationButton[i], annotationsConstraints );
-				annotationsConstraints.gridy++;
-
-				annotationsConstraints.insets = new Insets(0,0,0,0);
-
-				annotationsPanel.add( exampleList[i], annotationsConstraints );
-				annotationsConstraints.gridy++;
-			}
-
-			// Select first class
-			//addAnnotationButton[0].setSelected(true);
-
-			// Add listeners
-			for( int i = 0; i < deepSegmentation.getNumClasses(); i++)
-				addAnnotationButton[i].addActionListener(listener);
-
-			trainClassifierButton.addActionListener(listener);
-			updateTrainingDataButton.addActionListener(listener);
-
-			overlayButton.addActionListener(listener);
-			//getResultButton.addActionListener(listener);
-			//setResultButton.addActionListener(listener);
-			assignResultImageButton.addActionListener(listener);
-			reviewLabelsButton.addActionListener( listener );
-			applyClassifierButton.addActionListener(listener);
-			doButton.addActionListener(listener);
-			imagingModalityComboBox.addActionListener(listener);
-			stopButton.addActionListener( listener );
-			addClassButton.addActionListener(listener);
-			settingsButton.addActionListener(listener);
-			testThreadsButton.addActionListener(listener);
-
-			//wekaButton.addActionListener( listener );
-
-			// add special listener if the instances image is a stack
-			if(null != zSelector)
-			{
-				// set slice selector to the correct number
-				zSelector.setValue( imp.getSlice() );
-				// add adjustment listener to the scroll bar
-				zSelector.addAdjustmentListener(new AdjustmentListener() {
-
-					public void adjustmentValueChanged(final AdjustmentEvent e)
-					{
-						new Thread(new Runnable() {
-							//exec.submit(new Runnable() {
-							public void run()
-							{
-								if (e.getSource() == zSelector)
-								{
-									//IJ.log("moving scroll");
-									displayImage.killRoi();
-									drawExamples();
-									updateExampleLists();
-									if (showColorOverlay)
-									{
-										updateResultOverlay();
-										displayImage.updateAndDraw();
-									}
-								}
-
-							}
-						}).start();
-
-					}
-				});
-
-				// add special listener if the instances image is a movie
-				if(null != tSelector)
-				{
-					// set slice selector to the correct number
-					tSelector.setValue(imp.getFrame());
-					// add adjustment listener to the scroll bar
-					tSelector.addAdjustmentListener(new AdjustmentListener() {
-
-						public void adjustmentValueChanged(final AdjustmentEvent e)
-						{
-							new Thread(new Runnable() {
-								//exec.submit(new Runnable() {
-								public void run()
-								{
-									if (e.getSource() == tSelector)
-									{
-										//IJ.log("moving scroll");
-										displayImage.killRoi();
-										drawExamples();
-										updateExampleLists();
-										if (showColorOverlay)
-										{
-											updateResultOverlay();
-											displayImage.updateAndDraw();
-										}
-									}
-
-								}
-							}).start();
-
-						}
-					});
-				}
-
-
-				// mouse wheel listener to update the rois while scrolling
-				addMouseWheelListener(new MouseWheelListener() {
-
-					@Override
-					public void mouseWheelMoved(final MouseWheelEvent e)
-					{
-
-						exec.submit(new Runnable() {
-							public void run()
-							{
-								//IJ.log("moving scroll");
-								displayImage.killRoi();
-								drawExamples();
-								updateExampleLists();
-								if (showColorOverlay)
-								{
-									updateResultOverlay();
-									displayImage.updateAndDraw();
-								}
-							}
-						});
-
-					}
-				});
-			}
-
-			// key listener to repaint the display image and the traces
-			// when using the keys to scroll the stack
-			KeyListener keyListener = new KeyListener() {
-
-				@Override
-				public void keyTyped(KeyEvent e) {
-					new Thread(new Runnable(){
-						public void run()
-						{
-							if ( e.getKeyChar() == 'r' )
-							{
-								toggleOverlay("result");
-							}
-
-							if ( e.getKeyChar() == 'p' )
-							{
-								toggleOverlay("probability");
-							}
-
-							if ( e.getKeyChar() == 'u' )
-							{
-								toggleOverlay("uncertainty");
-							}
-
-							if ( e.getKeyChar() == 'g' )
-							{
-								int i = Integer.parseInt( uncertaintyTextField.getText().trim() );
-								uncertaintyNavigation("go-to", i);
-							}
-
-							if ( e.getKeyChar() == 'n' )
-							{
-								int i = Integer.parseInt( uncertaintyTextField.getText().trim() );
-								i++;
-
-								if ( i >= deepSegmentation.getNumUncertaintyRegions() )
-								{
-									return;
-								}
-
-								uncertaintyTextField.setText( ""+i );
-								uncertaintyNavigation("go-to", i );
-							}
-
-							if ( e.getKeyChar() == 'b' )
-							{
-								int i = Integer.parseInt( uncertaintyTextField.getText().trim() );
-								i--;
-
-								if ( i < 0 )
-								{
-									return;
-								}
-
-								uncertaintyTextField.setText( ""+i );
-								uncertaintyNavigation("go-to", i );
-							}
+			addKeyListeners( canvas );
 
 
 
-							if ( e.getKeyChar() == 'd' )
-							{
-								int i = Integer.parseInt( uncertaintyTextField.getText() );
-								uncertaintyNavigation("delete", i );
-							}
-
-							try
-							{
-								int iClass = Integer.parseInt("" + e.getKeyChar());
-								addAnnotation(iClass - 1 );
-							}
-							catch (NumberFormatException e )
-							{
-								// do nothing
-							}
-						}
-					}).start();
-				}
-
-				@Override
-				public void keyReleased(final KeyEvent e) {
-					new Thread(new Runnable(){
-					//exec.submit(new Runnable() {
-						public void run()
-						{
-							if(e.getKeyCode() == KeyEvent.VK_LEFT ||
-									e.getKeyCode() == KeyEvent.VK_RIGHT ||
-									e.getKeyCode() == KeyEvent.VK_LESS ||
-									e.getKeyCode() == KeyEvent.VK_GREATER ||
-									e.getKeyCode() == KeyEvent.VK_COMMA ||
-									e.getKeyCode() == KeyEvent.VK_PERIOD)
-							{
-								//IJ.log("moving scroll " + e.getKeyCode());
-								displayImage.killRoi();
-								updateExampleLists();
-								drawExamples();
-								if( showColorOverlay )
-								{
-									updateResultOverlay();
-									displayImage.updateAndDraw();
-								}
-							}
-						}
-					}).start();
-
-				}
-
-				@Override
-				public void keyPressed(KeyEvent e) {}
-			};
-			// add key listener to the window and the canvas
-			addKeyListener(keyListener);
-			canvas.addKeyListener(keyListener);
 
 			// Labels panel (includes annotations panel)
 			GridBagLayout labelsLayout = new GridBagLayout();
@@ -1410,6 +1251,280 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 		}
 
+		private void addKeyListeners( CustomCanvas canvas )
+		{
+			KeyListener keyListener = new KeyListener() {
+
+				@Override
+				public void keyTyped(KeyEvent e) {
+					new Thread(new Runnable(){
+						public void run()
+						{
+							if ( e.getKeyChar() == 'r' )
+							{
+								toggleOverlay("result");
+							}
+
+							if ( e.getKeyChar() == 'p' )
+							{
+								toggleOverlay("probability");
+							}
+
+							if ( e.getKeyChar() == 'u' )
+							{
+								toggleOverlay("uncertainty");
+							}
+
+							if ( e.getKeyChar() == 'g' )
+							{
+								int i = Integer.parseInt( uncertaintyTextField.getText().trim() );
+								uncertaintyNavigation("go-to", i);
+							}
+
+							if ( e.getKeyChar() == 'n' )
+							{
+								int i = Integer.parseInt( uncertaintyTextField.getText().trim() );
+								i++;
+
+								if ( i >= deepSegmentation.getNumUncertaintyRegions() )
+								{
+									return;
+								}
+
+								uncertaintyTextField.setText( ""+i );
+								uncertaintyNavigation("go-to", i );
+							}
+
+							if ( e.getKeyChar() == 'b' )
+							{
+								int i = Integer.parseInt( uncertaintyTextField.getText().trim() );
+								i--;
+
+								if ( i < 0 )
+								{
+									return;
+								}
+
+								uncertaintyTextField.setText( ""+i );
+								uncertaintyNavigation("go-to", i );
+							}
+
+
+							if ( e.getKeyChar() == 'd' )
+							{
+								int i = Integer.parseInt( uncertaintyTextField.getText() );
+								uncertaintyNavigation("delete", i );
+							}
+
+
+							try
+							{
+								int iClass = Integer.parseInt("" + e.getKeyChar());
+								addAnnotation(iClass - 1 );
+							}
+							catch (NumberFormatException e )
+							{
+								// do nothing
+							}
+						}
+					}).start();
+				}
+
+				@Override
+				public void keyReleased(final KeyEvent e) {
+					new Thread(new Runnable(){
+					//exec.submit(new Runnable() {
+						public void run()
+						{
+							if(e.getKeyCode() == KeyEvent.VK_LEFT ||
+									e.getKeyCode() == KeyEvent.VK_RIGHT ||
+									e.getKeyCode() == KeyEvent.VK_LESS ||
+									e.getKeyCode() == KeyEvent.VK_GREATER ||
+									e.getKeyCode() == KeyEvent.VK_COMMA ||
+									e.getKeyCode() == KeyEvent.VK_PERIOD)
+							{
+								//IJ.log("moving scroll " + e.getKeyCode());
+								displayImage.killRoi();
+								updateExampleLists();
+								drawExamples();
+								if( showColorOverlay )
+								{
+									updateResultOverlay();
+									displayImage.updateAndDraw();
+								}
+							}
+						}
+					}).start();
+
+				}
+
+				@Override
+				public void keyPressed(KeyEvent e) {}
+			};
+			// add key listener to the window and the canvas
+			addKeyListener(keyListener);
+			canvas.addKeyListener(keyListener);
+		}
+
+		private void addStackListeners( ImagePlus imp )
+		{
+			if( null != zSelector )
+			{
+				// set slice selector to the correct number
+				zSelector.setValue( imp.getSlice() );
+				// add adjustment listener to the scroll bar
+				zSelector.addAdjustmentListener( new AdjustmentListener() {
+
+					public void adjustmentValueChanged( final AdjustmentEvent e )
+					{
+						new Thread(new Runnable() {
+							//exec.submit(new Runnable() {
+							public void run()
+							{
+								if (e.getSource() == zSelector)
+								{
+									//IJ.log("moving scroll");
+									displayImage.killRoi();
+									drawExamples();
+									updateExampleLists();
+									if (showColorOverlay)
+									{
+										updateResultOverlay();
+										displayImage.updateAndDraw();
+									}
+								}
+
+							}
+						}).start();
+
+					}
+				});
+
+				// add special listener if the instances image is a movie
+				if( null != tSelector )
+				{
+					// set slice selector to the correct number
+					tSelector.setValue(imp.getFrame());
+					// add adjustment listener to the scroll bar
+					tSelector.addAdjustmentListener(new AdjustmentListener() {
+
+						public void adjustmentValueChanged(final AdjustmentEvent e)
+						{
+							new Thread(new Runnable() {
+								//exec.submit(new Runnable() {
+								public void run()
+								{
+									if (e.getSource() == tSelector)
+									{
+										//IJ.log("moving scroll");
+										displayImage.killRoi();
+										drawExamples();
+										updateExampleLists();
+										if (showColorOverlay)
+										{
+											updateResultOverlay();
+											displayImage.updateAndDraw();
+										}
+									}
+
+								}
+							}).start();
+
+						}
+					});
+				}
+
+
+				// mouse wheel listener to update the rois while scrolling
+				addMouseWheelListener(new MouseWheelListener() {
+
+					@Override
+					public void mouseWheelMoved(final MouseWheelEvent e)
+					{
+
+						exec.submit(new Runnable() {
+							public void run()
+							{
+								//IJ.log("moving scroll");
+								displayImage.killRoi();
+								drawExamples();
+								updateExampleLists();
+								if (showColorOverlay)
+								{
+									updateResultOverlay();
+									displayImage.updateAndDraw();
+								}
+							}
+						});
+
+					}
+				});
+			}
+		}
+
+		private void addResultOverlay()
+		{
+			resultOverlay = new ImageOverlay();
+			resultOverlay.setComposite( overlayAlpha );
+			((OverlayedImageCanvas )ic).addOverlay(resultOverlay);
+		}
+
+		private void addAnnotationsPanel()
+		{
+			annotationsConstraints.anchor = GridBagConstraints.NORTHWEST;
+			annotationsConstraints.fill = GridBagConstraints.HORIZONTAL;
+			annotationsConstraints.gridwidth = 1;
+			annotationsConstraints.gridheight = 1;
+			annotationsConstraints.gridx = 0;
+			annotationsConstraints.gridy = 0;
+
+			annotationsPanel.setBorder( BorderFactory.createTitledBorder("Labels") );
+			annotationsPanel.setLayout( boxAnnotation );
+
+			for( int i = 0; i < deepSegmentation.getNumClasses(); i++)
+			{
+				exampleList[i].addActionListener(listener);
+				exampleList[i].addItemListener(itemListener);
+
+				addAnnotationButton[i] = createAnnotationButton( i );
+
+				annotationsConstraints.insets = new Insets(5, 5, 6, 6);
+
+				annotationsPanel.add( addAnnotationButton[i], annotationsConstraints );
+				annotationsConstraints.gridy++;
+
+				annotationsConstraints.insets = new Insets(0,0,0,0);
+
+				annotationsPanel.add( exampleList[i], annotationsConstraints );
+				annotationsConstraints.gridy++;
+			}
+		}
+
+		private void addButtonListeners()
+		{
+			// Add listeners
+			for( int i = 0; i < deepSegmentation.getNumClasses(); i++)
+			{
+				addAnnotationButton[ i ].addActionListener( listener );
+			}
+
+			trainClassifierButton.addActionListener( listener );
+			updateTrainingDataButton.addActionListener(listener);
+
+			overlayButton.addActionListener(listener);
+			//getResultButton.addActionListener(listener);
+			//setResultButton.addActionListener(listener);
+			assignResultImageButton.addActionListener(listener);
+			reviewLabelsButton.addActionListener( listener );
+			applyClassifierButton.addActionListener(listener);
+			doButton.addActionListener(listener);
+			imagingModalityComboBox.addActionListener(listener);
+			stopButton.addActionListener( listener );
+			addClassButton.addActionListener(listener);
+			settingsButton.addActionListener(listener);
+			testThreadsButton.addActionListener(listener);
+		}
+
 		private JButton createAnnotationButton( int classNum )
 		{
 			JButton button = new JButton(
@@ -1456,7 +1571,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 			}
 		}
 
-		void zoomToSelection(ImagePlus imp, double marginFactor)
+
+
+		private void zoomToSelection( ImagePlus imp, double marginFactor )
 		{
 			ImageCanvas ic = imp.getCanvas();
 			Roi roi = imp.getRoi();
@@ -1471,8 +1588,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 			int x = r.x+r.width/2;
 			int y = r.y+r.height/2;
 			mag = ic.getHigherZoomLevel(mag);
-			while( (r.width*mag < w.width-marginw)
-					&& (r.height*mag<w.height-marginh) ) {
+			while( (r.width*mag < w.width-marginw) && (r.height*mag<w.height-marginh) )
+			{
 				ic.zoomIn(ic.screenX(x), ic.screenY(y));
 				double cmag = ic.getMagnification();
 				if (cmag==32.0) break;
@@ -1792,6 +1909,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 		{
 			return trainingImage;
 		}
+
+
 	}// end class CustomWindow
 
 	private boolean checkImageProperties()
@@ -2583,6 +2702,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 		*/
 
 		FinalInterval interval = getIntervalFromGUI( );
+
 		if ( interval == null )
 		{
 			logger.error("Could not determine the interval to be classified.");
@@ -2602,7 +2722,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 				deepSegmentation.isBusy = true;
 				deepSegmentation.resetUncertaintyRegions();
 
-				deepSegmentation.applyClassifierOnSlurm( interval );
+				deepSegmentation.applyClassifierOnSlurm( new HashMap<>(), interval );
 
 				if (showColorOverlay)
 					win.toggleOverlay();

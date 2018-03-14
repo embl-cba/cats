@@ -515,7 +515,7 @@ public class WarpingError extends Metrics {
 			double stepThreshold )
 	{
 		ArrayList<ClassificationStatistics> stats = getPrecisionRecallStats( minThreshold, maxThreshold, stepThreshold );
-	    // de.embl.cba.trainableDeepSegmentation.utils.Utils.plotPrecisionRecall( stats );
+	    // de.embl.cba.trainableDeepSegmentation.utils.ResultUtils.plotPrecisionRecall( stats );
 	    double maxFScore = 0;
 	    double th = 0;
 	    double bestTh = 0;
@@ -872,7 +872,7 @@ public class WarpingError extends Metrics {
 			double stepThreshold )
 	{
 		ArrayList<ClassificationStatistics> stats = getDualPrecisionRecallStats( minThreshold, maxThreshold, stepThreshold );
-	    // de.embl.cba.trainableDeepSegmentation.utils.Utils.plotPrecisionRecall( stats );
+	    // de.embl.cba.trainableDeepSegmentation.utils.ResultUtils.plotPrecisionRecall( stats );
 	    double maxFScore = 0;
 	    double th = 0;
 	    double bestTh = 0;
@@ -1038,7 +1038,7 @@ public class WarpingError extends Metrics {
 			double stepThreshold)
 	{
 		ArrayList<ClassificationStatistics> stats = getRandIndexStats( minThreshold, maxThreshold, stepThreshold );
-	    // de.embl.cba.trainableDeepSegmentation.utils.Utils.plotPrecisionRecall( stats );
+	    // de.embl.cba.trainableDeepSegmentation.utils.ResultUtils.plotPrecisionRecall( stats );
 	    
 	    double maxFScore = 0;
 	    double th = 0;

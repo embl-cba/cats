@@ -667,7 +667,7 @@ public class VariationOfInformation extends Metrics
 			double stepThreshold)
 	{
 		ArrayList< Double > fscores = getForegroundRestrictedFscores( minThreshold, maxThreshold, stepThreshold );
-	    // de.embl.cba.trainableDeepSegmentation.utils.Utils.plotPrecisionRecall( stats );
+	    // de.embl.cba.trainableDeepSegmentation.utils.ResultUtils.plotPrecisionRecall( stats );
 	    double maxFScore = 0;
 
 	    for(double f : fscores)
@@ -722,7 +722,7 @@ public class VariationOfInformation extends Metrics
 			double stepThreshold)
 	{
 		ArrayList< Double > fscores = getFscores( minThreshold, maxThreshold, stepThreshold );
-	    // de.embl.cba.trainableDeepSegmentation.utils.Utils.plotPrecisionRecall( stats );
+	    // de.embl.cba.trainableDeepSegmentation.utils.ResultUtils.plotPrecisionRecall( stats );
 	    double maxFScore = 0;
 
 	    for(double f : fscores)

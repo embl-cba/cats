@@ -74,7 +74,7 @@ public class LabelManager {
     }
 
     public void reviewLabelsInRoiManager( int classNum,
-                                          String order)
+                                          String order )
     {
 
         ArrayList< Roi > rois = getRoisFromExamples( classNum, order );
@@ -107,6 +107,7 @@ public class LabelManager {
         }
 
         manager.addRoi( roi );
+
 
         if ( imp.isHyperStack() )
         {

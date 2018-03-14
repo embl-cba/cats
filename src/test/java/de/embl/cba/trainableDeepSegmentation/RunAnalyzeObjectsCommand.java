@@ -18,7 +18,7 @@ public class RunAnalyzeObjectsCommand
         ij.ui().showUI();
 
         Map< String, Object > parameters = new HashMap<>(  );
-        parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_PATH, new File( TestingUtils.TEST_RESOURCES + "/image-sequence--classified/foreground.tif" ) );
+        parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_FILE, new File( TestingUtils.TEST_RESOURCES + "/image-sequence--classified/foreground.tif" ) );
         parameters.put( AnalyzeObjectsCommand.LOWER_THRESHOLD, 1 );
         parameters.put( AnalyzeObjectsCommand.UPPER_THRESHOLD, 255 );
         parameters.put( AnalyzeObjectsCommand.OUTPUT_DIRECTORY, new File( TestingUtils.TEST_RESOURCES + "/image-sequence--classified/" ) );

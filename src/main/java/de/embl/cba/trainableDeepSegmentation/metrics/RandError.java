@@ -2050,7 +2050,7 @@ public class RandError extends Metrics
 			double stepThreshold)
 	{
 		ArrayList<ClassificationStatistics> stats = getRandIndexStats( minThreshold, maxThreshold, stepThreshold );
-	    // de.embl.cba.trainableDeepSegmentation.utils.Utils.plotPrecisionRecall( stats );
+	    // de.embl.cba.trainableDeepSegmentation.utils.ResultUtils.plotPrecisionRecall( stats );
 	    double maxFScore = 0;
 
 	    for(ClassificationStatistics stat : stats)
@@ -2080,7 +2080,7 @@ public class RandError extends Metrics
 		ArrayList<ClassificationStatistics> stats = 
 				getForegroundRestrictedRandIndexStats( 
 						minThreshold, maxThreshold, stepThreshold );
-	    // de.embl.cba.trainableDeepSegmentation.utils.Utils.plotPrecisionRecall( stats );
+	    // de.embl.cba.trainableDeepSegmentation.utils.ResultUtils.plotPrecisionRecall( stats );
 	    double maxFScore = 0;
 
 	    for(ClassificationStatistics stat : stats)
@@ -2121,7 +2121,7 @@ public class RandError extends Metrics
 				getForegroundRestrictedRandAfterThinningStats( 
 						minThreshold, maxThreshold, stepThreshold, 
 						perSliceAverage );
-	    // de.embl.cba.trainableDeepSegmentation.utils.Utils.plotPrecisionRecall( stats );
+	    // de.embl.cba.trainableDeepSegmentation.utils.ResultUtils.plotPrecisionRecall( stats );
 	    double maxFScore = 0;
 
 	    for(ClassificationStatistics stat : stats)

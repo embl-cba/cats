@@ -17,7 +17,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPOutputStream;
 
 import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
-import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierAsSlurmJobsCommand;
+import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierOnSlurmCommand;
+import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import de.embl.cba.utils.logging.Logger;
@@ -60,8 +61,6 @@ import de.embl.cba.trainableDeepSegmentation.settings.SettingsUtils;
 
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.ThreadUtils;
-import org.scijava.Context;
-import org.scijava.command.CommandService;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -280,10 +279,9 @@ public class DeepSegmentation
 
 	public boolean setAndCreateLogDirRelative( String directory )
 	{
-		String logFileDirectory = directory.substring(0, directory.length() - 1)
-				+ "--log";
-		String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").
-				format(new Date());
+
+		String logFileDirectory = directory.replaceAll( "/$", "" ) + "--log";
+		String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
 		String logFileName = "log-" + timeStamp + ".txt";
 
 		logger.setLogFileNameAndDirectory( logFileName, logFileDirectory );
@@ -2234,31 +2232,29 @@ public class DeepSegmentation
 		applyClassifierWithTiling(  classifierKey, interval, -1, null , false );
 	}
 
-	public void applyClassifierOnSlurm(  FinalInterval interval )
-    {
 
-        Map< String, Object > parameters = new HashMap<>();
+	public void applyClassifierOnSlurm(  Map< String, Object > parameters )
+	{
+		FinalInterval interval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( inputImage );
+		applyClassifierOnSlurm( parameters, interval );
+	}
+
+	public void applyClassifierOnSlurm(  Map< String, Object > parameters, FinalInterval interval )
+    {
 
         configureInputImageLoading( parameters );
 
         parameters.put( IOUtils.OUTPUT_DIRECTORY, ((ResultImageDisk)resultImage).getDirectory() );
 
-        parameters.put( ApplyClassifierAsSlurmJobsCommand.INTERVAL, interval );
+        parameters.put( ApplyClassifierOnSlurmCommand.INTERVAL, interval );
 
-        parameters.put( ApplyClassifierAsSlurmJobsCommand.WORKERS, 16 );
+        parameters.put( ApplyClassifierOnSlurmCommand.NUM_WORKERS, 16 );
 
-        runSlurmCommand( parameters );
+        CommandUtils.runSlurmCommand( parameters );
 
 	}
 
-    private void runSlurmCommand( Map< String, Object > parameters )
-    {
-        Context ctx = (Context ) IJ.runPlugIn("org.scijava.Context", "");
-        CommandService commandService = ctx.service(CommandService.class);
-        commandService.run( ApplyClassifierAsSlurmJobsCommand.class, true, parameters );
-    }
-
-    private void configureInputImageLoading( Map< String, Object > parameters )
+	private void configureInputImageLoading( Map< String, Object > parameters )
     {
 
         if ( inputImage.getStack() instanceof VirtualStackOfStacks )
@@ -2269,18 +2265,18 @@ public class DeepSegmentation
             parameters.put( IOUtils.INPUT_IMAGE_VSS_PATTERN, vss.getFilterPattern() );
             parameters.put( IOUtils.INPUT_IMAGE_VSS_SCHEME, vss.getNamingScheme() );
             parameters.put( IOUtils.INPUT_IMAGE_VSS_HDF5_DATA_SET_NAME, vss.getH5DataSet() );
-			parameters.put( IOUtils.INPUT_IMAGE_PATH, new File("") ) ;
+			parameters.put( IOUtils.INPUT_IMAGE_FILE, new File("") ) ;
 			System.out.println( "IOUtils.INPUT_IMAGE_VSS_DIRECTORY: " + vss.getDirectory() );
         }
 		else if ( inputImage.getStack() instanceof VirtualStack )
 		{
 			parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGE_J1_VIRTUAL );
-			parameters.put( IOUtils.INPUT_IMAGE_PATH, getInputImageFile() );
+			parameters.put( IOUtils.INPUT_IMAGE_FILE, getInputImageFile() );
 		}
 		else
         {
             parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGEJ1 );
-			parameters.put( IOUtils.INPUT_IMAGE_PATH, getInputImageFile() );
+			parameters.put( IOUtils.INPUT_IMAGE_FILE, getInputImageFile() );
 		}
     }
 

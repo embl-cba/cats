@@ -17,7 +17,7 @@
 /*
  *    FastRfUtils.java
  *    Copyright (C) 1999-2004 University of Waikato, Hamilton, NZ (original
- *      code, Utils.java )
+ *      code, ResultUtils.java )
  *    Copyright (C) 2008 Fran Supek (adapted code)
  */
 
@@ -30,7 +30,7 @@ import weka.core.Instances;
 
 /**
  * Utility functions for sorting float (single-precision) arrays, and for
- * normalizing double arrays. Adapted from weka.core.Utils, version 1.57.
+ * normalizing double arrays. Adapted from weka.core.ResultUtils, version 1.57.
  *
  * @author Eibe Frank - original code
  * @author Yong Wang - original code

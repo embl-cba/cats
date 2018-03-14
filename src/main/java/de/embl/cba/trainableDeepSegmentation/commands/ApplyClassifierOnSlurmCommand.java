@@ -16,7 +16,6 @@ import org.scijava.widget.TextWidget;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,33 +28,38 @@ import static de.embl.cba.trainableDeepSegmentation.utils.Utils.getSimpleString;
 
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>Apply Classifier On Slurm" )
-public class ApplyClassifierAsSlurmJobsCommand implements Command
+public class ApplyClassifierOnSlurmCommand implements Command
 {
 
     @Parameter( label = "Username" )
-    private String username = "tischer";
+    private String userName = "tischer";
+    public static String USER_NAME = "userName";
 
     @Parameter( label = "Password", style = TextWidget.PASSWORD_STYLE, persist = false )
     private String password;
+    public static String PASSWORD = "password";
 
     @Parameter( label = "Queue", choices = { SlurmQueue.DEFAULT_QUEUE, SlurmQueue.ONE_DAY_QUEUE, SlurmQueue.ONE_WEEK_QUEUE, SlurmQueue.BIGMEM_QUEUE, SlurmQueue.GPU_QUEUE } )
     public String queue = SlurmQueue.DEFAULT_QUEUE;
+    public static String QUEUE = "queue";
 
     @Parameter( label = "Number of jobs" )
     public int numJobs = 20;
+    public static String NUM_JOBS = "numJobs";
 
     @Parameter( label = "Number of CPUs per job" )
     public int numWorkers;
-    public static final String WORKERS = "numWorkers";
+    public static final String NUM_WORKERS = "numWorkers";
 
     @Parameter( label = "Classifier file (must be cluster accessible)" )
     public File classifierFile;
+    public static final String CLASSIFIER_FILE = "classifierFile";
 
     @Parameter()
     public String inputModality;
 
     @Parameter()
-    public File inputImagePath; // TODO: rename to File
+    public File inputImageFile;
 
     @Parameter()
     public File outputDirectory;
@@ -78,7 +82,6 @@ public class ApplyClassifierAsSlurmJobsCommand implements Command
 
     public String imageJ = ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_XVFB;
 
-
     public static int memoryFactor = 10;
 
     public boolean quitAfterRun = true;
@@ -88,10 +91,10 @@ public class ApplyClassifierAsSlurmJobsCommand implements Command
     public void run()
     {
 
-        String jobDirectory = "/g/cba/cluster/" + username;
+        String jobDirectory = "/g/cba/cluster/" + userName;
 
         List< Path > dataSets = new ArrayList<>();
-        dataSets.add( inputImagePath.toPath() );
+        dataSets.add( inputImageFile.toPath() );
 
         ArrayList< JobFuture > jobFutures = submitJobsOnSlurm( imageJ, jobDirectory, classifierFile.toPath(), dataSets );
 
@@ -107,7 +110,7 @@ public class ApplyClassifierAsSlurmJobsCommand implements Command
                 ImageJCommandsSubmitter.EXECUTION_SYSTEM_EMBL_SLURM,
                 jobDirectory ,
                 imageJ,
-                username, password );
+                userName, password );
 
         ArrayList< JobFuture > jobFutures = new ArrayList<>( );
 
@@ -158,7 +161,7 @@ public class ApplyClassifierAsSlurmJobsCommand implements Command
         parameters.put( ApplyClassifierCommand.DATASET_ID, dataSetID );
 
         parameters.put( IOUtils.INPUT_MODALITY, inputModality );
-        parameters.put( IOUtils.INPUT_IMAGE_PATH, PathMapper.asEMBLClusterMounted( inputImagePath ) );
+        parameters.put( IOUtils.INPUT_IMAGE_FILE, PathMapper.asEMBLClusterMounted( inputImagePath ) );
 
         parameters.put( IOUtils.INPUT_IMAGE_VSS_DIRECTORY, PathMapper.asEMBLClusterMounted( inputImageVSSDirectory ));
         parameters.put( IOUtils.INPUT_IMAGE_VSS_PATTERN, inputImageVSSPattern );
@@ -200,7 +203,7 @@ public class ApplyClassifierAsSlurmJobsCommand implements Command
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        ij.command().run( ApplyClassifierAsSlurmJobsCommand.class, true );
+        ij.command().run( ApplyClassifierOnSlurmCommand.class, true );
 
     }
 }

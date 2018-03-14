@@ -59,8 +59,8 @@ public class AnalyzeObjectsCommand implements Command
             "...<br>";
 
     @Parameter ( label = "Input image" )
-    public File inputImagePath;
-    public static final String INPUT_IMAGE_PATH = "inputImagePath";
+    public File inputImageFile;
+    public static final String INPUT_IMAGE_FILE = "inputImageFile";
 
     @Parameter( label = "Lower threshold", required = true )
     public int lowerThreshold = 1;
@@ -99,8 +99,8 @@ public class AnalyzeObjectsCommand implements Command
         logService.info( "# " + PLUGIN_NAME );
         logCommandLineCall();
 
-        logService.info( "Loading image " + inputImagePath );
-        inputImage = IOUtils.openImageWithIJOpenImage( inputImagePath );
+        logService.info( "Loading image " + inputImageFile );
+        inputImage = IOUtils.openImageWithIJOpenImage( inputImageFile );
 
         logService.info( "Creating label mask");
         ImagePlus labelMask = ObjectAnalysis.createLabelMaskForChannelAndFrame( inputImage, 1, 1, minNumVoxels, lowerThreshold, upperThreshold );
@@ -149,13 +149,13 @@ public class AnalyzeObjectsCommand implements Command
     private void addInputImageFileAndPathName( ResultsTable resultsTable )
     {
 
-        resultsTable.addValue( "FileName_AnalyzeObjects_InputImage_IMG", inputImagePath.getName() );
-        resultsTable.addValue( "PathName_AnalyzeObjects_InputImage_IMG", inputImagePath.getParent() );
+        resultsTable.addValue( "FileName_AnalyzeObjects_InputImage_IMG", inputImageFile.getName() );
+        resultsTable.addValue( "PathName_AnalyzeObjects_InputImage_IMG", inputImageFile.getParent() );
 
         for ( int i = 0; i < resultsTable.size(); ++i )
         {
-            resultsTable.setValue("FileName_AnalyzeObjects_InputImage_IMG", i, inputImagePath.getName()  );
-            resultsTable.setValue("PathName_AnalyzeObjects_InputImage_IMG", i, inputImagePath.getParent()  );
+            resultsTable.setValue("FileName_AnalyzeObjects_InputImage_IMG", i, inputImageFile.getName()  );
+            resultsTable.setValue("PathName_AnalyzeObjects_InputImage_IMG", i, inputImageFile.getParent()  );
         }
     }
 
@@ -174,7 +174,7 @@ public class AnalyzeObjectsCommand implements Command
     private void logCommandLineCall()
     {
         Map<String, Object> parameters = new HashMap<>( );
-        parameters.put( INPUT_IMAGE_PATH, inputImagePath );
+        parameters.put( INPUT_IMAGE_FILE, inputImageFile );
         parameters.put( LOWER_THRESHOLD, lowerThreshold );
         parameters.put( UPPER_THRESHOLD, upperThreshold );
         parameters.put( OUTPUT_MODALITY, outputModality );

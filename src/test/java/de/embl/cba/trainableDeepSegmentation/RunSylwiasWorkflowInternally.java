@@ -26,14 +26,14 @@ public class RunSylwiasWorkflowInternally
         Map< String, Object > parameters = new HashMap<>(  );
 
         parameters.clear();
-        parameters.put( IOUtils.INPUT_IMAGE_PATH, new File( TestingUtils.TEST_RESOURCES + "/image-sequence/" + dataSetPattern ) );
+        parameters.put( IOUtils.INPUT_IMAGE_FILE, new File( TestingUtils.TEST_RESOURCES + "/image-sequence/" + dataSetPattern ) );
         parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, new File( TestingUtils.TEST_RESOURCES + "/transmission-cells-3d.classifier" ) );
         parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, new File( outputDirectory ) );
         parameters.put( IOUtils.OUTPUT_MODALITY, IOUtils.SAVE_AS_TIFF_STACKS );
         ij.command().run( ApplyClassifierCommand.class, false, parameters ).get();
 
         parameters.clear();
-        parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_PATH, new File( outputDirectory + "/foreground.tif" ) );
+        parameters.put( AnalyzeObjectsCommand.INPUT_IMAGE_FILE, new File( outputDirectory + "/foreground.tif" ) );
         parameters.put( AnalyzeObjectsCommand.LOWER_THRESHOLD, 1 );
         parameters.put( AnalyzeObjectsCommand.UPPER_THRESHOLD, 255 );
         parameters.put( AnalyzeObjectsCommand.OUTPUT_DIRECTORY, new File( outputDirectory ) );

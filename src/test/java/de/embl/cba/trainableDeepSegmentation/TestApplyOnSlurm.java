@@ -1,6 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation;
 
-import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierAsSlurmJobsCommand;
+import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierOnSlurmCommand;
 import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierCommand;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
@@ -29,7 +29,7 @@ public class TestApplyOnSlurm
 
         /*
         FileInfo fileInfo = imp.getOriginalFileInfo();
-        String inputImagePath = fileInfo.directory + File.separator + fileInfo.fileName;
+        String inputImageFile = fileInfo.directory + File.separator + fileInfo.fileName;
         */
 
         String inputImagePath = "/Volumes/cba/tischer/projects/em-automated-segmentation--data/fib-sem--cell--8x8x8nm.zip";
@@ -40,16 +40,16 @@ public class TestApplyOnSlurm
         Map< String, Object > parameters = new HashMap<>(  );
         parameters.put( IOUtils.OUTPUT_DIRECTORY, outputDirectory );
 
-        parameters.put( ApplyClassifierAsSlurmJobsCommand.INTERVAL, interval );
+        parameters.put( ApplyClassifierOnSlurmCommand.INTERVAL, interval );
 
         parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, classifierFile );
 
-        parameters.put( IOUtils.INPUT_IMAGE_PATH, inputImagePath );
+        parameters.put( IOUtils.INPUT_IMAGE_FILE, inputImagePath );
         parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGEJ1 );
 
-        parameters.put( ApplyClassifierAsSlurmJobsCommand.WORKERS, 16 );
+        parameters.put( ApplyClassifierOnSlurmCommand.NUM_WORKERS, 16 );
 
-        ij.command().run( ApplyClassifierAsSlurmJobsCommand.class, true, parameters );
+        ij.command().run( ApplyClassifierOnSlurmCommand.class, true, parameters );
 
     }
 }

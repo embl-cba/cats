@@ -14,9 +14,6 @@ import de.embl.cba.trainableDeepSegmentation.*;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class ResultImageDisk implements ResultImage {
@@ -43,11 +40,11 @@ public class ResultImageDisk implements ResultImage {
     public void saveClassesAsFiles( String directory, String fileNamePrefix, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType )
     {
 
-        logger.info("Saving results as separate imaris channels.." );
+        logger.info("Saving probabilities as separate files.." );
 
         IOUtils.createDirectoryIfNotExists( directory );
 
-        Utils.saveClassesAsFiles(
+        ResultUtils.saveClassesAsFiles(
                 directory,
                 fileNamePrefix,
                 classesToBeSaved,
@@ -58,6 +55,21 @@ public class ResultImageDisk implements ResultImage {
                 deepSegmentation.getClassNames(),
                 CLASS_LUT_WIDTH
         );
+
+    }
+
+    @Override
+    public void showClassesAsImages( String imageNamePrefix, ArrayList< Boolean > classesToBeShown, int[] binning )
+    {
+
+        ResultUtils.showClassesAsImages(
+                imageNamePrefix,
+                classesToBeShown,
+                result,
+                binning,
+                logger,
+                deepSegmentation.getClassNames(),
+                CLASS_LUT_WIDTH );
 
     }
 
@@ -145,8 +157,8 @@ public class ResultImageDisk implements ResultImage {
 
     public ImagePlus getWholeImageCopy()
     {
-        logger.error( "Currently not implemented for disk resident result images." );
-        return null;
+        ImagePlus imp = result.duplicate();
+        return imp;
     }
 
     public File getDirectory()

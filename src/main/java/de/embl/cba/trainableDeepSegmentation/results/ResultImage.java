@@ -10,6 +10,8 @@ public interface ResultImage {
 
     void saveClassesAsFiles( String directory, String fileNamePrefix, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType );
 
+    void showClassesAsImages( String imageNamePrefix, ArrayList< Boolean > classesToBeShown, int[] binning );
+
     ImageProcessor getSlice( int slice, int frame );
 
     ResultImageFrameSetter getFrameSetter( FinalInterval interval );

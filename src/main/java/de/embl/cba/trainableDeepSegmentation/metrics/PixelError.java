@@ -612,7 +612,7 @@ public class PixelError extends Metrics
 			double stepThreshold )
 	{
 		ArrayList<ClassificationStatistics> stats = getPrecisionRecallStats( minThreshold, maxThreshold, stepThreshold );
-	    // de.embl.cba.trainableDeepSegmentation.utils.Utils.plotPrecisionRecall( stats );
+	    // de.embl.cba.trainableDeepSegmentation.utils.ResultUtils.plotPrecisionRecall( stats );
 	    double maxFScore = 0;
 
 	    for(ClassificationStatistics stat : stats)

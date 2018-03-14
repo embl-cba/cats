@@ -9,40 +9,41 @@ import ij.gui.GenericDialog;
 
 import java.util.ArrayList;
 
-import static de.embl.cba.trainableDeepSegmentation.results.Utils.SEPARATE_IMARIS;
-import static de.embl.cba.trainableDeepSegmentation.results.Utils.SEPARATE_TIFF_FILES;
-import static de.embl.cba.trainableDeepSegmentation.results.Utils.saveAsImarisChannels;
+import static de.embl.cba.trainableDeepSegmentation.results.ResultUtils.*;
 
 public abstract class ResultImageGUI {
 
-    public static void showExportGUI(
-            String inputImageTitle,
-            ResultImage resultImage,
-            ImagePlus rawData,
-            ArrayList< String > classNames )
+    public static void showExportGUI( String inputImageTitle,
+                                      ResultImage resultImage,
+                                      ImagePlus rawData,
+                                      ArrayList< String > classNames )
     {
-        String[] exportChoices = new String[]{ SEPARATE_IMARIS, SEPARATE_TIFF_FILES };
+
+        String[] exportChoices = new String[]{ SEPARATE_IMAGES, SEPARATE_IMARIS, SEPARATE_TIFF_FILES };
 
         ArrayList < Boolean > classesToBeSaved = new ArrayList<>();
 
         GenericDialog gd = new GenericDialogPlus("Export Segmentation Results");
 
-        gd.addStringField( "Filename prefix: ", inputImageTitle + "--", 10  );
+        gd.addStringField( "Class names prefix: ", inputImageTitle + "--", 10  );
 
         gd.addStringField( "Binning: ", "1,1,1", 10  );
 
         gd.addMessage( "Export raw data:" );
+
         gd.addCheckbox( rawData.getTitle(), true );
 
         gd.addMessage( "Export class:" );
+
         for ( String className : classNames ) gd.addCheckbox( className, true );
-        gd.addChoice( "Export as:", exportChoices, de.embl.cba.trainableDeepSegmentation.results.Utils.SEPARATE_IMARIS );
+
+        gd.addChoice( "Export as:", exportChoices, ResultUtils.SEPARATE_IMARIS );
 
         gd.showDialog();
 
         if ( gd.wasCanceled() ) return;
 
-        String fileNamePrefix = gd.getNextString();
+        String classNamePrefix = gd.getNextString();
 
         int[] binning = Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
 
@@ -52,21 +53,24 @@ public abstract class ResultImageGUI {
 
         String exportModality = gd.getNextChoice();
 
-        // save
 
-        String directory = IJ.getDirectory("Select a directory");
-
-        if ( directory != null )
+        if ( exportModality.equals( SEPARATE_IMARIS ) )
         {
-            if ( exportModality.equals( SEPARATE_IMARIS ) )
-            {
-                saveAsSeparateImaris( directory, fileNamePrefix, resultImage, rawData, classesToBeSaved, binning, saveRawData, exportModality );
-            }
-            else if ( exportModality.equals( SEPARATE_TIFF_FILES ) )
-            {
-                resultImage.saveClassesAsFiles( directory, fileNamePrefix, classesToBeSaved, binning, exportModality );
-            }
+            String directory = IJ.getDirectory("Select a directory");
+            if ( directory == null ) return;
+            saveAsSeparateImaris( directory, classNamePrefix, resultImage, rawData, classesToBeSaved, binning, saveRawData, exportModality );
         }
+        else if ( exportModality.equals( SEPARATE_TIFF_FILES ) )
+        {
+            String directory = IJ.getDirectory("Select a directory");
+            if ( directory == null ) return;
+            resultImage.saveClassesAsFiles( directory, classNamePrefix, classesToBeSaved, binning, exportModality );
+        }
+        else if ( exportModality.equals( SEPARATE_IMAGES ) )
+        {
+            resultImage.showClassesAsImages( classNamePrefix, classesToBeSaved, binning );
+        }
+
     }
 
     private static void saveAsSeparateImaris( String directory, String fileNamePrefix, ResultImage resultImage, ImagePlus rawData, ArrayList< Boolean > classesToBeSaved, int[] binning, boolean saveRawData, String exportModality )

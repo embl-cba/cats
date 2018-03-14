@@ -11,6 +11,7 @@ public class SlurmUtils
     {
 
         ArrayList< JobFuture > doneJobs = new ArrayList<>();
+        int numResubmittedJobs = 0;
 
         while ( doneJobs.size() < jobFutures.size() )
         {
@@ -32,15 +33,25 @@ public class SlurmUtils
 
                     if ( ! resubmissionNeeded.equals( JobFuture.NO_EVERYTHING_FINE ) )
                     {
-                        logger.info( "KNOWN ERROR IN: " + jobFuture.getJobID() + ": " + resubmissionNeeded );
+                        logger.info( "# ERROR IN: " + jobFuture.getJobID() + ": " + resubmissionNeeded );
                         logger.info( "RESUBMITTING: " + jobFuture.getJobID() );
                         jobFuture.resubmit();
+                        numResubmittedJobs++;
                     }
                     else if ( jobFuture.isDone() )
                     {
                         logger.info("Final and full job output:" );
                         logger.info( currentOutput );
                         doneJobs.add( jobFuture );
+
+                        logger.info( " " );
+                        logger.info( "# JOB STATI" );
+                        logger.info( " " );
+                        logger.info( "Total number of jobs: " + jobFutures.size() );
+                        logger.info( "Finished jobs: " + doneJobs.size() );
+                        logger.info( "Job resubmissions: " + numResubmittedJobs );
+                        logger.info( " " );
+
                         if ( doneJobs.size() == jobFutures.size() )
                         {
                             break;
