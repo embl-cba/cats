@@ -160,7 +160,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
     try {
 
-      for (int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++) {
+      for ( int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++ ) {
 
         // create the in-bag dataset (and be sure to remember what's in bag)
         // for computing the out-of-bag error later
@@ -170,33 +170,28 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
         // Tischi
         if ( motherForest.labelIds != null )
         {
-          DeepSegmentation.logger.progress("Training data resampling:",
-                  "Tree " + (treeIdx + 1) + "/" + m_Classifiers.length );
-          bagData = myData.resampleBalancingLabels(
-                  m_BagSizePercent,
-                  motherForest.labelIds,
-                  random );
+          DeepSegmentation.logger.progress("Training data resampling:", "Tree " + (treeIdx + 1) + "/" + m_Classifiers.length );
+          bagData = myData.resampleBalancingLabels( m_BagSizePercent, motherForest.labelIds, random );
         }
         else
         {
-           bagData = myData.resample( bagSize, random );
+          bagData = myData.resample( bagSize, random );
         }
 
-
-        bagData.reusableRandomGenerator = bagData.getRandomNumberGenerator(
-          random.nextInt());
-        inBag[treeIdx] = bagData.inBag; // store later for OOB error calculation
+        bagData.reusableRandomGenerator = bagData.getRandomNumberGenerator( random.nextInt() );
+        inBag[ treeIdx ] = bagData.inBag; // store later for OOB error calculation
 
         // build the classifier
-        if (m_Classifiers[treeIdx] instanceof FastRandomTree) {
-
-          FastRandomTree aTree = (FastRandomTree) m_Classifiers[treeIdx];
+        if ( m_Classifiers[ treeIdx ] instanceof FastRandomTree )
+        {
+          FastRandomTree aTree = (FastRandomTree) m_Classifiers[ treeIdx ];
           aTree.data = bagData;
 
-          Future<?> future = threadPool.submit(aTree);
+          Future<?> future = threadPool.submit( aTree );
           futures.add(future);
-
-        } else {
+        }
+        else
+        {
           throw new IllegalArgumentException("The FastRfBagging class accepts " +
             "only FastRandomTree as its base classifier.");
         }
@@ -208,7 +203,8 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       long start = System.currentTimeMillis();
 
       // make sure all trees have been trained before proceeding
-      for (int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++) {
+      for (int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++)
+      {
         futures.get(treeIdx).get();
         logger.progress( "Building trees...", null, start, treeIdx+1, m_Classifiers.length); // Tischi
       }

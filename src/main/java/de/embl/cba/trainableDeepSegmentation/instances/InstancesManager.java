@@ -42,7 +42,7 @@ public class InstancesManager {
         return ( instancesMap.keySet() );
     }
 
-    public InstancesAndMetadata getCombinedInstancesAndMetadata(List< String > keys )
+    public InstancesAndMetadata getCombinedInstancesAndMetadata (List< String > keys )
     {
 
         InstancesAndMetadata combinedIAM = new InstancesAndMetadata( new Instances( getInstances( keys.get( 0 ) ) , 0 ), InstancesAndMetadata.getEmptyMetadata() );
@@ -58,9 +58,14 @@ public class InstancesManager {
 
     private String getName( Instances instances )
     {
-        String name = instances.relationName().split( "--" )[0];
+        String name = instances.relationName(); //.split( "--" )[0];
 
         return name;
+    }
+
+    public int getNumInstancesSets()
+    {
+        return instancesMap.size();
     }
 
 

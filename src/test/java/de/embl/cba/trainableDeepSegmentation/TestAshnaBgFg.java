@@ -63,7 +63,7 @@ public class TestAshnaBgFg {
             DeepSegmentation ws = new DeepSegmentation( );
             ws.setInputImage( IJ.getImage() );
             ws.setResultImageRAM( );
-            String instancesKey = ws.loadInstancesMetadata( INSTANCES_PATH );
+            String instancesKey = ws.loadInstancesAndMetadata( INSTANCES_PATH );
             //String classifierKey = ws.trainClassifier( instancesKey );
             //ws.applyClassifierWithTiling( classifierKey, interval );
             //ws.getResultImage().getWholeImageCopy().show();

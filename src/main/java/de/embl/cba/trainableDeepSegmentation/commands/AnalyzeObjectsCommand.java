@@ -18,7 +18,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
-import de.embl.cba.trainableDeepSegmentation.objectanalysis.ObjectAnalysis;
+import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectAnalysis;
 
 import java.io.File;
 import java.util.ArrayList;

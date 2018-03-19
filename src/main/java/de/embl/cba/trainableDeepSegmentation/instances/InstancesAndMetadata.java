@@ -28,6 +28,11 @@ public class InstancesAndMetadata {
 
     }
 
+    public String getRelationName()
+    {
+        return instances.relationName();
+    }
+
     public void putMetadataIntoInstances( )
     {
         int numInstances = instances.size();
@@ -217,12 +222,11 @@ public class InstancesAndMetadata {
     public Map< Integer, ArrayList < Integer > >[] getLabelList()
     {
 
-        Map< Integer, ArrayList < Integer > >[] labels =
-                new LinkedHashMap[ instances.numClasses() ];
+        Map< Integer, ArrayList < Integer > >[] labels = new LinkedHashMap[ instances.numClasses() ];
 
         for ( int c = 0; c < instances.numClasses(); ++c )
         {
-            labels[c] = new LinkedHashMap<>(  );
+            labels[ c ] = new LinkedHashMap<>(  );
         }
 
         ArrayList< Double > labelIds = metadata.get( Metadata.Metadata_Label_Id );

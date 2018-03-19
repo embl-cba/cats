@@ -10,6 +10,7 @@ package de.embl.cba.trainableDeepSegmentation.commands;
 
 
 import de.embl.cba.cluster.commands.Commands;
+import de.embl.cba.trainableDeepSegmentation.results.ResultExportSettings;
 import de.embl.cba.trainableDeepSegmentation.results.ResultUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.StringUtils;
@@ -181,17 +182,9 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         {
             deepSegmentation.getResultImage().getWholeImageCopy().show();
         }
-
-        if ( outputModality.equals( IOUtils.SAVE_AS_TIFF_STACKS ) )
+        else
         {
-            saveProbabilitiesAsSeparateTiffFiles();
-            outputFileType = ".tif";
-        }
-
-        if( outputModality.equals(  IOUtils.SAVE_AS_IMARIS ) )
-        {
-            saveProbabilitiesAsImarisFiles();
-            outputFileType = ".ims";
+            saveAsFiles();
         }
 
         logService.info( "Saving classification output images: done!" );
@@ -225,26 +218,26 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         }
     }
 
-    /*
-    private void saveProbabilitiesAsOneTiff()
-    {
-        ImagePlus result = deepSegmentation.getResultImage().getWholeImageCopy();
-        String savingPath = "" + outputDirectory + File.separator + inputImage.getTitle() + "--classified.tif";
-        logService.info( "Save results: " + savingPath);
-        DeepSegmentation.logger.info("\n# Saving " + savingPath + "...");
-        FileSaver fileSaver = new FileSaver( result );
-        fileSaver.saveAsTiff( savingPath );
-        DeepSegmentation.logger.info("...done.");
-    }*/
 
-    private void saveProbabilitiesAsSeparateTiffFiles()
+    private void saveAsFiles()
     {
-        deepSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), dataSetID + "--", null, null, ResultUtils.SEPARATE_TIFF_FILES );
-    }
+        ResultExportSettings resultExportSettings = new ResultExportSettings();
+        resultExportSettings.directory = outputDirectory.getAbsolutePath();
+        resultExportSettings.exportNamesPrefix = dataSetID + "--";
 
-    private void saveProbabilitiesAsImarisFiles()
-    {
-        deepSegmentation.getResultImage().saveClassesAsFiles( outputDirectory.getPath(), dataSetID + "--", null, null, ResultUtils.SEPARATE_IMARIS );
+        if( outputModality.equals(  IOUtils.SAVE_AS_IMARIS ) )
+        {
+            outputFileType = ".ims";
+            resultExportSettings.exportType = ResultUtils.SEPARATE_IMARIS;
+        }
+
+        if( outputModality.equals(  IOUtils.SAVE_AS_TIFF_STACKS ) )
+        {
+            outputFileType = ".tif";
+            resultExportSettings.exportType = ResultUtils.SEPARATE_TIFF_FILES;
+        }
+
+        deepSegmentation.getResultImage().exportResults( resultExportSettings );
     }
 
     private void applyClassifier( )

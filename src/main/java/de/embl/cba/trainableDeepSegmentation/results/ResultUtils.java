@@ -2,8 +2,10 @@ package de.embl.cba.trainableDeepSegmentation.results;
 
 import de.embl.cba.bigDataTools.Hdf5DataCubeWriter;
 import de.embl.cba.bigDataTools.imaris.ImarisDataSet;
+import de.embl.cba.bigDataTools.imaris.ImarisUtils;
 import de.embl.cba.bigDataTools.imaris.ImarisWriter;
-import de.embl.cba.utils.logging.Logger;
+import de.embl.cba.trainableDeepSegmentation.postprocessing.ProximityFilter3D;
+import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.Binner;
@@ -19,145 +21,129 @@ public abstract class ResultUtils
 
     public static final String SEPARATE_IMARIS = "Save as Imaris";
     public static final String SEPARATE_TIFF_FILES = "Save as Tiff";
-    public static final String SEPARATE_IMAGES = "Show images";
+    public static final String SHOW_AS_SEPARATE_IMAGES = "Show images";
 
-    private static void saveClassAsImaris( int classId,
-                                           String directory,
-                                           String fileNamePrefix,
-                                           ImagePlus result,
-                                           int[] binning,
-                                           Logger logger,
-                                           ArrayList< String > classNames,
-                                           int CLASS_LUT_WIDTH)
+    private static void saveClassAsImaris( int classId, ResultExportSettings resultExportSettings )
     {
 
-        String className = classNames.get( classId );
+        String className = resultExportSettings.classNames.get( classId );
 
         ImarisDataSet imarisDataSet = new ImarisDataSet();
 
-        imarisDataSet.setFromImagePlus( result, binning, directory, className, "/");
+        imarisDataSet.setFromImagePlus(
+                resultExportSettings.result,
+                resultExportSettings.binning,
+                resultExportSettings.directory,
+                className,
+                "/");
 
         ArrayList< String > channelNames = new ArrayList<>();
+
         channelNames.add( className );
 
         imarisDataSet.setChannelNames( channelNames  );
 
-        ImarisWriter.writeHeader( imarisDataSet, directory, fileNamePrefix + className + ".ims" );
+        ImarisWriter.writeHeader( imarisDataSet, resultExportSettings.directory, resultExportSettings.exportNamesPrefix + className + ".ims" );
 
         Hdf5DataCubeWriter writer = new Hdf5DataCubeWriter();
 
-        for ( int t = 0; t < result.getNFrames(); ++t )
+        for ( int t = 0; t < resultExportSettings.result.getNFrames(); ++t )
         {
+            ImagePlus impClass = getBinnedAndProximityFilteredClassImage( classId, resultExportSettings, t );
 
-            ImagePlus impClass = getClassImage( classId, t, result, CLASS_LUT_WIDTH );
-
-            if ( binning[0]*binning[1]*binning[2] > 1 )
-            {
-                Binner binner = new Binner();
-                impClass = binner.shrink( impClass, binning[ 0 ], binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
-            }
+            logger.progress( "Writing " + className+ ", frame:", (t+1) + "/" + resultExportSettings.result.getNFrames() + "..." );
 
             writer.writeImarisCompatibleResolutionPyramid( impClass, imarisDataSet, 0, t );
 
-            logger.progress( "Wrote " + className+ ", frame:", (t+1) + "/" + result.getNFrames() );
         }
     }
 
+    private static void logDone( ResultExportSettings resultExportSettings, String className, int t, String s )
+    {
+        logger.progress( s + className + ", frame:", ( t + 1 ) + "/" + resultExportSettings.result.getNFrames() );
+    }
 
-    private static void saveClassAsTiff( int classId,
-                                         String directory,
-                                         String fileNamePrefix,
-                                         ImagePlus result,
-                                         int[] binning,
-                                         Logger logger,
-                                         ArrayList< String > classNames,
-                                         int CLASS_LUT_WIDTH )
+    private static ImagePlus getBinnedClassImage( int classId, ResultExportSettings resultExportSettings, int t )
     {
 
-        String className = classNames.get( classId );
+        String className = resultExportSettings.classNames.get( classId );
 
-        for ( int t = 0; t < result.getNFrames(); ++t )
+        logger.progress( "Getting " + className + ", frame:", ( t + 1 ) + "/" + resultExportSettings.result.getNFrames() );
+
+        ImagePlus impClass = getClassImage( classId, t, resultExportSettings.result, resultExportSettings.classLutWidth );
+
+        if ( resultExportSettings.binning[0] * resultExportSettings.binning[1] * resultExportSettings.binning[2] > 1 )
         {
-            logger.progress( "Preparing " + className + ", frame:", (t + 1) + "/" + result.getNFrames() );
+            logger.progress( "Binning " + className + ", frame:", (t+1) + "/" + resultExportSettings.result.getNFrames() + "..." );
+            Binner binner = new Binner();
+            impClass = binner.shrink( impClass, resultExportSettings.binning[ 0 ], resultExportSettings.binning[ 1 ], resultExportSettings.binning[ 2 ], Binner.AVERAGE );
+        }
 
-            ImagePlus impClass = getClassImage( classId, t, result, CLASS_LUT_WIDTH );
+        return impClass;
+    }
 
-            if ( binning[0] * binning[1] * binning[2] > 1 )
-            {
-                Binner binner = new Binner();
-                impClass = binner.shrink( impClass, binning[ 0 ], binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
-            }
+
+    private static ImagePlus getBinnedAndProximityFilteredClassImage( int classId, ResultExportSettings resultExportSettings, int t )
+    {
+
+        ImagePlus impClass = getBinnedClassImage( classId, resultExportSettings, t );
+
+        if ( resultExportSettings.proximityFilterSettings.doSpatialProximityFiltering )
+        {
+            logger.info( "Applying proximity filter..." );
+            impClass = ProximityFilter3D.multiply( impClass, resultExportSettings.proximityFilterSettings.dilatedBinaryReferenceMask );
+        }
+
+        return impClass;
+    }
+
+
+
+    private static void saveClassAsTiff( int classId, ResultExportSettings resultExportSettings )
+    {
+
+        String className = resultExportSettings.classNames.get( classId );
+
+        for ( int t = 0; t < resultExportSettings.result.getNFrames(); ++t )
+        {
+
+            ImagePlus impClass = getBinnedAndProximityFilteredClassImage( classId, resultExportSettings, t );
 
             String path;
 
-            if ( result.getNFrames() > 1 )
+            if ( resultExportSettings.result.getNFrames() > 1 )
             {
-                path = directory + File.separator + fileNamePrefix + className + "--T" + String.format( "%05d", t ) + ".tif";
+                path = resultExportSettings.directory + File.separator + resultExportSettings.exportNamesPrefix + className + "--T" + String.format( "%05d", t ) + ".tif";
             }
             else
             {
-                path = directory + File.separator + fileNamePrefix + className + ".tif";
+                path = resultExportSettings.directory + File.separator + resultExportSettings.exportNamesPrefix + className + ".tif";
             }
 
             IJ.saveAsTiff( impClass, path );
 
-            logger.progress( "Wrote " + className + ", frame:", (t + 1) + "/" + result.getNFrames() + ", path: " + path );
+            logDone( resultExportSettings, className, t, "Done with export of " );
         }
 
     }
 
-
-    private static void showClassAsImage( int classId,
-                                          ImagePlus result,
-                                          int[] binning,
-                                          Logger logger,
-                                          String imageNamePrefix,
-                                          ArrayList< String > classNames,
-                                          int CLASS_LUT_WIDTH )
+    private static void showClassAsImage( int classId, ResultExportSettings resultExportSettings )
     {
 
-        String className = classNames.get( classId );
+        String className = resultExportSettings.classNames.get( classId );
 
-        for ( int t = 0; t < result.getNFrames(); ++t )
+        for ( int t = 0; t < resultExportSettings.result.getNFrames(); ++t )
         {
-            ImagePlus impClass = getClassImage( classId, t, result, CLASS_LUT_WIDTH );
-
-            if ( binning[0] * binning[1] * binning[2] > 1 )
-            {
-                Binner binner = new Binner();
-                impClass = binner.shrink( impClass, binning[ 0 ], binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
-            }
-
-            impClass.setTitle( imageNamePrefix + className + "--T" + ( t + 1 ) );
+            ImagePlus impClass = getBinnedAndProximityFilteredClassImage( classId, resultExportSettings, t );
+            impClass.setTitle( resultExportSettings.exportNamesPrefix + className + "--T" + ( t + 1 ) );
             impClass.show();
-
-            logger.progress( "Displayed " + className + ", frame:", (t + 1) + "/" + result.getNFrames() );
+            logDone( resultExportSettings, className, t, "Displayed " );
         }
 
     }
 
-    private static ImagePlus getClassImage( int classId,
-                                            int t,
-                                            ImagePlus result,
-                                            int CLASS_LUT_WIDTH)
-    {
-        ImagePlus impClass;
 
-        Duplicator duplicator = new Duplicator();
-        impClass = duplicator.run( result, 1, 1, 1, result.getNSlices(), t + 1, t + 1 );
-
-        int[] intensityGate = new int[]{ classId * CLASS_LUT_WIDTH + 1, (classId + 1 ) * CLASS_LUT_WIDTH };
-
-        de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( impClass, intensityGate );
-
-        return ( impClass );
-
-    }
-
-    public static void saveAsImarisChannels( ImagePlus rawData,
-                                             String name,
-                                             String directory,
-                                             int[] binning )
+    public static void saveAsImaris( ImagePlus rawData, String name, String directory, int[] binning )
     {
         // Set everything up
         ImarisDataSet imarisDataSet = new ImarisDataSet();
@@ -175,7 +161,6 @@ public abstract class ResultUtils
 
         for ( int t = 0; t < rawData.getNFrames(); ++t )
         {
-
             for ( int c = 0; c < rawData.getNChannels(); ++c )
             {
                 Duplicator duplicator = new Duplicator();
@@ -196,73 +181,138 @@ public abstract class ResultUtils
         }
     }
 
-
-    public static void saveClassesAsFiles(
-            String directory,
-            String fileNamePrefix,
-            ArrayList< Boolean > classesToBeSaved,
-            String fileType,
-            ImagePlus result,
-            int[] binning,
-            Logger logger,
-            ArrayList< String > classNames,
-            int CLASS_LUT_WIDTH)
+    public static void exportResults( ResultExportSettings resultExportSettings )
     {
 
+        if ( ! resultExportSettings.exportType.equals( ResultUtils.SHOW_AS_SEPARATE_IMAGES ) )
+        {
+            resultExportSettings.directory = IJ.getDirectory("Select a directory");
+            if ( resultExportSettings.directory == null ) return;
+            IOUtils.createDirectoryIfNotExists( resultExportSettings.directory );
+        }
+
+        if ( resultExportSettings.classesToBeExported == null )
+        {
+            resultExportSettings.classesToBeExported = selectAllClasses( resultExportSettings.classNames );
+        }
+
+        if ( resultExportSettings.binning == null )
+        {
+            resultExportSettings.binning = new int[] { 1, 1, 1 };
+        }
+
+        exportClasses( resultExportSettings );
+
+        exportRawDataAndCreateImarisHeader( resultExportSettings );
+
+        logger.info( "Export of results finished!" );
+
+    }
+
+    private static void exportRawDataAndCreateImarisHeader( ResultExportSettings resultExportSettings )
+    {
+        if ( resultExportSettings.exportType.equals( ResultUtils.SEPARATE_IMARIS ) )
+        {
+            if ( resultExportSettings.saveRawData )
+            {
+                saveAsImaris(
+                        resultExportSettings.rawData,
+                        resultExportSettings.exportNamesPrefix + "raw-data",
+                        resultExportSettings.directory,
+                        resultExportSettings.binning
+                );
+            }
+
+            ImarisUtils.createImarisMetaFile( resultExportSettings.directory );
+        }
+    }
+
+    private static void exportClasses( ResultExportSettings resultExportSettings )
+    {
+        prepareProximityFilter( resultExportSettings );
+
+        for ( int classIndex = 0; classIndex < resultExportSettings.classesToBeExported.size(); ++classIndex )
+        {
+            if ( resultExportSettings.classesToBeExported.get( classIndex ) )
+            {
+                if ( resultExportSettings.exportType.equals( ResultUtils.SEPARATE_IMARIS ) )
+                {
+                    saveClassAsImaris( classIndex, resultExportSettings );
+                }
+                else if ( resultExportSettings.exportType.equals( ResultUtils.SEPARATE_TIFF_FILES ) )
+                {
+                    saveClassAsTiff( classIndex, resultExportSettings );
+                }
+                else if ( resultExportSettings.exportType.equals( ResultUtils.SHOW_AS_SEPARATE_IMAGES ) )
+                {
+                    showClassAsImage( classIndex, resultExportSettings );
+                }
+            }
+        }
+    }
+
+    private static void prepareProximityFilter( ResultExportSettings resultExportSettings )
+    {
+        ProximityFilterSettings settings = resultExportSettings.proximityFilterSettings;
+
+        if ( settings.doSpatialProximityFiltering )
+        {
+            logger.info( "Computing proximity mask..." );
+            ImagePlus impReferenceClass = getBinnedClassImage( settings.referenceClassId, resultExportSettings, 0  );
+            settings.dilatedBinaryReferenceMask = ProximityFilter3D.getDilatedBinaryUsingEDT( impReferenceClass, settings.distanceInPixelsAfterBinning  );
+        }
+    }
+
+
+    public static void saveClassesAsFiles( ResultExportSettings resultExportSettings )
+    {
         // if ( checkMaximalVolume( result, binning, logger ) ) return;
 
-        if ( classesToBeSaved == null )
+        if ( resultExportSettings.classesToBeExported == null )
         {
-            classesToBeSaved = selectAllClasses( classNames );
+            resultExportSettings.classesToBeExported = selectAllClasses( resultExportSettings.classNames );
         }
 
-        if ( binning == null )
+        if ( resultExportSettings.binning == null )
         {
-            binning = new int[] { 1, 1, 1 };
+            resultExportSettings.binning = new int[] { 1, 1, 1 };
         }
 
-        for ( int classIndex = 0; classIndex < classesToBeSaved.size(); ++classIndex )
+        for ( int classIndex = 0; classIndex < resultExportSettings.classesToBeExported.size(); ++classIndex )
         {
-            if ( classesToBeSaved.get( classIndex ) )
+            if ( resultExportSettings.classesToBeExported.get( classIndex ) )
             {
-                if ( fileType.equals( ResultUtils.SEPARATE_IMARIS ) )
+                if ( resultExportSettings.exportType.equals( ResultUtils.SEPARATE_IMARIS ) )
                 {
-                    saveClassAsImaris( classIndex, directory, fileNamePrefix, result, binning, logger, classNames, CLASS_LUT_WIDTH );
+                    saveClassAsImaris( classIndex, resultExportSettings );
                 }
-                else if ( fileType.equals( ResultUtils.SEPARATE_TIFF_FILES ) )
+                else if ( resultExportSettings.exportType.equals( ResultUtils.SEPARATE_TIFF_FILES ) )
                 {
-                    saveClassAsTiff( classIndex, directory, fileNamePrefix, result, binning, logger, classNames, CLASS_LUT_WIDTH );
+                    saveClassAsTiff( classIndex, resultExportSettings );
                 }
             }
         }
     }
 
 
-    public static void showClassesAsImages(
-            String imageNamePrefix,
-            ArrayList< Boolean > classesToBeShown,
-            ImagePlus resultImage,
-            int[] binning,
-            Logger logger,
-            ArrayList< String > classNames,
-            int CLASS_LUT_WIDTH)
+    public static void showClassesAsImages( ResultExportSettings resultExportSettings )
     {
 
-        if ( classesToBeShown == null )
+        if ( resultExportSettings.classesToBeExported == null )
         {
-            classesToBeShown = selectAllClasses( classNames );
+            resultExportSettings.classesToBeExported = selectAllClasses( resultExportSettings.classNames );
         }
 
-        if ( binning == null )
+        if ( resultExportSettings.binning == null )
         {
-            binning = new int[] { 1, 1, 1 };
+            resultExportSettings.binning = new int[] { 1, 1, 1 };
         }
 
-        for ( int classIndex = 0; classIndex < classesToBeShown.size(); ++classIndex )
+        for ( int classIndex = 0; classIndex < resultExportSettings.classesToBeExported.size(); ++classIndex )
         {
-            if ( classesToBeShown.get( classIndex ) )
+            if ( resultExportSettings.classesToBeExported.get( classIndex ) )
             {
-                showClassAsImage( classIndex, resultImage, binning, logger, imageNamePrefix, classNames, CLASS_LUT_WIDTH );
+                showClassAsImage( classIndex, resultExportSettings );
             }
         }
 
@@ -273,5 +323,20 @@ public abstract class ResultUtils
         ArrayList< Boolean > classesToBeSaved = new ArrayList<>();
         for ( String className : classNames ) classesToBeSaved.add( true );
         return classesToBeSaved;
+    }
+
+    private static ImagePlus getClassImage( int classId, int t, ImagePlus result, int CLASS_LUT_WIDTH)
+    {
+        ImagePlus impClass;
+
+        Duplicator duplicator = new Duplicator();
+        impClass = duplicator.run( result, 1, 1, 1, result.getNSlices(), t + 1, t + 1 );
+
+        int[] intensityGate = new int[]{ classId * CLASS_LUT_WIDTH + 1, (classId + 1 ) * CLASS_LUT_WIDTH };
+
+        de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( impClass, intensityGate );
+
+        return ( impClass );
+
     }
 }

@@ -80,7 +80,7 @@ public class DeepSegmentation
 	/**
 	 * maximum number of classes (labels) allowed
 	 */
-	public static final int MAX_NUM_CLASSES = 10;
+	public static final int MAX_NUM_CLASSES = 20;
 	public static final String RESULT_IMAGE_DISK_SINGLE_TIFF = "Disk";
 	public static final String RESULT_IMAGE_RAM = "RAM";
 	public static final String WHOLE_DATA_SET = "Whole data set";
@@ -591,7 +591,7 @@ public class DeepSegmentation
 					{
 						numInstancesAtLastTraining = numInstances;
 						classifierNumTrees = numTrainingTrees;
-						classifierKey = trainClassifier(instancesAndMetadata);
+						classifierKey = trainClassifier( instancesAndMetadata );
 
 					}
 
@@ -1411,20 +1411,21 @@ public class DeepSegmentation
 
 	}
 
-	public String loadInstancesMetadata( String filePath )
+	public String loadInstancesAndMetadata( String filePath )
 	{
 		Path p = Paths.get(filePath);
-		String key = loadInstancesMetadata( p.getParent().toString(),  p.getFileName().toString());
+		String key = loadInstancesAndMetadata( p.getParent().toString(),  p.getFileName().toString());
 		return key;
 	}
 
-	public String loadInstancesMetadata( String directory, String fileName )
+	public String loadInstancesAndMetadata( String directory, String fileName )
 	{
 		InstancesAndMetadata instancesAndMetadata = InstancesUtils.loadInstancesAndMetadataFromARFF( directory, fileName );
 
 		if ( instancesAndMetadata == null )
 		{
 			logger.error( "Loading failed..." );
+			return null;
 		}
 
 		String key = getInstancesManager().putInstancesAndMetadata( instancesAndMetadata );
@@ -1432,18 +1433,22 @@ public class DeepSegmentation
 		// create examples, if
 		// - this contains multiple labels
 		// - was the first loaded set
-		if ( InstancesUtils.getNumLabelIds( instancesAndMetadata ) > 1 && getInstancesManager().getKeys().size() == 1  )
+        // - matches the image name
+		if ( InstancesUtils.getNumLabelIds( instancesAndMetadata ) > 1 && instancesAndMetadata.getRelationName().equals( inputImage.getTitle() ) )
 		{
-			logger.info( "\nCreating examples from instances..." );
-			setExamples(
-					ExamplesUtils.
-							getExamplesFromInstancesAndMetadata(
-									instancesAndMetadata
-							)
-			);
-
+            logger.info( "\n# Loaded instances relation name matches image name => Populating labels..." );
+            logger.info( "\nCreating examples from instances..." );
+			setExamples( ExamplesUtils.getExamplesFromInstancesAndMetadata( instancesAndMetadata ) );
 			examplesFeatureNames = instancesAndMetadata.getAttributeNames();
 		}
+		else
+        {
+            logger.info( "\nLoaded instances relation name does not match image name." +
+                    "\nInstances can be used for training a classifier but not for adding more annotations" +
+                    " based on current image." );
+        }
+
+
 
 		SettingsUtils.setSettingsFromInstancesMetadata( settings, instancesAndMetadata );
 
@@ -1455,7 +1460,7 @@ public class DeepSegmentation
 
 	public boolean saveInstances( String key, String directory, String filename )
 	{
-		logger.info("\n# Saving instances to " + directory + File.separator + filename );
+		logger.info("\n# Saving instances " + key + " to " + directory + File.separator + filename );
 
 		InstancesAndMetadata instancesAndMetadata = getInstancesManager().getInstancesAndMetadata( key );
 
@@ -1475,20 +1480,20 @@ public class DeepSegmentation
 
 	public void updateExamplesInstancesAndMetadata()
 	{
-		currentLabelInstancesKey = getKeyFromImageTitle();
-		updateExamplesInstancesAndMetadata( currentLabelInstancesKey );
+		currentLabelsInstancesKey = getKeyFromImageTitle();
+		updateExamplesInstancesAndMetadata( currentLabelsInstancesKey );
 	}
 
-	private String currentLabelInstancesKey;
+	private String currentLabelsInstancesKey;
 
-	private String getCurrentLabelInstancesKey()
+	private String getCurrentLabelsInstancesKey()
 	{
-		return currentLabelInstancesKey;
+		return currentLabelsInstancesKey;
 	}
 
 	public InstancesAndMetadata getCurrentLabelInstancesAndMetadata()
 	{
-		return getInstancesManager().getInstancesAndMetadata( currentLabelInstancesKey );
+		return getInstancesManager().getInstancesAndMetadata( currentLabelsInstancesKey );
 	}
 
 	public void updateExamplesInstancesAndMetadata( String instancesAndMetadataKey )
@@ -1522,8 +1527,8 @@ public class DeepSegmentation
 
 	private String getKeyFromImageTitle( )
 	{
-	    // TODO: does this make sense??
-		String instancesName = getInputImageTitle().split( "--" )[ 0 ];
+		String instancesName = getInputImageTitle(); //.split( "--" )[ 0 ];
+
 		return instancesName;
 	}
 
@@ -1534,12 +1539,11 @@ public class DeepSegmentation
 		ArrayList< ArrayList< Example > > groupedExamples = groupExamplesBySpatialProximity( examplesNeedingInstanceUpdate );
 
 		updateInstancesValuesOfGroupedExamples( groupedExamples );
-
 	}
 
 	private void updateInstancesValuesOfGroupedExamples( ArrayList< ArrayList< Example > > groupedExamples )
 	{
-		ExecutorService exe = Executors.newFixedThreadPool( threadsRegion );
+		ExecutorService exe = Executors.newFixedThreadPool( numThreads );
 		ArrayList<Future > futures = new ArrayList<>();
 
 		isUpdatedFeatureList = false;
@@ -1684,7 +1688,7 @@ public class DeepSegmentation
 
 		return () -> {
 
-			logger.info("" + (counter + 1) + "/" + (counterMax + 1) + ": " + "Computing features for " + examples.size() + " labels...");
+			logger.info("" + (counter + 1) + "/" + (counterMax + 1) + ": " + "Computing features for " + examples.size() + " label(s)...");
 
 			FinalInterval exampleListBoundingInterval = getExampleListBoundingInterval( examples );
 
@@ -2191,11 +2195,12 @@ public class DeepSegmentation
 		}
 		catch (InterruptedException ie)
 		{
-			logger.info("Classifier construction was interrupted.");
+			logger.info( "Classifier construction was interrupted." );
 			return null;
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
-			IJ.showMessage(e.getMessage());
+			IJ.showMessage( e.getMessage() );
 			e.printStackTrace();
 			return null;
 		}

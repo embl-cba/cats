@@ -37,41 +37,18 @@ public class ResultImageDisk implements ResultImage {
     }
 
     @Override
-    public void saveClassesAsFiles( String directory, String fileNamePrefix, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType )
+    public void exportResults( ResultExportSettings resultExportSettings )
     {
-
         logger.info("Saving probabilities as separate files.." );
 
-        IOUtils.createDirectoryIfNotExists( directory );
+        resultExportSettings.classLutWidth = CLASS_LUT_WIDTH;
+        resultExportSettings.logger = logger;
+        resultExportSettings.result = result;
 
-        ResultUtils.saveClassesAsFiles(
-                directory,
-                fileNamePrefix,
-                classesToBeSaved,
-                fileType,
-                result,
-                binning,
-                logger,
-                deepSegmentation.getClassNames(),
-                CLASS_LUT_WIDTH
-        );
+        ResultUtils.exportResults( resultExportSettings );
 
     }
 
-    @Override
-    public void showClassesAsImages( String imageNamePrefix, ArrayList< Boolean > classesToBeShown, int[] binning )
-    {
-
-        ResultUtils.showClassesAsImages(
-                imageNamePrefix,
-                classesToBeShown,
-                result,
-                binning,
-                logger,
-                deepSegmentation.getClassNames(),
-                CLASS_LUT_WIDTH );
-
-    }
 
     @Override
     public ImageProcessor getSlice( int slice, int frame )

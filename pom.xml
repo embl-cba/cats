@@ -11,7 +11,7 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>fiji_plugin_deepSegmentation</artifactId>
-	<version>0.4.47</version>
+	<version>0.4.52</version>
 
 	<name>Fiji plugin for trainable segmentation using deep convolution</name>
 	<description>A plugin for trainable segmentation using deep convolution.</description>
@@ -198,6 +198,10 @@
 			<version>1204d04b31217a7d14897a4dd93cc0eafc064e01</version>
 		</dependency>
 		-->
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>LocalThickness_</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>fr.inra.ijpb</groupId>

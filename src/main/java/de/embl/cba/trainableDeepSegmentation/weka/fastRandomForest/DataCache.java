@@ -262,8 +262,10 @@ public class DataCache {
 
 
   /**
-   * TISCHI: ... Uses sampling with replacement to create a new DataCache from an existing
-   * one.
+   * TISCHI:
+   * (i) From each class select bagSizePercent of all labels.
+   * (ii) Count how many instances (label pixels) have been selected for each class
+   * (iii) Weight each instance with the inverse of the number of selected pixels in its class
    *
    * The probability of sampling a specific instance does not depend on its
    * weight. When an instance is sampled multiple times, its weight in the new
@@ -279,8 +281,7 @@ public class DataCache {
                                             Map< Integer, ArrayList < Integer > >[] labelIds,
                                             Random random ) {
 
-    DataCache result =
-            new DataCache(this); // makes shallow copy of vals matrix
+    DataCache dataCache = new DataCache(this ); // makes shallow copy of vals matrix
 
     double[] newWeights = new double[ numInstances ]; // all 0.0 by default
 
@@ -296,20 +297,20 @@ public class DataCache {
     for ( int c = 0; c < numClasses; ++c )
     {
       // selectedLabelIds[c] = new ArrayList<>(  );
-      for ( int l : labelIds[c].keySet() )
+      for ( int l : labelIds[ c ].keySet() )
       {
         if ( random.nextInt( 100 ) < bagSizePercent )
         {
           ArrayList< Integer > ids = labelIds[ c ].get( l );
 
-          labelsPerClass[c]++;
+          labelsPerClass[ c ]++;
 
           //double weight = 1.0 / labelIds[ c ].size() ;
 
           for ( int i : ids )
           {
-            result.numInBag++;
-            result.inBag[ i ] = true;
+            dataCache.numInBag++;
+            dataCache.inBag[ i ] = true;
             classID[ i ] = c;
             instancesPerClass[ c ]++;
             //newWeights[ i ] = weight;
@@ -330,19 +331,19 @@ public class DataCache {
 
     for ( int i = 0; i < newWeights.length; ++i )
     {
-      if ( result.inBag[i] )
+      if ( dataCache.inBag[ i ] )
       {
-        newWeights[ i ] = classWeights [ classID[i] ];
+        newWeights[ i ] = classWeights [ classID[ i ] ];
       }
     }
 
-    result.instWeights = newWeights;
+    dataCache.instWeights = newWeights;
 
     // we also need to fill sortedIndices by peeking into the inBag array, but
     // this can be postponed until the tree instances begins
     // we will use the "createInBagSortedIndices()" for this
 
-    return result;
+    return dataCache;
 
   }
 

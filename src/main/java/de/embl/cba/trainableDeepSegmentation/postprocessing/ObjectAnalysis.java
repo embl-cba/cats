@@ -1,4 +1,4 @@
-package de.embl.cba.trainableDeepSegmentation.objectanalysis;
+package de.embl.cba.trainableDeepSegmentation.postprocessing;
 
 import ij.ImagePlus;
 import ij.plugin.Duplicator;
@@ -14,7 +14,8 @@ public class ObjectAnalysis
             int channel,
             int minNumVoxels,
             int lowerThreshold,
-            int upperThreshold)
+            int upperThreshold
+    )
     {
 
         int connectivity = 6;

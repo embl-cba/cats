@@ -4,13 +4,9 @@ import ij.ImagePlus;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 
-import java.util.ArrayList;
-
 public interface ResultImage {
 
-    void saveClassesAsFiles( String directory, String fileNamePrefix, ArrayList< Boolean > classesToBeSaved, int[] binning, String fileType );
-
-    void showClassesAsImages( String imageNamePrefix, ArrayList< Boolean > classesToBeShown, int[] binning );
+    void exportResults( ResultExportSettings resultExportSettings );
 
     ImageProcessor getSlice( int slice, int frame );
 

@@ -779,6 +779,8 @@ public class InstancesUtils {
                                                         ArrayList< Integer > goners )
     {
 
+        logger.info( "Removing attributes from instances..." );
+
         Instances attributeSubset = new Instances( instancesAndMetadata.instances );
 
         for( int j = goners.size() - 1; j >= 0; j-- )
@@ -789,12 +791,15 @@ public class InstancesUtils {
 
         attributeSubset.setClassIndex( attributeSubset.numAttributes() - 1 );
 
+        logger.info( "...done." );
+
         return ( new InstancesAndMetadata( attributeSubset, instancesAndMetadata.metadata ) );
     }
 
     public static InstancesAndMetadata onlyKeepAttributes(InstancesAndMetadata instancesAndMetadata,
                                                           ArrayList< Integer > keepers )
     {
+        logger.info( "Removing attributes from instances..." );
 
         Instances attributeSubset = new Instances( instancesAndMetadata.instances );
         int numAttributes = instancesAndMetadata.instances.numAttributes();
@@ -808,6 +813,8 @@ public class InstancesUtils {
         }
 
         attributeSubset.setClassIndex( attributeSubset.numAttributes() - 1 );
+
+        logger.info( "...done." );
 
         return ( new InstancesAndMetadata( attributeSubset, instancesAndMetadata.metadata ) );
     }

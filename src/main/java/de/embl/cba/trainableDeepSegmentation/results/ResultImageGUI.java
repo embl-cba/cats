@@ -1,9 +1,7 @@
 package de.embl.cba.trainableDeepSegmentation.results;
 
-import de.embl.cba.bigDataTools.imaris.ImarisUtils;
 import de.embl.cba.bigDataTools.utils.Utils;
 import fiji.util.gui.GenericDialogPlus;
-import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
 
@@ -19,9 +17,7 @@ public abstract class ResultImageGUI {
                                       ArrayList< String > classNames )
     {
 
-        String[] exportChoices = new String[]{ SEPARATE_IMAGES, SEPARATE_IMARIS, SEPARATE_TIFF_FILES };
-
-        ArrayList < Boolean > classesToBeSaved = new ArrayList<>();
+        String[] exportChoices = new String[]{ SHOW_AS_SEPARATE_IMAGES, SEPARATE_IMARIS, SEPARATE_TIFF_FILES };
 
         GenericDialog gd = new GenericDialogPlus("Export Segmentation Results");
 
@@ -29,13 +25,24 @@ public abstract class ResultImageGUI {
 
         gd.addStringField( "Binning: ", "1,1,1", 10  );
 
-        gd.addMessage( "Export raw data:" );
+        gd.addMessage( "--- Export ---" );
 
         gd.addCheckbox( rawData.getTitle(), true );
 
-        gd.addMessage( "Export class:" );
+        for ( String className : classNames )
+        {
+            gd.addCheckbox( className, true );
+        }
 
-        for ( String className : classNames ) gd.addCheckbox( className, true );
+
+        gd.addMessage( "--- Spatial proximity filtering (currently not working for movies) ---" );
+
+        gd.addCheckbox( "Do spatial proximity filtering", false );
+        gd.addNumericField( "Distance (after binning) [pixels]:", 10, 0 );
+
+        gd.addChoice( "Reference class:", classNames.toArray( new String[classNames.size()] ), classNames.get( 0 ) );
+
+        gd.addMessage( "--- Export modality ---" );
 
         gd.addChoice( "Export as:", exportChoices, ResultUtils.SEPARATE_IMARIS );
 
@@ -43,46 +50,46 @@ public abstract class ResultImageGUI {
 
         if ( gd.wasCanceled() ) return;
 
-        String classNamePrefix = gd.getNextString();
+        ResultExportSettings resultExportSettings = new ResultExportSettings();
+        resultExportSettings.classNames = classNames;
+        resultExportSettings.resultImage = resultImage;
+        resultExportSettings.rawData = rawData;
 
-        int[] binning = Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
+        setFromGUI( classNames, gd, resultExportSettings );
 
-        boolean saveRawData = gd.getNextBoolean();
-
-        for ( String className : classNames ) classesToBeSaved.add( gd.getNextBoolean() );
-
-        String exportModality = gd.getNextChoice();
-
-
-        if ( exportModality.equals( SEPARATE_IMARIS ) )
-        {
-            String directory = IJ.getDirectory("Select a directory");
-            if ( directory == null ) return;
-            saveAsSeparateImaris( directory, classNamePrefix, resultImage, rawData, classesToBeSaved, binning, saveRawData, exportModality );
-        }
-        else if ( exportModality.equals( SEPARATE_TIFF_FILES ) )
-        {
-            String directory = IJ.getDirectory("Select a directory");
-            if ( directory == null ) return;
-            resultImage.saveClassesAsFiles( directory, classNamePrefix, classesToBeSaved, binning, exportModality );
-        }
-        else if ( exportModality.equals( SEPARATE_IMAGES ) )
-        {
-            resultImage.showClassesAsImages( classNamePrefix, classesToBeSaved, binning );
-        }
+        resultImage.exportResults( resultExportSettings );
 
     }
 
-    private static void saveAsSeparateImaris( String directory, String fileNamePrefix, ResultImage resultImage, ImagePlus rawData, ArrayList< Boolean > classesToBeSaved, int[] binning, boolean saveRawData, String exportModality )
+    private static void setFromGUI( ArrayList< String > classNames, GenericDialog gd, ResultExportSettings resultExportSettings )
     {
-        resultImage.saveClassesAsFiles( directory, fileNamePrefix, classesToBeSaved, binning, exportModality );
+        resultExportSettings.exportNamesPrefix = gd.getNextString();
 
-        if ( saveRawData )
-        {
-            saveAsImarisChannels( rawData, fileNamePrefix + "raw-data", directory, binning );
-        }
+        resultExportSettings.binning = Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
 
-        ImarisUtils.createImarisMetaFile( directory );
+        setExport( classNames, gd, resultExportSettings );
+
+        setSpatialProximityFiltering( gd, resultExportSettings );
+
+        resultExportSettings.exportType = gd.getNextChoice();
     }
+
+    private static void setExport( ArrayList< String > classNames, GenericDialog gd, ResultExportSettings resultExportSettings )
+    {
+        resultExportSettings.saveRawData = gd.getNextBoolean();
+
+        resultExportSettings.classesToBeExported = new ArrayList<>();
+
+        for ( String className : classNames ) resultExportSettings.classesToBeExported.add( gd.getNextBoolean() );
+    }
+
+    private static void setSpatialProximityFiltering( GenericDialog gd, ResultExportSettings resultExportSettings )
+    {
+        resultExportSettings.proximityFilterSettings = new ProximityFilterSettings();
+        resultExportSettings.proximityFilterSettings.doSpatialProximityFiltering = gd.getNextBoolean();
+        resultExportSettings.proximityFilterSettings.distanceInPixelsAfterBinning = (int) gd.getNextNumber();
+        resultExportSettings.proximityFilterSettings.referenceClassId = (int) gd.getNextChoiceIndex();
+    }
+
 
 }

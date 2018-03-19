@@ -14,6 +14,8 @@ public class ClassifierManager {
 
     Map< String, ClassifierInstancesMetadata > classifiers;
 
+    String mostRecentlyAddedClassifierKey;
+
     public ClassifierManager( )
     {
         this.classifiers = new LinkedHashMap<>();
@@ -21,10 +23,11 @@ public class ClassifierManager {
 
     public String setClassifier( ClassifierInstancesMetadata classifierInstancesMetadata )
     {
-
         String key = classifierInstancesMetadata.instancesAndMetadata.getInstances().relationName();
 
         classifiers.put( key , classifierInstancesMetadata );
+
+        mostRecentlyAddedClassifierKey = key;
 
         return key;
     }
@@ -43,15 +46,7 @@ public class ClassifierManager {
 
     public String getMostRecentClassifierKey( )
     {
-        if ( classifiers.keySet().size() > 0 )
-        {
-            String lastKey = ( String ) classifiers.keySet().toArray()[ classifiers.keySet().size() - 1 ];
-            return ( lastKey );
-        }
-        else
-        {
-            return null;
-        }
+        return mostRecentlyAddedClassifierKey;
     }
 
     public ArrayList< Attribute > getClassifierAttributes( String key )

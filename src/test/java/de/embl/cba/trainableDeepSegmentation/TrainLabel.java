@@ -42,7 +42,7 @@ public class TrainLabel {
         ws.setInputImage( inputImage );
         ws.setLabelImage( labelImage );
         ws.setResultImageRAM( );
-        ws.loadInstancesMetadata( INSTANCES_PATH );
+        ws.loadInstancesAndMetadata( INSTANCES_PATH );
 
         ws.setNumThreads( 16 );
 
