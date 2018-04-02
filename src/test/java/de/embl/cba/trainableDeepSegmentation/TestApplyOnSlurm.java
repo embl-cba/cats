@@ -13,7 +13,8 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import static de.embl.cba.trainableDeepSegmentation.FIBSEMCell.TEST_RESOURCES;
+import static de.embl.cba.trainableDeepSegmentation.TestUtils.TEST_RESOURCES;
+
 
 public class TestApplyOnSlurm
 {

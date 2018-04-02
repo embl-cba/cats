@@ -4,7 +4,7 @@ import ij.ImagePlus;
 
 public class ProximityFilterSettings
 {
-    boolean doSpatialProximityFiltering;
+    boolean doSpatialProximityFiltering = false;
     int distanceInPixelsAfterBinning;
     int referenceClassId;
     ImagePlus dilatedBinaryReferenceMask;

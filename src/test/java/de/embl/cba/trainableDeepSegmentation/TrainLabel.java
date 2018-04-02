@@ -49,11 +49,11 @@ public class TrainLabel {
         ws.settings.log2 = false;
 
         int level = 0;
-        ws.settings.binFactors[level++] = 2;
-        ws.settings.binFactors[level++] = 2;
-        ws.settings.binFactors[level++] = 2;
-        ws.settings.binFactors[level++] = 2;
-        ws.settings.binFactors[level++] = -1;
+        ws.settings.binFactors.set(level++ , 2);
+        ws.settings.binFactors.set(level++ , 2);
+        ws.settings.binFactors.set(level++ , 2);
+        ws.settings.binFactors.set(level++ , 2);
+        ws.settings.binFactors.set(level++ , -1);
 
         String loggingDirectory = LOGGING_DIRECTORY;
         String outputDirectory = OUTPUT_DIRECTORY;

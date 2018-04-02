@@ -186,8 +186,6 @@ public abstract class ResultUtils
 
         if ( ! resultExportSettings.exportType.equals( ResultUtils.SHOW_AS_SEPARATE_IMAGES ) )
         {
-            resultExportSettings.directory = IJ.getDirectory("Select a directory");
-            if ( resultExportSettings.directory == null ) return;
             IOUtils.createDirectoryIfNotExists( resultExportSettings.directory );
         }
 
@@ -255,7 +253,7 @@ public abstract class ResultUtils
     {
         ProximityFilterSettings settings = resultExportSettings.proximityFilterSettings;
 
-        if ( settings.doSpatialProximityFiltering )
+        if (  settings.doSpatialProximityFiltering )
         {
             logger.info( "Computing proximity mask..." );
             ImagePlus impReferenceClass = getBinnedClassImage( settings.referenceClassId, resultExportSettings, 0  );

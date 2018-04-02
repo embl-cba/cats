@@ -3,11 +3,11 @@ package de.embl.cba.trainableDeepSegmentation;
 import ij.IJ;
 import ij.ImagePlus;
 
+import static de.embl.cba.trainableDeepSegmentation.TestUtils.TEST_RESOURCES;
+
 public class FIBSEMCell
 {
-    public final static String TEST_RESOURCES = "/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/";
-
-    public static void main( final String[] args )
+   public static void main( final String[] args )
     {
         final net.imagej.ImageJ ij = new net.imagej.ImageJ();
         ij.ui().showUI();

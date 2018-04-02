@@ -14,7 +14,8 @@ public class Example implements Serializable {
     public int strokeWidth = 0;
     public int z; // zero-based
     public int t; // zero-based
-    public ArrayList< double[] > instanceValuesArray = null;
+    public ArrayList< ArrayList< double[] > > instanceValuesArrays = null;
+    public boolean instanceValuesAreCurrentlyBeingComputed = false;
 
     public Example( int classNum, Point[] points, int strokeWidth, int z, int t )
     {

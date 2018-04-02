@@ -2,10 +2,11 @@ package de.embl.cba.trainableDeepSegmentation.commands;
 
 import de.embl.cba.cluster.ImageJCommandsSubmitter;
 import de.embl.cba.cluster.JobFuture;
-import de.embl.cba.cluster.SlurmQueue;
+import de.embl.cba.cluster.JobSettings;
+import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
-import de.embl.cba.trainableDeepSegmentation.utils.SlurmUtils;
+import de.embl.cba.trainableDeepSegmentation.utils.SlurmJobMonitor;
 import de.embl.cba.utils.fileutils.PathMapper;
 import net.imagej.ImageJ;
 import net.imglib2.FinalInterval;
@@ -14,6 +15,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.TextWidget;
 
+import javax.print.attribute.standard.JobImpressionsSupported;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -22,8 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import static de.embl.cba.trainableDeepSegmentation.DeepSegmentation.logger;
-import static de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils.T;
-import static de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils.XYZT;
+import static de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils.*;
 import static de.embl.cba.trainableDeepSegmentation.utils.Utils.getSimpleString;
 
 
@@ -39,21 +40,21 @@ public class ApplyClassifierOnSlurmCommand implements Command
     private String password;
     public static String PASSWORD = "password";
 
-    @Parameter( label = "Queue", choices = { SlurmQueue.DEFAULT_QUEUE, SlurmQueue.ONE_DAY_QUEUE, SlurmQueue.ONE_WEEK_QUEUE, SlurmQueue.BIGMEM_QUEUE, SlurmQueue.GPU_QUEUE } )
-    public String queue = SlurmQueue.DEFAULT_QUEUE;
-    public static String QUEUE = "queue";
-
     @Parameter( label = "Number of jobs" )
-    public int numJobs = 20;
+    public int numJobs = 100;
     public static String NUM_JOBS = "numJobs";
 
     @Parameter( label = "Number of CPUs per job" )
-    public int numWorkers;
+    public int numWorkers = 16;
     public static final String NUM_WORKERS = "numWorkers";
 
-    @Parameter( label = "Classifier file (must be cluster accessible)" )
+    @Parameter( label = "Classifier (must be cluster accessible)" )
     public File classifierFile;
     public static final String CLASSIFIER_FILE = "classifierFile";
+
+    @Parameter( label = "ImageJ executable (must be linux and cluster accessible)", required = false)
+    public File imageJFile;
+    public static final String IMAGEJ_FILE = "imageJFile";
 
     @Parameter()
     public String inputModality;
@@ -80,8 +81,6 @@ public class ApplyClassifierOnSlurmCommand implements Command
     @Parameter( required = false )
     public String inputImageVSSHdf5DataSetName;
 
-    public String imageJ = ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_XVFB;
-
     public static int memoryFactor = 10;
 
     public boolean quitAfterRun = true;
@@ -90,16 +89,30 @@ public class ApplyClassifierOnSlurmCommand implements Command
 
     public void run()
     {
-
         String jobDirectory = "/g/cba/cluster/" + userName;
 
         List< Path > dataSets = new ArrayList<>();
         dataSets.add( inputImageFile.toPath() );
 
-        ArrayList< JobFuture > jobFutures = submitJobsOnSlurm( imageJ, jobDirectory, classifierFile.toPath(), dataSets );
+        ArrayList< JobFuture > jobFutures = submitJobsOnSlurm(
+                CommandUtils.getImageJExecutionString( imageJFile ),
+                jobDirectory, classifierFile.toPath(), dataSets );
 
-        SlurmUtils.monitorJobProgress( jobFutures, logger );
+        SlurmJobMonitor slurmJobMonitor = new SlurmJobMonitor();
+        slurmJobMonitor.monitorJobProgress( jobFutures, logger );
 
+    }
+
+    private String getImageJExecutionString()
+    {
+        if ( imageJFile == null )
+        {
+            return ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_XVFB;
+        }
+        else
+        {
+            return "xvfb-run -a -e XVFB_ERR_PATH " + imageJFile.getAbsolutePath() + " --mem=MEMORY_MB --run";
+        }
     }
 
 
@@ -122,11 +135,22 @@ public class ApplyClassifierOnSlurmCommand implements Command
             {
                 commandsSubmitter.clearCommands();
                 setCommandAndParameterStrings( commandsSubmitter, dataSet, classifierPath, tile );
-                jobFutures.add( commandsSubmitter.submitCommands( getApproximatelyNeededMemoryMB( tile ), numWorkers, queue ) );
+                JobSettings jobSettings = getJobSettings( tile );
+                jobFutures.add( commandsSubmitter.submitCommands( jobSettings ) );
             }
         }
 
         return jobFutures;
+    }
+
+    private JobSettings getJobSettings( FinalInterval tile )
+    {
+        JobSettings jobSettings = new JobSettings();
+        jobSettings.numWorkersPerNode = numWorkers;
+        jobSettings.queue = JobSettings.DEFAULT_QUEUE;
+        jobSettings.memoryPerJobInMegaByte = getApproximatelyNeededMemoryMB( tile);
+        jobSettings.timePerJobInMinutes = getApproximatelyNeededTimeInMinutes( tile );
+        return jobSettings;
     }
 
     private int getApproximatelyNeededMemoryMB( FinalInterval tile )
@@ -135,6 +159,16 @@ public class ApplyClassifierOnSlurmCommand implements Command
         int memoryMB = (int) ( 1.0 * memoryB / 1000000L );
         if ( memoryMB < 32000 ) memoryMB = 32000;
         return memoryMB;
+    }
+
+    private int getApproximatelyNeededTimeInMinutes( FinalInterval tile )
+    {
+        long numVoxels = tile.dimension( X ) * tile.dimension( Y ) * tile.dimension( Z );
+        long voxelsPerSecond = 1000;
+        double secondsNeeded = 1.0 * numVoxels / voxelsPerSecond;
+        int minutesNeeded = ( int ) Math.ceil( secondsNeeded / 60.0 );
+        minutesNeeded = Math.max( 10, minutesNeeded );
+        return minutesNeeded;
     }
 
 

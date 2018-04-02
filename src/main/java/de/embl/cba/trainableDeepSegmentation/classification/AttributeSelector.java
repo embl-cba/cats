@@ -19,8 +19,7 @@ public abstract class AttributeSelector {
             Logger logger)
     {
 
-        double randomUsage = 1.0 *
-                classifier.getDecisionNodes() / instances.numAttributes();
+        double randomUsage = 1.0 * classifier.getDecisionNodes() / instances.numAttributes();
 
         int usageThreshold = 0;
 
@@ -71,8 +70,7 @@ public abstract class AttributeSelector {
     {
 
 
-        ClassifierUtils.NamesAndUsages[] namesAndUsages =
-                getAttributesSortedByUsage( classifier, instances );
+        ClassifierUtils.NamesAndUsages[] namesAndUsages = getAttributesSortedByUsage( classifier, instances );
 
         ArrayList< Integer > mostUsed = new ArrayList<>(  );
 

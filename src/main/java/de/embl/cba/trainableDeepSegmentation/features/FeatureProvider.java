@@ -77,6 +77,8 @@ public class FeatureProvider
 
     public DeepSegmentation deepSegmentation = null;
 
+    private String showFeatureImageTitle = "";
+
     /** flags of filters to be used */
     private boolean[] enabledFeatures = new boolean[]{
             true, 	/* Hessian */
@@ -95,7 +97,7 @@ public class FeatureProvider
 
     private Logger logger;
     private double anisotropy;
-    private int[] binFactors;
+    private ArrayList< Integer > binFactors;
 
     public ResultImage getResultImageFgDistBg()
     {
@@ -106,6 +108,12 @@ public class FeatureProvider
     {
         this.resultImageFgDistBg = resultImageFgDistBg;
     }
+
+    public void setShowFeatureImageTitle( String showFeatureImageTitle )
+    {
+        this.showFeatureImageTitle = showFeatureImageTitle;
+    }
+
 
     public Set<Integer> getFeatureSliceCacheKeys()
     {
@@ -127,6 +135,8 @@ public class FeatureProvider
     }
 
     public int cacheSize = 0;
+
+    private String downSamplingMethod = DownSampler.BIN_AVERAGE;
 
     final LinkedHashMap< Integer, double[][][] > featureSliceCache = new LinkedHashMap< Integer, double[][][]>() {
         @Override
@@ -153,8 +163,9 @@ public class FeatureProvider
         this.resultImageFgDistBg = deepSegmentation.getResultImageBgFg();
         this.logger = deepSegmentation.getLogger();
 
-        anisotropy = deepSegmentation.settings.anisotropy;
-        binFactors = deepSegmentation.settings.binFactors;
+        this.downSamplingMethod = deepSegmentation.settings.downSamplingMethod;
+        this.anisotropy = deepSegmentation.settings.anisotropy;
+        this.binFactors = deepSegmentation.settings.binFactors;
 
         // TODO: isn't below a job for the feature-provider?
         featureImageBorderSizes = deepSegmentation.getFeatureBorderSizes();
@@ -193,15 +204,19 @@ public class FeatureProvider
 
                 ImagePlus merged = new ImagePlus(channels[0].get(i).getTitle(), mergedColorStack);
 
-                for(int n = 1; n <= merged.getImageStackSize(); n++)
-                    merged.getImageStack().setSliceLabel(channels[0].get(i).getImageStack().getSliceLabel(n), n);
+                for( int n = 1; n <= merged.getImageStackSize(); n++ )
+                {
+                    merged.getImageStack().setSliceLabel( channels[ 0 ].get( i ).getImageStack().getSliceLabel( n ), n );
+                }
                 mergedList.add( merged );
             }
 
             return mergedList;
         }
         else
-            return channels[0];
+        {
+            return channels[ 0 ];
+        }
     }
 
     /**
@@ -416,7 +431,7 @@ public class FeatureProvider
     /**
      * set all feature values for one z-slice
      * coordinates are relative to within the set interval
-     * @param zGlobalx
+     * @param zGlobal
      * @param featureSlice
      */
     public boolean setFeatureSlicesValues( final int zGlobal,
@@ -528,8 +543,8 @@ public class FeatureProvider
             baseDist = tmp - base = 2 / 3 - 0 = 2 / 3
             baseDist2 = 1 - 2 / 3 = 1 / 3
             ..this makes sense, because
-            3 is 2 away from 1, which is the center of bin 0
-            3 is 1 away from 4, which is the center of bin 1
+            3 is 2 away from 1, which is the center of run 0
+            3 is 1 away from 4, which is the center of run 1
 
             # Example: binning 3, value 4
 
@@ -541,8 +556,8 @@ public class FeatureProvider
             base = (int) tmp = 1
             baseDist = tmp - base = 1 - 1 = 0
             baseDist2 = 1 - 0 = 1
-            ..this means that bin 2 will getInstancesAndMetadata a weight of 0 (i.e., baseDist)
-            ..and bin 1 will getInstancesAndMetadata a weight of 1
+            ..this means that run 2 will getInstancesAndMetadata a weight of 0 (i.e., baseDist)
+            ..and run 1 will getInstancesAndMetadata a weight of 1
 
             # Example: binning=cal=2, value 3
 
@@ -554,8 +569,8 @@ public class FeatureProvider
             base = (int) tmp = 1  (=> above will be 2)
             baseDist = tmp - base = 1.25 - 1 = 0.25
             baseDist2 = 1 - 0.25 = 0.75
-            ..center of bin 1 is 2.5 in orig
-            ..center of bin 2 is 4.5 in orig
+            ..center of run 1 is 2.5 in orig
+            ..center of run 2 is 4.5 in orig
             ..distance of 3 from 2.5 is 0.5
             ..distance of 3 from 4.5 is 1.5
             ..dividing 0.5 and 1.5 by the calibration (=binning) 2 yields the scaled distances 0.25 and 0.75
@@ -572,11 +587,11 @@ public class FeatureProvider
             {
                 pixelsBase = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
                 if ( zBaseDist > 0 )
-                    pixelsAbove = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+                    pixelsAbove = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1 + 1 ).getPixels()));
             }
             else if (imp.getBitDepth() == 16)
             {
-                pixelsBase = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsBase = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1 ).getPixels()));
                 if ( zBaseDist > 0 )
                     pixelsAbove = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
             }
@@ -642,7 +657,7 @@ public class FeatureProvider
 
                     vAAA = zBaseDist2 * vAA0 + zBaseDist * vAA1;
 
-                    featureSlice[ x-xs ][ y-ys ][ f ] = vAAA;
+                    featureSlice[ x - xs ][ y - ys ][ f ] = vAAA;
 
                 }
             }
@@ -650,7 +665,7 @@ public class FeatureProvider
 
     }
 
-    public ImagePlus interpolateFast(ImagePlus imp)
+    public ImagePlus interpolateFast( ImagePlus imp )
     {
 
         Calibration calibration = imp.getCalibration();
@@ -777,7 +792,7 @@ public class FeatureProvider
 
     }
 
-    public void interpolate(ImagePlus imp)
+    public void interpolate( ImagePlus imp )
     {
         Calibration calibration = imp.getCalibration();
 
@@ -1261,7 +1276,7 @@ public class FeatureProvider
     }
 
 
-    public static int getNumLevels( int[] binFactors )
+    public static int getNumLevels( ArrayList< Integer > binFactors )
     {
         int maxBinLevel = 0;
         for ( int b : binFactors )
@@ -1296,7 +1311,7 @@ public class FeatureProvider
             int b = 1;
         }
 
-        setCalibration( processedOriginalImage );
+        setUnitMicrometerCalibration( processedOriginalImage );
 
         ArrayList < ArrayList < ImagePlus > > multiResolutionFeatureImages = new ArrayList<>();
 
@@ -1311,7 +1326,7 @@ public class FeatureProvider
 
                 final ArrayList<ImagePlus> featureImagesThisResolution = new ArrayList<>();
 
-                adaptiveAnisotropy = binImagesForCurrentResolutionLayer( numThreads, numLayers, adaptiveAnisotropy, processedOriginalImage, multiResolutionFeatureImages, resolutionLayer, featureImagesThisResolution );
+                adaptiveAnisotropy = downsampleImagesForCurrentResolutionLayer( numThreads, numLayers, adaptiveAnisotropy, processedOriginalImage, multiResolutionFeatureImages, resolutionLayer, featureImagesThisResolution );
 
                 computeAndAddFeatureImagesForCurrentResolutionLayer( numThreads, maximumMultithreadedLevel, adaptiveAnisotropy, multiResolutionFeatureImages, resolutionLayer, featureImagesThisResolution );
 
@@ -1415,8 +1430,10 @@ public class FeatureProvider
 
     }
 
-    private double binImagesForCurrentResolutionLayer( int numThreads, int numLevels, double adaptiveAnisotropy, ImagePlus inputImage, ArrayList< ArrayList< ImagePlus > > multiResolutionFeatureImages, int level, ArrayList< ImagePlus > featureImagesThisResolution ) throws InterruptedException, ExecutionException
+    private double downsampleImagesForCurrentResolutionLayer( int numThreads, int numLevels, double adaptiveAnisotropy, ImagePlus inputImage, ArrayList< ArrayList< ImagePlus > > multiResolutionFeatureImages, int level, ArrayList< ImagePlus > featureImagesThisResolution ) throws InterruptedException, ExecutionException
     {
+        DownSampler downSampler = new DownSampler( downSamplingMethod );
+
         final ArrayList<ImagePlus> featureImagesPreviousResolution;
 
         if ( level == 0 )
@@ -1429,7 +1446,7 @@ public class FeatureProvider
             featureImagesPreviousResolution = multiResolutionFeatureImages.get( level - 1 );
         }
 
-        int[] binning = getBinning( featureImagesPreviousResolution.get(0), adaptiveAnisotropy, binFactors[ level ] );
+        int[] binning = getBinning( featureImagesPreviousResolution.get(0), adaptiveAnisotropy, binFactors.get( level ) );
 
         // add binning information to image title
         String binningTitle = "Bin" + binning[0] + "x" + binning[1] + "x" + binning[2];
@@ -1441,13 +1458,12 @@ public class FeatureProvider
         ExecutorService exe = Executors.newFixedThreadPool( numThreads );
         ArrayList<Future<ImagePlus> > futuresBinning = new ArrayList<>();
 
-
         for ( ImagePlus featureImage : featureImagesPreviousResolution )
         {
             if ( level == numLevels - 1 )
             {
                 /*
-                don't bin but smooth last level to better preserve
+                don't run but smooth last level to better preserve
                 spatial information.
                 */
 
@@ -1484,7 +1500,7 @@ public class FeatureProvider
             {
                 if ( isFeatureOrChildrenNeeded( binningTitle + "_" + featureImage.getTitle() ) )
                 {
-                    futuresBinning.add( exe.submit( bin( featureImage, binning, binningTitle, "AVERAGE") ) );
+                    futuresBinning.add( exe.submit( downSampler.run( featureImage, binning, binningTitle ) ) );
                 }
             }
         }
@@ -1545,16 +1561,12 @@ public class FeatureProvider
         {
             for ( ImagePlus featureImage : featureImages )
             {
-                /*
-                if (  showFeatureImages && ( featuresToShow != null ) )
+                if ( featureImage.getTitle().equals( showFeatureImageTitle ) )
                 {
-                    if ( featuresToShow.contains( iFeature ) )
-                    {
-                        //ImagePlus imp = interpolateFast(featureImage);
-                        //imp.show();
-                        featureImage.show();
-                    }
-                }*/
+                    //ImagePlus imp = interpolateFast(featureImage);
+                    featureImage.show();
+
+                }
 
                 if ( isFeatureNeeded( featureImage.getTitle() ) )
                 {
@@ -1564,7 +1576,7 @@ public class FeatureProvider
         }
     }
 
-    private void setCalibration( ImagePlus inputImage )
+    private void setUnitMicrometerCalibration( ImagePlus inputImage )
     {
         // Set a calibration that can be changed during the binning
         Calibration calibration = new Calibration();
@@ -1666,16 +1678,12 @@ public class FeatureProvider
                             + "_" + title,
                     result );
 
-            impResult.setCalibration( imp.getCalibration().copy() );
+            impResult.setUnitMicrometerCalibration( imp.getCalibration().copy() );
             return ( impResult );
             */
             return null;
         };
     }
-
-
-
-
 
     private int[] getBinning(ImagePlus imp,
                              double anisotropy,
@@ -1692,68 +1700,13 @@ public class FeatureProvider
         }
         else
         {
-            // potentially bin less in z
+            // potentially run less in z
             binning[2] = (int) Math.ceil( binFactor / anisotropy );
             if( binning[2]==0 ) binning[2] = 1;
         }
 
         return ( binning );
 
-    }
-
-    public Callable<ImagePlus> bin(ImagePlus imp_, int[] binning_, String binningTitle, String method)
-    {
-        return () -> {
-
-            ImagePlus imp = imp_;
-            int[] binning = binning_;
-            String title = new String( imp.getTitle() );
-            Binner binner = new Binner();
-
-            Calibration saveCalibration = imp.getCalibration().copy(); // this is due to a bug in the binner
-
-            ImagePlus impBinned = null;
-
-            switch( method )
-            {
-                case "OPEN":
-                    impBinned = binner.shrink(imp, binning[0], binning[1], binning[2], binner.MIN);
-                    //impBinned = binner.shrink(imp, binning[0], binning[1], binning[2], binner.AVERAGE);
-                    //IJ.run(impBinned, "Minimum 3D...", "x=1 y=1 z=1");
-                    //IJ.run(impBinned, "Maximum 3D...", "x=1 y=1 z=1");
-                    impBinned.setTitle("Open_" + title);
-                    break;
-                case "CLOSE":
-                    impBinned = binner.shrink(imp, binning[0], binning[1], binning[2], binner.MAX);
-                    //impBinned = binner.shrink(imp, binning[0], binning[1], binning[2], binner.AVERAGE);
-                    //IJ.run(impBinned, "Maximum 3D...", "x=1 y=1 z=1");
-                    //IJ.run(impBinned, "Minimum 3D...", "x=1 y=1 z=1");
-                    impBinned.setTitle("Close_" + title);
-                    break;
-                case "AVERAGE":
-                    impBinned = binner.shrink(imp, binning[0], binning[1], binning[2], binner.AVERAGE);
-                    impBinned.setTitle(binningTitle + "_" + title);
-                    break;
-                case "MIN":
-                    impBinned = binner.shrink(imp, binning[0], binning[1], binning[2], binner.MIN);
-                    impBinned.setTitle(binningTitle + "_Min_" + title);
-                    break;
-                case "MAX":
-                    impBinned = binner.shrink(imp, binning[0], binning[1], binning[2], binner.MAX);
-                    impBinned.setTitle(binningTitle + "_Max_" + title);
-                    break;
-                default:
-                    IJ.showMessage("Error while binning; method not supported :"+method);
-                    break;
-            }
-
-            // reset calibration of input image
-            // necessary due to a bug in the binner
-            imp.setCalibration( saveCalibration );
-
-            return ( impBinned );
-
-        };
     }
 
     public ArrayList<String> getAllFeatureNames()

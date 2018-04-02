@@ -4,10 +4,11 @@ import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
 import ij.IJ;
 import ij.ImagePlus;
 
+import static de.embl.cba.trainableDeepSegmentation.TestUtils.TEST_RESOURCES;
+
 public class MriStack2Channels
 {
 
-    public final static String TEST_RESOURCES = "/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/";
 
     public static void main( final String[] args )
     {

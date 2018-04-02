@@ -25,7 +25,6 @@ public class ClassifierUtils {
 
         int numDecisionNodes = classifier.getDecisionNodes();
 
-
         NamesAndUsages[] namesAndUsages = getAttributesSortedByUsage( classifier, instances );
 
         double avgRfTreeSize = 1.0 * numDecisionNodes / classifier.getNumTrees();
@@ -61,16 +60,14 @@ public class ClassifierUtils {
 
         DeepSegmentation.logger.info("Number of instances: " + instances.size() );
 
-        DeepSegmentation.logger.info("Number of instances per tree: "
-                + batchSizePercent / 100.0 * instances.size() );
+        DeepSegmentation.logger.info("Average number of instances per tree: " + batchSizePercent / 100.0 * instances.size() );
 
         // Print classifier information
         DeepSegmentation.logger.info( classifier.toString() );
 
     }
 
-    public static  NamesAndUsages[] getAttributesSortedByUsage(
-            FastRandomForest classifier, Instances instances )
+    public static  NamesAndUsages[] getAttributesSortedByUsage( FastRandomForest classifier, Instances instances )
     {
         int[] usages = classifier.getAttributeUsages();
         ArrayList< Attribute > attributes =

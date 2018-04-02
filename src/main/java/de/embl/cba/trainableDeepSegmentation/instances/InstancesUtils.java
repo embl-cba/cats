@@ -47,7 +47,6 @@ public class InstancesUtils {
             Settings settings,
             ArrayList< String > featureNames,
             ArrayList< String > classNames )
-
     {
 
         Instances instances = getInstancesHeader( instancesName, featureNames, classNames  );
@@ -57,20 +56,24 @@ public class InstancesUtils {
         for ( int e = 0; e < examples.size(); ++e )
         {
             Example example = examples.get( e );
-            for ( int p = 0; p < example.points.length; ++p )
+
+            if ( example.instanceValuesArrays !=  null && ! example.instanceValuesAreCurrentlyBeingComputed )
             {
-                Instance instance = new DenseInstance(1.0, example.instanceValuesArray.get( p ) );
-                instancesAndMetadata.addInstance( instance );
-                instancesAndMetadata.addMetadata( Metadata_Position_X , example.points[p].x );
-                instancesAndMetadata.addMetadata( Metadata_Position_Y , example.points[p].y );
-                instancesAndMetadata.addMetadata( Metadata_Position_Z , example.z );
-                instancesAndMetadata.addMetadata( Metadata_Position_T , example.t );
-                instancesAndMetadata.addMetadata( Metadata_Label_Id, e );
-
-                SettingsUtils.addSettingsToMetadata( settings, instancesAndMetadata );
-
-             }
-
+                for ( ArrayList< double[] > instanceValuesArray : example.instanceValuesArrays )
+                {
+                    for ( int p = 0; p < example.points.length; ++p )
+                    {
+                        Instance instance = new DenseInstance( 1.0, instanceValuesArray.get( p ) );
+                        instancesAndMetadata.addInstance( instance );
+                        instancesAndMetadata.addMetadata( Metadata_Position_X, example.points[ p ].x );
+                        instancesAndMetadata.addMetadata( Metadata_Position_Y, example.points[ p ].y );
+                        instancesAndMetadata.addMetadata( Metadata_Position_Z, example.z );
+                        instancesAndMetadata.addMetadata( Metadata_Position_T, example.t );
+                        instancesAndMetadata.addMetadata( Metadata_Label_Id, e );
+                        SettingsUtils.addSettingsToMetadata( settings, instancesAndMetadata );
+                    }
+                }
+            }
         }
 
         return ( instancesAndMetadata );
@@ -779,44 +782,48 @@ public class InstancesUtils {
                                                         ArrayList< Integer > goners )
     {
 
-        logger.info( "Removing attributes from instances..." );
+        logger.info( "# Removing non useful attributes from instances..." );
 
-        Instances attributeSubset = new Instances( instancesAndMetadata.instances );
+        logger.info( "Copying instances..." );
 
-        for( int j = goners.size() - 1; j >= 0; j-- )
+        Instances instancesWithAttributeSubset = new Instances( instancesAndMetadata.instances );
+
+        int n = goners.size();
+
+        for( int j = n - 1, i = 0; j >= 0; j--, i++ )
         {
+            // logger.progress( "Removed attributes:", "" + i + "/" +  n  );
             int id = goners.get( j );
-            attributeSubset.deleteAttributeAt( id );
+            instancesWithAttributeSubset.deleteAttributeAt( id );
         }
 
-        attributeSubset.setClassIndex( attributeSubset.numAttributes() - 1 );
+        instancesWithAttributeSubset.setClassIndex( instancesWithAttributeSubset.numAttributes() - 1 );
 
-        logger.info( "...done." );
 
-        return ( new InstancesAndMetadata( attributeSubset, instancesAndMetadata.metadata ) );
+        return ( new InstancesAndMetadata( instancesWithAttributeSubset, instancesAndMetadata.metadata ) );
     }
 
     public static InstancesAndMetadata onlyKeepAttributes(InstancesAndMetadata instancesAndMetadata,
                                                           ArrayList< Integer > keepers )
     {
-        logger.info( "Removing attributes from instances..." );
+        logger.info( "Removing non useful attributes from instances..." );
 
-        Instances attributeSubset = new Instances( instancesAndMetadata.instances );
+        Instances instancesWithAttributeSubset = new Instances( instancesAndMetadata.instances );
         int numAttributes = instancesAndMetadata.instances.numAttributes();
 
         for( int i = numAttributes - 1; i >= 0; --i )
         {
-            if ( ! keepers.contains( i )  && i != attributeSubset.classIndex() )
+            if ( ! keepers.contains( i )  && i != instancesWithAttributeSubset.classIndex() )
             {
-                attributeSubset.deleteAttributeAt( i );
+                instancesWithAttributeSubset.deleteAttributeAt( i );
             }
         }
 
-        attributeSubset.setClassIndex( attributeSubset.numAttributes() - 1 );
+        instancesWithAttributeSubset.setClassIndex( instancesWithAttributeSubset.numAttributes() - 1 );
 
         logger.info( "...done." );
 
-        return ( new InstancesAndMetadata( attributeSubset, instancesAndMetadata.metadata ) );
+        return ( new InstancesAndMetadata( instancesWithAttributeSubset, instancesAndMetadata.metadata ) );
     }
 
     public static void logInstancesInformation( Instances instances )

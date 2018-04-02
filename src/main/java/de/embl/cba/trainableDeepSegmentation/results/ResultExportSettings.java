@@ -12,7 +12,7 @@ public class ResultExportSettings
     public ArrayList< Boolean > classesToBeExported;
     public int[] binning;
     public String exportType;
-    public ProximityFilterSettings proximityFilterSettings;
+    public ProximityFilterSettings proximityFilterSettings = new ProximityFilterSettings();
     public ImagePlus rawData;
     public ImagePlus result;
     public ResultImage resultImage;

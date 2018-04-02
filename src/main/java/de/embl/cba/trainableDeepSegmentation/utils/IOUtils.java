@@ -15,7 +15,11 @@ import java.util.List;
 public class IOUtils
 {
 
+    public static final String SAVE = "Save";
+    public static final String SHOW = "Show";
+
     public static final String SAVE_RESULTS_TABLE = "Save results table";
+    public static final String SAVE_RESULTS_TABLE_AND_LABEL_MASK = "Save results table and label mask";
     public static final String SHOW_RESULTS_TABLE = "Show results table";
     public static final String INPUT_MODALITY = "inputModality";
     public static final String INPUT_IMAGE_VSS_DIRECTORY = "inputImageVSSDirectory";

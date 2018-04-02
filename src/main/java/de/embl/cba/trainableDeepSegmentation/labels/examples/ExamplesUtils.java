@@ -7,6 +7,7 @@ import weka.core.Instances;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static de.embl.cba.trainableDeepSegmentation.instances.InstancesAndMetadata.Metadata.*;
@@ -50,8 +51,8 @@ public abstract class ExamplesUtils {
 
         for ( Example example : examples )
         {
-            numExamplesPerClass[example.classNum] += 1;
-            numExamplePixelsPerClass[example.classNum] += example.instanceValuesArray.size();
+            numExamplesPerClass[ example.classNum ] += 1;
+            numExamplePixelsPerClass[ example.classNum ] += example.instanceValuesArrays.get( 0 ).size();
         }
 
         logger.info("## Annotation information: ");
@@ -71,38 +72,54 @@ public abstract class ExamplesUtils {
         ArrayList< Example > examples = new ArrayList<>(  );
 
         Instances instances = instancesAndMetadata.getInstances();
-        int i = 0;
+        int iInstance = 0;
 
-        while ( i < instances.size() )
+        while ( iInstance < instances.size() )
         {
-            int label_id = ( int ) instancesAndMetadata.getMetadata( Metadata_Label_Id, i );
+            int label_id = ( int ) instancesAndMetadata.getMetadata( Metadata_Label_Id, iInstance );
 
             Example example = new Example(
-                    ( int ) instances.get( i ).classValue(),
+                    ( int ) instances.get( iInstance ).classValue(),
                     null,
                     1,
-                    ( int ) instancesAndMetadata.getMetadata( Metadata_Position_Z, i ),
-                    ( int ) instancesAndMetadata.getMetadata( Metadata_Position_T, i )
+                    ( int ) instancesAndMetadata.getMetadata( Metadata_Position_Z, iInstance ),
+                    ( int ) instancesAndMetadata.getMetadata( Metadata_Position_T, iInstance )
             );
 
-            example.instanceValuesArray = new ArrayList<>();
-            ArrayList< Point > points = new ArrayList<>();
+            example.instanceValuesArrays = new ArrayList<>();
+
+            Set< Point > points = new LinkedHashSet<>() ;
+
+            int iBoundingBoxOffset = 0;
 
             do
             {
                 // TODO: this assumes that the instances are sorted
                 // according to their label id...maybe this should be
                 // ensured during loading
-                example.instanceValuesArray.add( instances.get( i ).toDoubleArray() );
-                points.add( new Point(
-                        ( int ) instancesAndMetadata.getMetadata( Metadata_Position_X, i ),
-                        ( int ) instancesAndMetadata.getMetadata( Metadata_Position_Y, i )
-                ) );
 
-                i++;
-            } while (
-                    i < instances.size() &&
-                    ( int ) instancesAndMetadata.getMetadata( Metadata_Label_Id, i ) == label_id );
+                Point point = new Point( ( int ) instancesAndMetadata.getMetadata( Metadata_Position_X, iInstance ), ( int ) instancesAndMetadata.getMetadata( Metadata_Position_Y, iInstance ) );
+
+                if (  points.contains( point ) )
+                {
+                    iBoundingBoxOffset++;
+                }
+                else
+                {
+                    points.add( point );
+                    iBoundingBoxOffset = 0;
+                }
+
+                if ( example.instanceValuesArrays.size() < iBoundingBoxOffset + 1 )
+                {
+                    example.instanceValuesArrays.add( new ArrayList<>( ) );
+                }
+
+
+                example.instanceValuesArrays.get( iBoundingBoxOffset ).add( instances.get( iInstance ).toDoubleArray() );
+                iInstance++;
+
+            } while ( iInstance < instances.size() && ( int ) instancesAndMetadata.getMetadata( Metadata_Label_Id, iInstance ) == label_id );
 
             example.points = points.toArray( new Point[ points.size() ]);
             examples.add( example );

@@ -61,6 +61,7 @@ import de.embl.cba.trainableDeepSegmentation.settings.SettingsUtils;
 
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.ThreadUtils;
+import net.imglib2.util.Intervals;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -162,13 +163,6 @@ public class DeepSegmentation
 	private FastRandomForest rf;
 
 	/**
-	 * names of the current classes
-	 */
-
-	private long[] imgDims = new long[5];
-
-	// Random Forest parameters
-	/**
 	 * current number of trees in the fast random forest classifier
 	 */
 	public int classifierNumTrees = 200;
@@ -178,7 +172,6 @@ public class DeepSegmentation
 	private int classifierNumRandomFeatures = 50;
 
 	public String classifierBatchSizePercent = "66";
-
 
 	/**
 	 * fraction of random features per node in the fast random forest classifier
@@ -190,7 +183,13 @@ public class DeepSegmentation
 	 */
 	public int classifierMaxDepth = 0;
 
-	/**
+
+	public boolean debugLogLabelPixelValues = false;
+    public boolean computeExampleFeatureValuesAtMultipleRegionOffest = false;
+    public String featureImageToBeShown = "";
+    public boolean debugUseWholeImageForFeatureComputation = false;
+
+    /**
 	 * list of class names on the loaded data
 	 */
 	private ArrayList<String> loadedClassNames = null;
@@ -622,7 +621,8 @@ public class DeepSegmentation
 												getClassifierManager().getInstancesHeader( classifierKey ),
 												getClassifierManager().getClassifier( classifierKey ),
 												accuracy,
-												numThreadsPerSlice
+												numThreadsPerSlice,
+												false
 										)
 								)
 						);
@@ -1081,14 +1081,10 @@ public class DeepSegmentation
 
 	public void setResultImageDisk( String directory )
 	{
-		ResultImage resultImage = new ResultImageDisk(
-				this,
-				directory,
-				getInputImageDimensions() );
-
+		ResultImage resultImage = new ResultImageDisk( this, directory, getInputImageDimensions() );
 		setResultImage( resultImage );
 
-		setAndCreateLogDirRelative( directory );
+		// setAndCreateLogDirRelative( directory ); // this is slow...
 
 		logger.info("Created disk-resident classification result image: " +
 				directory);
@@ -1096,12 +1092,8 @@ public class DeepSegmentation
 
 	public void setResultImageRAM()
 	{
-		ResultImage resultImage = new ResultImageRAM(
-				this,
-				getInputImageDimensions() );
-
+		ResultImage resultImage = new ResultImageRAM( this, getInputImageDimensions() );
 		setResultImage( resultImage );
-
 	}
 
 	public ResultImage getResultImage()
@@ -1430,10 +1422,6 @@ public class DeepSegmentation
 
 		String key = getInstancesManager().putInstancesAndMetadata( instancesAndMetadata );
 
-		// create examples, if
-		// - this contains multiple labels
-		// - was the first loaded set
-        // - matches the image name
 		if ( InstancesUtils.getNumLabelIds( instancesAndMetadata ) > 1 && instancesAndMetadata.getRelationName().equals( inputImage.getTitle() ) )
 		{
             logger.info( "\n# Loaded instances relation name matches image name => Populating labels..." );
@@ -1447,7 +1435,6 @@ public class DeepSegmentation
                     "\nInstances can be used for training a classifier but not for adding more annotations" +
                     " based on current image." );
         }
-
 
 
 		SettingsUtils.setSettingsFromInstancesMetadata( settings, instancesAndMetadata );
@@ -1502,7 +1489,7 @@ public class DeepSegmentation
 		putExamplesIntoInstancesAndMetadata( instancesAndMetadataKey );
 	}
 
-	public String putExamplesIntoInstancesAndMetadata( String instancesAndMetadataKey )
+	public synchronized String putExamplesIntoInstancesAndMetadata( String instancesAndMetadataKey )
 	{
 		if ( getNumExamples() > 0 )
 		{
@@ -1543,20 +1530,24 @@ public class DeepSegmentation
 
 	private void updateInstancesValuesOfGroupedExamples( ArrayList< ArrayList< Example > > groupedExamples )
 	{
-		ExecutorService exe = Executors.newFixedThreadPool( numThreads );
+		ExecutorService exe = Executors.newFixedThreadPool( threadsRegion ); // because internally there are threadsPerRegion used for feature computation!
 		ArrayList<Future > futures = new ArrayList<>();
 
 		isUpdatedFeatureList = false;
 
+		logger.info("Computing features values for " + groupedExamples.size() + " label groups using " + numThreads + " threads." );
+
 		for (int i = 0; i < groupedExamples.size(); i++)
 		{
 			ArrayList<Example> neighboringExamples = groupedExamples.get(i);
-			futures.add(
+			futures.add (
 					exe.submit(
-							setExamplesInstanceValues( neighboringExamples, i, groupedExamples.size() - 1)));
+							setExamplesInstanceValues( neighboringExamples, i, groupedExamples.size() - 1)
+					)
+			);
 		}
 
-		ThreadUtils.joinThreads(futures, logger);
+		ThreadUtils.joinThreads( futures, logger );
 		exe.shutdown();
 
 		if ( groupedExamples.size() > 0 )
@@ -1569,6 +1560,13 @@ public class DeepSegmentation
 	{
 		ArrayList<ArrayList<Example>> exampleList = new ArrayList<>();
 
+        if( debugUseWholeImageForFeatureComputation )
+        {
+            // put all examples into one group
+            exampleList.add( examplesNeedingInstanceUpdate );
+            return exampleList;
+        }
+
 		for (int iExampleWithoutFeatures = 0; iExampleWithoutFeatures < examplesNeedingInstanceUpdate.size(); iExampleWithoutFeatures++)
 		{
 			// figure out which examples are spatially close,
@@ -1576,7 +1574,7 @@ public class DeepSegmentation
 			// for them in one go; this saves time.
 			ArrayList<Example> neighboringExamples = new ArrayList<>();
 
-			Rectangle exampleBounds = getExampleRectangleBounds(examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures));
+			Rectangle exampleBounds = getExampleRectangleBounds( examplesNeedingInstanceUpdate.get( iExampleWithoutFeatures ) );
 
 			Point3D exampleLocation = new Point3D(
 					exampleBounds.getX(),
@@ -1584,12 +1582,13 @@ public class DeepSegmentation
 					examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures).z
 			);
 
-			neighboringExamples.add( examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures) );
+			neighboringExamples.add( examplesNeedingInstanceUpdate.get( iExampleWithoutFeatures ) );
 
 			Boolean includeNextExample = true;
 
 			iExampleWithoutFeatures++;
-			while (includeNextExample && (iExampleWithoutFeatures < examplesNeedingInstanceUpdate.size()))
+
+			while ( includeNextExample && ( iExampleWithoutFeatures < examplesNeedingInstanceUpdate.size() ) )
 			{
 				Rectangle nextExampleBounds = getExampleRectangleBounds(examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures));
 
@@ -1599,9 +1598,9 @@ public class DeepSegmentation
 						examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures).z
 				);
 
-				if ( exampleLocation.distance(nextExampleLocation) < getFeatureVoxelSizeAtMaximumScale())
+				if ( exampleLocation.distance( nextExampleLocation ) < getFeatureVoxelSizeAtMaximumScale() )
 				{
-					neighboringExamples.add(examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures));
+					neighboringExamples.add( examplesNeedingInstanceUpdate.get(iExampleWithoutFeatures) );
 					iExampleWithoutFeatures++;
 				}
 				else
@@ -1613,7 +1612,9 @@ public class DeepSegmentation
 			}
 
 			exampleList.add( neighboringExamples );
+
 		}
+
 		return exampleList;
 	}
 
@@ -1631,8 +1632,9 @@ public class DeepSegmentation
 			else
 			{
 				// add examples that need feature re-computation
-				if ( example.instanceValuesArray == null )
+				if ( example.instanceValuesArrays == null && ! example.instanceValuesAreCurrentlyBeingComputed )
 				{
+					example.instanceValuesAreCurrentlyBeingComputed = true;
 					examplesWithoutFeatures.add( example );
 				}
 			}
@@ -1681,56 +1683,119 @@ public class DeepSegmentation
 		return new ImagePlus("two-classes", newStack);
 	}
 
-	private Runnable setExamplesInstanceValues(ArrayList<Example> examples, int counter, int counterMax )
+	public boolean isExampleInstanceValuesAreCurrentlyBeingComputed()
+	{
+	    for ( Example example : examples )
+        {
+            if ( example.instanceValuesAreCurrentlyBeingComputed ) return true;
+        }
+
+        return false;
+	}
+
+	private Runnable setExamplesInstanceValues( ArrayList<Example> examples, int counter, int counterMax )
 	{
 		if (Thread.currentThread().isInterrupted())
 			return null;
 
 		return () -> {
 
-			logger.info("" + (counter + 1) + "/" + (counterMax + 1) + ": " + "Computing features for " + examples.size() + " label(s)...");
+			logger.info("Label set " + (counter + 1) + "/" + (counterMax + 1) + ": " + "Computing features for " + examples.size() + " label(s)...");
 
-			FinalInterval exampleListBoundingInterval = getExampleListBoundingInterval( examples );
+			clearInstancesValues( examples );
 
-			FeatureProvider featureProvider = new FeatureProvider( this );
-			featureProvider.setActiveChannels( settings.activeChannels );
-			featureProvider.setInterval( exampleListBoundingInterval );
-			featureProvider.computeFeatures( threadsPerRegion );
+			ArrayList< FinalInterval > exampleListBoundingIntervals = getBoundingIntervals( examples );
 
-			int nf = featureProvider.getNumAllFeatures();
-
-			this.examplesFeatureNames = featureProvider.getAllFeatureNames();
-
-			double[][][] featureSlice  = featureProvider.getReusableFeatureSlice();;
-
-			// extract the feature values at
-			// the respective z-position of each example
-			for (Example example : examples)
+			for ( int iBoundingInterval = 0; iBoundingInterval < exampleListBoundingIntervals.size(); ++iBoundingInterval )
 			{
-				example.instanceValuesArray = new ArrayList<>();
+				FeatureProvider featureProvider = new FeatureProvider( this );
+				featureProvider.setActiveChannels( settings.activeChannels );
+				featureProvider.setInterval( exampleListBoundingIntervals.get( iBoundingInterval ) );
+				featureProvider.computeFeatures( threadsPerRegion );
 
-				int z = example.z;
+				int nf = featureProvider.getNumAllFeatures();
 
-				featureProvider.setFeatureSlicesValues( z, featureSlice, 1 );
+				this.examplesFeatureNames = featureProvider.getAllFeatureNames();
 
-				for ( Point point : example.points )
+				double[][][] featureSlice = featureProvider.getReusableFeatureSlice();
+
+				// extract the feature values at
+				// the respective z-position of each example
+				for ( Example example : examples )
 				{
-					// global coordinates of this example point
-					int x = (int) point.getX();
-					int y = (int) point.getY();
+					example.instanceValuesAreCurrentlyBeingComputed = true;
 
-					// Note: x and y are global coordinates
-					// setFeatureValuesAndClassIndex will use the exampleListBoundingInterval
-					// to compute the correct coordinates in the featureSlice
-					// TODO: check that this extracts  the right values!
-					double[] values = new double[ nf + 1 ];
+					ArrayList< double[] > instanceValuesArray = new ArrayList<>();
 
-					featureProvider.setFeatureValuesAndClassIndex( values, x, y, featureSlice, example.classNum);
+					int z = example.z;
 
-					example.instanceValuesArray.add( values );
+					featureProvider.setFeatureSlicesValues( z, featureSlice, 1 );
 
-					// Below is some code for debugging
-					//
+					for ( Point point : example.points )
+					{
+						int xGlobal = ( int ) point.getX();
+						int yGlobal = ( int ) point.getY();
+
+						double[] values = new double[ nf + 1 ];
+						featureProvider.setFeatureValuesAndClassIndex( values, xGlobal, yGlobal, featureSlice, example.classNum );
+						instanceValuesArray.add( values );
+
+						if ( debugLogLabelPixelValues )
+						{
+							logger.info( "# " + counter
+									+ " x " + xGlobal
+									+ " y " + yGlobal
+									+ " z " + example.z
+									+ " value[0] " + values[ 0 ] );
+						}
+					}
+					example.instanceValuesArrays.add( instanceValuesArray );
+					example.instanceValuesAreCurrentlyBeingComputed = false;
+				}
+
+				// logger.info( "Bounding interval " + iBoundingInterval );
+
+			}
+
+			logger.info( "Label set " + ( counter + 1 ) + "/" + ( counterMax + 1 ) + ": " + "...done" );
+
+		};
+	}
+
+	private void clearInstancesValues( ArrayList< Example > examples )
+	{
+		for ( Example example : examples )
+        {
+            example.instanceValuesArrays = new ArrayList<>();
+        }
+	}
+
+	private ArrayList< FinalInterval > getBoundingIntervals( ArrayList< Example > examples )
+	{
+		ArrayList< FinalInterval > exampleListBoundingIntervals = new ArrayList<>();
+		FinalInterval exampleListBoundingInterval = getExampleListBoundingInterval( examples );
+
+		for ( int offset : settings.boundingBoxExpansions )
+        {
+            long[] offsets = new long[5];
+            offsets[ X ] = offset;
+            offsets[ Y ] = offset;
+
+            if ( inputImage.getNSlices() > 1 )
+            {
+                offsets[ Z ] = offset;
+            }
+
+            exampleListBoundingIntervals.add( Intervals.expand( exampleListBoundingInterval, offsets ) );
+        }
+
+        return exampleListBoundingIntervals;
+	}
+
+	private void debugInstanceValuesComputation()
+	{
+		// Below is some code for debugging
+		//
 
 					/*
 					IJ.log(" x,y: " + x + ", " + y + "; max = " + featureSlice.length + ", " + featureSlice[0].length );
@@ -1760,13 +1825,6 @@ public class DeepSegmentation
 					for ( String s : valueString )
 						IJ.log(randomNum + " x,y,z global: " + point.getX() + "," + point.getY()+ "," + example.z + " values "+s);
 						*/
-
-				}
-			}
-
-			logger.info("" + (counter + 1) + "/" + (counterMax + 1) + ": " + "...done");
-
-		};
 	}
 
 	public long getMaximalNumberOfVoxelsPerRegion()
@@ -1961,12 +2019,12 @@ public class DeepSegmentation
 
 	public int[] getFeatureBorderSizes()
 	{
-		int[] borderSize = new int[5];
+		int[] borderSize = new int[ 5 ];
 
 		borderSize[ X ] = borderSize[ Y ] = getFeatureVoxelSizeAtMaximumScale();
 
 		// Z: deal with 2-D case and anisotropy
-		if ( imgDims[ Z ] == 1 )
+		if ( getInputImageDimensions()[ Z ] == 1 )
 		{
 			borderSize[ Z ] = 0;
 		}
@@ -2112,15 +2170,16 @@ public class DeepSegmentation
 					break;
 
 				case FEATURE_SELECTION_ABSOLUTE_USAGE:
-					ArrayList< Integer > keepers2 =
-							AttributeSelector.getMostUsedAttributes(
-									classifier,
-									instancesAndMetadata.getInstances(),
-									( int ) featureSelectionValue,
-									logger );
+                    ArrayList< Integer > goners2 =
+                            AttributeSelector.getGonersBasedOnUsage(
+                                    classifier,
+                                    instancesAndMetadata.getInstances(),
+                                    -1,
+                                    (int) featureSelectionValue,
+                                    logger );
 
-					instancesWithFeatureSelection = InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers2 );
-					break;
+                    instancesWithFeatureSelection = InstancesUtils.removeAttributes( instancesAndMetadata, goners2 );
+                    break;
 
 
 			}
@@ -2178,15 +2237,9 @@ public class DeepSegmentation
 		// balance traces training data
 		// Instances balancedInstances = instancesAndMetadata.getInstances();
 
-		if ( getNumExamples() > 0 )
-		{
-			logger.info( "\nUsing label balancing strategy..." );
-			//balancedInstances = balanceTrainingData( instances );
-			//InstancesUtils.logInstancesInformation( balancedInstances );
 
-			classifier.setLabelIds( instancesAndMetadata.getLabelList() );
-		}
-
+		logger.info( "\nUsing label balancing strategy..." );
+		classifier.setLabelIds( instancesAndMetadata.getLabelList() );
 
 		try
 		{
@@ -2225,6 +2278,7 @@ public class DeepSegmentation
 		FinalInterval interval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( getInputImage() );
 		applyClassifierWithTiling(  mostRecentClassifierKey, interval, -1, null , false );
 	}
+
 	public void applyClassifierWithTiling( FinalInterval interval )
 	{
 		String mostRecentClassifierKey = getClassifierManager().getMostRecentClassifierKey();
@@ -2246,7 +2300,6 @@ public class DeepSegmentation
 
 	public void applyClassifierOnSlurm(  Map< String, Object > parameters, FinalInterval interval )
     {
-
         configureInputImageLoading( parameters );
 
         parameters.put( IOUtils.OUTPUT_DIRECTORY, ((ResultImageDisk)resultImage).getDirectory() );
@@ -2256,7 +2309,6 @@ public class DeepSegmentation
         parameters.put( ApplyClassifierOnSlurmCommand.NUM_WORKERS, 16 );
 
         CommandUtils.runSlurmCommand( parameters );
-
 	}
 
 	private void configureInputImageLoading( Map< String, Object > parameters )
@@ -2292,6 +2344,11 @@ public class DeepSegmentation
 		logger.info("\n# Apply classifier");
 
 		// set up tiling
+        if ( debugUseWholeImageForFeatureComputation )
+        {
+            numTiles = 1;
+        }
+
 		ArrayList<FinalInterval> tiles = createTiles( interval, IntervalUtils.getInterval( inputImage ), numTiles,false, this );
 
 		// set up multi-threading
@@ -2525,7 +2582,6 @@ public class DeepSegmentation
 
 			if ( isLogging ) logger.info("Classifying pixels...");
 
-
 			int numThreadsPerZChunk = 1;
 
 			if ( zChunks.size() == 1 )
@@ -2550,7 +2606,8 @@ public class DeepSegmentation
 										classifierManager.getInstancesHeader( classifierKey ),
 										classifierManager.getClassifier( classifierKey ),
 										accuracy,
-										numThreadsPerZChunk
+										numThreadsPerZChunk,
+										isLogging
 								)
 						)
 				);
@@ -2604,12 +2661,14 @@ public class DeepSegmentation
 			featureProvider.setFeatureListSubset( classifierManager.getClassifierAttributeNames( classifierKey ) );
 			featureProvider.setInterval( tileInterval );
 			featureProvider.isLogging( isLogging );
+			featureProvider.setShowFeatureImageTitle( featureImageToBeShown );
 			featureProvider.computeFeatures( numThreads );
 		}
 		else
 		{
 			featureProvider = externalFeatureProvider;
-			featureProvider.setFeatureListSubset( classifierManager.getClassifierAttributeNames( classifierKey ) );
+            featureProvider.setShowFeatureImageTitle( featureImageToBeShown );
+            featureProvider.setFeatureListSubset( classifierManager.getClassifierAttributeNames( classifierKey ) );
 		}
 		return featureProvider;
 	}
@@ -2743,7 +2802,8 @@ public class DeepSegmentation
 			final Instances instancesHeader,
 			final FastRandomForest classifier,
 			double accuracy,
-			int numThreads )
+			int numThreads,
+			boolean isLogging )
 	{
 
 		return new Runnable() {
@@ -2776,6 +2836,10 @@ public class DeepSegmentation
 
 					for ( long z = zMin; z <= zMax; ++z )
 					{
+						if ( isLogging )
+						{
+							logger.info( "Classifying slice " + z + "...; chunk of this thread contains: min = " + zMin + ", max = " + zMax  );
+						}
 
 						featureSlice = featureProvider.getCachedFeatureSlice( ( int ) z );
 						if ( featureSlice == null )
@@ -2807,7 +2871,6 @@ public class DeepSegmentation
 								{
 									classifierStatsMaximumTreesUsed.set( ( int ) result[ NUM_TREES_EVALUATED ] );
 								}
-
 							}
 						}
 					}
@@ -2944,21 +3007,11 @@ public class DeepSegmentation
 		}
 	}
 
+	// TODO:
+    // move below two functions to settings and make one function for the comma separated list
 
-	public String getActiveChannelsAsString()
-	{
-		String ss = "";
-		for ( int s : settings.activeChannels)
-		{
-			if ( !ss.equals("") )
-				ss += ("," + (s+1)); // one-based
-			else
-				ss += ""+(s+1);
-		}
-		return ss;
-	}
 
-	/**
+    /**
 	 * Get maximum depth of the random forest
 	 * @return maximum depth of the random forest
 	 */

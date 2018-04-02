@@ -1,5 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.ui;
 
+import de.embl.cba.trainableDeepSegmentation.features.DownSampler;
 import de.embl.cba.utils.logging.Logger;
 
 
@@ -48,7 +49,7 @@ import de.embl.cba.trainableDeepSegmentation.instances.InstancesAndMetadata;
 import de.embl.cba.trainableDeepSegmentation.labels.LabelManager;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImage;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageDisk;
-import de.embl.cba.trainableDeepSegmentation.results.ResultImageGUI;
+import de.embl.cba.trainableDeepSegmentation.results.ResultImageExportGUI;
 import de.embl.cba.trainableDeepSegmentation.settings.Settings;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import weka.classifiers.AbstractClassifier;
@@ -90,7 +91,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 {
 
 	/** plugin's name */
-	public static final String PLUGIN_NAME = "Trainable Deep Weka Segmentation";
+	public static final String PLUGIN_NAME = "Trainable Deep Segmentation";
 	/** plugin's current version */
 	public static final String PLUGIN_VERSION = "v" + de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin.class.getPackage().getImplementationVersion();
 
@@ -139,25 +140,27 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	/** load annotations button */
 	public static final String IO_LOAD_CLASSIFIER = "Load classifier";
 	public static final String IO_SAVE_CLASSIFIER = "Save classifier";
-	public static final String ADD_CLASS = "Add new class";
-	public static final String CHANGE_CLASS_NAMES = "Rename classes";
+	public static final String ADD_CLASS = "Add class";
+	public static final String CHANGE_CLASS_NAMES = "Change class names";
 	public static final String CHANGE_COLORS = "Change colors";
-	public static final String CHANGE_RESULT_OVERLAY_OPACITY = "Change result overlay opacity";
+	public static final String CHANGE_RESULT_OVERLAY_OPACITY = "Change overlay opacity";
 	public static final String UPDATE_LABELS_AND_TRAIN = "Update labels and train";
-	public static final String TRAIN_CLASSIFIER = "Train classifier";
+    public static final String UPDATE_LABELS = "Update labels";
+    public static final String TRAIN_CLASSIFIER = "Train classifier";
 	public static final String IO_LOAD_LABEL_IMAGE = "Load label image";
 	public static final String IO_LOAD_INSTANCES = "Load instances";
 	public static final String IO_SAVE_INSTANCES = "Save instances of current image";
 	public static final String IO_EXPORT_RESULT_IMAGE = "Export results";
 	public static final String TRAIN_FROM_LABEL_IMAGE = "Train from label image";
-	public static final String APPLY_CLASSIFIER_ON_SLURM = "Apply classifier on Slurm";
-	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier";
+	public static final String APPLY_CLASSIFIER_ON_SLURM = "Apply classifier on cluster";
+	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier (devel)";
 	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
 	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
 	public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier settings";
 	public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature settings";
 	public static final String GET_LABEL_MASK = "Get label mask";
-	public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute label feature values";
+	public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
+    public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
 
 
 	public static final String NO_TRAINING_DATA = "No training data available";
@@ -172,24 +175,26 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			new String[] {
 					ADD_CLASS,
 					CHANGE_CLASS_NAMES,
-					UPDATE_LABELS_AND_TRAIN,
+                    TRAIN_CLASSIFIER,
+                    UPDATE_LABELS_AND_TRAIN,
+                    IO_SAVE_INSTANCES,
+                    IO_LOAD_INSTANCES,
+                    IO_SAVE_CLASSIFIER,
                     DUPLICATE_RESULT_IMAGE_TO_RAM,
                     IO_EXPORT_RESULT_IMAGE,
                     CHANGE_FEATURE_COMPUTATION_SETTINGS,
                     CHANGE_RESULT_OVERLAY_OPACITY,
-                    TRAIN_CLASSIFIER,
 					APPLY_CLASSIFIER_ON_SLURM,
 					CHANGE_CLASSIFIER_SETTINGS,
-					IO_LOAD_INSTANCES,
-					IO_SAVE_INSTANCES,
+					UPDATE_LABELS,
 					CHANGE_COLORS,
 					IO_LOAD_LABEL_IMAGE,
 					TRAIN_FROM_LABEL_IMAGE,
 					GET_LABEL_IMAGE_TRAINING_ACCURACIES,
 					IO_LOAD_CLASSIFIER,
-					IO_SAVE_CLASSIFIER,
 					GET_LABEL_MASK,
-					RECOMPUTE_LABEL_FEATURE_VALUES
+					RECOMPUTE_LABEL_FEATURE_VALUES,
+                    CHANGE_DEBUG_SETTINGS
 			} );
 
 
@@ -204,6 +209,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 					TRANSMISSION_LM_IMAGING
 			} );
 
+
+	private boolean computeLabelFeatureValuesInstantly = false;
 
 	/** settings button */
 	private JButton settingsButton = null;
@@ -563,8 +570,11 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 							case RECOMPUTE_LABEL_FEATURE_VALUES:
 								recomputeLabelFeaturesAndRetrainClassifier();
 								break;
+                            case CHANGE_DEBUG_SETTINGS:
+                                showDebugSettingsDialog();
+                                break;
 							case IO_EXPORT_RESULT_IMAGE:
-								ResultImageGUI.showExportGUI(
+								ResultImageExportGUI.showExportGUI(
 										getDeepSegmentation().getInputImage().getTitle(),
 										deepSegmentation.getResultImage(),
 										deepSegmentation.getInputImage(),
@@ -582,6 +592,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 							case GET_LABEL_IMAGE_TRAINING_ACCURACIES:
 								reportLabelImageTrainingAccuracies();
 								break;
+                            case UPDATE_LABELS:
+                                updateLabelsTrainingData();
+                                break;
 							case UPDATE_LABELS_AND_TRAIN:
 								updateLabelsTrainingDataAndTrainClassifier();
 								break;
@@ -937,7 +950,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 
 	/**
-	 * Custom window to define the Trainable Weka Segmentation GUI
+	 * Custom window to define the Trainable Deep Segmentation GUI
 	 */
 	private class CustomWindow extends StackWindow
 	{
@@ -1967,9 +1980,11 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	private boolean initialisation()
 	{
+		IJ.run( trainingImage, "Properties...", "");
+
+		IJ.run("Memory & Threads...", "");
 
 		GenericDialog gd = new NonBlockingGenericDialog("Set up");
-
 
 		/*
 		gd.addMessage(
@@ -2020,16 +2035,15 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		gd.addNumericField( "Value", 0, 0 );
 
-		IJ.run( trainingImage, "Properties...", "");
-
 		gd.showDialog();
 
-		assignImageName( gd.getNextString() );
+        if ( gd.wasCanceled() ) return false;
+
+        assignImageName( gd.getNextString() );
 		assignResultImage( gd.getNextChoice() );
 		setImagingModality( gd.getNextChoice() );
 		deepSegmentation.setImageBackground( (int) gd.getNextNumber() );
 
-		if ( gd.wasCanceled() ) return false;
 		return true;
 	}
 
@@ -2044,7 +2058,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	/**
 	 * Plugin run method
 	 */
-	public void run(String arg)
+	public void run( String arg )
 	{
 
 		// START
@@ -2078,6 +2092,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		deepSegmentation.setInputImage( trainingImage );
 
+
 		if ( ! initialisation() ) return;
 
 		Calibration calibration = trainingImage.getCalibration();
@@ -2101,6 +2116,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		reviewLabelsClassComboBox = new JComboBox( deepSegmentation.getClassNames().toArray() );
 
+        showFeatureSettingsDialog();
 
 		//Build GUI
 		SwingUtilities.invokeLater(
@@ -2153,41 +2169,48 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	{
 		if ( classNum >= deepSegmentation.getNumClasses() )
 		{
-			logger.error( "Class number " + classNum + " does not exist; " +
-					"cannot at label.");
+			logger.error( "Class number " + classNum + " does not exist; cannot add label.");
 			return;
 		}
 
 		if ( deepSegmentation.isBusy )
 		{
-			logger.error( "Sorry, but I am busy, cannot add a " +
-					"new label right now...");
+			logger.error( "Sorry, but I am busy and cannot add a new label right now...");
 			return;
 		}
 
 		final Roi roi = trainingImage.getRoi();
-		if (null == roi)
-			return;
+		if (null == roi) return;
 		trainingImage.killRoi();
 
 		Point[] points = roi.getContainedPoints();
 
-
 		final int z = trainingImage.getZ() - 1;
 		final int t = trainingImage.getT() - 1;
 
-		Example newExample = deepSegmentation.createExample(classNum, points, (int)roi.getStrokeWidth(), z, t);
+		Example newExample = deepSegmentation.createExample( classNum, points, (int)roi.getStrokeWidth(), z, t );
 
 		deepSegmentation.addExample( newExample );
+
+		if ( computeLabelFeatureValuesInstantly )
+        {
+            Thread thread = new Thread()
+            {
+                public void run()
+                {
+                    deepSegmentation.updateExamplesInstancesAndMetadata();
+                    updateComboBoxes();
+                }
+            }; thread.start();
+        }
 
 		traceCounter[ classNum ]++;
 		win.drawExamples();
 		win.updateExampleLists();
+
 		// Record
 		final int n = trainingImage.getCurrentSlice();
-		String[] arg = new String[]{
-				Integer.toString(classNum),
-				Integer.toString(n)};
+		String[] arg = new String[]{ Integer.toString(classNum), Integer.toString(n)};
 		record(ADD_TRACE, arg);
 
 		/*
@@ -2329,9 +2352,10 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	void updateLabelsTrainingDataAndTrainClassifier()
 	{
-		if ( deepSegmentation.getInstancesManager().getNumInstancesSets() == 0 )
+		if ( deepSegmentation.isExampleInstanceValuesAreCurrentlyBeingComputed() )
 		{
-			if ( ! showFeatureSettingsDialog() ) return;
+			logger.error( "Feature value computation is ongoing (see log window); please try again later." );
+			return;
 		}
 
 		// Disable rest of buttons until the instances has finished
@@ -2358,7 +2382,29 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	}
 
 
-	public void analyzeObjects()
+    void updateLabelsTrainingData()
+    {
+        // Disable rest of buttons until the instances has finished
+        win.setButtonsEnabled( false );
+
+        Thread task = new Thread() {
+            public void run()
+            {
+
+                deepSegmentation.updateExamplesInstancesAndMetadata();
+
+                updateComboBoxes();
+
+                win.setButtonsEnabled( true );
+
+            }
+
+        }; task.start();
+
+    }
+
+
+    public void analyzeObjects()
 	{
 		GenericDialog gd = new GenericDialogPlus( "Analyze Object" );
 		gd.addNumericField( "Minimum number of voxels", 5, 0 );
@@ -2585,6 +2631,11 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		}
 		else
 		{
+			logger.info("# Combining instances:");
+			for ( String key : selectedInstances )
+			{
+				logger.info( key );
+			}
 			return deepSegmentation.getInstancesManager().getCombinedInstancesAndMetadata( selectedInstances );
 		}
 
@@ -3103,7 +3154,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	{
 		if( deepSegmentation.getNumClasses() == DeepSegmentation.MAX_NUM_CLASSES )
 		{
-			IJ.showMessage("Trainable Weka Segmentation", "Sorry, maximum number of classes has been reached");
+			IJ.showMessage("Trainable Deep Segmentation", "Sorry, maximum number of classes has been reached");
 			return;
 		}
 
@@ -3301,8 +3352,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		gd.addNumericField("Number of trees",
 				deepSegmentation.classifierNumTrees, 0);
 
-		gd.addStringField("Batch size per tree in percent",
-				deepSegmentation.classifierBatchSizePercent);
+		gd.addStringField("Batch size per tree in percent", deepSegmentation.classifierBatchSizePercent) ;
+
+		gd.addNumericField("Fraction of random features per node", deepSegmentation.classifierFractionFeaturesPerNode, 2);
 
 		gd.addChoice("Feature selection method", new String[]
 						{
@@ -3323,6 +3375,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		// Set classifier and options
 		deepSegmentation.classifierNumTrees = (int) gd.getNextNumber();
 		deepSegmentation.setBatchSizePercent( gd.getNextString() );
+		deepSegmentation.classifierFractionFeaturesPerNode = (double) gd.getNextNumber();
 		deepSegmentation.featureSelectionMethod = gd.getNextChoice();
 		deepSegmentation.featureSelectionValue = gd.getNextNumber();
 
@@ -3335,14 +3388,24 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		for ( int i = 0; i < 5; ++i )
 		{
-			gd.addNumericField( "Binning " + ( i + 1 ), deepSegmentation.settings.binFactors[ i ], 0 );
+			gd.addNumericField( "Binning " + ( i + 1 ), deepSegmentation.settings.binFactors.get( i ), 0 );
 		}
 
+
+		gd.addChoice( "Downsampling method", new String[]{
+		        DownSampler.BIN_AVERAGE,
+                DownSampler.BIN_MAXIMUM,
+                DownSampler.TRANSFORMJ_SCALE_LINEAR,
+                DownSampler.TRANSFORMJ_SCALE_CUBIC },
+				deepSegmentation.settings.downSamplingMethod );
 		gd.addNumericField("Maximal convolution depth", deepSegmentation.settings.maxDeepConvLevel, 0);
 		gd.addNumericField("z/xy settings.anisotropy", deepSegmentation.settings.anisotropy, 2);
-		gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]", deepSegmentation.getActiveChannelsAsString() );
+		gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
+				Settings.getAsCSVString( deepSegmentation.settings.activeChannels, 1 ) );
+        gd.addStringField("Bounding box offsets ",
+				Settings.getAsCSVString( deepSegmentation.settings.boundingBoxExpansions, 0 ) );
 
-		gd.showDialog();
+        gd.showDialog();
 
 		if ( gd.wasCanceled() )
 			return false;
@@ -3361,6 +3424,29 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		return true;
 	}
+
+    public boolean showDebugSettingsDialog()
+    {
+        GenericDialogPlus gd = new GenericDialogPlus("Debug settings");
+
+        gd.addCheckbox("Log label pixel values convolution depth", deepSegmentation.debugLogLabelPixelValues );
+        gd.addCheckbox("Compute feature values instantly", computeLabelFeatureValuesInstantly );
+        gd.addCheckbox("Compute example feature values at multiple offsets",  deepSegmentation.computeExampleFeatureValuesAtMultipleRegionOffest );
+        gd.addCheckbox("Compute feature values in whole image interval", deepSegmentation.debugUseWholeImageForFeatureComputation);
+        gd.addStringField( "Show feature image: ", deepSegmentation.featureImageToBeShown, 100 );
+        gd.showDialog();
+
+        if ( gd.wasCanceled() )
+            return false;
+
+        deepSegmentation.debugLogLabelPixelValues = gd.getNextBoolean();
+        computeLabelFeatureValuesInstantly = gd.getNextBoolean();
+        deepSegmentation.computeExampleFeatureValuesAtMultipleRegionOffest = gd.getNextBoolean();
+        deepSegmentation.debugUseWholeImageForFeatureComputation = gd.getNextBoolean();
+        deepSegmentation.featureImageToBeShown = gd.getNextString();
+
+        return true;
+    }
 
     private void recomputeLabelFeaturesAndRetrainClassifier()
     {
@@ -3382,12 +3468,14 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
         for ( int i = 0; i < 5; ++i )
         {
-            newSettings.binFactors[i] = (int) gd.getNextNumber();
+            newSettings.binFactors.set( i, (int) gd.getNextNumber() );
         }
 
+        newSettings.downSamplingMethod = gd.getNextChoice();
         newSettings.maxDeepConvLevel = (int) gd.getNextNumber();
         newSettings.anisotropy = gd.getNextNumber();
         newSettings.setActiveChannels( gd.getNextString() );
+        newSettings.setBoundingBoxExpansions( gd.getNextString() );
         return newSettings;
     }
 

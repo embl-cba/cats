@@ -23,7 +23,6 @@ public class RunAnalyzeObjectsCommand
         parameters.put( AnalyzeObjectsCommand.UPPER_THRESHOLD, 255 );
         parameters.put( AnalyzeObjectsCommand.OUTPUT_DIRECTORY, new File( TestingUtils.TEST_RESOURCES + "/image-sequence--classified/" ) );
         parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, IOUtils.SAVE_RESULTS_TABLE );
-
         ij.command().run( AnalyzeObjectsCommand.class, false, parameters );
 
     }

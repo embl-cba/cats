@@ -52,12 +52,6 @@ public class AnalyzeObjectsCommand implements Command
     @Parameter
     public StatusService statusService;
 
-    @Parameter( visibility = ItemVisibility.MESSAGE )
-    private String message
-            = "<html>"  +
-            "<br>Analyse Objects<br>" +
-            "...<br>";
-
     @Parameter ( label = "Input image" )
     public File inputImageFile;
     public static final String INPUT_IMAGE_FILE = "inputImageFile";
@@ -74,7 +68,7 @@ public class AnalyzeObjectsCommand implements Command
     public int minNumVoxels = 10;
     public static final String MIN_NUM_VOXELS = "minNumVoxels";
 
-    @Parameter( label = "Output modality", choices = { IOUtils.SHOW_RESULTS_TABLE, IOUtils.SAVE_RESULTS_TABLE } )
+    @Parameter( label = "Output modality", choices = { IOUtils.SHOW, IOUtils.SAVE } )
     public String outputModality;
     public static final String OUTPUT_MODALITY = "outputModality";
 
@@ -121,34 +115,60 @@ public class AnalyzeObjectsCommand implements Command
         resultsTableNames.add( "Ellipsoid" );
 
 
-
-        if ( outputModality.equals( IOUtils.SAVE_RESULTS_TABLE ) )
+        if ( outputModality.equals( IOUtils.SAVE ) )
         {
+            resultsTables.add( saveLabelMask( labelMask ) );
+            resultsTableNames.add( "LabelMask" );
+
             for ( int i = 0; i < resultsTables.size(); ++i )
             {
-                String tablePath = outputDirectory + File.separator + inputImage.getTitle() + "--" + resultsTableNames.get( i ) + "--AnalyzeObjects.csv";
-                logService.info( "Saving results table " + tablePath );
-                IOUtils.createDirectoryIfNotExists( outputDirectory.getPath() );
-                addDataSetId( resultsTables.get( i ) );
-                resultsTables.get( i ).save( tablePath );
+                saveTable( resultsTables, resultsTableNames, i );
             }
         }
 
-        if ( outputModality.equals( IOUtils.SHOW_RESULTS_TABLE ) )
+        if ( outputModality.equals( IOUtils.SHOW ) )
         {
             for ( int i = 0; i < resultsTables.size(); ++i )
             {
                 resultsTables.get( i ).show( resultsTableNames.get( i ) );
             }
+
+            labelMask.show();
         }
 
         if ( quitAfterRun ) Commands.quitImageJ( logService );
 
     }
 
+    private ResultsTable saveLabelMask( ImagePlus labelMask )
+    {
+        String labelMaskDirectory = outputDirectory.getAbsolutePath();
+        String labelMaskFileName = inputImage.getTitle() + "--LabelMask--AnalyzeObjects.tif";;
+        String labelMaskPath = labelMaskDirectory + File.separator + labelMaskFileName;
+
+        logService.info( "Saving label mask: " + labelMaskPath );
+        IJ.saveAsTiff( labelMask, labelMaskPath );
+
+        ij.measure.ResultsTable resultsTable = new ij.measure.ResultsTable();
+        resultsTable.incrementCounter();
+
+        resultsTable.addValue( "FileName_AnalyzeObjects_LabelMask_IMG", labelMaskFileName  );
+        resultsTable.addValue( "PathName_AnalyzeObjects_LabelMask_IMG",  labelMaskDirectory );
+
+        return ( resultsTable );
+    }
+
+    private void saveTable( ArrayList< ResultsTable > resultsTables, ArrayList< String > resultsTableNames, int i )
+    {
+        String tablePath = outputDirectory + File.separator + inputImage.getTitle() + "--" + resultsTableNames.get( i ) + "--AnalyzeObjects.csv";
+        logService.info( "Saving results table: " + tablePath );
+        IOUtils.createDirectoryIfNotExists( outputDirectory.getPath() );
+        addDataSetId( resultsTables.get( i ) );
+        resultsTables.get( i ).save( tablePath );
+    }
+
     private void addInputImageFileAndPathName( ResultsTable resultsTable )
     {
-
         resultsTable.addValue( "FileName_AnalyzeObjects_InputImage_IMG", inputImageFile.getName() );
         resultsTable.addValue( "PathName_AnalyzeObjects_InputImage_IMG", inputImageFile.getParent() );
 

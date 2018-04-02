@@ -1,6 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation;
 
-import de.embl.cba.trainableDeepSegmentation.commands.RunSylwiasWorkflowOnSlurm;
+import de.embl.cba.trainableDeepSegmentation.commands.BatchClassificationOnSlurm;
 import net.imagej.ImageJ;
 
 public class TestRunSylwiasWorkflowOnSlurm
@@ -11,7 +11,7 @@ public class TestRunSylwiasWorkflowOnSlurm
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        ij.command().run( RunSylwiasWorkflowOnSlurm.class, true );
+        ij.command().run( BatchClassificationOnSlurm.class, true );
     }
 
 }

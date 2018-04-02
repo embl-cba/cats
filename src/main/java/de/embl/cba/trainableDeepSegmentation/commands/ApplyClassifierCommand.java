@@ -224,20 +224,26 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         ResultExportSettings resultExportSettings = new ResultExportSettings();
         resultExportSettings.directory = outputDirectory.getAbsolutePath();
         resultExportSettings.exportNamesPrefix = dataSetID + "--";
+        resultExportSettings.classNames = deepSegmentation.getClassNames();
+        resultExportSettings.saveRawData = false;
 
         if( outputModality.equals(  IOUtils.SAVE_AS_IMARIS ) )
         {
+            logService.info( "Saving as Imaris..." );
             outputFileType = ".ims";
             resultExportSettings.exportType = ResultUtils.SEPARATE_IMARIS;
+            deepSegmentation.getResultImage().exportResults( resultExportSettings );
         }
 
         if( outputModality.equals(  IOUtils.SAVE_AS_TIFF_STACKS ) )
         {
+            logService.info( "Saving as Tiff stacks..." );
             outputFileType = ".tif";
             resultExportSettings.exportType = ResultUtils.SEPARATE_TIFF_FILES;
+            deepSegmentation.getResultImage().exportResults( resultExportSettings );
         }
 
-        deepSegmentation.getResultImage().exportResults( resultExportSettings );
+
     }
 
     private void applyClassifier( )
@@ -270,6 +276,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
             deepSegmentation.applyClassifierWithTiling( interval );
         }
 
+        logService.info( "Applying classifier: done." );
 
     }
 
