@@ -3,9 +3,9 @@ package de.embl.cba.trainableDeepSegmentation.commands;
 import de.embl.cba.cluster.ImageJCommandsSubmitter;
 import de.embl.cba.cluster.JobFuture;
 import de.embl.cba.cluster.JobSettings;
+import de.embl.cba.cluster.SlurmJobMonitor;
 import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
-import de.embl.cba.trainableDeepSegmentation.utils.SlurmJobMonitor;
 import de.embl.cba.utils.fileutils.PathMapper;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import org.scijava.command.Command;
@@ -52,7 +52,7 @@ public class BatchClassificationOnSlurm implements Command
     public int memoryMB = 32000;
 
     @Parameter (label = "Number of threads per job" )
-    public int numWorkers = 16;
+    public int numWorkers = 12;
 
     @Parameter (label = "Time per job in minutes" )
     public int timePerJobInMinutes = 120;

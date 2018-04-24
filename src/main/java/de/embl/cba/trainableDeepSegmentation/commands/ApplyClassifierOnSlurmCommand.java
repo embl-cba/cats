@@ -3,10 +3,10 @@ package de.embl.cba.trainableDeepSegmentation.commands;
 import de.embl.cba.cluster.ImageJCommandsSubmitter;
 import de.embl.cba.cluster.JobFuture;
 import de.embl.cba.cluster.JobSettings;
+import de.embl.cba.cluster.SlurmJobMonitor;
 import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
-import de.embl.cba.trainableDeepSegmentation.utils.SlurmJobMonitor;
 import de.embl.cba.utils.fileutils.PathMapper;
 import net.imagej.ImageJ;
 import net.imglib2.FinalInterval;
@@ -15,7 +15,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.TextWidget;
 
-import javax.print.attribute.standard.JobImpressionsSupported;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ public class ApplyClassifierOnSlurmCommand implements Command
     public static String NUM_JOBS = "numJobs";
 
     @Parameter( label = "Number of CPUs per job" )
-    public int numWorkers = 16;
+    public int numWorkers = 12;
     public static final String NUM_WORKERS = "numWorkers";
 
     @Parameter( label = "Classifier (must be cluster accessible)" )
@@ -164,7 +163,7 @@ public class ApplyClassifierOnSlurmCommand implements Command
     private int getApproximatelyNeededTimeInMinutes( FinalInterval tile )
     {
         long numVoxels = tile.dimension( X ) * tile.dimension( Y ) * tile.dimension( Z );
-        long voxelsPerSecond = 1000;
+        long voxelsPerSecond = 5000;
         double secondsNeeded = 1.0 * numVoxels / voxelsPerSecond;
         int minutesNeeded = ( int ) Math.ceil( secondsNeeded / 60.0 );
         minutesNeeded = Math.max( 10, minutesNeeded );

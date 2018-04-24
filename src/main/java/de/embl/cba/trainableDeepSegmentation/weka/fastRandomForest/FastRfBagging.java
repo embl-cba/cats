@@ -145,7 +145,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
 
     // sorting is performed inside this constructor
-    DataCache myData = new DataCache(data);
+    DataCache myData = new DataCache( data );
 
     int bagSize = data.numInstances() * m_BagSizePercent / 100;
     Random random = new Random(m_Seed);
@@ -155,6 +155,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
     // thread management
     ExecutorService threadPool = Executors.newFixedThreadPool(
       numThreads > 0 ? numThreads : Runtime.getRuntime().availableProcessors());
+
     List<Future<?>> futures =
       new ArrayList<Future<?>>(m_Classifiers.length);
 
@@ -188,7 +189,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
           aTree.data = bagData;
 
           Future<?> future = threadPool.submit( aTree );
-          futures.add(future);
+          futures.add( future );
         }
         else
         {
@@ -205,7 +206,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       // make sure all trees have been trained before proceeding
       for (int treeIdx = 0; treeIdx < m_Classifiers.length; treeIdx++)
       {
-        futures.get(treeIdx).get();
+        futures.get( treeIdx ).get();
         logger.progress( "Building trees...", null, start, treeIdx+1, m_Classifiers.length); // Tischi
       }
 

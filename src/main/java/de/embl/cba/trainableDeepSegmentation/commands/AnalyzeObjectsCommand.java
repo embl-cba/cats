@@ -114,7 +114,6 @@ public class AnalyzeObjectsCommand implements Command
         resultsTables.add( GeometricMeasures3D.inertiaEllipsoid( labelMask.getStack(), new double[]{ 1, 1, 1 } ) );
         resultsTableNames.add( "Ellipsoid" );
 
-
         if ( outputModality.equals( IOUtils.SAVE ) )
         {
             resultsTables.add( saveLabelMask( labelMask ) );

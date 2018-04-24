@@ -103,7 +103,7 @@ public class DataCache {
   /**
    * Creates a DataCache by copying data from a weka.core.Instances object.
    */
-  public DataCache(Instances origData) throws Exception {
+  public DataCache( Instances origData ) throws Exception {
 
     classIndex = origData.classIndex();
     numAttributes = origData.numAttributes();
@@ -193,7 +193,7 @@ public class DataCache {
    * 
    * @param origData
    */
-  public DataCache(DataCache origData) {
+  public DataCache( DataCache origData ) {
 
     classIndex = origData.classIndex;       // copied
     numAttributes = origData.numAttributes; // copied

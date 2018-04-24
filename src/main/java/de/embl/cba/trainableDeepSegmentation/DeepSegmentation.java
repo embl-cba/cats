@@ -474,7 +474,6 @@ public class DeepSegmentation
 					featureProvider = new FeatureProvider( this );
 					featureProvider.isLogging( true );
 					featureProvider.setInterval( tile );
-					featureProvider.setActiveChannels( settings.activeChannels );
 					featureProvider.setCacheSize( zChunkSize );
 					featureProvider.computeFeatures( numThreads );
 				}
@@ -1709,7 +1708,6 @@ public class DeepSegmentation
 			for ( int iBoundingInterval = 0; iBoundingInterval < exampleListBoundingIntervals.size(); ++iBoundingInterval )
 			{
 				FeatureProvider featureProvider = new FeatureProvider( this );
-				featureProvider.setActiveChannels( settings.activeChannels );
 				featureProvider.setInterval( exampleListBoundingIntervals.get( iBoundingInterval ) );
 				featureProvider.computeFeatures( threadsPerRegion );
 
@@ -2238,7 +2236,7 @@ public class DeepSegmentation
 		// Instances balancedInstances = instancesAndMetadata.getInstances();
 
 
-		logger.info( "\nUsing label balancing strategy..." );
+		//logger.info( "\nUsing label balancing strategy..." );
 		classifier.setLabelIds( instancesAndMetadata.getLabelList() );
 
 		try
@@ -2657,7 +2655,6 @@ public class DeepSegmentation
 		if ( externalFeatureProvider == null )
 		{
 			featureProvider = new FeatureProvider( this );
-			featureProvider.setActiveChannels( settings.activeChannels );
 			featureProvider.setFeatureListSubset( classifierManager.getClassifierAttributeNames( classifierKey ) );
 			featureProvider.setInterval( tileInterval );
 			featureProvider.isLogging( isLogging );

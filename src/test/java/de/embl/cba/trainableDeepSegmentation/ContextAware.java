@@ -13,7 +13,7 @@ public class ContextAware
         final net.imagej.ImageJ ij = new net.imagej.ImageJ();
         ij.ui().showUI();
 
-        ImagePlus inputImagePlus = IJ.openImage(TEST_RESOURCES + "context-aware-v4.tif" );
+        ImagePlus inputImagePlus = IJ.openImage(TEST_RESOURCES + "context-aware-v6-scale1.5-noise.tif" );
         inputImagePlus.show();
 
         IJ.wait(100);

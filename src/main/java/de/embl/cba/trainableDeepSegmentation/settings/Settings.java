@@ -14,7 +14,7 @@ public class Settings {
     public final static String MAX_BIN_LEVEL = "maxBinLevel";
     public final static String MAX_DEEP_CONV_LEVEL = "maxDeepConvLevel";
 
-    public String downSamplingMethod = DownSampler.TRANSFORMJ_SCALE_LINEAR;
+    public String downSamplingMethod = DownSampler.BIN_AVERAGE;
 
     public double anisotropy;
 
@@ -24,7 +24,7 @@ public class Settings {
 
     public boolean log2 = false;
 
-    public ArrayList< Integer > binFactors;
+    public ArrayList< Integer > binFactors = new ArrayList<>(  );
 
     public Set< Integer > activeChannels = new TreeSet<>();
 
@@ -32,6 +32,7 @@ public class Settings {
 
     public Set< Integer > boundingBoxExpansions = new TreeSet<>();
 
+    public Set< Integer > smoothingScales = new TreeSet<>();
 
     public boolean equals( Settings settings )
     {
@@ -43,6 +44,7 @@ public class Settings {
         if ( ! downSamplingMethod.equals( settings.downSamplingMethod ) ) return false;
         if ( ! boundingBoxExpansions.equals( settings.boundingBoxExpansions ) ) return false;
         if ( ! binFactors.equals( settings.binFactors ) ) return false;
+        if ( ! smoothingScales.equals( settings.smoothingScales ) ) return false;
 
         return true;
     }
@@ -50,7 +52,6 @@ public class Settings {
     public Settings()
     {
         anisotropy = 1.0;
-        binFactors = new ArrayList();
         binFactors.add( 1 );
         binFactors.add( 2 );
         binFactors.add( 3 );
@@ -65,6 +66,7 @@ public class Settings {
         maxDeepConvLevel = 3;
         imageBackground = 0;
         boundingBoxExpansions.add( 0 );
+        smoothingScales.add(1);
     }
 
     public Settings copy()
@@ -73,10 +75,13 @@ public class Settings {
         settings.classNames = new ArrayList<>( classNames );
         settings.binFactors = new ArrayList<>( binFactors );
         settings.activeChannels = new TreeSet<>( activeChannels );
+        settings.smoothingScales = new TreeSet<>( smoothingScales );
+        settings.boundingBoxExpansions = new TreeSet<>( boundingBoxExpansions );
         settings.anisotropy = anisotropy;
         settings.log2 = log2;
         settings.maxDeepConvLevel = maxDeepConvLevel;
         settings.imageBackground = imageBackground;
+
         return settings;
     }
 
@@ -99,6 +104,17 @@ public class Settings {
         for ( String s : ss)
         {
             this.boundingBoxExpansions.add( Integer.parseInt(s.trim()) );
+        }
+    }
+
+    public void setSmoothingScales( String csv )
+    {
+        String[] ss = csv.split(",");
+
+        this.smoothingScales = new TreeSet<>();
+        for ( String s : ss)
+        {
+            this.smoothingScales.add( Integer.parseInt(s.trim()) );
         }
     }
 

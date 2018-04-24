@@ -158,7 +158,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
 	public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier settings";
 	public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature settings";
-	public static final String GET_LABEL_MASK = "Get label mask";
+    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "(Devel) Change advanced feature settings";
+    public static final String GET_LABEL_MASK = "Get label mask";
 	public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
     public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
 
@@ -194,7 +195,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 					IO_LOAD_CLASSIFIER,
 					GET_LABEL_MASK,
 					RECOMPUTE_LABEL_FEATURE_VALUES,
-                    CHANGE_DEBUG_SETTINGS
+                    CHANGE_DEBUG_SETTINGS,
+                    CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS
 			} );
 
 
@@ -538,9 +540,12 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 								showClassifierSettingsDialog();
 								break;
 							case CHANGE_FEATURE_COMPUTATION_SETTINGS:
-								showFeatureSettingsDialog();
+								showFeatureSettingsDialog( false );
 								break;
-							case IO_LOAD_CLASSIFIER:
+                            case CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS:
+                                showFeatureSettingsDialog( true );
+                                break;
+                            case IO_LOAD_CLASSIFIER:
 								loadClassifier();
 								break;
 							case ADD_CLASS:
@@ -2116,7 +2121,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		reviewLabelsClassComboBox = new JComboBox( deepSegmentation.getClassNames().toArray() );
 
-        showFeatureSettingsDialog();
+        showFeatureSettingsDialog( false );
 
 		//Build GUI
 		SwingUtilities.invokeLater(
@@ -2546,7 +2551,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 					String directory = null;
 
-					if ( ! showFeatureSettingsDialog() ) return;
+					if ( ! showFeatureSettingsDialog( false ) ) return;
 					//if ( ! showClassifierSettingsDialog() ) return;
 
 					if ( autoSaveInstances )
@@ -3382,7 +3387,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		return true;
 	}
 
-	public boolean showFeatureSettingsDialog()
+	public boolean showFeatureSettingsDialog( boolean showAdvancedSettings )
 	{
 		GenericDialogPlus gd = new GenericDialogPlus("Segmentation settings");
 
@@ -3391,26 +3396,33 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			gd.addNumericField( "Binning " + ( i + 1 ), deepSegmentation.settings.binFactors.get( i ), 0 );
 		}
 
-
-		gd.addChoice( "Downsampling method", new String[]{
-		        DownSampler.BIN_AVERAGE,
-                DownSampler.BIN_MAXIMUM,
-                DownSampler.TRANSFORMJ_SCALE_LINEAR,
-                DownSampler.TRANSFORMJ_SCALE_CUBIC },
-				deepSegmentation.settings.downSamplingMethod );
 		gd.addNumericField("Maximal convolution depth", deepSegmentation.settings.maxDeepConvLevel, 0);
 		gd.addNumericField("z/xy settings.anisotropy", deepSegmentation.settings.anisotropy, 2);
 		gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
 				Settings.getAsCSVString( deepSegmentation.settings.activeChannels, 1 ) );
-        gd.addStringField("Bounding box offsets ",
-				Settings.getAsCSVString( deepSegmentation.settings.boundingBoxExpansions, 0 ) );
 
-        gd.showDialog();
+		if ( showAdvancedSettings )
+		{
+			gd.addStringField( "Bounding box offsets ",
+					Settings.getAsCSVString( deepSegmentation.settings.boundingBoxExpansions, 0 ) );
+
+			gd.addChoice( "Downsampling method", new String[]{
+							DownSampler.BIN_AVERAGE,
+							DownSampler.BIN_MAXIMUM,
+							DownSampler.TRANSFORMJ_SCALE_LINEAR,
+							DownSampler.TRANSFORMJ_SCALE_CUBIC }, deepSegmentation.settings.downSamplingMethod );
+
+			gd.addStringField( "Smoothing sigmas [pixels x/y] ",
+					Settings.getAsCSVString( deepSegmentation.settings.smoothingScales, 0 ) );
+
+		}
+
+			gd.showDialog();
 
 		if ( gd.wasCanceled() )
 			return false;
 
-        Settings newSettings = getNewSettings( gd );
+        Settings newSettings = getSettingsFromGenericDialog( gd, showAdvancedSettings );
         boolean settingsChanged = ! deepSegmentation.settings.equals(  newSettings );
         deepSegmentation.settings = newSettings;
 
@@ -3424,6 +3436,30 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		return true;
 	}
+
+	private Settings getSettingsFromGenericDialog( GenericDialogPlus gd, boolean showAdvancedSettings )
+	{
+		Settings newSettings = deepSegmentation.settings.copy();
+
+		for ( int i = 0; i < 5; ++i )
+		{
+			newSettings.binFactors.set( i, (int) gd.getNextNumber() );
+		}
+
+		newSettings.maxDeepConvLevel = (int) gd.getNextNumber();
+		newSettings.anisotropy = gd.getNextNumber();
+		newSettings.setActiveChannels( gd.getNextString() );
+
+		if ( showAdvancedSettings )
+		{
+			newSettings.setBoundingBoxExpansions( gd.getNextString() );
+			newSettings.downSamplingMethod = gd.getNextChoice();
+			newSettings.setSmoothingScales( gd.getNextString() );
+		}
+
+		return newSettings;
+	}
+
 
     public boolean showDebugSettingsDialog()
     {
@@ -3462,22 +3498,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
     }
 
-    private Settings getNewSettings( GenericDialogPlus gd )
-    {
-        Settings newSettings = deepSegmentation.settings.copy();
 
-        for ( int i = 0; i < 5; ++i )
-        {
-            newSettings.binFactors.set( i, (int) gd.getNextNumber() );
-        }
-
-        newSettings.downSamplingMethod = gd.getNextChoice();
-        newSettings.maxDeepConvLevel = (int) gd.getNextNumber();
-        newSettings.anisotropy = gd.getNextNumber();
-        newSettings.setActiveChannels( gd.getNextString() );
-        newSettings.setBoundingBoxExpansions( gd.getNextString() );
-        return newSettings;
-    }
 
     /* **********************************************************
 	 * Macro recording related methods
