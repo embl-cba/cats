@@ -279,6 +279,25 @@ public class FeatureProvider
         return channels;
     }
 
+
+    private String getFilterBaseName( String filterName, double sigma )
+    {
+        if ( sigma == 1 )
+        {
+            return filterName + "_"; // for backward compatibility
+        }
+        else
+        {
+            return filterName + (int)(sigma) + "_";
+        }
+
+    }
+
+
+    public static final String HESSIAN = "He";
+    public static final String STRUCTURE = "St";
+
+
     /**
      * Get Hessian features (to be submitted in an ExecutorService)
      *
@@ -286,10 +305,10 @@ public class FeatureProvider
      * @param sigma isotropic smoothing scale
      * @return filter Hessian filter images
      */
-    public Callable<ArrayList<ImagePlus>> getHessian(
+    public Callable<ArrayList<ImagePlus>> getHessianOrStructure(
+            final String filterName,
             final ImagePlus originalImage,
-            final double sigma,
-            final boolean absolute)
+            final double sigma )
     {
         if (Thread.currentThread().isInterrupted())
             return null;
@@ -302,7 +321,7 @@ public class FeatureProvider
                 // Get channel(s) to process
                 ImagePlus[] channels = extractChannels( originalImage );
 
-                String filterBaseName = "He" + (int)(sigma) +"_";
+                String filterNameWithSmoothin = getFilterBaseName( filterName, sigma );
 
                 ArrayList<ImagePlus>[] results = new ArrayList[ channels.length ];
 
@@ -310,41 +329,61 @@ public class FeatureProvider
                 {
                     results[ch] = new ArrayList<ImagePlus>();
 
-                    final ImagePlus channel = channels[ch].duplicate();
+                    final ImagePlus channelImage = channels[ch].duplicate();
 
-                    if ( channel.getNSlices() > 1 )
+                    if ( channelImage.getNSlices() > 1 )
                     {
                         // pad 3-D image on the back and the front
-                        channel.getImageStack().addSlice("pad-back", channels[ch].getImageStack().getProcessor(channels[ch].getImageStackSize()));
-                        channel.getImageStack().addSlice("pad-front", channels[ch].getImageStack().getProcessor(1), 1);
+                        channelImage.getImageStack().addSlice("pad-back", channels[ch].getImageStack().getProcessor(channels[ch].getImageStackSize()));
+                        channelImage.getImageStack().addSlice("pad-front", channels[ch].getImageStack().getProcessor(1), 1);
                     }
 
-                    final ArrayList<ImagePlus> result = ImageScience.computeHessianImages( sigma, absolute, channel );
-                    final ImageStack largest = result.get(0).getImageStack();
-                    final ImageStack middle = result.get(1).getImageStack();
+                    final ArrayList<ImagePlus> result;
 
-                    if ( channel.getNSlices() > 1 ) // 3D
+                    if ( filterName.equals( HESSIAN ) )
+                    {
+                        result = ImageScience.computeHessianImages( sigma, true, channelImage );
+                    }
+                    else if ( filterName.equals( STRUCTURE ) )
+                    {
+                        result = ImageScience.computeEigenimages( sigma, sigma, channelImage );
+                    }
+                    else
+                    {
+                        result = null;
+                    }
+
+                    final ImageStack largest = result.get( 0 ).getImageStack();
+                    final ImageStack middle = result.get( 1 ).getImageStack();
+
+                    if ( channelImage.getNSlices() > 1 )
                     {
                         // remove pad
                         largest.deleteLastSlice();
-                        largest.deleteSlice(1);
+                        largest.deleteSlice( 1 );
                         middle.deleteLastSlice();
-                        middle.deleteSlice(1);
+                        middle.deleteSlice( 1 );
                     }
-                    results[ ch ].add(new ImagePlus("L" + filterBaseName + originalImage.getTitle(), largest));
-                    results[ ch ].add(new ImagePlus("M" + filterBaseName + originalImage.getTitle(), middle));
 
-                    if ( result.size() == 3 ) // 3D
+                    results[ ch ].add(new ImagePlus("L" + filterNameWithSmoothin + originalImage.getTitle(), largest));
+
+                    if ( result.size() == 2 )
                     {
+                        results[ ch ].add(new ImagePlus("S" + filterNameWithSmoothin + originalImage.getTitle(), middle));
+                    }
+                    else // 3D
+                    {
+                        results[ ch ].add(new ImagePlus("M" + filterNameWithSmoothin + originalImage.getTitle(), middle));
                         final ImageStack smallest = result.get(2).getImageStack();
+                        // remove pad
                         smallest.deleteLastSlice();
                         smallest.deleteSlice(1);
-                        results[ ch ].add(new ImagePlus("S"+ filterBaseName + originalImage.getTitle(), smallest));
+                        results[ ch ].add(new ImagePlus("S"+ filterNameWithSmoothin + originalImage.getTitle(), smallest));
                     }
 
                 }
 
-                return mergeResultChannels(results);
+                return mergeResultChannels( results );
             }
         };
     }
@@ -565,7 +604,15 @@ public class FeatureProvider
             float[] pixelsBase = null;
             float[] pixelsAbove = null;
 
+
             ImagePlus imp = featureImages.get( feature );
+            if ( imp == null )
+            {
+                logger.error( "Feature not found among current feature images: " + feature );
+                return;
+            }
+
+
             calibration = imp.getCalibration();
             xCal = calibration.pixelWidth;
             yCal = calibration.pixelHeight;
@@ -969,75 +1016,6 @@ public class FeatureProvider
     }
 
 
-    /**
-     * Get structure tensor features (to be submitted in an ExecutorService).
-     * It computes, for all pixels in the input image, the eigenvalues of the so-called structure tensor.
-     *
-     * @param originalImage input image
-     * @param sigma isotropic smoothing scale
-     * @param integrationScale integration scale (standard deviation of the Gaussian
-     * 		kernel used for smoothing the elements of the structure tensor, must be larger than zero)
-     * @return filter structure tensor filter image
-     */
-    public Callable<ArrayList<ImagePlus>> getStructure(
-            final ImagePlus originalImage,
-            final double sigma,
-            final double integrationScale)
-    {
-        if (Thread.currentThread().isInterrupted())
-            return null;
-
-        return new Callable<ArrayList<ImagePlus>>() {
-            public ArrayList<ImagePlus> call()
-            {
-                ArrayList<ImagePlus> results = new ArrayList<>();
-
-                String filterBaseName = "St";//+(int)(sigma);
-
-                ImagePlus tmp = originalImage.duplicate();
-
-                if (tmp.getNSlices() > 1) // 3-D
-                {
-                    // pad 3-D image on the back and the front
-                    tmp.getImageStack().addSlice("pad-back", tmp.getImageStack().getProcessor(tmp.getImageStackSize()));
-                    tmp.getImageStack().addSlice("pad-front", tmp.getImageStack().getProcessor(1), 1);
-                }
-
-                final ArrayList<ImagePlus> result = ImageScience.computeEigenimages(sigma, integrationScale, tmp);
-                final ImageStack largest = result.get(0).getImageStack();
-                final ImageStack middle = result.get(1).getImageStack();
-
-                // remove pad
-                if (tmp.getNSlices() > 1) // 3-D
-                {
-                    largest.deleteLastSlice();
-                    largest.deleteSlice(1);
-                    middle.deleteLastSlice();
-                    middle.deleteSlice(1);
-                }
-                results.add(new ImagePlus("L"+filterBaseName+"_" + originalImage.getTitle(), largest));
-                results.add(new ImagePlus("M"+filterBaseName+"_" + originalImage.getTitle(), middle));
-
-                if (result.size() == 3) // 3D
-                {
-                    final ImageStack smallest = result.get(2).getImageStack();
-                    smallest.deleteLastSlice();
-                    smallest.deleteSlice(1);
-                    results.add(new ImagePlus("S"+filterBaseName+"_" + originalImage.getTitle(), smallest));
-                }
-
-                // remove the square as it over-pronounces strong edges and might
-                // (or might not?) confuse the classifier
-                for (ImagePlus imp : results)
-                {
-                    sqrt(imp);
-                }
-
-                return (results);
-            }
-        };
-    }
-
 
     public void sqrt(ImagePlus imp)
     {
@@ -1121,7 +1099,10 @@ public class FeatureProvider
 
     public boolean isFeatureNeeded( String featureImageTitle )
     {
-        if ( featureListSubset == null ) return true;
+        if ( featureListSubset == null )
+        {
+            return true;
+        }
 
         if ( featureListSubset.contains( featureImageTitle ) )
         {
@@ -1370,7 +1351,7 @@ public class FeatureProvider
             }
 
             putIntoFeatureImagesMap( multiResolutionFeatureImages );
-            
+
         }
         catch (InterruptedException ie)
         {
@@ -1422,23 +1403,23 @@ public class FeatureProvider
 
             for ( int smoothingScale : settings.smoothingScales )
             {
-                if ( !featureImage.getTitle().contains( CONV_DEPTH + deepSegmentation.settings.maxDeepConvLevel ) )
+                if ( ! featureImage.getTitle().contains( CONV_DEPTH + deepSegmentation.settings.maxDeepConvLevel ) )
                 {
                     if ( level <= maximumMultithreadedLevel ) // multi-threaded
                     {
-                        if ( isFeatureOrChildrenNeeded( "He_" + featureImage.getTitle() ) )
-                            featureFutures.add( exe.submit( getHessian( featureImage, smoothingScale, hessianAbsoluteValues ) ) );
+                        if ( isFeatureOrChildrenNeeded( getFilterBaseName( HESSIAN, smoothingScale ) + featureImage.getTitle() ) )
+                            featureFutures.add( exe.submit( getHessianOrStructure( HESSIAN, featureImage, smoothingScale ) ) );
 
-                        if ( isFeatureOrChildrenNeeded( "St_" + featureImage.getTitle() ) )
-                            featureFutures.add( exe.submit( getStructure( featureImage, smoothingScale, smoothingScale ) ) );
+                        if ( isFeatureOrChildrenNeeded( getFilterBaseName( STRUCTURE, smoothingScale )  + featureImage.getTitle() ) )
+                            featureFutures.add( exe.submit( getHessianOrStructure( STRUCTURE, featureImage, smoothingScale ) ) );
                     }
                     else // single-threaded
                     {
-                        if ( isFeatureOrChildrenNeeded( "He_" + featureImage.getTitle() ) )
-                            featureImagesList.add( getHessian( featureImage, smoothingScale, hessianAbsoluteValues ).call() );
+                        if ( isFeatureOrChildrenNeeded( getFilterBaseName( HESSIAN, smoothingScale )  + featureImage.getTitle() ) )
+                            featureImagesList.add( getHessianOrStructure( HESSIAN, featureImage, smoothingScale ).call() );
 
-                        if ( isFeatureOrChildrenNeeded( "St_" + featureImage.getTitle() ) )
-                            featureImagesList.add( getStructure( featureImage, smoothingScale, smoothingScale ).call() );
+                        if ( isFeatureOrChildrenNeeded( getFilterBaseName( STRUCTURE, smoothingScale ) + featureImage.getTitle() ) )
+                            featureImagesList.add( getHessianOrStructure( STRUCTURE, featureImage, smoothingScale ).call() );
                     }
                 }
             }
@@ -1476,8 +1457,7 @@ public class FeatureProvider
             featureImagesPreviousResolution = multiResolutionFeatureImages.get( level - 1 );
         }
 
-        int[] binning = getBinning( featureImagesPreviousResolution.get(0),
-                adaptiveAnisotropy, settings.binFactors.get( level ) );
+        int[] binning = getBinning( featureImagesPreviousResolution.get(0), adaptiveAnisotropy, settings.binFactors.get( level ) );
 
         // add binning information to image title
         String binningTitle = "Bin" + binning[0] + "x" + binning[1] + "x" + binning[2];
@@ -1494,8 +1474,8 @@ public class FeatureProvider
             if ( level == numLevels - 1 )
             {
                 /*
-                don't run but smooth last level to better preserve
-                spatial information.
+                don't bin but smooth at the last resolution level
+                to better preserve the spatial information.
                 */
 
                 // TODO:
@@ -1520,6 +1500,7 @@ public class FeatureProvider
                  */
 
                 int[] radii = new int[ 3 ];
+
                 for( int i = 0; i < 3; ++i )
                 {
                     radii[i] = (int) Math.ceil ( ( binning[i] - 1 ) / 2.0 );
@@ -1654,28 +1635,33 @@ public class FeatureProvider
 
     }
 
-    public Callable<ImagePlus> filter3d(ImagePlus imp, int[] radii)
+    public Callable<ImagePlus> filter3d( ImagePlus inputImage, int[] radii )
     {
         return () -> {
 
-            ImageStack result = ImageStack.create( imp.getWidth(), imp.getHeight(), imp.getNSlices(), 32 );
-            StackProcessor stackProcessor = new StackProcessor( imp.getStack() );
+            if ( radii[0] == 0 && radii[1] == 0 && radii[2] == 0 )
+            {
+                return inputImage;
+            }
+
+            ImageStack result = ImageStack.create( inputImage.getWidth(), inputImage.getHeight(), inputImage.getNSlices(), 32 );
+            StackProcessor stackProcessor = new StackProcessor( inputImage.getStack() );
 
             stackProcessor.filter3D( result,
                     (float) radii[0], (float) radii[1], (float) radii[2],
                     0, result.size(),
                     StackProcessor.FILTER_MEAN );
 
-            String title = imp.getTitle();
-            ImagePlus impResult = new ImagePlus(
+            String title = inputImage.getTitle();
+            ImagePlus filteredImage = new ImagePlus(
                             String.format("Mean%d", (radii[0]*2)+1)
-                            + String.format("_%d", (radii[1]*2)+1)
-                            + String.format("_%d", (radii[2]*2)+1)
+                            + String.format("x%d", (radii[1]*2)+1)
+                            + String.format("x%d", (radii[2]*2)+1)
                             + "_" + title,
                     result );
 
-            impResult.setCalibration( imp.getCalibration().copy() );
-            return ( impResult );
+            filteredImage.setCalibration( inputImage.getCalibration().copy() );
+            return ( filteredImage );
         };
     }
 

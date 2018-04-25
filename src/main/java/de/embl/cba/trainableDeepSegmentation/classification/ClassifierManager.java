@@ -64,7 +64,7 @@ public class ClassifierManager {
 
     public Instances getInstancesHeader( String key )
     {
-        Instances instancesHeader = new Instances( classifiers.get(key).instancesAndMetadata.getInstances(), 1 );
+        Instances instancesHeader = new Instances( classifiers.get( key ).instancesAndMetadata.getInstances(), 1 );
 
         return ( instancesHeader );
     }

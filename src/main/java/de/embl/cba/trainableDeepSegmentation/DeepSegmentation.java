@@ -2192,6 +2192,11 @@ public class DeepSegmentation
 
 	}
 
+	public String trainClassifier( )
+	{
+		return trainClassifier( getCurrentLabelInstancesAndMetadata() );
+	}
+
 	public String trainClassifier( String key )
 	{
 		return trainClassifier( instancesManager.getInstancesAndMetadata( key ) );
