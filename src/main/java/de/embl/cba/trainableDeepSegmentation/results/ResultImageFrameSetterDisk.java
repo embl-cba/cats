@@ -7,14 +7,14 @@ public class ResultImageFrameSetterDisk implements ResultImageFrameSetter {
 
     FinalInterval interval;
     byte[][][] resultChunk;
-    ResultImageDisk resultImage;
+    ResultImageDisk resultImageDisk;
 
-    public ResultImageFrameSetterDisk( ResultImage resultImage, FinalInterval interval )
+    public ResultImageFrameSetterDisk( ResultImage resultImageDisk, FinalInterval interval )
     {
         assert interval.min( IntervalUtils.T ) == interval.max( IntervalUtils.T );
 
         this.interval = interval;
-        this.resultImage = (ResultImageDisk) resultImage;
+        this.resultImageDisk = (ResultImageDisk) resultImageDisk;
         resultChunk = new byte[ (int) interval.dimension( IntervalUtils.Z ) ]
                 [ (int) interval.dimension( IntervalUtils.Y ) ]
                 [ (int) interval.dimension( IntervalUtils.X ) ];
@@ -23,9 +23,9 @@ public class ResultImageFrameSetterDisk implements ResultImageFrameSetter {
     @Override
     public void set( long x, long y, long z, int classId, double certainty )
     {
-        int lutCertainty = (int) ( certainty * ( resultImage.CLASS_LUT_WIDTH - 1.0 ) );
+        int lutCertainty = (int) ( certainty * ( resultImageDisk.CLASS_LUT_WIDTH - 1.0 ) );
 
-        int classOffset = classId * resultImage.CLASS_LUT_WIDTH + 1;
+        int classOffset = classId * resultImageDisk.CLASS_LUT_WIDTH + 1;
 
         resultChunk[ (int) (z - interval.min( IntervalUtils.Z )) ]
                 [ (int) (y - interval.min ( IntervalUtils.Y )) ]
@@ -37,7 +37,7 @@ public class ResultImageFrameSetterDisk implements ResultImageFrameSetter {
     @Override
     public void close()
     {
-        resultImage.write3dResultChunk( interval, resultChunk );
+        resultImageDisk.write3dResultChunk( interval, resultChunk );
     }
 
 }

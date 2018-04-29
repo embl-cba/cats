@@ -1,6 +1,7 @@
 package de.embl.cba.trainableDeepSegmentation.ui;
 
 import de.embl.cba.trainableDeepSegmentation.features.DownSampler;
+import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.utils.logging.Logger;
 
 
@@ -50,7 +51,6 @@ import de.embl.cba.trainableDeepSegmentation.labels.LabelManager;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImage;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageDisk;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageExportGUI;
-import de.embl.cba.trainableDeepSegmentation.settings.Settings;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import weka.classifiers.AbstractClassifier;
 import weka.core.SerializationHelper;
@@ -100,7 +100,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	/** image to be used in the instances */
 	private ImagePlus trainingImage = null;
-	/** result image after classification */
+	/** resultImagePlus image after classification */
 	private CustomWindow win = null;
 	/** number of classes in the GUI */
 	private int numOfClasses = 2;
@@ -141,8 +141,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public static final String IO_LOAD_CLASSIFIER = "Load classifier";
 	public static final String IO_SAVE_CLASSIFIER = "Save classifier";
 	public static final String ADD_CLASS = "Add class";
-	public static final String CHANGE_CLASS_NAMES = "Class names";
-	public static final String CHANGE_COLORS = "Colors";
+	public static final String CHANGE_CLASS_NAMES = "Change class names";
+	public static final String CHANGE_COLORS = "Change colors";
 	public static final String CHANGE_RESULT_OVERLAY_OPACITY = "Overlay opacity";
 	public static final String UPDATE_LABELS_AND_TRAIN = "Update labels and train classifier";
     public static final String UPDATE_LABELS = "Update labels";
@@ -154,19 +154,19 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public static final String TRAIN_FROM_LABEL_IMAGE = "Train from label image";
 	public static final String APPLY_CLASSIFIER_ON_SLURM = "Apply classifier on cluster";
 	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier (development)";
-	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
+	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show resultImagePlus image";
 	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
-	public static final String CHANGE_CLASSIFIER_SETTINGS = "Classifier settings";
-	public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature settings";
-    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Advanced feature settings (development)";
+	public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier featureSettings";
+	public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature featureSettings";
+    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature featureSettings";
     public static final String GET_LABEL_MASK = "Get label mask";
 	public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
-    public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
+    public static final String CHANGE_DEBUG_SETTINGS = "Change development featureSettings";
 
 
 	public static final String NO_TRAINING_DATA = "No training data available";
 
-	// TODO: how to know the settings associated with instances data
+	// TODO: how to know the featureSettings associated with instances data
 	// ??
 	private JButton doButton = null;
 
@@ -214,7 +214,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	private boolean computeLabelFeatureValuesInstantly = false;
 
-	/** settings button */
+	/** featureSettings button */
 	private JButton settingsButton = null;
 
 	private JButton testThreadsButton = null;
@@ -254,7 +254,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			Color.black
 	};
 
-	/** Lookup table for the result overlay image */
+	/** Lookup table for the resultImagePlus overlay image */
 	private LUT overlayLUT = null;
 
 	/** array of trace lists for every class */
@@ -270,9 +270,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public static final String DELETE_TRACE = "deleteTrace";
 	/** name of the macro method to toggle the overlay image */
 	public static final String TOGGLE_OVERLAY = "toggleOverlay";
-	/** name of the macro method to getInstancesAndMetadata the binary result */
+	/** name of the macro method to getInstancesAndMetadata the binary resultImagePlus */
 	public static final String GET_RESULT = "getResult";
-	/** name of the macro method to getInstancesAndMetadata the binary result */
+	/** name of the macro method to getInstancesAndMetadata the binary resultImagePlus */
 	public static final String SET_RESULT = "setResult";
 	/** name of the macro method to getInstancesAndMetadata the probability maps */
 	public static final String GET_PROBABILITY = "getProbability";
@@ -405,8 +405,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		overlayButton.setToolTipText("Toggle between current segmentation and original image");
 		overlayButton.setEnabled(false);
 
-		assignResultImageButton = new JButton("Assign result image");
-		assignResultImageButton.setToolTipText("Assign result image");
+		assignResultImageButton = new JButton("Assign resultImagePlus image");
+		assignResultImageButton.setToolTipText("Assign resultImagePlus image");
 		assignResultImageButton.setEnabled(true);
 
 		resultImageComboBox = new JComboBox( new String[]{ DeepSegmentation.RESULT_IMAGE_RAM,
@@ -439,8 +439,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		addClassButton = new JButton ("Create new class");
 		addClassButton.setToolTipText("Add one more label to mark different areas");
 
-		settingsButton = new JButton ("Settings");
-		settingsButton.setToolTipText("Display settings dialog");
+		settingsButton = new JButton ("FeatureSettings");
+		settingsButton.setToolTipText("Display featureSettings dialog");
 
 		testThreadsButton = new JButton ("Thread test");
 		testThreadsButton.setToolTipText("Tests how many numWorkers this PC will concurrently handle.");
@@ -625,11 +625,11 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 						if ( imagingModality.equals( FLUORESCENCE_IMAGING ) )
 						{
-							deepSegmentation.settings.log2 = true;
+							deepSegmentation.featureSettings.log2 = true;
 						}
 						else
 						{
-							deepSegmentation.settings.log2 = false;
+							deepSegmentation.featureSettings.log2 = false;
 						}
 					}
 					else if(e.getSource() == addClassButton){
@@ -985,11 +985,11 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		private final Composite transparency050 = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.50f );
 		/** 25% alpha composite */
 		//final Composite transparency025 = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f );
-		/** opacity (in %) of the result overlay image */
+		/** opacity (in %) of the resultImagePlus overlay image */
 		private int overlayOpacity = 33;
-		/** alpha composite for the result overlay image */
+		/** alpha composite for the resultImagePlus overlay image */
 		private Composite overlayAlpha = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, overlayOpacity / 100f);
-		/** current segmentation result overlay */
+		/** current segmentation resultImagePlus overlay */
 		private ImageOverlay resultOverlay;
 
 		/** boolean flag set to true when instances is complete */
@@ -1329,7 +1329,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 						{
 							if ( e.getKeyChar() == 'r' )
 							{
-								toggleOverlay("result");
+								toggleOverlay("resultImagePlus");
 							}
 
 							if ( e.getKeyChar() == 'p' )
@@ -1864,7 +1864,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		synchronized void toggleOverlay()
 		{
-			toggleOverlay("result");
+			toggleOverlay("resultImagePlus");
 		}
 
 		/**
@@ -1878,7 +1878,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			final byte[] green = new byte[ 256 ];
 			final byte[] blue = new byte[ 256 ];
 
-			if ( mode.equals("result") )
+			if ( mode.equals("resultImagePlus") )
 			{
 				// assign colors to classes
 				for ( int iClass = 0; iClass < DeepSegmentation.MAX_NUM_CLASSES; iClass++)
@@ -2101,7 +2101,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		if ( ! initialisation() ) return;
 
 		Calibration calibration = trainingImage.getCalibration();
-		deepSegmentation.settings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
+		deepSegmentation.featureSettings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
 
 		if( calibration.pixelWidth != calibration.pixelHeight )
 		{
@@ -2115,7 +2115,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			channelsToConsider.add(c); // zero-based
 		}
 
-		deepSegmentation.settings.activeChannels = channelsToConsider;
+		deepSegmentation.featureSettings.activeChannels = channelsToConsider;
 
 		//ij.gui.Toolbar.getInstance().setTool(ij.gui.Toolbar.FREELINE);
 
@@ -2141,11 +2141,11 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		if ( resultImageType.equals( DeepSegmentation.RESULT_IMAGE_DISK_SINGLE_TIFF ) )
 		{
-			String directory = IJ.getDirectory("Select result images directory");
+			String directory = IJ.getDirectory("Select resultImagePlus images directory");
 			if( directory == null )
 			{
-				logger.error( "No result image was assigned now.\n " +
-						"You can later click [Settings] and assign one." );
+				logger.error( "No resultImagePlus image was assigned now.\n " +
+						"You can later click [FeatureSettings] and assign one." );
 				return;
 			}
 
@@ -2158,7 +2158,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 			deepSegmentation.setResultImageRAM();
 
-			logger.info("Allocated memoryMB for classification result image." );
+			logger.info("Allocated memoryMB for classification resultImagePlus image." );
 
 		}
 
@@ -2235,7 +2235,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	}
 
 	/**
-	 * Update the result image overlay with the corresponding slice
+	 * Update the resultImagePlus image overlay with the corresponding slice
 	 */
 	public void updateResultOverlay()
 	{
@@ -2476,11 +2476,11 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		imagingModalityComboBox.setSelectedItem( imagingModality );
 		if ( imagingModality.equals( FLUORESCENCE_IMAGING ) )
 		{
-			deepSegmentation.settings.log2 = true;
+			deepSegmentation.featureSettings.log2 = true;
 		}
 		else
 		{
-			deepSegmentation.settings.log2 = false;
+			deepSegmentation.featureSettings.log2 = false;
 		}
 	}
 
@@ -2505,7 +2505,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		if ( ! deepSegmentation.hasResultImage() )
 		{
-			logger.error( "No result image assigned." );
+			logger.error( "No resultImagePlus image assigned." );
 			return;
 		}
 
@@ -2761,8 +2761,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		if ( deepSegmentation.getResultImage() == null )
 		{
-			logger.error("Classification result image yet assigned.\n" +
-					"Please [Assign result image].");
+			logger.error("Classification resultImagePlus image yet assigned.\n" +
+					"Please [Assign resultImagePlus image].");
 			return;
 		}
 
@@ -2809,7 +2809,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		if ( deepSegmentation.getResultImage() == null )
 		{
-			logger.error("Classification result image yet assigned.\n" + "Please [Assign result image].");
+			logger.error("Classification resultImagePlus image yet assigned.\n" + "Please [Assign resultImagePlus image].");
 			return;
 		}
 
@@ -3266,7 +3266,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	}
 
 	/**
-	 * Show class settings dialog
+	 * Show class featureSettings dialog
 	 *
 	 * @return false when canceled
 	 */
@@ -3318,7 +3318,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 
 	/**
-	 * Show class settings dialog
+	 * Show class featureSettings dialog
 	 *
 	 * @return false when canceled
 	 */
@@ -3352,7 +3352,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	public boolean showClassifierSettingsDialog()
 	{
-		GenericDialogPlus gd = new GenericDialogPlus("Classifier settings");
+		GenericDialogPlus gd = new GenericDialogPlus("Classifier featureSettings");
 
 		gd.addNumericField("Number of trees",
 				deepSegmentation.classifierNumTrees, 0);
@@ -3389,42 +3389,44 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	public boolean showFeatureSettingsDialog( boolean showAdvancedSettings )
 	{
-		GenericDialogPlus gd = new GenericDialogPlus("Segmentation settings");
+		GenericDialogPlus gd = new GenericDialogPlus("Segmentation featureSettings");
 
 		for ( int i = 0; i < 5; ++i )
 		{
-			gd.addNumericField( "Binning " + ( i + 1 ), deepSegmentation.settings.binFactors.get( i ), 0 );
+			gd.addNumericField( "Binning " + ( i + 1 ), deepSegmentation.featureSettings.binFactors.get( i ), 0 );
 		}
 
-		gd.addNumericField("Maximal convolution depth", deepSegmentation.settings.maxDeepConvLevel, 0);
-		gd.addNumericField("z/xy settings.anisotropy", deepSegmentation.settings.anisotropy, 2);
+		gd.addNumericField("Maximal convolution depth", deepSegmentation.featureSettings.maxDeepConvLevel, 0);
+		gd.addNumericField("z/xy featureSettings.anisotropy", deepSegmentation.featureSettings.anisotropy, 2);
 		gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
-				Settings.getAsCSVString( deepSegmentation.settings.activeChannels, 1 ) );
+				FeatureSettings.getAsCSVString( deepSegmentation.featureSettings.activeChannels, 1 ) );
 
 		if ( showAdvancedSettings )
 		{
 			gd.addStringField( "Bounding box offsets ",
-					Settings.getAsCSVString( deepSegmentation.settings.boundingBoxExpansions, 0 ) );
+					FeatureSettings.getAsCSVString( deepSegmentation.featureSettings.boundingBoxExpansionsForGeneratingInstancesFromLabels, 0 ) );
 
 			gd.addChoice( "Downsampling method", new String[]{
 							DownSampler.BIN_AVERAGE,
 							DownSampler.BIN_MAXIMUM,
 							DownSampler.TRANSFORMJ_SCALE_LINEAR,
-							DownSampler.TRANSFORMJ_SCALE_CUBIC }, deepSegmentation.settings.downSamplingMethod );
+							DownSampler.TRANSFORMJ_SCALE_CUBIC }, deepSegmentation.featureSettings.downSamplingMethod );
 
 			gd.addStringField( "Smoothing sigmas [pixels x/y] ",
-					Settings.getAsCSVString( deepSegmentation.settings.smoothingScales, 0 ) );
+					FeatureSettings.getAsCSVString( deepSegmentation.featureSettings.smoothingScales, 0 ) );
+
+			gd.addCheckbox( "Compute Gaussian filter", deepSegmentation.featureSettings.commputeGaussian );
 
 		}
 
-			gd.showDialog();
+		gd.showDialog();
 
 		if ( gd.wasCanceled() )
 			return false;
 
-        Settings newSettings = getSettingsFromGenericDialog( gd, showAdvancedSettings );
-        boolean settingsChanged = ! deepSegmentation.settings.equals(  newSettings );
-        deepSegmentation.settings = newSettings;
+        FeatureSettings newFeatureSettings = getSettingsFromGenericDialog( gd, showAdvancedSettings );
+        boolean settingsChanged = ! deepSegmentation.featureSettings.equals( newFeatureSettings );
+        deepSegmentation.featureSettings = newFeatureSettings;
 
         if ( settingsChanged )
         {
@@ -3437,33 +3439,34 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		return true;
 	}
 
-	private Settings getSettingsFromGenericDialog( GenericDialogPlus gd, boolean showAdvancedSettings )
+	private FeatureSettings getSettingsFromGenericDialog( GenericDialogPlus gd, boolean showAdvancedSettings )
 	{
-		Settings newSettings = deepSegmentation.settings.copy();
+		FeatureSettings newFeatureSettings = deepSegmentation.featureSettings.copy();
 
 		for ( int i = 0; i < 5; ++i )
 		{
-			newSettings.binFactors.set( i, (int) gd.getNextNumber() );
+			newFeatureSettings.binFactors.set( i, (int) gd.getNextNumber() );
 		}
 
-		newSettings.maxDeepConvLevel = (int) gd.getNextNumber();
-		newSettings.anisotropy = gd.getNextNumber();
-		newSettings.setActiveChannels( gd.getNextString() );
+		newFeatureSettings.maxDeepConvLevel = (int) gd.getNextNumber();
+		newFeatureSettings.anisotropy = gd.getNextNumber();
+		newFeatureSettings.setActiveChannels( gd.getNextString() );
 
 		if ( showAdvancedSettings )
 		{
-			newSettings.setBoundingBoxExpansions( gd.getNextString() );
-			newSettings.downSamplingMethod = gd.getNextChoice();
-			newSettings.setSmoothingScales( gd.getNextString() );
+			newFeatureSettings.setBoundingBoxExpansionsForGeneratingInstancesFromLabels( gd.getNextString() );
+			newFeatureSettings.downSamplingMethod = gd.getNextChoice();
+			newFeatureSettings.setSmoothingScales( gd.getNextString() );
+			newFeatureSettings.commputeGaussian = gd.getNextBoolean();
 		}
 
-		return newSettings;
+		return newFeatureSettings;
 	}
 
 
     public boolean showDebugSettingsDialog()
     {
-        GenericDialogPlus gd = new GenericDialogPlus("Debug settings");
+        GenericDialogPlus gd = new GenericDialogPlus("Debug featureSettings");
 
         gd.addCheckbox("Log label pixel values convolution depth", deepSegmentation.debugLogLabelPixelValues );
         gd.addCheckbox("Compute feature values instantly", computeLabelFeatureValuesInstantly );
@@ -3486,7 +3489,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
     private void recomputeLabelFeaturesAndRetrainClassifier()
     {
-        logger.warning( "Feature computation settings have been changed.\n" +
+        logger.warning( "Feature computation featureSettings have been changed.\n" +
                 "Thus, all label features will be recomputed \n" +
                 "and the classifier will be retrained. \n" +
                 "This might take some time." );
@@ -3525,7 +3528,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	}
 
 	/**
-	 * Toggle current result overlay image
+	 * Toggle current resultImagePlus overlay image
 	 */
 	public synchronized static void toggleOverlay()
 	{

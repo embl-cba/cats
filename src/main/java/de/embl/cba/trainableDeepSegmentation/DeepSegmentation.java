@@ -18,6 +18,7 @@ import java.util.zip.GZIPOutputStream;
 
 import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierOnSlurmCommand;
+import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
@@ -54,7 +55,6 @@ import de.embl.cba.trainableDeepSegmentation.results.ResultImageFrameSetter;
 import de.embl.cba.trainableDeepSegmentation.instances.InstancesUtils;
 import de.embl.cba.trainableDeepSegmentation.instances.InstancesManager;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageRAM;
-import de.embl.cba.trainableDeepSegmentation.settings.Settings;
 import de.embl.cba.trainableDeepSegmentation.settings.SettingsUtils;
 
 //import inra.ijpb.segment.Threshold;
@@ -127,7 +127,7 @@ public class DeepSegmentation
 	{
 		resultImageBgFg = new ResultImageRAM( this, getInputImageDimensions() );
 
-		logger.info("Allocated memoryMB for result image." );
+		logger.info("Allocated memoryMB for resultImagePlus image." );
 
 	}
 
@@ -136,7 +136,7 @@ public class DeepSegmentation
 
 		resultImageBgFg = new ResultImageDisk( this, directory, getInputImageDimensions() );
 
-		logger.info("Created disk-resident result image: " + directory);
+		logger.info("Created disk-resident resultImagePlus image: " + directory);
 
 
 	}
@@ -200,7 +200,7 @@ public class DeepSegmentation
 
 	public String tileSizeSetting = "auto";
 
-	public Settings settings = new Settings();
+	public FeatureSettings featureSettings = new FeatureSettings();
 
 	public String featureSelectionMethod = FEATURE_SELECTION_RELATIVE_USAGE;
 
@@ -373,19 +373,19 @@ public class DeepSegmentation
 
 	public void setImageBackground( int background )
 	{
-		if ( background != settings.imageBackground && getNumExamples() > 0 )
+		if ( background != featureSettings.imageBackground && getNumExamples() > 0 )
 		{
 			logger.warning( "Image background value has changed. " +
 					"Feature values for labels will thus be recomputed during " +
 					"next update." );
 			recomputeLabelInstances = true;
 		}
-		settings.imageBackground = background;
+		featureSettings.imageBackground = background;
 	}
 
 	public int getImageBackground()
 	{
-		return settings.imageBackground;
+		return featureSettings.imageBackground;
 	}
 
 
@@ -440,9 +440,9 @@ public class DeepSegmentation
 		threadsClassifierTraining = zChunkSize;
 
 		// TODO: obtain from label image
-		settings.classNames = new ArrayList<>();
-		settings.classNames.add( "label_im_class_0" );
-		settings.classNames.add( "label_im_class_1" );
+		featureSettings.classNames = new ArrayList<>();
+		featureSettings.classNames.add( "label_im_class_0" );
+		featureSettings.classNames.add( "label_im_class_1" );
 
 		FeatureProvider featureProvider = null;
 		ArrayList< long[][] > labelImageClassificationAccuraciesHistory = null;
@@ -837,9 +837,9 @@ public class DeepSegmentation
 		// set class label names
 		char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
 
-		settings.classNames = new ArrayList<>();
-		settings.classNames.add(new String("background"));
-		settings.classNames.add(new String("foreground"));
+		featureSettings.classNames = new ArrayList<>();
+		featureSettings.classNames.add(new String("background"));
+		featureSettings.classNames.add(new String("foreground"));
 
 		// Initialization of Fast Random Forest classifier
 		rf = new FastRandomForest();
@@ -926,7 +926,6 @@ public class DeepSegmentation
 		}
 
 	}
-
 
 	public Rectangle getExampleRectangleBounds(Example example)
 	{
@@ -1038,7 +1037,7 @@ public class DeepSegmentation
 	 */
 	public int getNumClasses()
 	{
-		return settings.classNames.size();
+		return featureSettings.classNames.size();
 	}
 
 	/**
@@ -1070,7 +1069,7 @@ public class DeepSegmentation
 	 */
 	public void addClass(String className)
 	{
-		settings.classNames.add(className);
+		featureSettings.classNames.add(className);
 	}
 
 	public void setResultImage( ResultImage resultImage )
@@ -1085,28 +1084,34 @@ public class DeepSegmentation
 
 		// setAndCreateLogDirRelative( directory ); // this is slow...
 
-		logger.info("Created disk-resident classification result image: " +
-				directory);
+		logger.info("Created disk-resident classification resultImagePlus image: " + directory);
 	}
 
-	public void setResultImageRAM()
+	public void setResultImageRAM( )
 	{
 		ResultImage resultImage = new ResultImageRAM( this, getInputImageDimensions() );
 		setResultImage( resultImage );
 	}
 
-	public ResultImage getResultImage()
+    public void setResultImageRAM( FinalInterval interval )
+    {
+        ResultImage resultImage = new ResultImageRAM( this, interval );
+        setResultImage( resultImage );
+    }
+
+
+    public ResultImage getResultImage()
 	{
 		return ( resultImage );
 	}
 
 
 	/**
-	 * bag class for getting the result of the loaded classifier
+	 * bag class for getting the resultImagePlus of the loaded classifier
 	 */
 	private static class LoadedProject {
 		private AbstractClassifier newClassifier = null;
-		private Settings newSettings = null;
+		private FeatureSettings newFeatureSettings = null;
 		private ArrayList<Example> newExamples = null;
 	}
 
@@ -1142,7 +1147,7 @@ public class DeepSegmentation
 			}
 			ObjectOutputStream objectOutputStream = new ObjectOutputStream(os);
 			objectOutputStream.writeObject(classifier);
-			objectOutputStream.writeObject(settings);
+			objectOutputStream.writeObject( featureSettings );
 			objectOutputStream.writeObject(getExamples());
 			objectOutputStream.flush();
 			objectOutputStream.close();
@@ -1172,13 +1177,13 @@ public class DeepSegmentation
 	}
 
 	/**
-	 * Set current settings
+	 * Set current featureSettings
 	 *
-	 * @param settings
+	 * @param featureSettings
 	 */
-	public void setSettings(Settings settings)
+	public void setFeatureSettings( FeatureSettings featureSettings )
 	{
-		this.settings = settings;
+		this.featureSettings = featureSettings;
 	}
 
 	public void loadClassifier( File file )
@@ -1195,7 +1200,7 @@ public class DeepSegmentation
 	public void loadClassifier( String directory, String filename )
 	{
 		ClassifierInstancesMetadata classifierInstancesMetadata = ClassifierUtils.loadClassifierInstancesMetadata( directory, filename );
-		SettingsUtils.setSettingsFromInstancesMetadata( settings, classifierInstancesMetadata.instancesAndMetadata );
+		SettingsUtils.setSettingsFromInstancesMetadata( featureSettings, classifierInstancesMetadata.instancesAndMetadata );
 		classifierManager.setClassifier( classifierInstancesMetadata );
 	}
 
@@ -1354,7 +1359,7 @@ public class DeepSegmentation
 
 		resetInstancesClasses( instancesAndMetadata.getInstances(), originalClasses );
 
-		// reroute classification to BgFg result image
+		// reroute classification to BgFg resultImagePlus image
 		ResultImage originalResultImage = resultImage;
 		resultImage = resultImageBgFg;
 
@@ -1362,7 +1367,7 @@ public class DeepSegmentation
 				classifierBgFgKey,
 				interval );
 
-		// reset result image
+		// reset resultImagePlus image
 		resultImage = originalResultImage;
 
 		// compute distance transform on whole data set
@@ -1374,8 +1379,8 @@ public class DeepSegmentation
 
 		// Recompute instance values, now including the distance map
 		//
-		//settings.activeChannels.remove( 0 );
-		settings.activeChannels.add( FeatureProvider.FG_DIST_BG_IMAGE );
+		//featureSettings.activeChannels.remove( 0 );
+		featureSettings.activeChannels.add( FeatureProvider.FG_DIST_BG_IMAGE );
 
 		logger.info( "\n# Recomputing instances including distance image" );
 		String bgFgInstancesKey = "BgFgTraining";
@@ -1405,7 +1410,9 @@ public class DeepSegmentation
 	public String loadInstancesAndMetadata( String filePath )
 	{
 		Path p = Paths.get(filePath);
+
 		String key = loadInstancesAndMetadata( p.getParent().toString(),  p.getFileName().toString());
+
 		return key;
 	}
 
@@ -1423,10 +1430,12 @@ public class DeepSegmentation
 
 		if ( InstancesUtils.getNumLabelIds( instancesAndMetadata ) > 1 && instancesAndMetadata.getRelationName().equals( inputImage.getTitle() ) )
 		{
-            logger.info( "\n# Loaded instances relation name matches image name => Populating labels..." );
-            logger.info( "\nCreating examples from instances..." );
+            logger.info( "# Loaded instances relation name matches image name => Populating labels..." );
+            logger.info( "Creating examples from instances..." );
 			setExamples( ExamplesUtils.getExamplesFromInstancesAndMetadata( instancesAndMetadata ) );
 			examplesFeatureNames = instancesAndMetadata.getAttributeNames();
+			logger.info( "..done." );
+			currentLabelsInstancesKey = key;
 		}
 		else
         {
@@ -1436,9 +1445,9 @@ public class DeepSegmentation
         }
 
 
-		SettingsUtils.setSettingsFromInstancesMetadata( settings, instancesAndMetadata );
+		SettingsUtils.setSettingsFromInstancesMetadata( featureSettings, instancesAndMetadata );
 
-		setImageBackground( settings.imageBackground );
+		setImageBackground( featureSettings.imageBackground );
 
 		return key;
 
@@ -1496,7 +1505,7 @@ public class DeepSegmentation
 					InstancesUtils.createInstancesAndMetadataFromExamples(
 							getExamples(),
 							instancesAndMetadataKey,
-							settings,
+                            featureSettings,
 							examplesFeatureNames,
 							getClassNames() );
 
@@ -1773,7 +1782,7 @@ public class DeepSegmentation
 		ArrayList< FinalInterval > exampleListBoundingIntervals = new ArrayList<>();
 		FinalInterval exampleListBoundingInterval = getExampleListBoundingInterval( examples );
 
-		for ( int offset : settings.boundingBoxExpansions )
+		for ( int offset : featureSettings.boundingBoxExpansionsForGeneratingInstancesFromLabels )
         {
             long[] offsets = new long[5];
             offsets[ X ] = offset;
@@ -1970,7 +1979,7 @@ public class DeepSegmentation
 
 		int maxFeatureVoxelSize = 1;
 
-		for ( int b : settings.binFactors )
+		for ( int b : featureSettings.binFactors )
 		{
 			if ( b > 0 )
 			{
@@ -2028,7 +2037,7 @@ public class DeepSegmentation
 		}
 		else
 		{
-			borderSize[ Z ] = (int) Math.ceil(( 1.0 * getFeatureVoxelSizeAtMaximumScale() / settings.anisotropy ) );
+			borderSize[ Z ] = (int) Math.ceil(( 1.0 * getFeatureVoxelSizeAtMaximumScale() / featureSettings.anisotropy ) );
 		}
 
 		return (borderSize);
@@ -2204,7 +2213,7 @@ public class DeepSegmentation
 
 	/**
 	 * Train classifier with the current instances
-	 * and current classifier settings
+	 * and current classifier featureSettings
 	 * and current active features
 	 */
 	public String trainClassifier( InstancesAndMetadata instancesAndMetadata )
@@ -2553,7 +2562,7 @@ public class DeepSegmentation
 	 * @param featureImages   feature stack array
 	 * @param numThreads      The number of numWorkers to use. Set to zero for auto-detection.
 	 * @param probabilityMaps probability flag. Tue: probability maps are calculated, false: binary classification
-	 * @return result image containing the probability maps or the binary classification
+	 * @return resultImagePlus image containing the probability maps or the binary classification
 	 */
 	public Runnable applyClassifier(
 			String classifierKey,
@@ -2583,7 +2592,7 @@ public class DeepSegmentation
 			ExecutorService exe = Executors.newFixedThreadPool( numThreads );
 			ArrayList< Future > futures = new ArrayList<>();
 
-			if ( isLogging ) logger.info("Classifying pixels...");
+			if ( isLogging ) logger.info( "Classifying pixels..." );
 
 			int numThreadsPerZChunk = 1;
 
@@ -2592,7 +2601,7 @@ public class DeepSegmentation
 				numThreadsPerZChunk = numThreads;
 			}
 
-			for (long[] zChunk : zChunks)
+			for ( long[] zChunk : zChunks )
 			{
 				if ( ThreadUtils.stopThreads( logger, exe, stopCurrentTasks, tileCounter, tileCounterMax ) ) return;
 
@@ -2641,10 +2650,10 @@ public class DeepSegmentation
 	{
 		// TODO: check whether this is a background region
 			/*
-			if ( settings.imageBackground > 0 )
+			if ( featureSettings.imageBackground > 0 )
 			{
 				// check whether the region is background
-				if ( isBackgroundRegion( imageToClassify, settings.imageBackground) )
+				if ( isBackgroundRegion( imageToClassify, featureSettings.imageBackground) )
 				{
 					// don't classify, but leave all classification pixels as is, hopefully 0...
 					pixelsClassified.addAndGet( nx * ny * nz  );
@@ -2794,7 +2803,7 @@ public class DeepSegmentation
 	 * @param classifier current classifier
 	 * @param counter auxiliary counter to be able to update the progress bar
 	 * @param probabilityMaps if true return a probability map for each class instead of a classified image
-	 * @return classification result
+	 * @return classification resultImagePlus
 	 */
 	private Runnable classifyZChunk(
 			FeatureProvider featureProvider,
@@ -2840,7 +2849,7 @@ public class DeepSegmentation
 					{
 						if ( isLogging )
 						{
-							logger.info( "Classifying slice " + z + "...; chunk of this thread contains: min = " + zMin + ", max = " + zMax  );
+							// logger.info( "Classifying slice " + z + "...; chunk of this thread contains: min = " + zMin + ", max = " + zMax  );
 						}
 
 						featureSlice = featureProvider.getCachedFeatureSlice( ( int ) z );
@@ -3010,7 +3019,7 @@ public class DeepSegmentation
 	}
 
 	// TODO:
-    // move below two functions to settings and make one function for the comma separated list
+    // move below two functions to featureSettings and make one function for the comma separated list
 
 
     /**
@@ -3034,7 +3043,7 @@ public class DeepSegmentation
 	 */
 	public ArrayList<String> getClassNames()
 	{
-		return settings.classNames;
+		return featureSettings.classNames;
 	}
 
 }

@@ -344,7 +344,7 @@ public class WatershedTransform2D {
 	    final long end = System.currentTimeMillis();
 		if( verbose ) IJ.log("  Flooding took: " + (end-start) + " ms");
 	    
-	    // Create result label image
+	    // Create resultImagePlus label image
 	    	
 		FloatProcessor fp = new FloatProcessor( size1, size2 );
 		for (int i = 0; i < size1; ++i)

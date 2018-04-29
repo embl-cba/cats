@@ -46,19 +46,19 @@ public class TrainLabel {
 
         ws.setNumThreads( 16 );
 
-        ws.settings.log2 = false;
+        ws.featureSettings.log2 = false;
 
         int level = 0;
-        ws.settings.binFactors.set(level++ , 2);
-        ws.settings.binFactors.set(level++ , 2);
-        ws.settings.binFactors.set(level++ , 2);
-        ws.settings.binFactors.set(level++ , 2);
-        ws.settings.binFactors.set(level++ , -1);
+        ws.featureSettings.binFactors.set(level++ , 2);
+        ws.featureSettings.binFactors.set(level++ , 2);
+        ws.featureSettings.binFactors.set(level++ , 2);
+        ws.featureSettings.binFactors.set(level++ , 2);
+        ws.featureSettings.binFactors.set(level++ , -1);
 
         String loggingDirectory = LOGGING_DIRECTORY;
         String outputDirectory = OUTPUT_DIRECTORY;
 
-        for ( int b : ws.settings.binFactors )
+        for ( int b : ws.featureSettings.binFactors )
         {
             if ( b == -1 ) break;
 
@@ -69,8 +69,8 @@ public class TrainLabel {
         createIfNotExists( outputDirectory );
 
         ws.setAndCreateLogDirAbsolute( loggingDirectory );
-        ws.settings.anisotropy = 5;
-        ws.settings.activeChannels.add( 0 );
+        ws.featureSettings.anisotropy = 5;
+        ws.featureSettings.activeChannels.add( 0 );
 
         ws.classifierBatchSizePercent = "100";
         ws.classifierNumTrees = 100;

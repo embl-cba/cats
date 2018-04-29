@@ -21,7 +21,7 @@ package de.embl.cba.trainableDeepSegmentation.features;
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
-import de.embl.cba.trainableDeepSegmentation.settings.Settings;
+import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.utils.logging.Logger;
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
 import ij.IJ;
@@ -134,7 +134,7 @@ public class FeatureProvider
 
     public int cacheSize = 0;
 
-    Settings settings;
+    FeatureSettings featureSettings;
 
     final LinkedHashMap< Integer, double[][][] > featureSliceCache = new LinkedHashMap< Integer, double[][][]>() {
         @Override
@@ -150,7 +150,7 @@ public class FeatureProvider
         this.inputImage = deepSegmentation.getInputImage();
         this.resultImageFgDistBg = deepSegmentation.getResultImageBgFg();
         this.logger = deepSegmentation.getLogger();
-        this.settings = deepSegmentation.settings.copy();
+        this.featureSettings = deepSegmentation.featureSettings.copy();
 
         // TODO: isn't below a job for the feature-provider?
         featureImageBorderSizes = deepSegmentation.getFeatureBorderSizes();
@@ -169,7 +169,7 @@ public class FeatureProvider
     /**
      * Merge input channels if they are more than 1
      * @param channels results channels
-     * @return result image
+     * @return resultImagePlus image
      */
     ArrayList< ImagePlus > mergeResultChannels(final ArrayList<ImagePlus>[] channels)
     {
@@ -296,6 +296,7 @@ public class FeatureProvider
 
     public static final String HESSIAN = "He";
     public static final String STRUCTURE = "St";
+    public static final String GAUSSIAN = "Ga";
 
 
     /**
@@ -321,13 +322,13 @@ public class FeatureProvider
                 // Get channel(s) to process
                 ImagePlus[] channels = extractChannels( originalImage );
 
-                String filterNameWithSmoothin = getFilterBaseName( filterName, sigma );
+                String filterNameIncludingSmoothing = getFilterBaseName( filterName, sigma );
 
                 ArrayList<ImagePlus>[] results = new ArrayList[ channels.length ];
 
                 for( int ch = 0; ch < channels.length; ch++ )
                 {
-                    results[ch] = new ArrayList<ImagePlus>();
+                    results[ch] = new ArrayList< >();
 
                     final ImagePlus channelImage = channels[ch].duplicate();
 
@@ -365,20 +366,21 @@ public class FeatureProvider
                         middle.deleteSlice( 1 );
                     }
 
-                    results[ ch ].add(new ImagePlus("L" + filterNameWithSmoothin + originalImage.getTitle(), largest));
+                    results[ ch ].add(new ImagePlus("L" + filterNameIncludingSmoothing + originalImage.getTitle(), largest));
 
                     if ( result.size() == 2 )
                     {
-                        results[ ch ].add(new ImagePlus("S" + filterNameWithSmoothin + originalImage.getTitle(), middle));
+                        // TODO: change this to S at some point (issue: backwards compatibility with stored features)
+                        results[ ch ].add(new ImagePlus("M" + filterNameIncludingSmoothing + originalImage.getTitle(), middle));
                     }
                     else // 3D
                     {
-                        results[ ch ].add(new ImagePlus("M" + filterNameWithSmoothin + originalImage.getTitle(), middle));
+                        results[ ch ].add(new ImagePlus("M" + filterNameIncludingSmoothing + originalImage.getTitle(), middle));
                         final ImageStack smallest = result.get(2).getImageStack();
                         // remove pad
                         smallest.deleteLastSlice();
                         smallest.deleteSlice(1);
-                        results[ ch ].add(new ImagePlus("S"+ filterNameWithSmoothin + originalImage.getTitle(), smallest));
+                        results[ ch ].add(new ImagePlus("S"+ filterNameIncludingSmoothing + originalImage.getTitle(), smallest));
                     }
 
                 }
@@ -409,7 +411,7 @@ public class FeatureProvider
             public ArrayList< ImagePlus > call()
             {
 
-                String filterBaseName = "G" + (int)sigma + "_";
+                String filterBaseName = getFilterBaseName( GAUSSIAN, sigma );
 
                 // Get channel(s) to process
                 ImagePlus[] channels = extractChannels(originalImage);
@@ -421,21 +423,22 @@ public class FeatureProvider
                     results[ ch ] = new ArrayList<ImagePlus>();
 
                     final ImagePlus im = channels [ ch ].duplicate();
-                    final Img<FloatType > image2 = ImagePlusAdapter.wrap( im );
+                    final Img<FloatType > resultImage = ImagePlusAdapter.wrap( im );
 
                     // first extend the image with mirror
-                    RandomAccessible< FloatType > mirrorImg = Views.extendMirrorSingle( image2 );
+                    RandomAccessible< FloatType > extendedInputImage = Views.extendMirrorSingle( resultImage );
 
                     // adjust sigma based on voxel size
-                    final double[] isoSigma = new double[ mirrorImg.numDimensions() ];
+                    final double[] isoSigma = new double[ extendedInputImage.numDimensions() ];
                     Calibration calibration = originalImage.getCalibration();
                     isoSigma[ 0 ] = sigma / calibration.pixelWidth;
                     isoSigma[ 1 ] = sigma / calibration.pixelHeight;
+
                     if ( isoSigma.length == 3 ) isoSigma[ 2 ] = sigma / calibration.pixelDepth;
 
                     try
                     {
-                        Gauss3.gauss( isoSigma, mirrorImg, image2 );
+                        Gauss3.gauss( isoSigma, extendedInputImage, resultImage );
                     }
                     catch (IncompatibleTypeException e) {
                         IJ.log( "Error when calculating Gaussian feature." );
@@ -443,8 +446,7 @@ public class FeatureProvider
                         return null;
                     }
 
-                    final ImagePlus ip = ImageJFunctions.wrapFloat(
-                            image2, filterBaseName + originalImage.getTitle());
+                    final ImagePlus ip = ImageJFunctions.wrapFloat( resultImage, filterBaseName + originalImage.getTitle());
 
                     results[ch].add( ip );
                 }
@@ -1057,7 +1059,7 @@ public class FeatureProvider
         {
             logger.error("Something went wrong during the feature computation; " +
                     "probably a memoryMB issue. Please try increasing your RAM " +
-                    "and/or got to [Settings] and reduce the " +
+                    "and/or got to [FeatureSettings] and reduce the " +
                     "'Maximum resolution level'");
             System.gc();
         }
@@ -1135,7 +1137,7 @@ public class FeatureProvider
 
         long start = System.currentTimeMillis();
 
-        for ( int channel : settings.activeChannels )
+        for ( int channel : featureSettings.activeChannels )
         {
             boolean success = computeFeatureImages( channel, numThreads, 100 );
 
@@ -1155,7 +1157,7 @@ public class FeatureProvider
     {
         if ( isLogging )
         {
-            logger.info("Anisotropy setting: " +  settings.anisotropy );
+            logger.info("Anisotropy setting: " +  featureSettings.anisotropy );
             logger.info("Number of active features: " + getNumActiveFeatures() );
             logger.info("Features computed in [ms]: " + (System.currentTimeMillis() - start) +
                     ", using " + numThreads + " threads");
@@ -1323,9 +1325,9 @@ public class FeatureProvider
      */
     public boolean computeFeatureImages( int channel, int numThreads, int maximumMultithreadedLevel )
     {
-        int numResolutionLevels = getNumResolutionLevels( settings.binFactors );
+        int numResolutionLevels = getNumResolutionLevels( featureSettings.binFactors );
 
-        double adaptiveAnisotropy = settings.anisotropy;
+        double adaptiveAnisotropy = featureSettings.anisotropy;
 
         ImagePlus processedOriginalImage = getProcessedOriginalImage( channel );
 
@@ -1401,9 +1403,9 @@ public class FeatureProvider
             // in order to account for anisotropy in xy vs z
             featureImage.setCalibration( calibrationForFeatureComputation );
 
-            for ( int smoothingScale : settings.smoothingScales )
+            for ( int smoothingScale : featureSettings.smoothingScales )
             {
-                if ( ! featureImage.getTitle().contains( CONV_DEPTH + deepSegmentation.settings.maxDeepConvLevel ) )
+                if ( ! featureImage.getTitle().contains( CONV_DEPTH + deepSegmentation.featureSettings.maxDeepConvLevel ) )
                 {
                     if ( level <= maximumMultithreadedLevel ) // multi-threaded
                     {
@@ -1412,6 +1414,14 @@ public class FeatureProvider
 
                         if ( isFeatureOrChildrenNeeded( getFilterBaseName( STRUCTURE, smoothingScale )  + featureImage.getTitle() ) )
                             featureFutures.add( exe.submit( getHessianOrStructure( STRUCTURE, featureImage, smoothingScale ) ) );
+
+                        if ( featureSettings.commputeGaussian )
+                        {
+                            if ( isFeatureOrChildrenNeeded( getFilterBaseName( GAUSSIAN, smoothingScale )  + featureImage.getTitle() ) )
+                            {
+                                featureFutures.add( exe.submit( getGaussian( featureImage, smoothingScale ) ) );
+                            }
+                        }
                     }
                     else // single-threaded
                     {
@@ -1420,6 +1430,14 @@ public class FeatureProvider
 
                         if ( isFeatureOrChildrenNeeded( getFilterBaseName( STRUCTURE, smoothingScale ) + featureImage.getTitle() ) )
                             featureImagesList.add( getHessianOrStructure( STRUCTURE, featureImage, smoothingScale ).call() );
+
+                        if ( featureSettings.commputeGaussian )
+                        {
+                            if ( isFeatureOrChildrenNeeded( getFilterBaseName( GAUSSIAN, smoothingScale )  + featureImage.getTitle() ) )
+                            {
+                                featureImagesList.add( getGaussian( featureImage, smoothingScale ).call() );
+                            }
+                        }
                     }
                 }
             }
@@ -1443,7 +1461,7 @@ public class FeatureProvider
 
     private double downsampleImagesForCurrentResolutionLayer( int numThreads, int numLevels, double adaptiveAnisotropy, ImagePlus inputImage, ArrayList< ArrayList< ImagePlus > > multiResolutionFeatureImages, int level, ArrayList< ImagePlus > featureImagesThisResolution ) throws InterruptedException, ExecutionException
     {
-        DownSampler downSampler = new DownSampler( settings.downSamplingMethod );
+        DownSampler downSampler = new DownSampler( featureSettings.downSamplingMethod );
 
         final ArrayList<ImagePlus> featureImagesPreviousResolution;
 
@@ -1457,7 +1475,7 @@ public class FeatureProvider
             featureImagesPreviousResolution = multiResolutionFeatureImages.get( level - 1 );
         }
 
-        int[] binning = getBinning( featureImagesPreviousResolution.get(0), adaptiveAnisotropy, settings.binFactors.get( level ) );
+        int[] binning = getBinning( featureImagesPreviousResolution.get(0), adaptiveAnisotropy, featureSettings.binFactors.get( level ) );
 
         // add binning information to image title
         String binningTitle = "Bin" + binning[0] + "x" + binning[1] + "x" + binning[2];
@@ -1606,10 +1624,10 @@ public class FeatureProvider
         ImagePlus processedInputImage = getDataCube( expandedInterval, channel, "mirror" );
 
         // pre-processing
-        if ( deepSegmentation.settings.log2 && channel != FG_DIST_BG_IMAGE )
+        if ( deepSegmentation.featureSettings.log2 && channel != FG_DIST_BG_IMAGE )
         {
             // subtract background
-            IJ.run( processedInputImage, "Subtract...", "value=" + deepSegmentation.settings.imageBackground + " stack" );
+            IJ.run( processedInputImage, "Subtract...", "value=" + deepSegmentation.featureSettings.imageBackground + " stack" );
             // make sure there are no zeros, because the log will give -Infinity
             IJ.run( processedInputImage, "Add...", "value=1 stack" );
 
@@ -1653,10 +1671,11 @@ public class FeatureProvider
                     StackProcessor.FILTER_MEAN );
 
             String title = inputImage.getTitle();
+            // TODO: change from "_" to "x" (issue backward compatibility)
             ImagePlus filteredImage = new ImagePlus(
                             String.format("Mean%d", (radii[0]*2)+1)
-                            + String.format("x%d", (radii[1]*2)+1)
-                            + String.format("x%d", (radii[2]*2)+1)
+                            + String.format("_%d", (radii[1]*2)+1)
+                            + String.format("_%d", (radii[2]*2)+1)
                             + "_" + title,
                     result );
 
@@ -1679,12 +1698,12 @@ public class FeatureProvider
             ImagePlus medianImage=HandMedian.getWholeImageCopy();
 
 
-            ImageStack result = ImageStack.create( imp.getWidth(), imp.getHeight(), imp.getNSlices(), 32 );
+            ImageStack resultImagePlus = ImageStack.create( imp.getWidth(), imp.getHeight(), imp.getNSlices(), 32 );
             StackProcessor stackProcessor = new StackProcessor( imp.getStack() );
 
-            stackProcessor.filter3D( result,
+            stackProcessor.filter3D( resultImagePlus,
                     (float) radii[0], (float) radii[1], (float) radii[2],
-                    0, result.size(),
+                    0, resultImagePlus.size(),
                     StackProcessor.FILTER_MEAN );
 
             String title = imp.getTitle();
@@ -1693,7 +1712,7 @@ public class FeatureProvider
                             + String.format("_%d", (radii[1]*2)+1)
                             + String.format("_%d", (radii[2]*2)+1)
                             + "_" + title,
-                    result );
+                    resultImagePlus );
 
             impResult.setUnitMicrometerCalibration( imp.getCalibration().copy() );
             return ( impResult );

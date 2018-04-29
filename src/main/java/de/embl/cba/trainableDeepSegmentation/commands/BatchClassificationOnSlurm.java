@@ -75,13 +75,13 @@ public class BatchClassificationOnSlurm implements Command
         List< Path > dataSetPatterns = getDataSetPatterns();
 
         ArrayList< JobFuture > jobFutures = submitJobsOnSlurm(
-                CommandUtils.getImageJExecutionString( imageJFile ),
+                CommandUtils.getXvfbImageJExecutionString( imageJFile ),
                 jobDirectory.toPath() ,
                 classifierFile.toPath(),
                 dataSetPatterns );
 
-        SlurmJobMonitor slurmJobMonitor = new SlurmJobMonitor();
-        slurmJobMonitor.monitorJobProgress( jobFutures, logger );
+        SlurmJobMonitor slurmJobMonitor = new SlurmJobMonitor( logger );
+        slurmJobMonitor.monitorJobProgress( jobFutures, 15, 5 );
 
     }
 

@@ -336,7 +336,7 @@ public class BalancedRandomForest extends AbstractClassifier implements Randomiz
 
 
 	/**
-	 * Gets the current settings of the forest.
+	 * Gets the current featureSettings of the forest.
 	 *
 	 * @return an array of strings suitable for passing to setOptions()
 	 */

@@ -1,5 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.instances;
 
+import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.utils.logging.Logger;
 import ij.ImagePlus;
 import ij.Prefs;
@@ -9,7 +10,6 @@ import de.embl.cba.trainableDeepSegmentation.*;
 import de.embl.cba.trainableDeepSegmentation.labels.examples.Example;
 import de.embl.cba.trainableDeepSegmentation.features.FeatureProvider;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImage;
-import de.embl.cba.trainableDeepSegmentation.settings.Settings;
 import de.embl.cba.trainableDeepSegmentation.settings.SettingsUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.ThreadUtils;
@@ -44,7 +44,7 @@ public class InstancesUtils {
     public static InstancesAndMetadata createInstancesAndMetadataFromExamples(
             ArrayList< Example > examples,
             String instancesName,
-            Settings settings,
+            FeatureSettings featureSettings,
             ArrayList< String > featureNames,
             ArrayList< String > classNames )
     {
@@ -70,7 +70,7 @@ public class InstancesUtils {
                         instancesAndMetadata.addMetadata( Metadata_Position_Z, example.z );
                         instancesAndMetadata.addMetadata( Metadata_Position_T, example.t );
                         instancesAndMetadata.addMetadata( Metadata_Label_Id, e );
-                        SettingsUtils.addSettingsToMetadata( settings, instancesAndMetadata );
+                        SettingsUtils.addSettingsToMetadata( featureSettings, instancesAndMetadata );
                     }
                 }
             }
@@ -259,7 +259,7 @@ public class InstancesUtils {
                                 instancesAndMetadata.addMetadata( Metadata_Position_T, t );
                                 instancesAndMetadata.addMetadata( Metadata_Label_Id, -1 );
 
-                                SettingsUtils.addSettingsToMetadata( deepSegmentation.settings,
+                                SettingsUtils.addSettingsToMetadata( deepSegmentation.featureSettings,
                                         instancesAndMetadata );
 
                                 pixelsPerClass[ localClass ]++;

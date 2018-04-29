@@ -55,6 +55,10 @@ public class ApplyClassifierOnSlurmCommand implements Command
     public File imageJFile;
     public static final String IMAGEJ_FILE = "imageJFile";
 
+    @Parameter( label = "Job status monitoring interval [s]", required = true)
+    public int jobStatusMonitoringInterval = 15;
+    public static final String JOB_STATUS_MONITORING_INTERVAL = "jobStatusMonitoringInterval";
+
     @Parameter()
     public String inputModality;
 
@@ -94,26 +98,13 @@ public class ApplyClassifierOnSlurmCommand implements Command
         dataSets.add( inputImageFile.toPath() );
 
         ArrayList< JobFuture > jobFutures = submitJobsOnSlurm(
-                CommandUtils.getImageJExecutionString( imageJFile ),
+                CommandUtils.getHeadlessImageJExecutionString( imageJFile ),
                 jobDirectory, classifierFile.toPath(), dataSets );
 
-        SlurmJobMonitor slurmJobMonitor = new SlurmJobMonitor();
-        slurmJobMonitor.monitorJobProgress( jobFutures, logger );
+        SlurmJobMonitor slurmJobMonitor = new SlurmJobMonitor( logger );
+        slurmJobMonitor.monitorJobProgress( jobFutures, jobStatusMonitoringInterval, 5 );
 
     }
-
-    private String getImageJExecutionString()
-    {
-        if ( imageJFile == null )
-        {
-            return ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_XVFB;
-        }
-        else
-        {
-            return "xvfb-run -a -e XVFB_ERR_PATH " + imageJFile.getAbsolutePath() + " --mem=MEMORY_MB --run";
-        }
-    }
-
 
     private ArrayList< JobFuture > submitJobsOnSlurm( String imageJ, String jobDirectory, Path classifierPath, List< Path > dataSets )
     {
@@ -136,11 +127,22 @@ public class ApplyClassifierOnSlurmCommand implements Command
                 setCommandAndParameterStrings( commandsSubmitter, dataSet, classifierPath, tile );
                 JobSettings jobSettings = getJobSettings( tile );
                 jobFutures.add( commandsSubmitter.submitCommands( jobSettings ) );
+
+                try
+                {
+                    Thread.sleep( 500 );
+                }
+                catch ( InterruptedException e )
+                {
+                    e.printStackTrace();
+                }
+
             }
         }
 
         return jobFutures;
     }
+
 
     private JobSettings getJobSettings( FinalInterval tile )
     {
@@ -183,29 +185,32 @@ public class ApplyClassifierOnSlurmCommand implements Command
 
         Map< String, Object > parameters = new HashMap<>();
 
-        String intervalXYZT = "";
-        for ( int d : XYZT )
-        {
-            intervalXYZT += tile.min( d ) + "," + tile.max( d );
-            if (d != T) intervalXYZT += ",";
-        }
+        String intervalXYZT = getIntervalAsCsvString( tile );
 
         parameters.clear();
         parameters.put( ApplyClassifierCommand.DATASET_ID, dataSetID );
 
         parameters.put( IOUtils.INPUT_MODALITY, inputModality );
+
         parameters.put( IOUtils.INPUT_IMAGE_FILE, PathMapper.asEMBLClusterMounted( inputImagePath ) );
 
-        parameters.put( IOUtils.INPUT_IMAGE_VSS_DIRECTORY, PathMapper.asEMBLClusterMounted( inputImageVSSDirectory ));
-        parameters.put( IOUtils.INPUT_IMAGE_VSS_PATTERN, inputImageVSSPattern );
-        parameters.put( IOUtils.INPUT_IMAGE_VSS_SCHEME, inputImageVSSScheme );
-        parameters.put( IOUtils.INPUT_IMAGE_VSS_HDF5_DATA_SET_NAME, inputImageVSSHdf5DataSetName );
+        if ( inputModality.equals( IOUtils.OPEN_USING_LAZY_LOADING_TOOLS) )
+        {
+            parameters.put( IOUtils.INPUT_IMAGE_VSS_DIRECTORY, PathMapper.asEMBLClusterMounted( inputImageVSSDirectory ) );
+
+            parameters.put( IOUtils.INPUT_IMAGE_VSS_PATTERN, inputImageVSSPattern );
+
+            parameters.put( IOUtils.INPUT_IMAGE_VSS_SCHEME, inputImageVSSScheme );
+
+            parameters.put( IOUtils.INPUT_IMAGE_VSS_HDF5_DATA_SET_NAME, inputImageVSSHdf5DataSetName );
+        }
 
         parameters.put( ApplyClassifierCommand.CLASSIFICATION_INTERVAL, intervalXYZT );
 
         parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, PathMapper.asEMBLClusterMounted( classifierPath ) );
 
-        parameters.put( IOUtils.OUTPUT_MODALITY, IOUtils.SAVE_AS_TIFF_SLICES );
+        parameters.put( IOUtils.OUTPUT_MODALITY, IOUtils.SAVE_AS_MULTI_CLASS_TIFF_SLICES );
+
         parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, PathMapper.asEMBLClusterMounted( outputDirectory ) );
 
         parameters.put( ApplyClassifierCommand.NUM_WORKERS, numWorkers );
@@ -215,7 +220,6 @@ public class ApplyClassifierOnSlurmCommand implements Command
         parameters.put( ApplyClassifierCommand.QUIT_AFTER_RUN, true );
 
         commandsSubmitter.addIJCommandWithParameters( ApplyClassifierCommand.PLUGIN_NAME , parameters );
-
 
     }
 

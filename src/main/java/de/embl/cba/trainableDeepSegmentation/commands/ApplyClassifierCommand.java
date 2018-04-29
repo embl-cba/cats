@@ -11,7 +11,6 @@ package de.embl.cba.trainableDeepSegmentation.commands;
 
 import de.embl.cba.cluster.commands.Commands;
 import de.embl.cba.trainableDeepSegmentation.results.ResultExportSettings;
-import de.embl.cba.trainableDeepSegmentation.results.ResultUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.StringUtils;
 import ij.IJ;
@@ -84,6 +83,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
             IOUtils.SAVE_AS_IMARIS } , required = true )
 
     public String outputModality;
+    public static final String OUTPUT_MODALITY = "outputModality";
 
     @Parameter( label = "Output folder", style = "directory" )
     public File outputDirectory;
@@ -135,6 +135,20 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         logService.info( "# " + PLUGIN_NAME );
         logCommandLineCall();
 
+        setInputImage();
+
+        applyClassifier();
+
+        manageProbabilitiesOutput();
+
+        saveResultsTable();
+
+        if ( quitAfterRun )  if ( quitAfterRun ) Commands.quitImageJ( logService );
+
+    }
+
+    private void setInputImage()
+    {
         logService.info( "Loading: " + inputImageFile );
 
         if ( inputModality.equals( IOUtils.OPEN_USING_IMAGEJ1 ) )
@@ -163,15 +177,18 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         logService.info( "Image dimensions: X = " + inputImage.getWidth() + "; Y = " + inputImage.getHeight() );
 
         inputImage.setTitle( dataSetID );
+    }
 
-        applyClassifier();
-
-        saveOutputImages();
-
-        saveResultsTable();
-
-        if ( quitAfterRun )  if ( quitAfterRun ) Commands.quitImageJ( logService );
-
+    private void manageProbabilitiesOutput()
+    {
+        if ( outputModality.equals( IOUtils.STREAM_TO_RESULT_IMAGE_DISK ) )
+        {
+            logService.info( "Results have been saved into the specified disk resident resultImagePlus image." );
+        }
+        else
+        {
+            saveOutputImages();
+        }
     }
 
     private void saveOutputImages()
@@ -221,6 +238,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
     private void saveAsFiles()
     {
+
         ResultExportSettings resultExportSettings = new ResultExportSettings();
         resultExportSettings.directory = outputDirectory.getAbsolutePath();
         resultExportSettings.exportNamesPrefix = dataSetID + "--";
@@ -231,7 +249,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         {
             logService.info( "Saving as Imaris..." );
             outputFileType = ".ims";
-            resultExportSettings.exportType = ResultUtils.SEPARATE_IMARIS;
+            resultExportSettings.exportType = ResultExportSettings.SEPARATE_IMARIS;
             deepSegmentation.getResultImage().exportResults( resultExportSettings );
         }
 
@@ -239,7 +257,15 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         {
             logService.info( "Saving as Tiff stacks..." );
             outputFileType = ".tif";
-            resultExportSettings.exportType = ResultUtils.SEPARATE_TIFF_FILES;
+            resultExportSettings.exportType = ResultExportSettings.SEPARATE_TIFF_FILES;
+            deepSegmentation.getResultImage().exportResults( resultExportSettings );
+        }
+
+        if( outputModality.equals( IOUtils.SAVE_AS_MULTI_CLASS_TIFF_SLICES ) )
+        {
+            logService.info( "Saving as Tiff stacks..." );
+            outputFileType = ".tif";
+            resultExportSettings.exportType = ResultExportSettings.SEPARATE_MULTI_CLASS_TIFF_SLICES;
             deepSegmentation.getResultImage().exportResults( resultExportSettings );
         }
 
@@ -255,13 +281,13 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         deepSegmentation.setMaxMemory( memoryMB * 1000000L ); // MB -> Byte
         deepSegmentation.setInputImage( inputImage );
 
-        if ( outputModality.equals( IOUtils.SAVE_AS_TIFF_SLICES ) )
+        if ( outputModality.equals( IOUtils.STREAM_TO_RESULT_IMAGE_DISK ) )
         {
             deepSegmentation.setResultImageDisk( outputDirectory.getAbsolutePath() );
         }
         else
         {
-            deepSegmentation.setResultImageRAM();
+            deepSegmentation.setResultImageRAM( getInterval() );
         }
 
         deepSegmentation.loadClassifier( classifierFile.getAbsolutePath() );

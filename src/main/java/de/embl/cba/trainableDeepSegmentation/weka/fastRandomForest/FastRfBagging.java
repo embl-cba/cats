@@ -519,7 +519,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
   }
 
   /**
-   * Gets the current settings of the Classifier.
+   * Gets the current featureSettings of the Classifier.
    *
    * @return an array of strings suitable for passing to setOptions
    */
@@ -759,7 +759,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
           // Evaluate statistical significance of difference
           // between most and second-most likely class.
-          // Return result is significance is reached, even
+          // Return resultImagePlus is significance is reached, even
           // before all trees have been evaluated.
 
           if ( p0 == 1.0 )

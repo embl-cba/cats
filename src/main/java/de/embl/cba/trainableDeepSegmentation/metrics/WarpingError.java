@@ -2256,10 +2256,10 @@ public class WarpingError extends Metrics {
 	
 
 	/**
-	 * Cluster the result mismatches from the warping so pixels
+	 * Cluster the resultImagePlus mismatches from the warping so pixels
 	 * belonging to the same error are only counted once.
 	 * 
-	 * @param warpedLabels result warped labels
+	 * @param warpedLabels resultImagePlus warped labels
 	 * @param mismatches list of non simple points 
 	 * @param mismatchClassification array of classified mismatches
 	 * @return number of warping mismatches after clustering by error
@@ -2341,7 +2341,7 @@ public class WarpingError extends Metrics {
 	
 	
 	/**
-	 * Cluster the result mismatches from the warping
+	 * Cluster the resultImagePlus mismatches from the warping
 	 * by types of errors.
 	 * 
 	 * @param mismatchClassification array of classified mismatches
@@ -2743,7 +2743,7 @@ public class WarpingError extends Metrics {
 
     
 	/**
-	 * Calculate warping error and return the related result images and values.
+	 * Calculate warping error and return the related resultImagePlus images and values.
 	 *
 	 * @param binaryThreshold threshold value to binarize proposal (larger than 0 and smaller than 1)
 	 * @param clusterByError if false, cluster topology errors by type, otherwise cluster by type and mistake

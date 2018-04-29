@@ -11,10 +11,8 @@ import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import de.embl.cba.trainableDeepSegmentation.*;
-import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 
 import java.io.File;
-import java.util.ArrayList;
 
 public class ResultImageDisk implements ResultImage {
 
@@ -39,11 +37,10 @@ public class ResultImageDisk implements ResultImage {
     @Override
     public void exportResults( ResultExportSettings resultExportSettings )
     {
-        logger.info("Saving probabilities as separate files.." );
-
         resultExportSettings.classLutWidth = CLASS_LUT_WIDTH;
         resultExportSettings.logger = logger;
-        resultExportSettings.result = result;
+        resultExportSettings.resultImagePlus = result;
+        resultExportSettings.resultImage = this;
 
         ResultUtils.exportResults( resultExportSettings );
     }
@@ -72,10 +69,8 @@ public class ResultImageDisk implements ResultImage {
     @Override
     public ImagePlus getDataCubeCopy( FinalInterval interval )
     {
-
         VirtualStackOfStacks vss = (VirtualStackOfStacks)result.getStack();
-        ImagePlus dataCube = vss.getDataCube( IntervalUtils.convertIntervalToRegion5D( interval ),
-                new int[] {-1,-1,}, 1 );
+        ImagePlus dataCube = vss.getDataCube( IntervalUtils.convertIntervalToRegion5D( interval ), new int[] {-1,-1,}, 1 );
         return dataCube;
     }
 
@@ -116,8 +111,8 @@ public class ResultImageDisk implements ResultImage {
                 true);
 
         result.setDimensions( 1, (int) dimensions[ IntervalUtils.Z ], (int) dimensions[ IntervalUtils.T ]);
-        result.setOpenAsHyperStack(true);
-        result.setTitle("classification_result");
+        result.setOpenAsHyperStack( true );
+        result.setTitle( "classification_result" );
 
         return ( result );
     }
@@ -135,6 +130,12 @@ public class ResultImageDisk implements ResultImage {
     {
         ImagePlus imp = result.duplicate();
         return imp;
+    }
+
+    @Override
+    public FinalInterval getInterval()
+    {
+        return null;
     }
 
     public File getDirectory()

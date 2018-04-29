@@ -9,6 +9,7 @@ import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
+import net.imglib2.util.Intervals;
 
 import java.awt.image.ColorModel;
 import java.util.ArrayList;
@@ -23,13 +24,24 @@ public class ResultImageRAM implements ResultImage {
     DeepSegmentation deepSegmentation;
     Logger logger;
     long[] dimensions;
+    FinalInterval interval;
 
-    public ResultImageRAM( DeepSegmentation deepSegmentation, long[] dimensions)
+    public ResultImageRAM( DeepSegmentation deepSegmentation, long[] dimensions )
     {
         this.deepSegmentation = deepSegmentation;
         this.logger = deepSegmentation.getLogger();
         this.result = createImagePlus( dimensions );
         this.dimensions = dimensions;
+        this.interval = null;
+    }
+
+    public ResultImageRAM( DeepSegmentation deepSegmentation, FinalInterval interval )
+    {
+        this.deepSegmentation = deepSegmentation;
+        this.logger = deepSegmentation.getLogger();
+        this.interval = interval;
+        this.dimensions = Intervals.dimensionsAsLongArray( interval );
+        this.result = createImagePlus( dimensions);
     }
 
 
@@ -38,7 +50,8 @@ public class ResultImageRAM implements ResultImage {
     {
         resultExportSettings.classLutWidth = CLASS_LUT_WIDTH;
         resultExportSettings.logger = logger;
-        resultExportSettings.result = result;
+        resultExportSettings.resultImagePlus = result;
+        resultExportSettings.resultImage = this;
 
         ResultUtils.exportResults( resultExportSettings );
     }
@@ -46,6 +59,12 @@ public class ResultImageRAM implements ResultImage {
     @Override
     public ImageProcessor getSlice( int slice, int frame )
     {
+        if ( interval != null )
+        {
+            slice -= interval.min( IntervalUtils.Z );
+            frame -= interval.min( IntervalUtils.T );
+        }
+
         int stackIndex = result.getStackIndex(  0, slice, frame );
         ImageProcessor ip = result.getStack().getProcessor( stackIndex );
         return ( ip );
@@ -53,6 +72,12 @@ public class ResultImageRAM implements ResultImage {
 
     public void setProcessor( ImageProcessor ip, int slice, int frame )
     {
+        if ( interval != null )
+        {
+            slice -= interval.min( IntervalUtils.Z );
+            frame -= interval.min( IntervalUtils.T );
+        }
+
         int stackIndex = result.getStackIndex(  0, slice, frame );
         result.getStack().setProcessor( ip, stackIndex );
     }
@@ -65,14 +90,20 @@ public class ResultImageRAM implements ResultImage {
 
     public void set( long x, long y, long z, long t, int classId, double certainty )
     {
+        if ( interval != null )
+        {
+            x -= interval.min( IntervalUtils.X );
+            y -= interval.min( IntervalUtils.Y );
+            z -= interval.min( IntervalUtils.Z );
+            t -= interval.min( IntervalUtils.T );
+        }
+
         int lutCertainty = (int) ( certainty * ( CLASS_LUT_WIDTH - 1.0 ) );
 
         int classOffset = classId * CLASS_LUT_WIDTH + 1;
 
         int n = result.getStackIndex( 1, (int) z+1, (int) t+1 );
-        result.getStack().getProcessor( n ).set(
-                (int) x, (int) y,
-                (byte) ( classOffset + lutCertainty ));
+        result.getStack().getProcessor( n ).set( (int) x, (int) y, (byte) ( classOffset + lutCertainty ));
     }
 
     private ImagePlus createImagePlus( long[] dimensions )
@@ -118,6 +149,12 @@ public class ResultImageRAM implements ResultImage {
     {
         ImagePlus imp = result.duplicate();
         return imp;
+    }
+
+    @Override
+    public FinalInterval getInterval()
+    {
+        return interval;
     }
 
     public ImagePlus getFrame( int frame )

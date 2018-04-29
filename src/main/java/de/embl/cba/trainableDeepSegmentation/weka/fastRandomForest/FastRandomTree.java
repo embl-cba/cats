@@ -622,7 +622,7 @@ class FastRandomTree
    *
    * - When splitting sortedIndices into two or more subsetIndices,
    * FastRandomTree checks whether an instance's split attribute value was above 
-   * splitpoint only once per instances, and stores result into the DataCache's
+   * splitpoint only once per instances, and stores resultImagePlus into the DataCache's
    * whatGoesWhere field, which is then read in splitting subsetIndices. <p>
    * 
    * As a consequence of the above points, the exact branch sizes (even with
@@ -909,13 +909,13 @@ class FastRandomTree
    * <li>dist[][] is now computed only after the split point has been found,
    *     and not updated continually by copying from currDist
    * <li>also, in Weka's RandomTree it was possible to create a split 'in the
-   *     middle' of instance 0, which would result in empty nodes after the
+   *     middle' of instance 0, which would resultImagePlus in empty nodes after the
    *     split; this is now fixed
    * <li>instance 0 is now generally skipped when looking for split points,
    *     as the split point 'before instance 0' is not sensible; in versions
    *     prior to 0.96 this change introduced a bug where attributes with
    *     all missing values had their dists computed wrongly, which might
-   *     result in useless (but harmless) branches being added to the tree
+   *     resultImagePlus in useless (but harmless) branches being added to the tree
    * </ul>
    * 
    * @param props gets filled with relative sizes of branches (total = 1), indexed

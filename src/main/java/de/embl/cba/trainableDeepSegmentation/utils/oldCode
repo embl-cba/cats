@@ -15,7 +15,7 @@
 						this,
 						inputImage,
 						labelImage,
-						resultImage,
+						resultImageDisk,
 						instancesName,
 						interval,
 						labelImageNumInstancesPerClass,
@@ -5045,17 +5045,17 @@
     					return;
     				}
     			}
-    			final ImagePlus resultImage = classifiedImage.duplicate();
+    			final ImagePlus resultImageDisk = classifiedImage.duplicate();
 
-    			resultImage.setTitle("Classified image");
+    			resultImageDisk.setTitle("Classified image");
 
-    			convertTo8bitNoScaling( resultImage );
+    			convertTo8bitNoScaling( resultImageDisk );
 
-    			resultImage.getProcessor().setColorModel( win.getOverlayLUT() );
-    			resultImage.getImageStack().setColorModel( win.getOverlayLUT() );
-    			resultImage.updateAndDraw();
+    			resultImageDisk.getProcessor().setColorModel( win.getOverlayLUT() );
+    			resultImageDisk.getImageStack().setColorModel( win.getOverlayLUT() );
+    			resultImageDisk.updateAndDraw();
 
-    			resultImage.show();
+    			resultImageDisk.show();
     		}
     		*/
     	}
@@ -5104,17 +5104,17 @@
 			win.updateButtonsEnabling();
 		}
 
-		final ImagePlus resultImage = classifiedImage.duplicate();
+		final ImagePlus resultImageDisk = classifiedImage.duplicate();
 
-		resultImage.setTitle( "Classified image" );
+		resultImageDisk.setTitle( "Classified image" );
 
-		convertTo8bitNoScaling( resultImage );
+		convertTo8bitNoScaling( resultImageDisk );
 
-		resultImage.getProcessor().setColorModel( overlayLUT );
-		resultImage.getImageStack().setColorModel( overlayLUT );
-		resultImage.updateAndDraw();
+		resultImageDisk.getProcessor().setColorModel( overlayLUT );
+		resultImageDisk.getImageStack().setColorModel( overlayLUT );
+		resultImageDisk.updateAndDraw();
 
-		resultImage.show();
+		resultImageDisk.show();
 		*/
 	}
 

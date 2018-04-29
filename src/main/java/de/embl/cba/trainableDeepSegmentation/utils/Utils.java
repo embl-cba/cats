@@ -481,7 +481,7 @@ public final class Utils {
 	 * Apply binary threshold to input image
 	 * @param ip input image
 	 * @param thresholdValue threshold value (all pixel above that value will be set to 255, the rest to 0)
-	 * @return binary result
+	 * @return binary resultImagePlus
 	 */
 	public static ByteProcessor threshold (ImageProcessor ip, double thresholdValue)
 	{

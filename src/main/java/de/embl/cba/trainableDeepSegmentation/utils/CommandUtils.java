@@ -19,7 +19,7 @@ public class CommandUtils
         commandService.run( ApplyClassifierOnSlurmCommand.class, true, parameters );
     }
 
-    public static String getImageJExecutionString( File imageJFile )
+    public static String getXvfbImageJExecutionString( File imageJFile )
     {
         if ( imageJFile == null )
         {
@@ -29,6 +29,19 @@ public class CommandUtils
         {
             String clusterMountedImageJ = PathMapper.asEMBLClusterMounted( imageJFile.getAbsolutePath() );
             return "xvfb-run -a -e XVFB_ERR_PATH " + clusterMountedImageJ + " --mem=MEMORY_MB --run";
+        }
+    }
+
+    public static String getHeadlessImageJExecutionString( File imageJFile )
+    {
+        if ( imageJFile == null )
+        {
+            return ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS;
+        }
+        else
+        {
+            String clusterMountedImageJ = PathMapper.asEMBLClusterMounted( imageJFile.getAbsolutePath() );
+            return clusterMountedImageJ + " --headless --mem=MEMORY_MB --run";
         }
     }
 }

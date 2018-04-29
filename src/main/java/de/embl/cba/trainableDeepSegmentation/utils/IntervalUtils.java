@@ -264,7 +264,7 @@ public abstract class IntervalUtils {
         max[ X ] = imp.getWidth() - 1;
         max[ Y ] = imp.getHeight() - 1;
         max[ Z ] = imp.getNSlices() - 1;
-        min[ C ] = max[ C ] = 0; // Singleton, because classification result currently can only have one channel
+        min[ C ] = max[ C ] = 0; // Singleton, because classification resultImagePlus currently can only have one channel
         max[ T ] = imp.getNFrames() - 1;
 
         return new FinalInterval( min, max );
@@ -320,5 +320,16 @@ public abstract class IntervalUtils {
 
         return bytes;
 
+    }
+
+    public static String getIntervalAsCsvString( FinalInterval tile )
+    {
+        String intervalXYZT = "";
+        for ( int d : XYZT )
+        {
+            intervalXYZT += tile.min( d ) + "," + tile.max( d );
+            if (d != T) intervalXYZT += ",";
+        }
+        return intervalXYZT;
     }
 }

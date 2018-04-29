@@ -30,4 +30,6 @@ public interface ResultImage {
     ImagePlus getDataCubeCopy( FinalInterval interval );
 
     ImagePlus getWholeImageCopy();
+
+    FinalInterval getInterval();
 }

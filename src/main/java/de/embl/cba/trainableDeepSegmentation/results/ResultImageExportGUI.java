@@ -8,8 +8,6 @@ import ij.gui.GenericDialog;
 
 import java.util.ArrayList;
 
-import static de.embl.cba.trainableDeepSegmentation.results.ResultUtils.*;
-
 public abstract class ResultImageExportGUI
 {
 
@@ -19,7 +17,7 @@ public abstract class ResultImageExportGUI
                                       ArrayList< String > classNames )
     {
 
-        String[] exportChoices = new String[]{ SHOW_AS_SEPARATE_IMAGES, SEPARATE_IMARIS, SEPARATE_TIFF_FILES };
+        String[] exportChoices = new String[]{ ResultExportSettings.SHOW_AS_SEPARATE_IMAGES, ResultExportSettings.SEPARATE_IMARIS, ResultExportSettings.SEPARATE_TIFF_FILES };
 
         GenericDialog gd = new GenericDialogPlus("Export Segmentation Results");
 
@@ -46,7 +44,9 @@ public abstract class ResultImageExportGUI
 
         gd.addMessage( "--- Export modality ---" );
 
-        gd.addChoice( "Export as:", exportChoices, ResultUtils.SEPARATE_IMARIS );
+        gd.addChoice( "Export as:", exportChoices, ResultExportSettings.SEPARATE_IMARIS );
+
+        gd.addStringField( "TimePoints [from, to] ", "1," + rawData.getNFrames() );
 
         gd.showDialog();
 
@@ -67,7 +67,7 @@ public abstract class ResultImageExportGUI
 
     private static boolean getOutputDirectory( ResultExportSettings resultExportSettings )
     {
-        if ( ! resultExportSettings.exportType.equals( ResultUtils.SHOW_AS_SEPARATE_IMAGES ) )
+        if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_AS_SEPARATE_IMAGES ) )
         {
             resultExportSettings.directory = IJ.getDirectory("Select output directory");
             if ( resultExportSettings.directory == null ) return true;
@@ -86,6 +86,8 @@ public abstract class ResultImageExportGUI
         setSpatialProximityFiltering( gd, resultExportSettings );
 
         resultExportSettings.exportType = gd.getNextChoice();
+
+        resultExportSettings.timePointsFirstLast = Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
     }
 
     private static void setExport( ArrayList< String > classNames, GenericDialog gd, ResultExportSettings resultExportSettings )

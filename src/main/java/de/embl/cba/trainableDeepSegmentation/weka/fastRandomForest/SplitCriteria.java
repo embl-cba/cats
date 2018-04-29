@@ -42,7 +42,7 @@ public final class SplitCriteria {
    * Similar to weka.core.ContingencyTables.entropyConditionedOnRows.
    * 
    * Does not output entropy, output is modified to make routine faster:
-   * the result is not divided by "total", as the total is a constant
+   * the resultImagePlus is not divided by "total", as the total is a constant
    * in all operations (subtraction, comparison) performed as a part of
    * splitting in FastRfTree. Also, we don't have to divide by Math.log(2)
    * as the logarithms provided by fastLog2() are already base 2.
@@ -76,7 +76,7 @@ public final class SplitCriteria {
    * Similar to weka.core.ContingencyTables.entropyOverColumns
    * 
    * Does not output entropy, output is modified to make routine faster:
-   * the result is not divided by "total", as the total is a constant
+   * the resultImagePlus is not divided by "total", as the total is a constant
    * in all operations (subtraction, comparison) performed as a part of
    * splitting in FastRfTree. Also, we don't have to divide by Math.log(2)
    * as the logarithms provided by fastLog2() are already base 2.
