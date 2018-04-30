@@ -26,7 +26,7 @@ public class ContextAware
         deepSegmentation.setResultImageRAM( );
         deepSegmentation.loadInstancesAndMetadata( "/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/context-aware-v6-scale1.5-noise.ARFF"  );
 
-        deepSegmentation.featureSettings.downSamplingMethod = DownSampler.TRANSFORMJ_SCALE_LINEAR;
+        deepSegmentation.featureSettings.downSamplingMethod = DownSampler.getID( DownSampler.TRANSFORMJ_SCALE_LINEAR );
         deepSegmentation.featureSettings.boundingBoxExpansionsForGeneratingInstancesFromLabels = new TreeSet<>(  );
         deepSegmentation.featureSettings.boundingBoxExpansionsForGeneratingInstancesFromLabels.add( 0 );
         deepSegmentation.featureSettings.boundingBoxExpansionsForGeneratingInstancesFromLabels.add( 1 );

@@ -1202,6 +1202,7 @@ public class DeepSegmentation
 		ClassifierInstancesMetadata classifierInstancesMetadata = ClassifierUtils.loadClassifierInstancesMetadata( directory, filename );
 		SettingsUtils.setSettingsFromInstancesMetadata( featureSettings, classifierInstancesMetadata.instancesAndMetadata );
 		classifierManager.setClassifier( classifierInstancesMetadata );
+
 	}
 
 
@@ -1416,6 +1417,8 @@ public class DeepSegmentation
 		return key;
 	}
 
+	public boolean considerMultipleBoundingBoxOffsetsDuringInstancesLoading = false;
+
 	public String loadInstancesAndMetadata( String directory, String fileName )
 	{
 		InstancesAndMetadata instancesAndMetadata = InstancesUtils.loadInstancesAndMetadataFromARFF( directory, fileName );
@@ -1432,7 +1435,7 @@ public class DeepSegmentation
 		{
             logger.info( "# Loaded instances relation name matches image name => Populating labels..." );
             logger.info( "Creating examples from instances..." );
-			setExamples( ExamplesUtils.getExamplesFromInstancesAndMetadata( instancesAndMetadata ) );
+			setExamples( ExamplesUtils.getExamplesFromInstancesAndMetadata( instancesAndMetadata, considerMultipleBoundingBoxOffsetsDuringInstancesLoading ) );
 			examplesFeatureNames = instancesAndMetadata.getAttributeNames();
 			logger.info( "..done." );
 			currentLabelsInstancesKey = key;
@@ -1708,15 +1711,18 @@ public class DeepSegmentation
 
 		return () -> {
 
-			logger.info("Label set " + (counter + 1) + "/" + (counterMax + 1) + ": " + "Computing features for " + examples.size() + " label(s)...");
+            setExampleInstanceValuesAreCurrentlyBeingComputed( examples, true );
 
-			clearInstancesValues( examples );
+            logger.info("Label set " + (counter + 1) + "/" + (counterMax + 1) + ": " + "Computing features for " + examples.size() + " label(s)...");
+
+            clearInstancesValues( examples );
 
 			ArrayList< FinalInterval > exampleListBoundingIntervals = getBoundingIntervals( examples );
 
 			for ( int iBoundingInterval = 0; iBoundingInterval < exampleListBoundingIntervals.size(); ++iBoundingInterval )
 			{
-				FeatureProvider featureProvider = new FeatureProvider( this );
+
+			    FeatureProvider featureProvider = new FeatureProvider( this );
 				featureProvider.setInterval( exampleListBoundingIntervals.get( iBoundingInterval ) );
 				featureProvider.computeFeatures( threadsPerRegion );
 
@@ -1756,20 +1762,31 @@ public class DeepSegmentation
 									+ " value[0] " + values[ 0 ] );
 						}
 					}
+
 					example.instanceValuesArrays.add( instanceValuesArray );
-					example.instanceValuesAreCurrentlyBeingComputed = false;
+
 				}
 
 				// logger.info( "Bounding interval " + iBoundingInterval );
 
 			}
 
-			logger.info( "Label set " + ( counter + 1 ) + "/" + ( counterMax + 1 ) + ": " + "...done" );
+            setExampleInstanceValuesAreCurrentlyBeingComputed( examples, false );
+
+            logger.info( "Label set " + ( counter + 1 ) + "/" + ( counterMax + 1 ) + ": " + "...done" );
 
 		};
 	}
 
-	private void clearInstancesValues( ArrayList< Example > examples )
+    private void setExampleInstanceValuesAreCurrentlyBeingComputed( ArrayList< Example > examples, boolean b )
+    {
+        for ( Example example : examples )
+        {
+            example.instanceValuesAreCurrentlyBeingComputed = b;
+        }
+    }
+
+    private void clearInstancesValues( ArrayList< Example > examples )
 	{
 		for ( Example example : examples )
         {

@@ -15,7 +15,7 @@ public class FeatureSettings
     public final static String MAX_BIN_LEVEL = "maxBinLevel";
     public final static String MAX_DEEP_CONV_LEVEL = "maxDeepConvLevel";
 
-    public String downSamplingMethod = DownSampler.BIN_AVERAGE;
+    public int downSamplingMethod;
 
     public double anisotropy;
 
@@ -35,20 +35,21 @@ public class FeatureSettings
 
     public Set< Integer > smoothingScales = new TreeSet<>();
 
-    public boolean commputeGaussian = false;
+    public boolean computeGaussian = false;
 
     public boolean equals( FeatureSettings featureSettings )
     {
         if ( anisotropy != featureSettings.anisotropy ) return false;
         if ( maxDeepConvLevel != featureSettings.maxDeepConvLevel ) return false;
         if ( imageBackground != featureSettings.imageBackground ) return false;
-        if ( ! activeChannels.equals( featureSettings.activeChannels ) ) return false;
-        if ( ! classNames.equals( featureSettings.classNames ) ) return false;
-        if ( ! downSamplingMethod.equals( featureSettings.downSamplingMethod ) ) return false;
-        if ( ! boundingBoxExpansionsForGeneratingInstancesFromLabels.equals( featureSettings.boundingBoxExpansionsForGeneratingInstancesFromLabels ) ) return false;
-        if ( ! binFactors.equals( featureSettings.binFactors ) ) return false;
-        if ( ! smoothingScales.equals( featureSettings.smoothingScales ) ) return false;
-        if ( !commputeGaussian == featureSettings.commputeGaussian ) return false;
+        if ( ! ( activeChannels.equals( featureSettings.activeChannels ) ) ) return false;
+        if ( ! ( classNames.equals( featureSettings.classNames ) ) ) return false;
+        if ( ! ( downSamplingMethod == featureSettings.downSamplingMethod ) ) return false;
+        if ( ! ( boundingBoxExpansionsForGeneratingInstancesFromLabels.equals( featureSettings.boundingBoxExpansionsForGeneratingInstancesFromLabels ) ) ) return false;
+        if ( ! ( binFactors.equals( featureSettings.binFactors ) ) ) return false;
+        if ( ! ( smoothingScales.equals( featureSettings.smoothingScales ) ) ) return false;
+        if ( ! ( computeGaussian == featureSettings.computeGaussian ) ) return false;
+        if ( ! ( log2 == featureSettings.log2) ) return false;
 
         return true;
     }
@@ -71,6 +72,7 @@ public class FeatureSettings
         imageBackground = 0;
         boundingBoxExpansionsForGeneratingInstancesFromLabels.add( 0 );
         smoothingScales.add( 1 );
+        downSamplingMethod = DownSampler.getID( DownSampler.BIN_AVERAGE );
     }
 
     public FeatureSettings copy()
@@ -85,7 +87,8 @@ public class FeatureSettings
         featureSettings.log2 = log2;
         featureSettings.maxDeepConvLevel = maxDeepConvLevel;
         featureSettings.imageBackground = imageBackground;
-        featureSettings.commputeGaussian = commputeGaussian;
+        featureSettings.computeGaussian = computeGaussian;
+        featureSettings.downSamplingMethod = downSamplingMethod;
 
         return featureSettings;
     }

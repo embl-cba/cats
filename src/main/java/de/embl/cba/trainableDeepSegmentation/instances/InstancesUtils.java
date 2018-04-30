@@ -61,17 +61,35 @@ public class InstancesUtils {
             {
                 for ( ArrayList< double[] > instanceValuesArray : example.instanceValuesArrays )
                 {
-                    for ( int p = 0; p < example.points.length; ++p )
+                    if ( instanceValuesArray.size() != example.points.length )
                     {
-                        Instance instance = new DenseInstance( 1.0, instanceValuesArray.get( p ) );
-                        instancesAndMetadata.addInstance( instance );
-                        instancesAndMetadata.addMetadata( Metadata_Position_X, example.points[ p ].x );
-                        instancesAndMetadata.addMetadata( Metadata_Position_Y, example.points[ p ].y );
-                        instancesAndMetadata.addMetadata( Metadata_Position_Z, example.z );
-                        instancesAndMetadata.addMetadata( Metadata_Position_T, example.t );
-                        instancesAndMetadata.addMetadata( Metadata_Label_Id, e );
-                        SettingsUtils.addSettingsToMetadata( featureSettings, instancesAndMetadata );
+                        int a = 1;
+                        //logger.warning( "Example point list size does not equal instances array size" );
+                        //continue;
                     }
+
+                    Set< Point > addedPoints = new LinkedHashSet<>();
+
+                    for ( int p = 0; p < instanceValuesArray.size(); ++p )
+                    {
+                        if ( ! addedPoints.contains( example.points[ p ]  ) )
+                        {
+                            Instance instance = new DenseInstance( 1.0, instanceValuesArray.get( p ) );
+                            instancesAndMetadata.addInstance( instance );
+                            instancesAndMetadata.addMetadata( Metadata_Position_X, example.points[ p ].x );
+                            instancesAndMetadata.addMetadata( Metadata_Position_Y, example.points[ p ].y );
+                            instancesAndMetadata.addMetadata( Metadata_Position_Z, example.z );
+                            instancesAndMetadata.addMetadata( Metadata_Position_T, example.t );
+                            instancesAndMetadata.addMetadata( Metadata_Label_Id, e );
+                            SettingsUtils.addSettingsToMetadata( featureSettings, instancesAndMetadata );
+                            addedPoints.add( example.points[ p ] );
+                        }
+                        else
+                        {
+                            int a = 1; // point was added already (this can happen as the IJ Rois can contain points multiple times.)
+                        }
+                    }
+
                 }
             }
         }

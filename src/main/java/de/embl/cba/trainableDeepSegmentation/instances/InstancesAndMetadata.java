@@ -68,6 +68,7 @@ public class InstancesAndMetadata {
         Metadata_Settings_Binning_9,
         Metadata_Settings_UseChannels,
         Metadata_Settings_MaxDeepConvLevel,
+        Metadata_Settings_DownSamplingMethod,
         Metadata_Settings_Log2;
 
 
@@ -118,6 +119,10 @@ public class InstancesAndMetadata {
         if ( ! metadata.keySet().contains( aMetadata ) )
         {
             System.out.println( "ERROR: Metadata is not contained: " + aMetadata );
+            return -1;
+        }
+        else if ( metadata.get( aMetadata ).size() == 0 )
+        {
             return -1;
         }
         else

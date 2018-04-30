@@ -154,15 +154,14 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public static final String TRAIN_FROM_LABEL_IMAGE = "Train from label image";
 	public static final String APPLY_CLASSIFIER_ON_SLURM = "Apply classifier on cluster";
 	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier (development)";
-	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show resultImagePlus image";
+	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
 	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
-	public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier featureSettings";
-	public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature featureSettings";
-    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature featureSettings";
+	public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier settings";
+	public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature settings";
+    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature settings";
     public static final String GET_LABEL_MASK = "Get label mask";
 	public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
-    public static final String CHANGE_DEBUG_SETTINGS = "Change development featureSettings";
-
+    public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
 
 	public static final String NO_TRAINING_DATA = "No training data available";
 
@@ -3397,7 +3396,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		}
 
 		gd.addNumericField("Maximal convolution depth", deepSegmentation.featureSettings.maxDeepConvLevel, 0);
-		gd.addNumericField("z/xy featureSettings.anisotropy", deepSegmentation.featureSettings.anisotropy, 2);
+		gd.addNumericField("z/xy featureSettings.anisotropy", deepSegmentation.featureSettings.anisotropy, 10);
 		gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
 				FeatureSettings.getAsCSVString( deepSegmentation.featureSettings.activeChannels, 1 ) );
 
@@ -3410,14 +3409,19 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 							DownSampler.BIN_AVERAGE,
 							DownSampler.BIN_MAXIMUM,
 							DownSampler.TRANSFORMJ_SCALE_LINEAR,
-							DownSampler.TRANSFORMJ_SCALE_CUBIC }, deepSegmentation.featureSettings.downSamplingMethod );
+							DownSampler.TRANSFORMJ_SCALE_CUBIC },
+							DownSampler.getString( deepSegmentation.featureSettings.downSamplingMethod ) );
 
 			gd.addStringField( "Smoothing sigmas [pixels x/y] ",
 					FeatureSettings.getAsCSVString( deepSegmentation.featureSettings.smoothingScales, 0 ) );
 
-			gd.addCheckbox( "Compute Gaussian filter", deepSegmentation.featureSettings.commputeGaussian );
+			gd.addCheckbox( "Compute Gaussian filter", deepSegmentation.featureSettings.computeGaussian );
 
-		}
+            gd.addCheckbox( "Use log2 transformation", deepSegmentation.featureSettings.log2 );
+
+            gd.addCheckbox( "Consider multiple bounding box offsets during loading", deepSegmentation.considerMultipleBoundingBoxOffsetsDuringInstancesLoading );
+
+        }
 
 		gd.showDialog();
 
@@ -3455,9 +3459,12 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		if ( showAdvancedSettings )
 		{
 			newFeatureSettings.setBoundingBoxExpansionsForGeneratingInstancesFromLabels( gd.getNextString() );
-			newFeatureSettings.downSamplingMethod = gd.getNextChoice();
+			newFeatureSettings.downSamplingMethod = DownSampler.getID( gd.getNextChoice() );
 			newFeatureSettings.setSmoothingScales( gd.getNextString() );
-			newFeatureSettings.commputeGaussian = gd.getNextBoolean();
+			newFeatureSettings.computeGaussian = gd.getNextBoolean();
+			newFeatureSettings.log2 = gd.getNextBoolean();
+			deepSegmentation.considerMultipleBoundingBoxOffsetsDuringInstancesLoading = gd.getNextBoolean();
+
 		}
 
 		return newFeatureSettings;

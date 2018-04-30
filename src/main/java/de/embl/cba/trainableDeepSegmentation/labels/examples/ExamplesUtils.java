@@ -67,7 +67,8 @@ public abstract class ExamplesUtils {
 
 
 
-    public static ArrayList< Example > getExamplesFromInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata )
+    public static ArrayList< Example > getExamplesFromInstancesAndMetadata( InstancesAndMetadata instancesAndMetadata,
+                                                                            boolean considerMultipleBoundingBoxOffsetsDuringInstancesLoading )
     {
         ArrayList< Example > examples = new ArrayList<>(  );
 
@@ -88,7 +89,7 @@ public abstract class ExamplesUtils {
 
             example.instanceValuesArrays = new ArrayList<>();
 
-            Set< Point > points = new LinkedHashSet<>() ;
+            ArrayList< Point > points = new ArrayList<>();
 
             int iBoundingBoxOffset = 0;
 
@@ -102,7 +103,14 @@ public abstract class ExamplesUtils {
 
                 if (  points.contains( point ) )
                 {
-                    iBoundingBoxOffset++;
+                    if ( considerMultipleBoundingBoxOffsetsDuringInstancesLoading ) // TODO: fix this...
+                    {
+                        iBoundingBoxOffset++;
+                    }
+                    else
+                    {
+                        points.add( point );
+                    }
                 }
                 else
                 {
@@ -114,7 +122,6 @@ public abstract class ExamplesUtils {
                 {
                     example.instanceValuesArrays.add( new ArrayList<>( ) );
                 }
-
 
                 example.instanceValuesArrays.get( iBoundingBoxOffset ).add( instances.get( iInstance ).toDoubleArray() );
                 iInstance++;

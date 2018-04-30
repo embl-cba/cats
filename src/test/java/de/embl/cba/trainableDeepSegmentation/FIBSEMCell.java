@@ -1,13 +1,9 @@
 package de.embl.cba.trainableDeepSegmentation;
 
-import de.embl.cba.trainableDeepSegmentation.features.DownSampler;
-import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
-import landmarks.FineTuneProgressListener;
 import net.imglib2.FinalInterval;
-import scala.tools.nsc.settings.Final;
 
 import java.util.TreeSet;
 
@@ -67,7 +63,7 @@ public class FIBSEMCell
         deepSegmentation.featureSettings.binFactors.set( 1,  -1 );
         deepSegmentation.featureSettings.binFactors.set( 2,  -1 );
         deepSegmentation.featureSettings.binFactors.set( 3,  -1 );
-        deepSegmentation.featureSettings.commputeGaussian = true;
+        deepSegmentation.featureSettings.computeGaussian = true;
 
         deepSegmentation.recomputeLabelInstances = true;
         deepSegmentation.updateExamplesInstancesAndMetadata();

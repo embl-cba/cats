@@ -1415,7 +1415,7 @@ public class FeatureProvider
                         if ( isFeatureOrChildrenNeeded( getFilterBaseName( STRUCTURE, smoothingScale )  + featureImage.getTitle() ) )
                             featureFutures.add( exe.submit( getHessianOrStructure( STRUCTURE, featureImage, smoothingScale ) ) );
 
-                        if ( featureSettings.commputeGaussian )
+                        if ( featureSettings.computeGaussian )
                         {
                             if ( isFeatureOrChildrenNeeded( getFilterBaseName( GAUSSIAN, smoothingScale )  + featureImage.getTitle() ) )
                             {
@@ -1431,7 +1431,7 @@ public class FeatureProvider
                         if ( isFeatureOrChildrenNeeded( getFilterBaseName( STRUCTURE, smoothingScale ) + featureImage.getTitle() ) )
                             featureImagesList.add( getHessianOrStructure( STRUCTURE, featureImage, smoothingScale ).call() );
 
-                        if ( featureSettings.commputeGaussian )
+                        if ( featureSettings.computeGaussian )
                         {
                             if ( isFeatureOrChildrenNeeded( getFilterBaseName( GAUSSIAN, smoothingScale )  + featureImage.getTitle() ) )
                             {
@@ -1633,7 +1633,7 @@ public class FeatureProvider
 
             // log transformation to go to multiplicative math
             IJ.run( processedInputImage, "32-bit", "" );
-            IJ.run( processedInputImage, "Log", "stack" );
+            IJ.run( processedInputImage, "Log", "stack" ); // TODO: maybe too unstable for cluster computing?
         }
 
         processedInputImage.setTitle( "Orig_ch" + channel );

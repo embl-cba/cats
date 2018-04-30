@@ -15,16 +15,52 @@ public class DownSampler
 
     String method;
 
-    public static final String BIN_AVERAGE = "Bin average";
-    public static final String BIN_MAXIMUM = "Bin maximum";
-    public static final String TRANSFORMJ_SCALE_LINEAR = "TransformJ linear";
-    public static final String TRANSFORMJ_SCALE_CUBIC = "TransformJ cubic";
-    public static final String IMAGEJ_SCALE = "ImageJ scale";
+    public static final String BIN_AVERAGE = "Bin_average";
+
+    public static final String BIN_MAXIMUM = "Bin_maximum";
+
+    public static final String TRANSFORMJ_SCALE_LINEAR = "TransformJ_linear";
+
+    public static final String TRANSFORMJ_SCALE_CUBIC = "TransformJ_cubic";
+
+    public static final String IMAGEJ_SCALE = "ImageJ_scale";
 
     public DownSampler( String method )
     {
         this.method = method;
     }
+
+    public DownSampler( int method )
+    {
+        this.method = getString( method );
+    }
+
+    public static int getID( String method )
+    {
+        switch ( method )
+        {
+            case BIN_AVERAGE: return 0;
+            case BIN_MAXIMUM: return 1;
+            case TRANSFORMJ_SCALE_LINEAR: return 2;
+            case TRANSFORMJ_SCALE_CUBIC: return 3;
+            case IMAGEJ_SCALE: return 4;
+            default: return -1;
+        }
+    }
+
+    public static String getString( int method )
+    {
+        switch ( method )
+        {
+            case 0: return BIN_AVERAGE;
+            case 1: return BIN_MAXIMUM;
+            case 2: return TRANSFORMJ_SCALE_LINEAR;
+            case 3: return TRANSFORMJ_SCALE_CUBIC;
+            case 4: return IMAGEJ_SCALE;
+            default: return "";
+        }
+    }
+
 
     public Callable<ImagePlus> run( ImagePlus imp, int[] binning, String binningTitle )
     {

@@ -1,5 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.settings;
 
+import de.embl.cba.trainableDeepSegmentation.features.DownSampler;
 import de.embl.cba.trainableDeepSegmentation.instances.InstancesAndMetadata;
 
 import java.util.TreeSet;
@@ -15,6 +16,7 @@ public abstract class SettingsUtils {
         instancesAndMetadata.addMetadata( Metadata_Settings_MaxDeepConvLevel, featureSettings.maxDeepConvLevel );
         instancesAndMetadata.addMetadata( Metadata_Settings_Anisotropy, featureSettings.anisotropy );
         instancesAndMetadata.addMetadata( Metadata_Settings_Log2, featureSettings.log2 == true ? 1 : 0 );
+        instancesAndMetadata.addMetadata( Metadata_Settings_DownSamplingMethod, featureSettings.downSamplingMethod );
 
         int i = 0;
         instancesAndMetadata.addMetadata( Metadata_Settings_Binning_0, featureSettings.binFactors.get(i++) );
@@ -47,6 +49,12 @@ public abstract class SettingsUtils {
         featureSettings.maxDeepConvLevel = ( int ) instancesAndMetadata.getMetadata( Metadata_Settings_MaxDeepConvLevel, 0 );
         featureSettings.anisotropy = (double) instancesAndMetadata.getMetadata( Metadata_Settings_Anisotropy, 0 );
         featureSettings.log2 = (( int ) instancesAndMetadata.getMetadata( Metadata_Settings_Log2, 0 ) == 1 );
+
+        featureSettings.downSamplingMethod = ( int ) instancesAndMetadata.getMetadata( Metadata_Settings_DownSamplingMethod, 0 );
+        if ( featureSettings.downSamplingMethod == -1 ) // was not present due to older version
+        {
+            featureSettings.downSamplingMethod = DownSampler.getID( DownSampler.BIN_AVERAGE ); // this was the old default
+        }
 
         int iBinFactor = 0;
         featureSettings.binFactors.set( iBinFactor++ , (int) instancesAndMetadata.getMetadata( Metadata_Settings_Binning_0, 0 ));
