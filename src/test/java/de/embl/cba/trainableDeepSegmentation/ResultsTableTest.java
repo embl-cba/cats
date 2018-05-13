@@ -7,7 +7,11 @@ public class ResultsTableTest
     {
         ij.measure.ResultsTable resultsTable = new ij.measure.ResultsTable();
 
-        resultsTable.incrementCounter();
+        if ( resultsTable.getCounter() == 0 )
+        {
+            resultsTable.incrementCounter();
+        }
+
         resultsTable.addValue( "column1", "value1" );
         resultsTable.addValue( "column2", "value1" );
 

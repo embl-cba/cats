@@ -75,7 +75,7 @@ public class BatchClassificationOnSlurm implements Command
         List< Path > dataSetPatterns = getDataSetPatterns();
 
         ArrayList< JobFuture > jobFutures = submitJobsOnSlurm(
-                CommandUtils.getXvfbImageJExecutionString( imageJFile ),
+                CommandUtils.getHeadlessImageJExecutionString( imageJFile ), // CommandUtils.getHeadlessImageJExecutionString( imageJFile ),
                 jobDirectory.toPath() ,
                 classifierFile.toPath(),
                 dataSetPatterns );
@@ -225,6 +225,11 @@ public class BatchClassificationOnSlurm implements Command
         parameters.put( ApplyClassifierCommand.CLASSIFICATION_INTERVAL, ApplyClassifierCommand.WHOLE_IMAGE );
         parameters.put( ApplyClassifierCommand.QUIT_AFTER_RUN, true );
         parameters.put( ApplyClassifierCommand.SAVE_RESULTS_TABLE, true );
+
+        parameters.put( "inputImageVSSDirectory", "" );
+        parameters.put( "inputImageVSSScheme", "" );
+        parameters.put( "inputImageVSSPattern", "" );
+        parameters.put( "inputImageVSSHdf5DataSetName", "" );
 
         commandsSubmitter.addIJCommandWithParameters( ApplyClassifierCommand.PLUGIN_NAME , parameters );
 

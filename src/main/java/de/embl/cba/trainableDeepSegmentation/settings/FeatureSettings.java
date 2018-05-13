@@ -60,7 +60,7 @@ public class FeatureSettings
         binFactors.add( 1 );
         binFactors.add( 2 );
         binFactors.add( 3 );
-        binFactors.add( 4 );
+        binFactors.add( 3 );
         binFactors.add( -1 );
         binFactors.add( -1 );
         binFactors.add( -1 );

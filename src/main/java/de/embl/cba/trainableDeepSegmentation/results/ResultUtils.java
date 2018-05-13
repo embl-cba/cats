@@ -24,7 +24,7 @@ public abstract class ResultUtils
 
     private static void saveClassAsImaris( int classId, ResultExportSettings resultExportSettings )
     {
-        String className = resultExportSettings.classNames.get( classId );
+        String fileName = resultExportSettings.classNames.get( classId );
 
         ImarisDataSet imarisDataSet = new ImarisDataSet();
 
@@ -32,16 +32,16 @@ public abstract class ResultUtils
                 resultExportSettings.resultImagePlus,
                 resultExportSettings.binning,
                 resultExportSettings.directory,
-                className,
+                fileName,
                 "/");
 
         ArrayList< String > channelNames = new ArrayList<>();
 
-        channelNames.add( className );
+        channelNames.add( fileName );
 
         imarisDataSet.setChannelNames( channelNames  );
 
-        ImarisWriter.writeHeader( imarisDataSet, resultExportSettings.directory, resultExportSettings.exportNamesPrefix + className + ".ims" );
+        ImarisWriter.writeHeader( imarisDataSet, resultExportSettings.directory, resultExportSettings.exportNamesPrefix + fileName + ".ims" );
 
         Hdf5DataCubeWriter writer = new Hdf5DataCubeWriter();
 
@@ -49,12 +49,54 @@ public abstract class ResultUtils
         {
             ImagePlus impClass = getBinnedAndProximityFilteredClassImage( classId, resultExportSettings, t );
 
-            logger.progress( "Writing " + className+ ", frame:", (t+1) + "/" + resultExportSettings.resultImagePlus.getNFrames() + "..." );
+            logger.progress( "Writing " + fileName+ ", frame:", ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames() + "..." );
 
             writer.writeImarisCompatibleResolutionPyramid( impClass, imarisDataSet, 0, t );
+        }
+    }
+
+
+    public static void saveRawDataAsImaris( ResultExportSettings resultExportSettings  )
+    {
+        if ( resultExportSettings.rawData.getNChannels() > 1 )
+        {
+            logger.error( "Multi-channel raw data export for imaris is currently not implemented." );
+            return;
+        }
+
+        String fileName = "raw-data";
+
+        ImarisDataSet imarisDataSet = new ImarisDataSet();
+
+        imarisDataSet.setFromImagePlus(
+                resultExportSettings.rawData,
+                resultExportSettings.binning,
+                resultExportSettings.directory,
+                fileName,
+                "/");
+
+        ArrayList< String > channelNames = new ArrayList<>();
+
+        channelNames.add( fileName );
+
+        imarisDataSet.setChannelNames( channelNames  );
+
+        // Header
+        ImarisWriter.writeHeader( imarisDataSet, resultExportSettings.directory, resultExportSettings.exportNamesPrefix + fileName + ".ims" );
+
+        Hdf5DataCubeWriter writer = new Hdf5DataCubeWriter();
+
+        for ( int t = resultExportSettings.timePointsFirstLast[ 0 ]; t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
+        {
+            ImagePlus rawDataFrame = getBinnedRawDataFrame( resultExportSettings, t );
+
+            logger.progress( "Writing " + fileName+ ", frame:", ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames() + "..." );
+
+            writer.writeImarisCompatibleResolutionPyramid( rawDataFrame, imarisDataSet, 0, t );
 
         }
     }
+
 
     private static void logDone( ResultExportSettings resultExportSettings, String className, int t, String s )
     {
@@ -66,13 +108,13 @@ public abstract class ResultUtils
 
         String className = resultExportSettings.classNames.get( classId );
 
-        logger.progress( "Getting " + className + ", frame:", ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames() );
+        // logger.progress( "Getting " + className + ", frame:", ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames() );
 
         ImagePlus impClass = getClassImage( classId, t, resultExportSettings.resultImagePlus, resultExportSettings.classLutWidth );
 
         if ( resultExportSettings.binning[0] * resultExportSettings.binning[1] * resultExportSettings.binning[2] > 1 )
         {
-            logger.progress( "Binning " + className + ", frame:", (t+1) + "/" + resultExportSettings.resultImagePlus.getNFrames() + "..." );
+            // logger.progress( "Binning " + className + ", frame:", (t+1) + "/" + resultExportSettings.resultImagePlus.getNFrames() + "..." );
             Binner binner = new Binner();
             impClass = binner.shrink( impClass, resultExportSettings.binning[ 0 ], resultExportSettings.binning[ 1 ], resultExportSettings.binning[ 2 ], Binner.AVERAGE );
         }
@@ -141,48 +183,19 @@ public abstract class ResultUtils
     }
 
 
-    public static void saveAsImaris(  ResultExportSettings resultExportSettings  )
+
+    private static ImagePlus getBinnedRawDataFrame( ResultExportSettings resultExportSettings, int t )
     {
+        Duplicator duplicator = new Duplicator();
 
-        ImagePlus rawData = resultExportSettings.rawData;
-        String name =  resultExportSettings.exportNamesPrefix + "raw-data";
-        String directory =  resultExportSettings.directory;
-        int[] binning =  resultExportSettings.binning;
+        ImagePlus rawDataFrame = duplicator.run( resultExportSettings.rawData, 1, 1, 1, resultExportSettings.rawData.getNSlices(), t + 1, t + 1 );
 
-        // Set everything up
-        ImarisDataSet imarisDataSet = new ImarisDataSet();
-        imarisDataSet.setFromImagePlus( rawData, binning, directory, name, "/");
-
-        // Channels
-        //ArrayList< String > channelNames = new ArrayList<>();
-        //channelNames.add( name );
-        //imarisDataSet.setChannelNames( channelNames  );
-
-        // Header
-        ImarisWriter.writeHeader( imarisDataSet, directory, name + ".ims" );
-
-        Hdf5DataCubeWriter writer = new Hdf5DataCubeWriter();
-
-        for ( int t = resultExportSettings.timePointsFirstLast[ 0 ]; t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
+        if ( resultExportSettings.binning[ 0 ] * resultExportSettings.binning[ 1 ] * resultExportSettings.binning[ 2 ] > 1 )
         {
-            for ( int c = 0; c < rawData.getNChannels(); ++c )
-            {
-                Duplicator duplicator = new Duplicator();
-                ImagePlus rawDataFrame = duplicator.run( rawData, c + 1, c + 1, 1, rawData.getNSlices(), t + 1, t + 1 );
-
-                if ( binning[ 0 ] * binning[ 1 ] * binning[ 2 ] > 1 )
-                {
-                    Binner binner = new Binner();
-                    rawDataFrame = binner.shrink( rawDataFrame, binning[ 0 ], binning[ 1 ], binning[ 2 ], Binner.AVERAGE );
-                }
-
-                writer.writeImarisCompatibleResolutionPyramid( rawDataFrame, imarisDataSet, c, t );
-
-                logger.progress( "Wrote " + name + ", channel:" + ( c + 1 ) + "/" + rawData.getNChannels() + ", frame:", ( t + 1 ) + "/" + rawData.getNFrames() );
-
-            }
-
+            Binner binner = new Binner();
+            rawDataFrame = binner.shrink( rawDataFrame, resultExportSettings.binning[ 0 ], resultExportSettings.binning[ 1 ], resultExportSettings.binning[ 2 ], Binner.AVERAGE );
         }
+        return rawDataFrame;
     }
 
     public static void exportResults( ResultExportSettings resultExportSettings )
@@ -190,6 +203,8 @@ public abstract class ResultUtils
 
         logger.info( "Exporting results, using modality: " + resultExportSettings.exportType );
         logger.info( "Exporting results to: " + resultExportSettings.directory );
+
+        setExportTimePoints( resultExportSettings );
 
         if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_AS_SEPARATE_IMAGES ) )
         {
@@ -208,22 +223,40 @@ public abstract class ResultUtils
 
         exportClasses( resultExportSettings );
 
-        exportRawDataAndCreateImarisHeader( resultExportSettings );
+        exportRawData( resultExportSettings );
+
+        createImarisHeader( resultExportSettings );
 
         logger.info( "Export of results finished." );
 
     }
 
-    private static void exportRawDataAndCreateImarisHeader( ResultExportSettings resultExportSettings )
+    private static void setExportTimePoints( ResultExportSettings resultExportSettings )
+    {
+        if ( resultExportSettings.timePointsFirstLast == null )
+        {
+            resultExportSettings.timePointsFirstLast = new int[2];
+            resultExportSettings.timePointsFirstLast[ 0 ] = 0;
+            resultExportSettings.timePointsFirstLast[ 1 ] = resultExportSettings.resultImagePlus.getNFrames() - 1;
+        }
+    }
+
+    private static void createImarisHeader( ResultExportSettings resultExportSettings )
+    {
+        if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_IMARIS ) )
+        {
+            ImarisUtils.createImarisMetaFile( resultExportSettings.directory );
+        }
+    }
+
+    private static void exportRawData( ResultExportSettings resultExportSettings )
     {
         if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_IMARIS ) )
         {
             if ( resultExportSettings.saveRawData )
             {
-                saveAsImaris( resultExportSettings );
+                saveRawDataAsImaris( resultExportSettings );
             }
-
-            ImarisUtils.createImarisMetaFile( resultExportSettings.directory );
         }
     }
 

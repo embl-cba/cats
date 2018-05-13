@@ -168,6 +168,11 @@ public class AnalyzeObjectsCommand implements Command
 
     private void addInputImageFileAndPathName( ResultsTable resultsTable )
     {
+        if ( resultsTable.getCounter() == 0 )
+        {
+            resultsTable.incrementCounter();
+        }
+
         resultsTable.addValue( "FileName_AnalyzeObjects_InputImage_IMG", inputImageFile.getName() );
         resultsTable.addValue( "PathName_AnalyzeObjects_InputImage_IMG", inputImageFile.getParent() );
 
@@ -180,6 +185,10 @@ public class AnalyzeObjectsCommand implements Command
 
     private void addDataSetId( ResultsTable resultsTable )
     {
+        if ( resultsTable.getCounter() == 0 )
+        {
+            resultsTable.incrementCounter();
+        }
 
         resultsTable.addValue( "DataSetID_FACT", dataSetID );
 

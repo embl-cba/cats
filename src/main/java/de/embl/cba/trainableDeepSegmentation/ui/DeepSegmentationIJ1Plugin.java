@@ -594,7 +594,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 								trainFromLabelImage();
 								break;
 							case GET_LABEL_IMAGE_TRAINING_ACCURACIES:
-								reportLabelImageTrainingAccuracies();
+								computeLabelImageBasedAccuracies();
 								break;
                             case UPDATE_LABELS:
                                 updateLabelsTrainingData();
@@ -699,6 +699,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			deepSegmentation.setLabelImage( labelImage );
 			logger.info( "...done." );
 		}
+
 	}
 
 	/**
@@ -2140,7 +2141,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		if ( resultImageType.equals( DeepSegmentation.RESULT_IMAGE_DISK_SINGLE_TIFF ) )
 		{
-			String directory = IJ.getDirectory("Select resultImagePlus images directory");
+			String directory = IJ.getDirectory("Select directory with pixel probabilities");
 			if( directory == null )
 			{
 				logger.error( "No resultImagePlus image was assigned now.\n " +
@@ -2491,7 +2492,6 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	 */
 	public void trainFromLabelImage()
 	{
-
 		FinalInterval interval = getIntervalFromGUI();
 
 		if ( interval == null ) return;
@@ -2532,6 +2532,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 					gd.addNumericField( "Radius for local instances pairs", 5, 0 );
 					gd.addNumericField( "Maximum number of instances in total", 400000, 0 );
 					gd.addNumericField( "Maximum number of instance pairs per plane and tile", 20, 0 );
+
 					gd.addCheckbox( "Auto save instances", true );
 
 					gd.showDialog();
@@ -2573,7 +2574,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 							maxNumInstances,
 							100, // TODO
 							100, // TODO
-							100,
+							400,
 							100, // TODO
 							classWeights,
 							directory,
@@ -2605,7 +2606,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	}
 
-	public void reportLabelImageTrainingAccuracies()
+	public void computeLabelImageBasedAccuracies()
 	{
 		win.setButtonsEnabled( false );
 		deepSegmentation.isBusy = true;
@@ -2614,12 +2615,17 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 			public void run()
 			{
-				deepSegmentation.reportLabelImageTrainingAccuracies( "accuracies", 0 );
+
+				FinalInterval interval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( deepSegmentation.getInputImage() );
+
+				deepSegmentation.computeLabelImageBasedAccuracies( "accuracies", 1, interval);
 
 				deepSegmentation.isBusy = false;
 				win.setButtonsEnabled( true );
+
 			}
 		}; task.start();
+
 	}
 
 

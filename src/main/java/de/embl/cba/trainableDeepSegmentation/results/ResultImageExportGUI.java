@@ -21,13 +21,13 @@ public abstract class ResultImageExportGUI
 
         GenericDialog gd = new GenericDialogPlus("Export Segmentation Results");
 
-        gd.addStringField( "Class names prefix: ", inputImageTitle + "--", 10  );
+        // gd.addStringField( "Class names prefix: ", inputImageTitle + "--", 10  );
 
         gd.addStringField( "Binning: ", "1,1,1", 10  );
 
         gd.addMessage( "--- Export ---" );
 
-        gd.addCheckbox( rawData.getTitle(), true );
+        gd.addCheckbox( "raw data", true );
 
         for ( String className : classNames )
         {
@@ -46,7 +46,7 @@ public abstract class ResultImageExportGUI
 
         gd.addChoice( "Export as:", exportChoices, ResultExportSettings.SEPARATE_IMARIS );
 
-        gd.addStringField( "TimePoints [from, to] ", "1," + rawData.getNFrames() );
+        // gd.addStringField( "TimePoints [from, to] ", "1," + rawData.getNFrames());
 
         gd.showDialog();
 
@@ -56,6 +56,7 @@ public abstract class ResultImageExportGUI
         resultExportSettings.classNames = classNames;
         resultExportSettings.resultImage = resultImage;
         resultExportSettings.rawData = rawData;
+        resultExportSettings.timePointsFirstLast = new int[] { 0, rawData.getNFrames() - 1 };
 
         setFromGUI( classNames, gd, resultExportSettings );
 
@@ -77,7 +78,7 @@ public abstract class ResultImageExportGUI
 
     private static void setFromGUI( ArrayList< String > classNames, GenericDialog gd, ResultExportSettings resultExportSettings )
     {
-        resultExportSettings.exportNamesPrefix = gd.getNextString();
+        // resultExportSettings.exportNamesPrefix = gd.getNextString();
 
         resultExportSettings.binning = Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
 
@@ -87,12 +88,21 @@ public abstract class ResultImageExportGUI
 
         resultExportSettings.exportType = gd.getNextChoice();
 
-        resultExportSettings.timePointsFirstLast = Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
+
+        // resultExportSettings.timePointsFirstLast = Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
+
+        // for ( int i = 0; i < resultExportSettings.timePointsFirstLast.length; ++i )
+        // {
+        //    resultExportSettings.timePointsFirstLast[ i ] -= 1; // convert to zero-based ids
+        // }
+
     }
 
     private static void setExport( ArrayList< String > classNames, GenericDialog gd, ResultExportSettings resultExportSettings )
     {
         resultExportSettings.saveRawData = gd.getNextBoolean();
+
+
 
         resultExportSettings.classesToBeExported = new ArrayList<>();
 

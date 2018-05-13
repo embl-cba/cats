@@ -12,7 +12,7 @@ public class ResultExportSettings
     public static final String SEPARATE_MULTI_CLASS_TIFF_SLICES = "Save as Tiff slices";
     public static final String SHOW_AS_SEPARATE_IMAGES = "Show images";
     public String directory;
-    public String exportNamesPrefix;
+    public String exportNamesPrefix = "";
     public ArrayList< Boolean > classesToBeExported;
     public int[] binning;
     public String exportType;

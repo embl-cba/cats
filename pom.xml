@@ -11,7 +11,7 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>fiji_plugin_deepSegmentation</artifactId>
-	<version>0.5.1</version>
+	<version>0.5.2</version>
 
 	<name>Fiji plugin for trainable segmentation using deep convolution</name>
 	<description>A plugin for trainable segmentation using deep convolution.</description>
@@ -198,6 +198,7 @@
 			<version>1204d04b31217a7d14897a4dd93cc0eafc064e01</version>
 		</dependency>
 		-->
+
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>LocalThickness_</artifactId>
@@ -212,7 +213,7 @@
 		<dependency>
 			<groupId>com.github.tischi</groupId>
 			<artifactId>fiji-plugin-bigDataTools</artifactId>
-            <version>master-SNAPSHOT</version>
+            <version>612b229c4425b3fabc35ad93c1e87e43efa0fdd5</version>
 		</dependency>
 
         <dependency>
@@ -224,7 +225,7 @@
 		<dependency>
 			<groupId>com.github.tischi</groupId>
 			<artifactId>fiji-slurm</artifactId>
-			<version>f8e44c4e3be45cccebcbe9be4a5222563187b8db</version>
+			<version>437a9cbdf085018cb06177cb8a14f9714289277e</version>
 		</dependency>
 
 		<!-- Fiji dependencies -->
@@ -241,6 +242,11 @@
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>fiji-lib</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigdataviewer-vistools</artifactId>
 		</dependency>
 
 		<!-- ImgLib2 dependencies -->
@@ -268,6 +274,11 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>ij</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-common</artifactId>
 		</dependency>
 
 		<!-- Java3D dependencies -->

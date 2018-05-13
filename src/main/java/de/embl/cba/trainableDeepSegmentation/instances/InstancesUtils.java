@@ -1,5 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.instances;
 
+import de.embl.cba.trainableDeepSegmentation.labelimagetraining.AccuracyEvaluation;
 import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.utils.logging.Logger;
 import ij.ImagePlus;
@@ -101,7 +102,8 @@ public class InstancesUtils {
 
     public static Callable<InstancesAndMetadata> getUsefulInstancesFromLabelImage(
             DeepSegmentation deepSegmentation,
-            ImagePlus labelImage,
+            ImagePlus inputImageWithLabels,
+            int labelChannel,
             ResultImage resultImage,
             ImageProcessor ipInstancesDistribution,
             FeatureProvider featureProvider,
@@ -131,7 +133,7 @@ public class InstancesUtils {
                 ArrayList< int[] >[][] globalClassCoordinates;
                 ArrayList< int[] >[][] localClassCoordinates;
 
-                FinalInterval localInterval = IntervalUtils.getEmptyInterval();
+                FinalInterval localInterval;
 
                 Instances instances = InstancesUtils.getInstancesHeader(
                         instancesName,
@@ -147,7 +149,8 @@ public class InstancesUtils {
                 {
                     logLabelImageTrainingProgress( logger, z, interval, "getting class coordinates..." );
 
-                    ImageProcessor labelSlice = labelImage.getStack().getProcessor(z + 1);
+                    int stackIndex = inputImageWithLabels.getStackIndex( labelChannel + 1, z + 1, t + 1  );
+                    ImageProcessor labelSlice = inputImageWithLabels.getStack().getProcessor(stackIndex );
                     ImageProcessor resultSlice = resultImage.getSlice( z + 1, t + 1  );
 
                     ImageProcessor accuracySliceRegion = getAccuracySlice(
@@ -277,8 +280,7 @@ public class InstancesUtils {
                                 instancesAndMetadata.addMetadata( Metadata_Position_T, t );
                                 instancesAndMetadata.addMetadata( Metadata_Label_Id, -1 );
 
-                                SettingsUtils.addSettingsToMetadata( deepSegmentation.featureSettings,
-                                        instancesAndMetadata );
+                                SettingsUtils.addSettingsToMetadata( deepSegmentation.featureSettings, instancesAndMetadata );
 
                                 pixelsPerClass[ localClass ]++;
 
@@ -314,9 +316,7 @@ public class InstancesUtils {
         return labelIdsPerClass;
     }
 
-    private static void addToInstancesDistribution( ImageProcessor instancesDistribution,
-                                             int[] xy,
-                                             FinalInterval interval )
+    private static void addToInstancesDistribution( ImageProcessor instancesDistribution, int[] xy, FinalInterval interval )
     {
         if ( instancesDistribution != null )
         {
@@ -324,26 +324,6 @@ public class InstancesUtils {
             int yy = xy[ 1 ] - ( int ) interval.min( Y );
             int v = instancesDistribution.get( xx, yy ) + 1;
             instancesDistribution.set( xx, yy, v );
-        }
-    }
-
-    public static void reportClassificationAccuracies( long[][] classificationAccuracies,
-                                                        Logger logger)
-    {
-        logger.info( "\n# Classification accuracies");
-
-        for ( int iClass = 0; iClass < classificationAccuracies.length; ++iClass )
-        {
-            long total = classificationAccuracies[iClass][TOTAL];
-            if ( total == 0 ) total = -1; // to avoid division by zero
-
-            logger.info("Class " + iClass
-                    + "; " + "Percent correct: " + ( 100 * classificationAccuracies[iClass][CORRECT] ) / total
-                    + "; " + "Ground truth: " + total
-                    + "; " + "Correct: " + classificationAccuracies[iClass][CORRECT]
-                    + "; " + "False positive: " + classificationAccuracies[iClass][FP]
-                    + "; " + "False negative: " + classificationAccuracies[iClass][FN]
-            );
         }
     }
 
@@ -367,14 +347,12 @@ public class InstancesUtils {
         return classCoordinates;
     }
 
-    final static int TOTAL = 0, CORRECT = 1, FP = 2, FN = 3;
-
     private static ArrayList< int[] >[][] getClassCoordinatesAndAccuracies(
                                     int maxProbability,
                                     int numClasses,
                                     ImageProcessor labelImageSlice,
                                     ImageProcessor correctnessSliceRegion,
-                                    FinalInterval interval)
+                                    FinalInterval interval )
     {
 
 
@@ -450,136 +428,6 @@ public class InstancesUtils {
         return accuracySlice;
 
     }
-
-    public static long[][] setAccuracies(
-            ImagePlus labelImage,
-            ResultImage resultImage,
-            int t,
-            ImagePlus accuraciesImage,
-            FinalInterval interval,
-            DeepSegmentation ws)
-    {
-
-        logger.info( "\n# Label image training accuracies");
-
-        int numClasses = 2; // TODO
-
-        long[][] accuracies = new long[numClasses][5];
-
-        ExecutorService exe = Executors.newFixedThreadPool( Prefs.getThreads() );
-        ArrayList< Future > futures = new ArrayList< >(  );
-
-        for ( int z = (int) interval.min( Z ); z <= interval.max( Z ); ++z )
-        {
-            futures.add(
-                    exe.submit(
-                        setAccuracies(
-                            accuracies,
-                            labelImage,
-                            resultImage,
-                            accuraciesImage,
-                            z,
-                            t,
-                            interval,
-                            ws
-                        )
-                    )
-            );
-        }
-
-        ThreadUtils.joinThreads( futures, ws.getLogger() );
-
-        return ( accuracies );
-
-    }
-
-
-    public static Runnable setAccuracies(
-            long[][] accuracies,
-            ImagePlus labelImage,
-            ResultImage resultImage,
-            ImagePlus accuraciesImage,
-            int z,
-            int t,
-            FinalInterval interval,
-            DeepSegmentation ws )
-    {
-
-        final Object lock = new Object();
-
-        return new Runnable() {
-            @Override
-            public void run()
-            {
-
-                int maxProbability = resultImage.getProbabilityRange();
-
-                if ( ws.stopCurrentTasks ) return;
-
-                logger.progress( "Measuring accuracies",
-                        "in z-slice " + ( z + 1 ) + "/" + ( interval.max( Z ) + 1 ) );
-
-                ImageProcessor labelImageSlice = labelImage.getStack().getProcessor( z + 1 );
-                ImageProcessor ipAccuracies = null;
-                ImageProcessor ipResult = resultImage.getSlice( z + 1, t + 1  );
-                int probabilityRange = resultImage.getProbabilityRange();
-
-                if ( accuraciesImage != null )
-                {
-                    ipAccuracies = accuraciesImage.getImageStack().getProcessor( z + 1 - ( int ) interval.min( Z ) );
-                }
-
-                for ( int y = ( int ) interval.min( Y ); y <= interval.max( Y ); ++y )
-                {
-                    for ( int x = ( int ) interval.min( X ); x <= interval.max( X ); ++x )
-                    {
-                        int realClass = labelImageSlice.get( x, y );
-
-                        byte result = (byte) ipResult.get( x, y );
-
-                        int[] classAndProbability = new int[2];
-
-                        classAndProbability[0] = ( result - 1 ) / probabilityRange;
-                        classAndProbability[1] = result - classAndProbability[0] * probabilityRange;
-
-                        int classifiedClass = classAndProbability[ 0 ];
-                        int correctness = classAndProbability[ 1 ];
-
-                        synchronized ( lock )
-                        {
-                            accuracies[ realClass ][ TOTAL ]++;
-                            if ( realClass == classifiedClass )
-                            {
-                                accuracies[ realClass ][ CORRECT ]++;
-                            }
-                            else
-                            {
-                                correctness *= -1;
-                                accuracies[ realClass ][ FN ]++;
-                                accuracies[ classifiedClass ][ FP ]++;
-                            }
-                        }
-
-                        correctness += maxProbability;
-
-                        if ( ipAccuracies != null )
-                        {
-                            ipAccuracies.set(
-                                    x - ( int ) interval.min( X ),
-                                    y - ( int ) interval.min( Y ),
-                                    correctness );
-                        }
-
-                    }
-
-                }
-
-                accuraciesImage.updateImage();
-            }
-        };
-    }
-
-
 
 
     private static ArrayList< int[] >[] getLocalClassCoordinates(

@@ -12,6 +12,7 @@ package de.embl.cba.trainableDeepSegmentation.commands;
 import de.embl.cba.cluster.commands.Commands;
 import de.embl.cba.trainableDeepSegmentation.results.ResultExportSettings;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
+import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.StringUtils;
 import ij.IJ;
 import ij.ImagePlus;
@@ -287,7 +288,14 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         }
         else
         {
-            deepSegmentation.setResultImageRAM( getInterval() );
+            if ( classificationIntervalXYZT.equals( WHOLE_IMAGE ) )
+            {
+                deepSegmentation.setResultImageRAM();
+            }
+            else
+            {
+                deepSegmentation.setResultImageRAM( getInterval() );
+            }
         }
 
         deepSegmentation.loadClassifier( classifierFile.getAbsolutePath() );
@@ -309,8 +317,8 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     private FinalInterval getInterval()
     {
         int[] minMaxXYZT = StringUtils.delimitedStringToIntegerArray( classificationIntervalXYZT, "," );
-        long[] min = new long[5];
-        long[] max = new long[5];
+        long[] min = new long[ 5 ];
+        long[] max = new long[ 5 ];
 
         int i = 0;
         for ( int d : XYZT )

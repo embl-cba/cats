@@ -18,6 +18,7 @@ import java.util.zip.GZIPOutputStream;
 
 import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierOnSlurmCommand;
+import de.embl.cba.trainableDeepSegmentation.labelimagetraining.AccuracyEvaluation;
 import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
@@ -32,6 +33,7 @@ import ij.io.FileSaver;
 import ij.measure.ResultsTable;
 import ij.plugin.Duplicator;
 import ij.process.ImageProcessor;
+import ij.process.ShortProcessor;
 import inra.ijpb.binary.BinaryImages;
 import inra.ijpb.measure.GeometricMeasures3D;
 import inra.ijpb.morphology.AttributeFiltering;
@@ -433,10 +435,12 @@ public class DeepSegmentation
 			FinalInterval applyInterval )
 	{
 
+	    int labelChannel = 1; // TODO: make chooseable
+
 		if ( trainInterval == null ) return;
 
 		featureSelectionMethod = FEATURE_SELECTION_NONE;
-		classifierBatchSizePercent = "100"; // since we choose uncorrelated features anyway
+		classifierBatchSizePercent = "66";
 		threadsClassifierTraining = zChunkSize;
 
 		// TODO: obtain from label image
@@ -447,9 +451,10 @@ public class DeepSegmentation
 		FeatureProvider featureProvider = null;
 		ArrayList< long[][] > labelImageClassificationAccuraciesHistory = null;
 		ArrayList< Integer > numInstancesHistory = null;
+
 		ImageProcessor ipLabelImageInstancesDistribution = null;
 
-		boolean isFirstTime = true;
+        boolean isFirstTime = true;
 		int numTrueObjects = -1;
 		String classifierKey = null;
 
@@ -477,13 +482,6 @@ public class DeepSegmentation
 					featureProvider.setCacheSize( zChunkSize );
 					featureProvider.computeFeatures( numThreads );
 				}
-
-				labelImageClassificationAccuraciesHistory = new ArrayList<>();
-				numInstancesHistory = new ArrayList<>();
-
-				//ipLabelImageInstancesDistribution = new ShortProcessor(
-				//		( int ) tile.dimension( X ),
-				//		( int ) tile.dimension( Y ) );
 
 				int numSliceChunks = ( int ) tile.dimension( Z ) / zChunkSize;
 				int numSlicesInCurrentChunk;
@@ -517,14 +515,14 @@ public class DeepSegmentation
 					for ( int z = ( int ) zChunk[ 0 ]; z <= zChunk[ 1 ]; ++z )
 					{
 
-						FinalInterval newInstancesInterval =
-								fixDimension( tile, Z, z );
+						FinalInterval newInstancesInterval = fixDimension( tile, Z, z );
 
 						futures.add(
 								exe.submit(
 										InstancesUtils.getUsefulInstancesFromLabelImage(
 												this,
-												getLabelImage(),
+												inputImage,
+												labelChannel,
 												getResultImage(),
 												ipLabelImageInstancesDistribution,
 												featureProvider,
@@ -577,126 +575,128 @@ public class DeepSegmentation
 					// Train classifier
 					//
 
-					InstancesAndMetadata instancesAndMetadata =
-							getInstancesManager()
-									.getInstancesAndMetadata(instancesKey);
+					InstancesAndMetadata instancesAndMetadata = getInstancesManager().getInstancesAndMetadata(instancesKey);
 
 					numInstances = instancesAndMetadata.getInstances().numInstances();
-					boolean isEnoughNewInstances =
+
+					boolean enoughNewInstancesForNewTraining =
 							( numInstances - numInstancesAtLastTraining ) >= minNumInstancesBeforeNewTraining;
 
-					if ( classifierKey == null || isEnoughNewInstances)
+					if ( classifierKey == null || enoughNewInstancesForNewTraining )
 					{
 						numInstancesAtLastTraining = numInstances;
 						classifierNumTrees = numTrainingTrees;
 						classifierKey = trainClassifier( instancesAndMetadata );
-
 					}
 
 					// Apply classifier to next chunk
 					//
-					int iClassificationChunk = iChunk < ( zChunks.size() - 1 ) ? iChunk + 1 : 0;
-					zChunk = zChunks.get( iClassificationChunk );
 
-					numSlicesInCurrentChunk = ( int ) ( zChunk[ 1 ] - zChunk[ 0 ] + 1 );
-					numThreadsPerSlice = 1;
+					applyLabelImageTrainingClassifierToNextChunk( featureProvider, classifierKey, resultImageFrameSetter, zChunks, iChunk );
 
-					exe = Executors.newFixedThreadPool( numSlicesInCurrentChunk );
-					ArrayList< Future > classificationFutures = new ArrayList<>();
-
-					logger.info( "\n# Applying classifier to: zMin " + zChunk[ 0 ]
-							+ "; zMax " + zChunk[ 1 ]
-							+ "; using " + numSlicesInCurrentChunk + " workers." );
-
-					for ( int z = ( int ) zChunk[ 0 ]; z <= zChunk[ 1 ]; ++z )
-					{
-
-						classificationFutures.add(
-								exe.submit(
-										classifyZChunk(
-												featureProvider,
-												resultImageFrameSetter,
-												z, z,
-												getClassifierManager().getInstancesHeader( classifierKey ),
-												getClassifierManager().getClassifier( classifierKey ),
-												accuracy,
-												numThreadsPerSlice,
-												false
-										)
-								)
-						);
-					}
-
-					ThreadUtils.joinThreads( classificationFutures, logger );
-
-					numInstances = instancesManager
-							.getInstancesAndMetadata( instancesKey )
-							.getInstances().numInstances();
+					numInstances = instancesManager.getInstancesAndMetadata( instancesKey ).getInstances().numInstances();
 
 					if ( numInstances >= maxNumInstances ) break;
 
 
 				} // chunks
 
-				numInstances = instancesManager
-						.getInstancesAndMetadata( instancesKey )
-						.getInstances().numInstances();
-
-				if( directory != null )
-				{
-					logger.info( "\n# Saving instances..." );
-					InstancesUtils.saveInstancesAndMetadataAsARFF( instancesManager.getInstancesAndMetadata( instancesKey ), directory, "Instances-" + numInstances + ".ARFF" );
-					logger.info( "...done" );
-				}
+				numInstances = saveLabelImageTrainingCurrentInstances( instancesKey, directory );
 
 				if ( numInstances >= maxNumInstances ) break;
 
 
 			} // tiles
 
-			logger.info( "\n#" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# ----------------------------------- Evaluate current accuracy ------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n# --------------------------------------------------------------------------------------------------------" +
-					"\n#" );
+			classifierKey = evaluateCurrentAccuracies( instancesKey, numClassificationTrees, applyInterval, i );
 
-			// Classify everything, properly
-			//
-			InstancesAndMetadata instancesAndMetadata =
-					getInstancesManager()
-							.getInstancesAndMetadata( instancesKey );
+			if ( numInstances >= maxNumInstances ) break;
 
-			classifierNumTrees = numClassificationTrees;
-			classifierKey  = trainClassifier( instancesAndMetadata );
+		} // iterations
 
-			applyClassifierWithTiling( classifierKey, applyInterval );
+		logger.info( "\n\n# Training from label image: DONE.");
 
-			// Report results from training region
-			//
+	}
 
+	private void applyLabelImageTrainingClassifierToNextChunk( FeatureProvider featureProvider, String classifierKey, ResultImageFrameSetter resultImageFrameSetter, ArrayList< long[] > zChunks, int iChunk )
+	{
+		long[] zChunk;
+		int numSlicesInCurrentChunk;
+		int numThreadsPerSlice;
+		ExecutorService exe;
+		int iClassificationChunk = iChunk < ( zChunks.size() - 1 ) ? iChunk + 1 : 0;
+		zChunk = zChunks.get( iClassificationChunk );
+
+		numSlicesInCurrentChunk = ( int ) ( zChunk[ 1 ] - zChunk[ 0 ] + 1 );
+		numThreadsPerSlice = 1;
+
+		exe = Executors.newFixedThreadPool( numSlicesInCurrentChunk );
+		ArrayList< Future > classificationFutures = new ArrayList<>();
+
+		logger.info( "\n# Applying classifier to: zMin " + zChunk[ 0 ]
+                + "; zMax " + zChunk[ 1 ]
+                + "; using " + numSlicesInCurrentChunk + " workers." );
+
+		for ( int z = ( int ) zChunk[ 0 ]; z <= zChunk[ 1 ]; ++z )
+        {
+
+            classificationFutures.add(
+                    exe.submit(
+                            classifyZChunk(
+                                    featureProvider,
+                                    resultImageFrameSetter,
+                                    z, z,
+                                    getClassifierManager().getInstancesHeader( classifierKey ),
+                                    getClassifierManager().getClassifier( classifierKey ),
+                                    accuracy,
+                                    numThreadsPerSlice,
+                                    false
+                            )
+                    )
+            );
+        }
+
+		ThreadUtils.joinThreads( classificationFutures, logger );
+	}
+
+	private long saveLabelImageTrainingCurrentInstances( String instancesKey, String directory )
+	{
+		long numInstances;
+		numInstances = instancesManager
+                .getInstancesAndMetadata( instancesKey )
+                .getInstances().numInstances();
+
+		if( directory != null )
+        {
+            logger.info( "\n# Saving instances..." );
+            InstancesUtils.saveInstancesAndMetadataAsARFF( instancesManager.getInstancesAndMetadata( instancesKey ), directory, "Instances-" + numInstances + ".ARFF" );
+            logger.info( "...done" );
+        }
+		return numInstances;
+	}
+
+	private String evaluateCurrentAccuracies( String instancesKey, int numClassificationTrees, FinalInterval applyInterval, int i )
+	{
+
+		logger.info( "\n#" +
+                "\n# --------------------------------------------------------------------------------------------------------" +
+                "\n# ----------------------------------- Evaluate current accuracy ------------------------------------------" +
+                "\n# --------------------------------------------------------------------------------------------------------" +
+                "\n#" );
+
+
+		// Classify everything, properly
+		//
+		InstancesAndMetadata instancesAndMetadata = getInstancesManager().getInstancesAndMetadata( instancesKey );
+
+		classifierNumTrees = numClassificationTrees;
+		String classifierKey = trainClassifier( instancesAndMetadata );
+
+		applyClassifierWithTiling( classifierKey, applyInterval );
+
+		// Report results from training region
+		//
+			/*
 			if ( numTrueObjects == -1 )
 			{
 				int t = 0;
@@ -706,25 +706,21 @@ public class DeepSegmentation
 				ResultsTable rtTruth = GeometricMeasures3D.volume( classLabelMask.getStack(), new double[]{ 1, 1, 1 } );
 				numTrueObjects = rtTruth.size();
 			}
+			*/
 
-			logger.info( "\n# True number of objects in training image: " + numTrueObjects);
+		//logger.info( "\n# True number of objects in training image: " + numTrueObjects);
 
-			analyzeObjects( minNumVoxels, 0 , ""+i+"-train" , directory );
+		//analyzeObjects( minNumVoxels, 0 , "" + i + "-train" , directory );
 
-			reportLabelImageTrainingAccuracies( ""+i+"-accuracies" , 0 );
-
-			// Report results from test image
-			//
-			analyzeObjects( minNumVoxels, 1, ""+i+"-test" , directory );
-
-
-			if ( numInstances >= maxNumInstances ) break;
+		// Report results from test image
+		//
+		// analyzeObjects( minNumVoxels, 1, ""+i+"-test" , directory );
 
 
-		} // iterations
+		computeLabelImageBasedAccuracies( "" + i + "-accuracies-train" , 1, getInterval( getInputImage() ) );
 
-		logger.info( "\n\n# Training from label image: DONE.");
 
+		return classifierKey;
 	}
 
 
@@ -753,30 +749,32 @@ public class DeepSegmentation
 
 	}
 
-	public void reportLabelImageTrainingAccuracies( String title, int t )
+	public void computeLabelImageBasedAccuracies( String title,
+                                                  int labelChannel,
+                                                  FinalInterval interval )
 	{
 
-		if ( labelImage == null )
-		{
-			logger.error( "No label image found. Please load one." );
-			return;
-		}
 
-		FinalInterval interval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( inputImage );
-		ImagePlus accuraciesImage = IntervalUtils.createImagePlus( interval );
-		accuraciesImage.setTitle( title );
-		accuraciesImage.show();
+		for ( long t = interval.min( T ); t <= interval.max( T ); ++t )
+        {
+            ImagePlus accuraciesImage = IntervalUtils.createImagePlus( interval );
 
-		long[][] accuracies = InstancesUtils.setAccuracies(
-				getLabelImage(),
-				getResultImage(),
-				t,
-				accuraciesImage,
-				interval,
-				this
-		);
+            long[][][] accuracies = AccuracyEvaluation.computeLabelImageBasedAccuracies(
+                    inputImage,
+                    getResultImage(),
+                    labelChannel,
+                    accuraciesImage,
+                    interval,
+                    (int) t,
+                    this
+            );
 
-		InstancesUtils.reportClassificationAccuracies( accuracies, logger );
+            AccuracyEvaluation.reportClassificationAccuracies( accuracies, (int) t, logger );
+
+            accuraciesImage.setTitle( title );
+            accuraciesImage.show();
+        }
+
 	}
 
 
@@ -2104,7 +2102,7 @@ public class DeepSegmentation
 		return ( minutesS );
 	}
 
-	public void setLabelImage(ImagePlus labelImage)
+	public void setLabelImage( ImagePlus labelImage )
 	{
 		this.labelImage = labelImage;
 	}
