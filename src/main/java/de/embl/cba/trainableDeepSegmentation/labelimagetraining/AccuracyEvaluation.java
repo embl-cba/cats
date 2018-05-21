@@ -106,7 +106,7 @@ public class AccuracyEvaluation
             );
         }
 
-        ThreadUtils.joinThreads( futures, deepSegmentation.getLogger() );
+        ThreadUtils.joinThreads( futures, deepSegmentation.getLogger(), exe );
 
         return ( accuracies );
 

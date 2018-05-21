@@ -48,7 +48,7 @@ public class MitochondriaLabelImageTraining
         ws.featureSettings.binFactors.set(level++ , 2);
         ws.featureSettings.binFactors.set(level++ , 2);
         ws.featureSettings.binFactors.set(level++ , 3);
-        ws.featureSettings.binFactors.set(level++ , 3);
+        ws.featureSettings.binFactors.set(level++ , -1);
         ws.featureSettings.binFactors.set(level++ , -1);
 
         ws.featureSettings.anisotropy = 1.0D;
@@ -86,12 +86,12 @@ public class MitochondriaLabelImageTraining
 
         int maxNumIterations = 100;
         int zChunkSize = 16;
-        int nxyTiles = 1;
+        int nxyTiles = 2;
         int localRadius = 7;
         int maxNumInstanceSetsPerTileAndPlane = 20;
-        int maxNumInstances = 1000;
-        int numTrainingTrees = 75;
-        int numClassificationTrees = 200;
+        int maxNumInstances = 4000;
+        int numTrainingTrees = 20;
+        int numClassificationTrees = 20;
         int minNumVoxels = 1000;
         int minNumInstancesBeforeNewTraining = 100; // to speed it up a bit
 

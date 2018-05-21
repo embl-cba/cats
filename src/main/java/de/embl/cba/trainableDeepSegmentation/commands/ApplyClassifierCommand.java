@@ -17,6 +17,8 @@ import de.embl.cba.trainableDeepSegmentation.utils.StringUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import net.imagej.*;
+import net.imagej.legacy.IJ1Helper;
+import net.imagej.legacy.LegacyService;
 import net.imagej.ops.OpService;
 import net.imglib2.FinalInterval;
 import net.imglib2.type.numeric.RealType;
@@ -40,6 +42,9 @@ import static de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils.XYZT;
 public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 {
     public static final String PLUGIN_NAME = "Apply Classifier";
+
+    @Parameter
+    public LegacyService legacyService;
 
     @Parameter
     public UIService uiService;
@@ -136,6 +141,8 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         logService.info( "# " + PLUGIN_NAME );
         logCommandLineCall();
 
+        logMultipleInstanceListenerState();
+
         setInputImage();
 
         applyClassifier();
@@ -146,6 +153,12 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
         if ( quitAfterRun )  if ( quitAfterRun ) Commands.quitImageJ( logService );
 
+    }
+
+    private void logMultipleInstanceListenerState()
+    {
+        final IJ1Helper helper = legacyService.getIJ1Helper();
+        logService.info( "isRMIEnabled: " + helper.isRMIEnabled() );
     }
 
     private void setInputImage()

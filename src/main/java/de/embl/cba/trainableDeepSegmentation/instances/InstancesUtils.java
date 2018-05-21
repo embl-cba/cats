@@ -644,15 +644,14 @@ public class InstancesUtils {
 
     }
 
-    public static InstancesAndMetadata removeAttributes(InstancesAndMetadata instancesAndMetadata,
-                                                        ArrayList< Integer > goners )
+    public static InstancesAndMetadata removeAttributes(InstancesAndMetadata instancesAndMetadata, ArrayList< Integer > goners )
     {
-
-        logger.info( "# Removing non useful attributes from instances..." );
 
         logger.info( "Copying instances..." );
 
         Instances instancesWithAttributeSubset = new Instances( instancesAndMetadata.instances );
+
+        logger.info( "Removing non useful attributes..." );
 
         int n = goners.size();
 
@@ -665,16 +664,52 @@ public class InstancesUtils {
 
         instancesWithAttributeSubset.setClassIndex( instancesWithAttributeSubset.numAttributes() - 1 );
 
-
         return ( new InstancesAndMetadata( instancesWithAttributeSubset, instancesAndMetadata.metadata ) );
     }
 
-    public static InstancesAndMetadata onlyKeepAttributes(InstancesAndMetadata instancesAndMetadata,
-                                                          ArrayList< Integer > keepers )
+    public static int[] getAttIndicesWindowByRemovingAttributes( InstancesAndMetadata instancesAndMetadata, ArrayList< Integer > goners )
     {
-        logger.info( "Removing non useful attributes from instances..." );
 
-        Instances instancesWithAttributeSubset = new Instances( instancesAndMetadata.instances );
+        int nGoners = goners.size();
+        int nTotal = instancesAndMetadata.instances.numAttributes() - 1;
+        int nTotalAfterRemoval = nTotal - nGoners;
+
+        int[] attIndicesWindow = new int[nTotalAfterRemoval];
+
+        for( int i = 0, j = 0; i < nTotal; ++i )
+        {
+            if ( ! goners.contains( i ) )
+            {
+                attIndicesWindow[ j++ ] = i;
+            }
+        }
+
+        return ( attIndicesWindow );
+    }
+
+    public static InstancesAndMetadata onlyKeepAttributes(InstancesAndMetadata instancesAndMetadata,
+                                                          ArrayList< Integer > keepers)
+    {
+        return onlyKeepAttributes( instancesAndMetadata, keepers, null );
+    }
+
+    public static InstancesAndMetadata onlyKeepAttributes(InstancesAndMetadata instancesAndMetadata,
+                                                          ArrayList< Integer > keepers,
+                                                          Integer numInstances )
+    {
+        //logger.info( "Removing non useful attributes from instances..." );
+
+        Instances instancesWithAttributeSubset;
+
+        if ( numInstances != null )
+        {
+            instancesWithAttributeSubset = new Instances( instancesAndMetadata.instances, 0, numInstances );
+        }
+        else
+        {
+            instancesWithAttributeSubset = new Instances( instancesAndMetadata.instances );
+        }
+
         int numAttributes = instancesAndMetadata.instances.numAttributes();
 
         for( int i = numAttributes - 1; i >= 0; --i )
@@ -687,9 +722,21 @@ public class InstancesUtils {
 
         instancesWithAttributeSubset.setClassIndex( instancesWithAttributeSubset.numAttributes() - 1 );
 
-        logger.info( "...done." );
+        //logger.info( "...done." );
 
         return ( new InstancesAndMetadata( instancesWithAttributeSubset, instancesAndMetadata.metadata ) );
+    }
+
+    public static int[] getAttIndicesWindowByKeepingAttributes(ArrayList< Integer > keepers )
+    {
+        int[] attIndicesWindow = new int[ keepers.size() ];
+
+        for( int i = 0; i < keepers.size(); ++i )
+        {
+            attIndicesWindow[ i ] = keepers.get( i );
+        }
+
+        return attIndicesWindow;
     }
 
     public static void logInstancesInformation( Instances instances )

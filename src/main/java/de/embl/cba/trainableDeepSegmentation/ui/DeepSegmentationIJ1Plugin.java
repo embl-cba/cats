@@ -140,6 +140,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	/** load annotations button */
 	public static final String IO_LOAD_CLASSIFIER = "Load classifier";
 	public static final String IO_SAVE_CLASSIFIER = "Save classifier";
+	public static final String APPLY_CLASSIFIER = "Apply classifier";
 	public static final String ADD_CLASS = "Add class";
 	public static final String CHANGE_CLASS_NAMES = "Change class names";
 	public static final String CHANGE_COLORS = "Change colors";
@@ -175,16 +176,17 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			new String[] {
 					ADD_CLASS,
 					CHANGE_CLASS_NAMES,
-                    TRAIN_CLASSIFIER,
                     UPDATE_LABELS_AND_TRAIN,
-                    IO_SAVE_INSTANCES,
+					TRAIN_CLASSIFIER,
+					APPLY_CLASSIFIER,
+					APPLY_CLASSIFIER_ON_SLURM,
+					IO_SAVE_INSTANCES,
                     IO_LOAD_INSTANCES,
                     IO_SAVE_CLASSIFIER,
                     DUPLICATE_RESULT_IMAGE_TO_RAM,
                     IO_EXPORT_RESULT_IMAGE,
                     CHANGE_FEATURE_COMPUTATION_SETTINGS,
                     CHANGE_RESULT_OVERLAY_OPACITY,
-					APPLY_CLASSIFIER_ON_SLURM,
 					CHANGE_CLASSIFIER_SETTINGS,
 					UPDATE_LABELS,
 					CHANGE_COLORS,
@@ -278,7 +280,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	/** name of the macro method to plot the threshold curves */
 	public static final String PLOT_RESULT = "plotResultGraphs";
 	/** name of the macro method to apply the current classifier to an image or stack */
-	public static final String APPLY_CLASSIFIER = "applyClassifierWithTiling";
+	public static final String APPLY_CLASSIFIER_MACRO = "applyClassifier";
 	/** name of the macro method to load a classifier from file */
 	public static final String LOAD_CLASSIFIER = "loadProject";
 	/** name of the macro method to save the current classifier into a file */
@@ -583,6 +585,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 										deepSegmentation.getResultImage(),
 										deepSegmentation.getInputImage(),
 										deepSegmentation.getClassNames() );
+								break;
+							case APPLY_CLASSIFIER:
+								applyClassifier();
 								break;
 							case APPLY_CLASSIFIER_ON_SLURM:
 								applyClassifierOnSlurm();
@@ -1110,8 +1115,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			trainingJPanel.add(instancesPanel, trainingConstraints);
 			trainingConstraints.gridy++;
 
-			trainingJPanel.add( applyClassifierButton, trainingConstraints);
-			trainingConstraints.gridy++;
+			//trainingJPanel.add( applyClassifierButton, trainingConstraints);
+			//trainingConstraints.gridy++;
 
 			JPanel panelZTRange = new JPanel();
 			panelZTRange.add( new JLabel("Range") );
@@ -1986,8 +1991,6 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	private boolean initialisation()
 	{
 		IJ.run( trainingImage, "Properties...", "");
-
-		IJ.run("Memory & Threads...", "");
 
 		GenericDialog gd = new NonBlockingGenericDialog("Set up");
 

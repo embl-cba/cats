@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static de.embl.cba.cluster.ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS;
 import static de.embl.cba.trainableDeepSegmentation.DeepSegmentation.logger;
 import static de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils.*;
 import static de.embl.cba.trainableDeepSegmentation.utils.Utils.getSimpleString;
@@ -51,9 +52,11 @@ public class ApplyClassifierOnSlurmCommand implements Command
     public File classifierFile;
     public static final String CLASSIFIER_FILE = "classifierFile";
 
+    /*
     @Parameter( label = "ImageJ executable (must be linux and cluster accessible)", required = false)
     public File imageJFile;
     public static final String IMAGEJ_FILE = "imageJFile";
+    */
 
     @Parameter( label = "Job status monitoring interval [s]", required = true)
     public int jobStatusMonitoringInterval = 15;
@@ -98,7 +101,7 @@ public class ApplyClassifierOnSlurmCommand implements Command
         dataSets.add( inputImageFile.toPath() );
 
         ArrayList< JobFuture > jobFutures = submitJobsOnSlurm(
-                CommandUtils.getHeadlessImageJExecutionString( imageJFile ),
+                IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS,
                 jobDirectory, classifierFile.toPath(), dataSets );
 
         SlurmJobMonitor slurmJobMonitor = new SlurmJobMonitor( logger );
@@ -165,7 +168,7 @@ public class ApplyClassifierOnSlurmCommand implements Command
     private int getApproximatelyNeededTimeInMinutes( FinalInterval tile )
     {
         long numVoxels = tile.dimension( X ) * tile.dimension( Y ) * tile.dimension( Z );
-        long voxelsPerSecond = 5000;
+        long voxelsPerSecond = 20000;
         double secondsNeeded = 1.0 * numVoxels / voxelsPerSecond;
         int minutesNeeded = ( int ) Math.ceil( secondsNeeded / 60.0 );
         minutesNeeded = Math.max( 10, minutesNeeded );

@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -33,7 +34,6 @@ import ij.io.FileSaver;
 import ij.measure.ResultsTable;
 import ij.plugin.Duplicator;
 import ij.process.ImageProcessor;
-import ij.process.ShortProcessor;
 import inra.ijpb.binary.BinaryImages;
 import inra.ijpb.measure.GeometricMeasures3D;
 import inra.ijpb.morphology.AttributeFiltering;
@@ -509,7 +509,7 @@ public class DeepSegmentation
 					numThreadsPerSlice = 1;
 
 					// create new instances
-					exe = Executors.newFixedThreadPool( numSlicesInCurrentChunk );
+					exe = Executors.newFixedThreadPool( numThreads );
 					ArrayList< Future<InstancesAndMetadata> > futures = new ArrayList<>();
 
 					for ( int z = ( int ) zChunk[ 0 ]; z <= zChunk[ 1 ]; ++z )
@@ -579,6 +579,8 @@ public class DeepSegmentation
 
 					numInstances = instancesAndMetadata.getInstances().numInstances();
 
+					logger.info( "Number of instances: " + numInstances );
+
 					boolean enoughNewInstancesForNewTraining =
 							( numInstances - numInstancesAtLastTraining ) >= minNumInstancesBeforeNewTraining;
 
@@ -620,22 +622,19 @@ public class DeepSegmentation
 
 	private void applyLabelImageTrainingClassifierToNextChunk( FeatureProvider featureProvider, String classifierKey, ResultImageFrameSetter resultImageFrameSetter, ArrayList< long[] > zChunks, int iChunk )
 	{
-		long[] zChunk;
-		int numSlicesInCurrentChunk;
-		int numThreadsPerSlice;
-		ExecutorService exe;
+
 		int iClassificationChunk = iChunk < ( zChunks.size() - 1 ) ? iChunk + 1 : 0;
-		zChunk = zChunks.get( iClassificationChunk );
+        long[] zChunk = zChunks.get( iClassificationChunk );
 
-		numSlicesInCurrentChunk = ( int ) ( zChunk[ 1 ] - zChunk[ 0 ] + 1 );
-		numThreadsPerSlice = 1;
+        int numSlicesInCurrentChunk = ( int ) ( zChunk[ 1 ] - zChunk[ 0 ] + 1 );
+        int numThreadsPerSlice = 1;
 
-		exe = Executors.newFixedThreadPool( numSlicesInCurrentChunk );
+        ExecutorService exe = Executors.newFixedThreadPool( numThreads );
 		ArrayList< Future > classificationFutures = new ArrayList<>();
 
 		logger.info( "\n# Applying classifier to: zMin " + zChunk[ 0 ]
                 + "; zMax " + zChunk[ 1 ]
-                + "; using " + numSlicesInCurrentChunk + " workers." );
+                + "; using " + numThreads + " workers." );
 
 		for ( int z = ( int ) zChunk[ 0 ]; z <= zChunk[ 1 ]; ++z )
         {
@@ -656,7 +655,8 @@ public class DeepSegmentation
             );
         }
 
-		ThreadUtils.joinThreads( classificationFutures, logger );
+		ThreadUtils.joinThreads( classificationFutures, logger, exe );
+
 	}
 
 	private long saveLabelImageTrainingCurrentInstances( String instancesKey, String directory )
@@ -771,8 +771,8 @@ public class DeepSegmentation
 
             AccuracyEvaluation.reportClassificationAccuracies( accuracies, (int) t, logger );
 
-            accuraciesImage.setTitle( title );
-            accuraciesImage.show();
+            //accuraciesImage.setTitle( title + "_t" + t );
+            //accuraciesImage.show();
         }
 
 	}
@@ -1200,7 +1200,6 @@ public class DeepSegmentation
 		ClassifierInstancesMetadata classifierInstancesMetadata = ClassifierUtils.loadClassifierInstancesMetadata( directory, filename );
 		SettingsUtils.setSettingsFromInstancesMetadata( featureSettings, classifierInstancesMetadata.instancesAndMetadata );
 		classifierManager.setClassifier( classifierInstancesMetadata );
-
 	}
 
 
@@ -1440,9 +1439,10 @@ public class DeepSegmentation
 		}
 		else
         {
-            logger.info( "\nLoaded instances relation name does not match image name." +
-                    "\nInstances can be used for training a classifier but not for adding more annotations" +
-                    " based on current image." );
+            logger.info( "\nLoaded instances relation name: " + instancesAndMetadata.getRelationName()
+                            + "\ndoes not match image name: " + inputImage.getTitle()
+                            + "\nInstances can be used for training a classifier but not for adding more annotations"
+                            + " based on current image." );
         }
 
 
@@ -1556,8 +1556,8 @@ public class DeepSegmentation
 			);
 		}
 
-		ThreadUtils.joinThreads( futures, logger );
-		exe.shutdown();
+		ThreadUtils.joinThreads( futures, logger, exe );
+
 
 		if ( groupedExamples.size() > 0 )
 		{
@@ -2159,12 +2159,13 @@ public class DeepSegmentation
 	public String trainClassifierWithFeatureSelection ( InstancesAndMetadata instancesAndMetadata )
 	{
 
-		String classifierKey = trainClassifier( instancesAndMetadata );
+		String classifierKey = trainClassifier( instancesAndMetadata, null );
 
 		if ( ! featureSelectionMethod.equals( FEATURE_SELECTION_NONE ) )
 		{
 			FastRandomForest classifier = classifierManager.getClassifier( classifierKey );
 			InstancesAndMetadata instancesWithFeatureSelection = null;
+			int[] attIndicesWindow;
 
 			switch ( featureSelectionMethod )
 			{
@@ -2177,7 +2178,8 @@ public class DeepSegmentation
 									-1,
 									logger );
 
-					instancesWithFeatureSelection = InstancesUtils.removeAttributes( instancesAndMetadata, goners );
+					//instancesWithFeatureSelection = InstancesUtils.removeAttributes( instancesAndMetadata, goners );
+                    attIndicesWindow = InstancesUtils.getAttIndicesWindowByRemovingAttributes( instancesAndMetadata, goners );
 					break;
 
 				case FEATURE_SELECTION_TOTAL_NUMBER:
@@ -2188,7 +2190,8 @@ public class DeepSegmentation
 									( int ) featureSelectionValue,
 									logger );
 
-					instancesWithFeatureSelection = InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers );
+					//instancesWithFeatureSelection = InstancesUtils.onlyKeepAttributes( instancesAndMetadata, keepers );
+					attIndicesWindow = InstancesUtils.getAttIndicesWindowByKeepingAttributes( keepers );
 					break;
 
 				case FEATURE_SELECTION_ABSOLUTE_USAGE:
@@ -2200,15 +2203,17 @@ public class DeepSegmentation
                                     (int) featureSelectionValue,
                                     logger );
 
-                    instancesWithFeatureSelection = InstancesUtils.removeAttributes( instancesAndMetadata, goners2 );
+                    //instancesWithFeatureSelection = InstancesUtils.removeAttributes( instancesAndMetadata, goners2 );
+                    attIndicesWindow = InstancesUtils.getAttIndicesWindowByRemovingAttributes( instancesAndMetadata, goners2 );
                     break;
-
-
+                default:
+                    attIndicesWindow = null;
+                    break;
 			}
 
 			logger.info( "\n# Second training with feature subset" );
 
-			classifierKey = trainClassifier( instancesWithFeatureSelection );
+			classifierKey = trainClassifier( instancesAndMetadata, attIndicesWindow );
 
 		}
 
@@ -2218,20 +2223,25 @@ public class DeepSegmentation
 
 	public String trainClassifier( )
 	{
-		return trainClassifier( getCurrentLabelInstancesAndMetadata() );
+		return trainClassifier( getCurrentLabelInstancesAndMetadata(), null );
 	}
 
 	public String trainClassifier( String key )
 	{
-		return trainClassifier( instancesManager.getInstancesAndMetadata( key ) );
+		return trainClassifier( instancesManager.getInstancesAndMetadata( key ), null );
 	}
 
-	/**
+    public String trainClassifier( InstancesAndMetadata instancesAndMetadata )
+    {
+        return trainClassifier( instancesAndMetadata, null );
+    }
+
+    /**
 	 * Train classifier with the current instances
 	 * and current classifier featureSettings
 	 * and current active features
 	 */
-	public String trainClassifier( InstancesAndMetadata instancesAndMetadata )
+	public String trainClassifier( InstancesAndMetadata instancesAndMetadata, int[] attIndicesWindow  )
 	{
 		isTrainingCompleted = false;
 
@@ -2260,6 +2270,7 @@ public class DeepSegmentation
 		classifier.setNumThreads( threadsClassifierTraining );
 		classifier.setBatchSize( "" + getBatchSizePercent() );
 		classifier.setComputeImportances( false ); // using own method currently
+        classifier.setAttIndicesWindow( attIndicesWindow  );
 
 		// balance traces training data
 		// Instances balancedInstances = instancesAndMetadata.getInstances();
@@ -2293,17 +2304,45 @@ public class DeepSegmentation
 
 		isTrainingCompleted = true;
 
-		String key = getClassifierManager().setClassifier( classifier, instancesAndMetadata );
+        String classifierKey;
 
-		return key;
+		if ( attIndicesWindow != null )
+        {
+            // remove unused attributes from instances...
+            ArrayList< Integer > attIndicesWindowList = asList( attIndicesWindow );
+            InstancesAndMetadata instancesAndMetadataAttributeSubset = InstancesUtils.onlyKeepAttributes( instancesAndMetadata, attIndicesWindowList, 1 );
+
+            // ...and keep the classifier, only with used instances (important for feature computation)
+            // also note that the "buildClassifier" command above takes care of reassigning the attribute
+            // ids on the tree nodes to only account for the used attributes.
+            classifierKey = getClassifierManager().setClassifier( classifier, instancesAndMetadataAttributeSubset );
+        }
+        else
+        {
+            classifierKey = getClassifierManager().setClassifier( classifier, instancesAndMetadata );
+        }
+
+		return classifierKey;
 	}
 
+    private ArrayList<Integer> asList( int[] array )
+    {
+        ArrayList<Integer> list = new ArrayList<>();
 
-	public void applyClassifierWithTiling()
+        for ( int i = 0; i < array.length; ++i )
+        {
+            list.add( array[ i ] );
+        }
+
+        return list;
+    }
+
+
+    public void applyClassifierWithTiling()
 	{
 		String mostRecentClassifierKey = getClassifierManager().getMostRecentClassifierKey();
 		FinalInterval interval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( getInputImage() );
-		applyClassifierWithTiling(  mostRecentClassifierKey, interval, -1, null , false );
+		applyClassifierWithTiling( mostRecentClassifierKey, interval, -1, null , false );
 	}
 
 	public void applyClassifierWithTiling( FinalInterval interval )
@@ -2629,7 +2668,6 @@ public class DeepSegmentation
 										featureProvider,
 										resultSetter,
 										zChunk[0], zChunk[1],
-										//uncertaintyRegion,
 										classifierManager.getInstancesHeader( classifierKey ),
 										classifierManager.getClassifier( classifierKey ),
 										accuracy,
@@ -2642,8 +2680,7 @@ public class DeepSegmentation
 			}
 
 			// wait until done
-			ThreadUtils.joinThreads( futures, logger );
-			exe.shutdown();
+			ThreadUtils.joinThreads( futures, logger, exe );
 
 			// store classification results
 			resultSetter.close();

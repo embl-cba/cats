@@ -28,7 +28,7 @@ public class CommandUtils
         else
         {
             String clusterMountedImageJ = PathMapper.asEMBLClusterMounted( imageJFile.getAbsolutePath() );
-            return "xvfb-run -a -e XVFB_ERR_PATH " + clusterMountedImageJ + " --mem=MEMORY_MB --run";
+            return "xvfb-run -a -e XVFB_ERR_PATH " + clusterMountedImageJ + " --mem=MEMORY_MB --headless --allow-multiple --run";
         }
     }
 
@@ -41,7 +41,7 @@ public class CommandUtils
         else
         {
             String clusterMountedImageJ = PathMapper.asEMBLClusterMounted( imageJFile.getAbsolutePath() );
-            return clusterMountedImageJ + " --headless --mem=MEMORY_MB --run";
+            return clusterMountedImageJ + " --headless --mem=MEMORY_MB --allow-multiple --run";
         }
     }
 }

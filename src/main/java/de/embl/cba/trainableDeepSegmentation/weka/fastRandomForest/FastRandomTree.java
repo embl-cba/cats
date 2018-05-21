@@ -23,6 +23,7 @@
 
 package de.embl.cba.trainableDeepSegmentation.weka.fastRandomForest;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -116,6 +117,20 @@ class FastRandomTree
   }
 
 
+  public void reassignAttributes( ArrayList< Integer > attributes )
+  {
+    this.m_Attribute = attributes.indexOf( m_Attribute );
+
+    if ( m_Successors != null )
+    {
+      for ( FastRandomTree tree : m_Successors )
+      {
+        tree.reassignAttributes( attributes );
+      }
+    }
+  }
+
+
   /**
    * Returns the tip text for this property
    * @return tip text for this property suitable for
@@ -202,13 +217,31 @@ class FastRandomTree
       classProbs[data.instClassValues[i]] += data.instWeights[i];
     }
 
-    // create the attribute indices window - skip class
-    int[] attIndicesWindow = new int[data.numAttributes - 1];
-    int j = 0;
-    for (int i = 0; i < attIndicesWindow.length; i++) {
-      if (j == data.classIndex)
-        j++; // do not include the class
-      attIndicesWindow[i] = j++;
+    int[] attIndicesWindow;
+
+    if ( m_MotherForest.attIndicesWindowExternallySet  )
+    {
+      // copy the window, because it will be changed within this tree!
+
+      attIndicesWindow = new int[ m_MotherForest.attIndicesWindow.length ];
+
+      for ( int i = 0; i < attIndicesWindow.length; ++i )
+      {
+        attIndicesWindow[ i ] = m_MotherForest.attIndicesWindow[ i ];
+      }
+
+    }
+    else
+    {
+      // create the attribute indices window - skip class
+      attIndicesWindow = new int[ data.numAttributes - 1 ];
+      int j = 0;
+      for ( int i = 0; i < attIndicesWindow.length; i++ )
+      {
+        if ( j == data.classIndex )
+          j++; // do not include the class
+        attIndicesWindow[ i ] = j++;
+      }
     }
 
     // prepare the DataCache by:
@@ -228,8 +261,7 @@ class FastRandomTree
       endAt = data.sortedIndices[ 1 ].length - 1;
     }
 
-    buildTree(data.sortedIndices, 0, endAt,
-            classProbs, m_Debug, attIndicesWindow, 0);
+    buildTree(data.sortedIndices, 0, endAt, classProbs, m_Debug, attIndicesWindow, 0);
 
     this.data = null;
       
@@ -530,8 +562,7 @@ class FastRandomTree
       //        m_SplitPoint, sortedIndices );
       //int numInstancesBeforeSplit = sortedIndices[0].length;
       
-      int belowTheSplitStartsAt = splitDataNew(  m_Attribute, m_SplitPoint, sortedIndices, startAt, endAt );
-      
+      int belowTheSplitStartsAt = splitDataNew( m_Attribute, m_SplitPoint, sortedIndices, startAt, endAt );
 
       m_Successors = new FastRandomTree[dist.length];  // dist.length now always == 2
       for (int i = 0; i < dist.length; i++) {
@@ -564,11 +595,12 @@ class FastRandomTree
 
 
         dist[i] = null;
-        
+
+
       }
       sortedIndices = null;
 
-      
+
     } else { // ------ make leaf --------
 
       m_Attribute = -1;

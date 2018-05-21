@@ -38,7 +38,7 @@ public class ThreadUtils {
         }
     }
 
-    public static void joinThreads( ArrayList<Future> futures, Logger logger )
+    public static void joinThreads( ArrayList<Future> futures, Logger logger, ExecutorService exe )
     {
         if ( futures.size() > 0)
         {
@@ -66,6 +66,10 @@ public class ThreadUtils {
                 return;
             }
         }
+
+        futures = null;
+        exe.shutdown();
+
         return;
     }
 }

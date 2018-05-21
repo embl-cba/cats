@@ -570,8 +570,7 @@ public class FeatureProvider
             );
         }
 
-        ThreadUtils.joinThreads( futures, logger );
-        exe.shutdown();
+        ThreadUtils.joinThreads( futures, logger, exe );
 
         // cache featureSlice
         if ( cacheSize > 0 )
@@ -613,7 +612,6 @@ public class FeatureProvider
                 logger.error( "Feature not found among current feature images: " + feature );
                 return;
             }
-
 
             calibration = imp.getCalibration();
             xCal = calibration.pixelWidth;

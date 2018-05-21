@@ -138,6 +138,11 @@ public class FastRandomForest
   /** The header information. */
   protected Instances m_Info = null;
 
+  /** only attributes whose id is present here will be used for training **/
+  protected int[] attIndicesWindow = null; // Tischi
+
+  protected boolean attIndicesWindowExternallySet = false; // Tischi
+
   /** a ZeroR model in case no model can be built from the data */
   protected AbstractClassifier m_ZeroR;
 
@@ -154,7 +159,6 @@ public class FastRandomForest
   {
     decisionNodes++;
   }
-
 
 
   /**
@@ -224,6 +228,22 @@ public class FastRandomForest
     return attributeUsages; // Tischi
   }
 
+
+  public int[] getAttIndicesWindow() // Tischi
+  {
+    return attIndicesWindow;
+  }
+
+  public void setAttIndicesWindow( int[] attIndicesWindow ) // Tischi
+  {
+    this.attIndicesWindow = attIndicesWindow;
+
+    if ( attIndicesWindow != null )
+    {
+      this.attIndicesWindowExternallySet = true;
+    }
+
+  }
 
   Map< Integer, ArrayList< Integer > >[] labelIds = null;
 
@@ -639,8 +659,8 @@ public class FastRandomForest
     getCapabilities().testWithFail(data);
 
     // remove instances with missing class
-    data = new Instances(data);
-    data.deleteWithMissingClass();
+    //data = new Instances(data); // TISCHI commented this
+    //data.deleteWithMissingClass(); // TISCHI commented this
 
     // only class? -> build ZeroR model
     if(data.numAttributes() == 1){

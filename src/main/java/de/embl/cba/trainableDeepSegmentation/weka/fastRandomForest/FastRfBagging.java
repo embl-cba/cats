@@ -23,11 +23,7 @@
 
 package de.embl.cba.trainableDeepSegmentation.weka.fastRandomForest;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Random;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +32,7 @@ import java.util.concurrent.Future;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import de.embl.cba.utils.logging.Logger;
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
+import ij.IJ;
 import weka.classifiers.Classifier;
 import weka.classifiers.RandomizableIteratedSingleClassifierEnhancer;
 import weka.core.AdditionalMeasureProducer;
@@ -106,8 +103,8 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
     getCapabilities().testWithFail(data);
 
     // remove instances with missing class
-    data = new Instances(data);
-    data.deleteWithMissingClass();
+    // data = new Instances(data); // TISCHI commented this
+    // data.deleteWithMissingClass(); // TISCHI commented this
 
     if (!(m_Classifier instanceof FastRandomTree))
       throw new IllegalArgumentException("The FastRfBagging class accepts " +
@@ -137,7 +134,6 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
     // this was SLOW.. takes approx 1/2 time as instances the forest afterwards (!!!)
     // super.buildClassifier(data);
 
-
     //if (m_CalcOutOfBag && (m_BagSizePercent != 100)) {
     //  throw new IllegalArgumentException("Bag size needs to be 100% if " +
     //    "out-of-bag error is to be calculated!");
@@ -145,7 +141,9 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
 
     // sorting is performed inside this constructor
+    IJ.log( "Creating instances data cache..." );
     DataCache myData = new DataCache( data );
+    IJ.log( "...done.\n" );
 
     int bagSize = data.numInstances() * m_BagSizePercent / 100;
     Random random = new Random(m_Seed);
@@ -237,6 +235,26 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
           }
           //m_FeatureNames[j] = data.attribute(j).name();
         }
+      }
+
+      // reassign the attribute ids, because next time this classifier will be used,
+      // only the attributes in the window will be present.
+      if ( motherForest.attIndicesWindowExternallySet  )
+      {
+        ArrayList<Integer> attIndicesList = new ArrayList<Integer>();
+
+        int[] window = motherForest.getAttIndicesWindow();
+
+        for (int i : window)
+        {
+          attIndicesList.add(i);
+        }
+
+        for (int i = 0; i < m_Classifiers.length; i++) {
+          FastRandomTree tree = (FastRandomTree) m_Classifiers[ i ];
+          tree.reassignAttributes( attIndicesList );
+        }
+
       }
 
       threadPool.shutdown();
