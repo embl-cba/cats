@@ -37,7 +37,7 @@ public class ObjectSegmentation
         this.deepSegmentation = deepSegmentation;
     }
 
-    public SegmentedObjects runViaUI( )
+    public SegmentedObjects runUI( )
     {
 
         GenericDialog gd = openGenericDialog();

@@ -164,8 +164,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier settings";
 	public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature settings";
     public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature settings";
-    public static final String SEGMENT_OBJECTS = "Segment objects3DPopulation";
-    public static final String REVIEW_OBJECTS = "Review objects3DPopulation";
+    public static final String SEGMENT_OBJECTS = "Segment objects";
+    public static final String REVIEW_OBJECTS = "Review objects";
     public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
     public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
 
@@ -190,6 +190,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 					IO_SAVE_INSTANCES,
                     IO_LOAD_INSTANCES,
                     SEGMENT_OBJECTS,
+                    REVIEW_OBJECTS,
                     DUPLICATE_RESULT_IMAGE_TO_RAM,
                     IO_EXPORT_RESULT_IMAGE,
                     CHANGE_FEATURE_COMPUTATION_SETTINGS,
@@ -2402,7 +2403,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
         SegmentedObjects segmentedObjects = deepSegmentation.getSegmentedObjectsList().get( 0 );
 
         ObjectsReview objectsReview = new ObjectsReview( deepSegmentation );
-        objectsReview.reviewObjectsUsingRoiManager( segmentedObjects );
+
+        objectsReview.runUI( );
 
         //RoiManager3D_2 manager3D = new RoiManager3D_2();
         //manager3D.setVisible( false );

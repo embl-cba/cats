@@ -161,9 +161,8 @@ public class DeepSegmentation
 
 	public void segmentObjects()
 	{
-
 		ObjectSegmentation objectSegmentation = new ObjectSegmentation( this );
-		SegmentedObjects objects = objectSegmentation.runViaUI( );
+		SegmentedObjects objects = objectSegmentation.runUI( );
 
 		if ( objects != null )
 		{
@@ -3127,6 +3126,21 @@ public class DeepSegmentation
 	public ArrayList<String> getClassNames()
 	{
 		return featureSettings.classNames;
+	}
+
+	public ArrayList<String> getSegmentedObjectsNames()
+	{
+		ArrayList< String > segmentedObjectsNames = new ArrayList<>(  );
+
+		if ( segmentedObjectsList != null )
+		{
+			for ( SegmentedObjects segmentedObjects : segmentedObjectsList )
+			{
+				segmentedObjectsNames.add( segmentedObjects.name );
+			}
+		}
+
+		return segmentedObjectsNames;
 	}
 
 }
