@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -20,6 +19,8 @@ import java.util.zip.GZIPOutputStream;
 import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierOnSlurmCommand;
 import de.embl.cba.trainableDeepSegmentation.labelimagetraining.AccuracyEvaluation;
+import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectSegmentation;
+import de.embl.cba.trainableDeepSegmentation.postprocessing.SegmentedObjects;
 import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
@@ -142,6 +143,36 @@ public class DeepSegmentation
 
 
 	}
+
+	public ArrayList< SegmentedObjects > getSegmentedObjectsList()
+	{
+		return segmentedObjectsList;
+	}
+
+	public void addObjects( SegmentedObjects segmentedObjects )
+	{
+		if ( segmentedObjectsList == null  )
+		{
+			segmentedObjectsList = new ArrayList<>(  );
+		}
+
+		segmentedObjectsList.add( segmentedObjects );
+	}
+
+	public void segmentObjects()
+	{
+
+		ObjectSegmentation objectSegmentation = new ObjectSegmentation( this );
+		SegmentedObjects objects = objectSegmentation.runViaUI( );
+
+		if ( objects != null )
+		{
+			addObjects( objects );
+		}
+
+	}
+
+	private ArrayList< SegmentedObjects > segmentedObjectsList;
 
 	private ResultImage resultImageBgFg = null;
 
@@ -708,13 +739,13 @@ public class DeepSegmentation
 			}
 			*/
 
-		//logger.info( "\n# True number of objects in training image: " + numTrueObjects);
+		//logger.info( "\n# True number of segmentedObjectsList in training image: " + numTrueObjects);
 
-		//analyzeObjects( minNumVoxels, 0 , "" + i + "-train" , directory );
+		//segmentObjects( minNumVoxels, 0 , "" + i + "-train" , directory );
 
 		// Report results from test image
 		//
-		// analyzeObjects( minNumVoxels, 1, ""+i+"-test" , directory );
+		// segmentObjects( minNumVoxels, 1, ""+i+"-test" , directory );
 
 
 		computeLabelImageBasedAccuracies( "" + i + "-accuracies-train" , 1, getInterval( getInputImage() ) );
@@ -736,7 +767,7 @@ public class DeepSegmentation
 		//classLabelMask.show();
 
 		ResultsTable rt = GeometricMeasures3D.volume( classLabelMask.getStack() , new double[]{1,1,1});
-		logger.info( "\n# Classified number of objects in " + title + ": " + rt.size() );
+		logger.info( "\n# Classified number of segmentedObjectsList in " + title + ": " + rt.size() );
 	}
 
 	private void saveImage( ImagePlus imp, String directory )

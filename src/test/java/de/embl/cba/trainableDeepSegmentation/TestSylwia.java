@@ -67,7 +67,7 @@ public class TestSylwia {
         ResultsTable rt_v = GeometricMeasures3D.volume( labelMask.getStack(), resolution );
         rt_v.show( "Volumes" );
 
-        DeepSegmentation.logger.info( "\nNumber of objects: " + rt_v.size() );
+        DeepSegmentation.logger.info( "\nNumber of objects3DPopulation: " + rt_v.size() );
 
         // Saving results
         //

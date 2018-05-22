@@ -5587,7 +5587,7 @@
 				imp = classifiedImage; // whole image
 			}
 
-			// remove small objects
+			// remove small objectsList
 			de.embl.cba.trainableDeepSegmentation.utils.Utils.filterSmallObjects3D(imp, sizesMinMax);
 
 			// save changed classification image

@@ -1,17 +1,22 @@
 package de.embl.cba.trainableDeepSegmentation.labels;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
+import ij.plugin.Duplicator;
 import ij.plugin.frame.RoiManager;
 import de.embl.cba.trainableDeepSegmentation.labels.examples.Example;
 
+import java.awt.*;
 import java.util.*;
 
 public class LabelManager {
 
     ImagePlus imp;
+
+    ImagePlus imageAroundCurrentSelection;
 
     Map < String, Example > examples;
     ArrayList < String > underReview;
@@ -24,6 +29,22 @@ public class LabelManager {
     {
         this.imp = imp;
     }
+
+    private static void zoomIn()
+    {
+        IJ.run("In [+]", "");
+        IJ.run("In [+]", "");
+        IJ.run("In [+]", "");
+        IJ.run("In [+]", "");
+    }
+
+    public static void zoomOut( int n )
+	{
+	    for ( int i = 0; i < n; ++i )
+        {
+            IJ.run( "Out [-]", "" );
+        }
+	}
 
     public void setExamples( ArrayList< Example > examples )
     {
@@ -73,8 +94,7 @@ public class LabelManager {
 
     }
 
-    public void reviewLabelsInRoiManager( int classNum,
-                                          String order )
+    public void reviewLabelsInRoiManager( int classNum, String order )
     {
 
         ArrayList< Roi > rois = getRoisFromExamples( classNum, order );
@@ -89,15 +109,15 @@ public class LabelManager {
 
     }
 
-    private static void addRoiToManager( RoiManager manager, ImagePlus imp, Roi roi )
+    public static void addRoiToManager( RoiManager manager, ImagePlus imp, Roi roi )
     {
-
 
         int nSave = imp.getSlice();
         int n = imp.getStackIndex(  roi.getCPosition(), roi.getZPosition(), roi.getTPosition());
         imp.setSliceWithoutUpdate( n );
 
         int tSave = 0, zSave = 0, cSave = 0;
+
         if ( imp.isHyperStack() )
         {
             tSave = imp.getT();
@@ -107,7 +127,6 @@ public class LabelManager {
         }
 
         manager.addRoi( roi );
-
 
         if ( imp.isHyperStack() )
         {
@@ -166,8 +185,7 @@ public class LabelManager {
     final static String ORDER_Z = "z-position";
     final static String ORDER_TIME_ADDED = "time added";
 
-    private ArrayList< Roi > getRoisFromExamples( int classNum,
-                                                  String ordering)
+    private ArrayList< Roi > getRoisFromExamples( int classNum, String ordering )
     {
         ArrayList< Roi > rois = new ArrayList<>();
 
@@ -209,8 +227,6 @@ public class LabelManager {
             rois.add( roi );
         }
 
-
-
         return rois;
     }
 
@@ -237,5 +253,46 @@ public class LabelManager {
     {
         manager.close();
     }
+
+    private static int getMargin( Roi roi )
+    {
+        return (int) ( Math.max( roi.getBounds().width, roi.getBounds().height ) * 2 );
+    }
+
+    private void showImageAroundRoi( Roi roi, int margin )
+    {
+        if ( ! imageAroundCurrentSelection.isVisible() )
+        {
+            imageAroundCurrentSelection.show();
+        }
+        imageAroundCurrentSelection.updateAndDraw();
+
+        Roi zoomedInROI = (Roi) roi.clone();
+        zoomedInROI.setLocation( margin, margin );
+        imageAroundCurrentSelection.setRoi( zoomedInROI );
+    }
+
+    private void setImageAroundRoi( ImagePlus trainingImage,  Roi roi, int margin )
+    {
+        Rectangle r = roi.getBounds();
+
+        Roi rectangleRoi = new Roi( r.x - margin, r.y - margin, r.width + 2 * margin, r.height + 2 * margin  );
+
+        trainingImage.setRoi( rectangleRoi );
+
+        Duplicator duplicator = new Duplicator();
+
+        if ( imageAroundCurrentSelection != null )
+        {
+            imageAroundCurrentSelection.close();
+        }
+
+        imageAroundCurrentSelection = duplicator.run( trainingImage, trainingImage.getC(), trainingImage.getC(), trainingImage.getZ(), trainingImage.getZ(), trainingImage.getT(), trainingImage.getT() );
+
+        trainingImage.setRoi( roi );
+
+
+    }
+
 
 }

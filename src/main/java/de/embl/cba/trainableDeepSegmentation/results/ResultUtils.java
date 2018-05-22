@@ -103,18 +103,13 @@ public abstract class ResultUtils
         logger.progress( s + className + ", frame:", ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames() );
     }
 
-    private static ImagePlus getBinnedClassImage( int classId, ResultExportSettings resultExportSettings, int t )
+    public static ImagePlus getBinnedClassImage( int classId, ResultExportSettings resultExportSettings, int t )
     {
-
-        String className = resultExportSettings.classNames.get( classId );
-
-        // logger.progress( "Getting " + className + ", frame:", ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames() );
 
         ImagePlus impClass = getClassImage( classId, t, resultExportSettings.resultImagePlus, resultExportSettings.classLutWidth );
 
         if ( resultExportSettings.binning[0] * resultExportSettings.binning[1] * resultExportSettings.binning[2] > 1 )
         {
-            // logger.progress( "Binning " + className + ", frame:", (t+1) + "/" + resultExportSettings.resultImagePlus.getNFrames() + "..." );
             Binner binner = new Binner();
             impClass = binner.shrink( impClass, resultExportSettings.binning[ 0 ], resultExportSettings.binning[ 1 ], resultExportSettings.binning[ 2 ], Binner.AVERAGE );
         }
@@ -122,8 +117,7 @@ public abstract class ResultUtils
         return impClass;
     }
 
-
-    private static ImagePlus getBinnedAndProximityFilteredClassImage( int classId, ResultExportSettings resultExportSettings, int t )
+    public static ImagePlus getBinnedAndProximityFilteredClassImage( int classId, ResultExportSettings resultExportSettings, int t )
     {
 
         ImagePlus impClass = getBinnedClassImage( classId, resultExportSettings, t );
@@ -137,9 +131,7 @@ public abstract class ResultUtils
         return impClass;
     }
 
-
-
-    private static void saveClassAsTiff( int classId, ResultExportSettings resultExportSettings )
+    public static void saveClassAsTiff( int classId, ResultExportSettings resultExportSettings )
     {
 
         String className = resultExportSettings.classNames.get( classId );
@@ -388,7 +380,7 @@ public abstract class ResultUtils
         return classesToBeSaved;
     }
 
-    private static ImagePlus getClassImage( int classId, int t, ImagePlus result, int CLASS_LUT_WIDTH)
+    private static ImagePlus getClassImage( int classId, int t, ImagePlus result, int CLASS_LUT_WIDTH )
     {
         ImagePlus impClass;
 

@@ -12,7 +12,7 @@ import weka.core.Utils;
  *
  * Implements callable so it can be run in multiple numWorkers.
  *
- * Adapted by Ignacio Arganda-Carreras from the Fran Supek's version to work on BalancedRandomTree objects
+ * Adapted by Ignacio Arganda-Carreras from the Fran Supek's version to work on BalancedRandomTree objects3DPopulation
  */
 public class VotesCollector implements Callable<Double> 
 {

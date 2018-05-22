@@ -2084,13 +2084,13 @@ public class WarpingError extends Metrics {
 					if ( uniqueId2.size() > 2 )
 					{
 						pointClassification[ n ] = SPLIT;
-						//IJ.log(" all surrounding pixels are white, the point is white and second CC has more than 2 objects -> split");
+						//IJ.log(" all surrounding pixels are white, the point is white and second CC has more than 2 objects3DPopulation -> split");
 					}
 					// otherwise it deletes a hole
 					else
 					{
 						pointClassification[ n ] = HOLE_DELETION;
-						//IJ.log(" all surrounding pixels are white, the point is white and second CC has 2 objects -> hole deletion");
+						//IJ.log(" all surrounding pixels are white, the point is white and second CC has 2 objects3DPopulation -> hole deletion");
 					}
 				}
 			}			
@@ -2099,12 +2099,12 @@ public class WarpingError extends Metrics {
 				if(components.getf(x, y) == 0)
 				{
 					pointClassification[ n ] = MERGE;
-					//IJ.log(" surrounding pixels have at least 2 objects and the point is black -> merge");					
+					//IJ.log(" surrounding pixels have at least 2 objects3DPopulation and the point is black -> merge");
 				}
 				else
 				{
 					pointClassification[ n ] = SPLIT;
-					//IJ.log(" surrounding pixels have at least 2 objects and the point is white -> split");					
+					//IJ.log(" surrounding pixels have at least 2 objects3DPopulation and the point is white -> split");
 				}
 			}	
 			n++;

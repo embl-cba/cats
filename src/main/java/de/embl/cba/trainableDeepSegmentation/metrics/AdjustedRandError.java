@@ -247,8 +247,8 @@ public class AdjustedRandError extends Metrics
 	 * }
 	 * </pre>
 	 * 
-	 * @param cluster1 2D segmented image (objects are labeled with different numbers) 
-	 * @param cluster2 2D segmented image (objects are labeled with different numbers)
+	 * @param cluster1 2D segmented image (objects3DPopulation are labeled with different numbers)
+	 * @param cluster2 2D segmented image (objects3DPopulation are labeled with different numbers)
 	 * @return adjusted Rand index
 	 */
 	public static double adjustedRandIndex(

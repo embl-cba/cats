@@ -1053,8 +1053,8 @@ public class RandError extends Metrics
 	 * }
 	 * </pre>
 	 * 
-	 * @param cluster1 2D segmented image (objects are labeled with different numbers) 
-	 * @param cluster2 2D segmented image (objects are labeled with different numbers)
+	 * @param cluster1 2D segmented image (objects3DPopulation are labeled with different numbers)
+	 * @param cluster2 2D segmented image (objects3DPopulation are labeled with different numbers)
 	 * @return Rand index
 	 */
 	public double classicRandIndex(
@@ -1125,8 +1125,8 @@ public class RandError extends Metrics
 	 * }
 	 * </pre>
 	 * 
-	 * @param cluster1 ground truth, 2D segmented image (objects are labeled with different numbers) 
-	 * @param cluster2 prediction, 2D segmented image (objects are labeled with different numbers)
+	 * @param cluster1 ground truth, 2D segmented image (objects3DPopulation are labeled with different numbers)
+	 * @param cluster2 prediction, 2D segmented image (objects3DPopulation are labeled with different numbers)
 	 * @return foreground-restricted Rand index of the two images
 	 */
 	public double foregroundRestrictedRandIndex(
@@ -1161,7 +1161,7 @@ public class RandError extends Metrics
 		}
 
 		// sum of squares of sums of rows
-		// (skip background objects in the first cluster)
+		// (skip background objects3DPopulation in the first cluster)
 		double[] ni = new double[ cont.length ];
 		for(int i=1; i<cont.length; i++)
 			for(int j=0; j<cont[0].length; j++)
@@ -1178,7 +1178,7 @@ public class RandError extends Metrics
 				nj[ j ] += cont[ i ][ j ];
 			}
 		
-		// true positives - type (i): objects in the pair are placed in the 
+		// true positives - type (i): objects3DPopulation in the pair are placed in the
 		// same class in cluster1 and in the same class in claster2
 		// (prune out the zero component in the labeling (un-assigned "out" space))
 		double truePositives = 0;
@@ -1200,7 +1200,7 @@ public class RandError extends Metrics
 		for(int k=0; k<nj.length; k++)
 			nPosActual += nj[ k ] * (nj[ k ]-1.0)/2.0;					
 				
-		// true negatives - type (ii): objects in the pair are placed in different 
+		// true negatives - type (ii): objects3DPopulation in the pair are placed in different
 		// classes in cluster1 and in different classes in claster2
 		// trueNegatives = 	nNegTrue - falsePositives = (nPairsTotal - nPosTrue) - (nPosActual - truePositives)	
 		double trueNegatives = nPairsTotal + truePositives - nPosTrue - nPosActual;
@@ -1233,8 +1233,8 @@ public class RandError extends Metrics
 	 * }
 	 * </pre>
 	 *  
-	 * @param originalLabels ground truth, 3D segmented image (objects are labeled with different numbers) 
-	 * @param proposedLabels prediction, 3D segmented image (objects are labeled with different numbers)
+	 * @param originalLabels ground truth, 3D segmented image (objects3DPopulation are labeled with different numbers)
+	 * @param proposedLabels prediction, 3D segmented image (objects3DPopulation are labeled with different numbers)
 	 * @return adapted Rand index value
 	 */
 	public static double adaptedRandIndex3D(
@@ -1291,7 +1291,7 @@ public class RandError extends Metrics
 			}
 
 			// sum of squares of sums of rows
-			// (skip background objects in the first cluster)
+			// (skip background objects3DPopulation in the first cluster)
 			double[] ni = new double[ cont.length ];
 			for(int i=1; i<cont.length; i++)
 				for(int j=0; j<cont[0].length; j++)
@@ -1308,7 +1308,7 @@ public class RandError extends Metrics
 					nj[ j ] += cont[ i ][ j ];
 				}
 			
-			// true positives - type (i): objects in the pair are placed in the 
+			// true positives - type (i): objects3DPopulation in the pair are placed in the
 			// same class in cluster1 and in the same class in claster2
 			// (prune out the zero component in the labeling (un-assigned "out" space))
 			double truePositives = 0;
@@ -1330,7 +1330,7 @@ public class RandError extends Metrics
 				for(int k=0; k<nj.length; k++)
 					nPosActual += nj[ k ] * (nj[ k ]-1.0)/2.0;							
 					
-			// true negatives - type (ii): objects in the pair are placed in different 
+			// true negatives - type (ii): objects3DPopulation in the pair are placed in different
 			// classes in cluster1 and in different classes in claster2
 			// trueNegatives = 	nNegTrue - falsePositives = (nPairsTotal - nPosTrue) - (nPosActual - truePositives)	
 			double trueNegatives = nPairsTotal + truePositives - nPosTrue - nPosActual;
@@ -1363,8 +1363,8 @@ public class RandError extends Metrics
 	 * }
 	 * </pre>
 	 *  
-	 * @param originalLabels ground truth, 3D segmented image (objects are labeled with different numbers) 
-	 * @param proposedLabels prediction, 3D segmented image (objects are labeled with different numbers)
+	 * @param originalLabels ground truth, 3D segmented image (objects3DPopulation are labeled with different numbers)
+	 * @param proposedLabels prediction, 3D segmented image (objects3DPopulation are labeled with different numbers)
 	 * @return adapted Rand index value and prediction statistics
 	 */
 	public static ClassificationStatistics adaptedRandIndexStats3D(
@@ -1428,7 +1428,7 @@ public class RandError extends Metrics
 			}
 		}
 		// sum of squares of sums of rows
-		// (skip background objects in the first cluster)
+		// (skip background objects3DPopulation in the first cluster)
 
 		for(int i=1; i<cont.length; i++)
 			for(int j=0; j<cont[0].length; j++)
@@ -1445,7 +1445,7 @@ public class RandError extends Metrics
 			}
 
 
-		// true positives - type (i): objects in the pair are placed in the 
+		// true positives - type (i): objects3DPopulation in the pair are placed in the
 		// same class in cluster1 and in the same class in claster2
 		// (prune out the zero component in the labeling (un-assigned "out" space))
 		double truePositives = 0;
@@ -1467,7 +1467,7 @@ public class RandError extends Metrics
 		for(int k=0; k<nj.length; k++)
 			nPosActual += nj[ k ] * (nj[ k ]-1.0); ///2.0;				
 
-		// true negatives - type (ii): objects in the pair are placed in different 
+		// true negatives - type (ii): objects3DPopulation in the pair are placed in different
 		// classes in cluster1 and in different classes in claster2
 		// trueNegatives = 	nNegTrue - falsePositives = (nPairsTotal - nPosTrue) - (nPosActual - truePositives)	
 		double trueNegatives = nPairsTotal + truePositives - nPosTrue - nPosActual;
@@ -1517,8 +1517,8 @@ public class RandError extends Metrics
 	 * }
 	 * </pre>
 	 *  
-	 * @param segA ground truth, 3D segmented image (objects are labeled with different numbers) 
-	 * @param segB prediction, 3D segmented image (objects are labeled with different numbers)
+	 * @param segA ground truth, 3D segmented image (objects3DPopulation are labeled with different numbers)
+	 * @param segB prediction, 3D segmented image (objects3DPopulation are labeled with different numbers)
 	 * @return [ precision, recall, Rand index with n^2 normalization ]
 	 */
 	public static double[] adaptedRandIndexStats3DN2(
@@ -1573,7 +1573,7 @@ public class RandError extends Metrics
 
 
 		// sum of squares of sums of rows
-		// (skip background objects in the first cluster)
+		// (skip background objects3DPopulation in the first cluster)
 		double[] ai = new double[ pij.length ];
 		for(int i=1; i<pij.length; i++)
 			for(int j=0; j<pij[0].length; j++)
@@ -1640,8 +1640,8 @@ public class RandError extends Metrics
 	 * }
 	 * </pre>
 	 *  
-	 * @param originalLabels ground truth, 3D segmented image (objects are labeled with different numbers) 
-	 * @param proposedLabels prediction, 3D segmented image (objects are labeled with different numbers)
+	 * @param originalLabels ground truth, 3D segmented image (objects3DPopulation are labeled with different numbers)
+	 * @param proposedLabels prediction, 3D segmented image (objects3DPopulation are labeled with different numbers)
 	 * @return F-score of Rand index in 3D (-1 if error)
 	 */
 	public static double adaptedRandIndexFScore3D(
@@ -1676,8 +1676,8 @@ public class RandError extends Metrics
 	 * }
 	 * </pre>
 	 * 
-	 * @param cluster1 ground truth, 2D segmented image (objects are labeled with different numbers) 
-	 * @param cluster2 prediction, 2D segmented image (objects are labeled with different numbers)
+	 * @param cluster1 ground truth, 2D segmented image (objects3DPopulation are labeled with different numbers)
+	 * @param cluster2 prediction, 2D segmented image (objects3DPopulation are labeled with different numbers)
 	 * @return Rand index value and prediction statistics
 	 */
 	public ClassificationStatistics getRandIndexStats(
@@ -1723,7 +1723,7 @@ public class RandError extends Metrics
 				nj[ j ] += cont[ i ][ j ];
 			}
 		
-		// true positives - type (i): objects in the pair are placed in the 
+		// true positives - type (i): objects3DPopulation in the pair are placed in the
 		// same class in cluster1 and in the same class in claster2
 		double truePositives = 0;
 		for(int j=0; j<cont[0].length; j++)
@@ -1746,7 +1746,7 @@ public class RandError extends Metrics
 		for(int k=0; k<nj.length; k++)
 			nPosActual += nj[ k ] * (nj[ k ]-1)/2;				
 		
-		// true negatives - type (ii): objects in the pair are placed in different 
+		// true negatives - type (ii): objects3DPopulation in the pair are placed in different
 		// classes in cluster1 and in different classes in claster2
 		//double trueNegatives = (n*n + t2 - nis - njs) / 2;		
 		// Pairs correctly classified as negative (i.e. true negatives)
@@ -1755,14 +1755,14 @@ public class RandError extends Metrics
 		//                   = (nPairsTotal - nPostTrue) - (nPosActual - truePositives)
 		double trueNegatives = nPairsTotal + truePositives - nPosTrue - nPosActual;
 						
-		// false positives - type (iii): objects in the pair are placed in different 
+		// false positives - type (iii): objects3DPopulation in the pair are placed in different
 		// classes in cluster1 and in the same class in claster2
 		double falsePositives = nPosActual - truePositives; //(njs - t2) / 2;
 		
 		// number of pairs actually classified as negative
 		double nNegActual = nPairsTotal - nPosActual;
 		
-		// false negatives - type (iv): objects in the pair are placed in the same 
+		// false negatives - type (iv): objects3DPopulation in the pair are placed in the same
 		// class in cluster1 and in different classes in claster2		
 		double falseNegatives = nNegActual - trueNegatives; //(nis - t2) / 2;
 		
@@ -1840,7 +1840,7 @@ public class RandError extends Metrics
 			}
 		
 		// sum of squares of sums of rows
-		// (skip background objects in the first cluster)
+		// (skip background objects3DPopulation in the first cluster)
 		double[] ai = new double[ pij.length ];
 		for(int i=1; i<pij.length; i++)
 		{
@@ -2012,7 +2012,7 @@ public class RandError extends Metrics
 		double[] dis = new double[ pij.length ];
 		
 		// sum of squares of sums of rows
-		// (skip background objects in the first cluster)
+		// (skip background objects3DPopulation in the first cluster)
 		double[] ai = new double[ pij.length ];
 		for(int i=1; i<pij.length; i++)
 		{

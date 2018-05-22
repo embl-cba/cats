@@ -1,6 +1,9 @@
 package de.embl.cba.trainableDeepSegmentation.ui;
 
 import de.embl.cba.trainableDeepSegmentation.features.DownSampler;
+import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectSegmentation;
+import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectsReview;
+import de.embl.cba.trainableDeepSegmentation.postprocessing.SegmentedObjects;
 import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.utils.logging.Logger;
 
@@ -12,7 +15,6 @@ import ij.gui.*;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.measure.Calibration;
-import ij.plugin.Duplicator;
 import ij.plugin.MacroInstaller;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.Recorder;
@@ -42,6 +44,8 @@ import java.util.concurrent.Executors;
 
 import javax.swing.*;
 
+import mcib3d.geom.Objects3DPopulation;
+import mcib_plugins.tools.RoiManager3D_2;
 import net.imglib2.FinalInterval;
 import de.embl.cba.trainableDeepSegmentation.*;
 import de.embl.cba.trainableDeepSegmentation.labels.examples.Example;
@@ -130,7 +134,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	private JButton reviewLabelsButton = null;
 
-	private JComboBox reviewLabelsClassComboBox = null;
+    private JComboBox reviewLabelsClassComboBox = null;
 
 	/** apply classifier button */
 	private JButton applyClassifierButton = null;
@@ -160,8 +164,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier settings";
 	public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature settings";
     public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature settings";
-    public static final String GET_LABEL_MASK = "Get label mask";
-	public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
+    public static final String SEGMENT_OBJECTS = "Segment objects3DPopulation";
+    public static final String REVIEW_OBJECTS = "Review objects3DPopulation";
+    public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
     public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
 
 	public static final String NO_TRAINING_DATA = "No training data available";
@@ -184,6 +189,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 					TRAIN_CLASSIFIER,
 					IO_SAVE_INSTANCES,
                     IO_LOAD_INSTANCES,
+                    SEGMENT_OBJECTS,
                     DUPLICATE_RESULT_IMAGE_TO_RAM,
                     IO_EXPORT_RESULT_IMAGE,
                     CHANGE_FEATURE_COMPUTATION_SETTINGS,
@@ -194,8 +200,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 					TRAIN_FROM_LABEL_IMAGE,
 					GET_LABEL_IMAGE_TRAINING_ACCURACIES,
 					IO_LOAD_CLASSIFIER,
-					GET_LABEL_MASK,
-					RECOMPUTE_LABEL_FEATURE_VALUES,
+                    RECOMPUTE_LABEL_FEATURE_VALUES,
                     CHANGE_DEBUG_SETTINGS,
                     CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS
 			} );
@@ -324,8 +329,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	// TODO: make an "I am busy flag"
 
-	static final String REVIEW_START = "Review labels";
-	static final String REVIEW_END = "Done reviewing";
+    static final String REVIEW_LABELS_START = "Review labels";
+    static final String REVIEW_OBJECTS_START = "Review objects3DPopulation";
+    static final String REVIEW_END = "Stop reviewing!";
 
 	public static final String TRAINING_DATA_TRACES = "Traces";
 	public static final String TRAINING_DATA_LABEL_IMAGE = "Label image";
@@ -337,7 +343,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	private boolean isFirstTime = true;
 
-	private boolean reviewLabelsFlag = false;
+	private boolean reviewRoisFlag = false;
 
 	private Logger logger;
 
@@ -415,10 +421,10 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		reviewLabelsClassComboBox = new JComboBox( new String[]{ "1" , "2"} );
 
-		reviewLabelsButton = new JButton(REVIEW_START);
-		reviewLabelsButton.setEnabled(true);
+		reviewLabelsButton = new JButton( REVIEW_LABELS_START );
+		reviewLabelsButton.setEnabled( true );
 
-		applyClassifierButton = new JButton ("Apply classifier");
+        applyClassifierButton = new JButton ("Apply classifier");
 		applyClassifierButton.setToolTipText("Apply classifier");
 		applyClassifierButton.setEnabled(false);
 
@@ -502,24 +508,28 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 					}
 					else if(e.getSource() == reviewLabelsButton )
 					{
-						if ( reviewLabelsButton.getText().equals( REVIEW_START ) )
+						if ( reviewLabelsButton.getText().equals( REVIEW_LABELS_START ) )
 						{
 							win.setButtonsEnabled( false );
 							reviewLabelsButton.setEnabled( true );
 							reviewLabelsButton.setText( REVIEW_END );
-							reviewLabelsFlag = true;
+							reviewRoisFlag = true;
 
 							reviewLabels( reviewLabelsClassComboBox.getSelectedIndex() );
 						}
 						else
 						{
+							trainingImage.setOverlay( new Overlay() );
+							//IJ.run("Remove Overlay");
+
 							labelManager.updateExamples();
 							ArrayList< Example > approvedExamples = labelManager.getExamples();
 							deepSegmentation.setExamples( approvedExamples );
 							labelManager.close();
-							reviewLabelsButton.setText( REVIEW_START );
-							reviewLabelsFlag = false;
-							imageAroundCurrentSelection.close();
+							reviewLabelsButton.setText( REVIEW_LABELS_START );
+							reviewRoisFlag = false;
+
+							// imageAroundCurrentSelection.close();
 
 							win.setButtonsEnabled( true );
 						}
@@ -534,9 +544,12 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 						switch ( action )
 						{
-							case GET_LABEL_MASK:
-								analyzeObjects();
+							case SEGMENT_OBJECTS:
+								segmentObjects();
 								break;
+                            case REVIEW_OBJECTS:
+                                reviewObjects();
+                                break;
 							case CHANGE_CLASSIFIER_SETTINGS:
 								showClassifierSettingsDialog();
 								break;
@@ -742,17 +755,18 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 
 	Roi currentlyDisplayedRoi;
+
 	@Override
-	public void roiModified( ImagePlus imagePlus, int i )
+	public void roiModified( ImagePlus imagePlus, int actionId )
 	{
-		if ( imagePlus == trainingImage )
+		if ( ( imagePlus != null ) && ( imagePlus == trainingImage ) )
 		{
-			if ( i == RoiListener.CREATED && reviewLabelsFlag )
+			if ( actionId == RoiListener.CREATED && reviewRoisFlag )
 			{
 				if ( currentlyDisplayedRoi == null)
 				{
 					currentlyDisplayedRoi = trainingImage.getRoi();
-					showImageAroundCurrentSelection();
+					zoomToSelection();
 				}
 				else
 				{
@@ -761,7 +775,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 					if ( x != x2 )
 					{
 						currentlyDisplayedRoi = trainingImage.getRoi();
-						showImageAroundCurrentSelection();
+						zoomToSelection();
 					}
 				}
 
@@ -843,7 +857,12 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		return deepSegmentation;
 	}
 
-	private void testThreads()
+    public void setDeepSegmentation( DeepSegmentation deepSegmentation )
+    {
+        this.deepSegmentation = deepSegmentation;
+    }
+
+    private void testThreads()
 	{
 		logger.info("Testing maximum number of numWorkers...");
 		int i = 0;
@@ -865,21 +884,28 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	ImagePlus imageAroundCurrentSelection;
 
-	private void showImageAroundCurrentSelection()
+	private void zoomToSelection()
 	{
 
 		Roi roi = trainingImage.getRoi(); if ( roi == null ) return;
 
-		int margin = getMargin( roi );
+		// makeTrainingImageTheActiveWindow();
 
-		setImageAroundRoi( roi, margin );
+		IJ.run("To Selection");
 
-		showImageAroundRoi( roi, margin );
+		IJ.run("Add Selection...");
 
-		zoomImageAroundRoi();
+		trainingImage.killRoi();
 
-		makeTrainingImageTheActiveWindow();
+		//int margin = getMargin( roi );
 
+		//setImageAroundRoi( roi, margin );
+
+		//showImageAroundRoi( roi, margin );
+
+		LabelManager.zoomOut( 5 );
+
+		// makeTrainingImageTheActiveWindow();
 
 	}
 
@@ -901,62 +927,14 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		try
 		{
 			Thread.sleep( 300 );
-		} catch ( InterruptedException e )
+		}
+		catch ( InterruptedException e )
 		{
 			e.printStackTrace();
 		}
 	}
 
-	private void zoomImageAroundRoi()
-	{
-		IJ.run("In [+]", "");
-		IJ.run("In [+]", "");
-		IJ.run("In [+]", "");
-		IJ.run("In [+]", "");
-	}
 
-	private int getMargin( Roi roi )
-	{
-		return (int) ( Math.max( roi.getBounds().width, roi.getBounds().height ) * 2 );
-	}
-
-	private void showImageAroundRoi( Roi roi, int margin )
-	{
-		if ( ! imageAroundCurrentSelection.isVisible() )
-		{
-			imageAroundCurrentSelection.show();
-		}
-		imageAroundCurrentSelection.updateAndDraw();
-
-		Roi zoomedInROI = (Roi) roi.clone();
-		zoomedInROI.setLocation( margin, margin );
-		imageAroundCurrentSelection.setRoi( zoomedInROI );
-	}
-
-	private void setImageAroundRoi( Roi roi, int margin )
-	{
-		Rectangle r = roi.getBounds();
-
-		Roi rectangleRoi = new Roi( r.x - margin, r.y - margin, r.width + 2 * margin, r.height + 2 * margin  );
-
-		reviewLabelsFlag = false;
-
-		trainingImage.setRoi( rectangleRoi );
-
-		Duplicator duplicator = new Duplicator();
-
-		if ( imageAroundCurrentSelection != null )
-		{
-			imageAroundCurrentSelection.close();
-		}
-
-		imageAroundCurrentSelection = duplicator.run( trainingImage, trainingImage.getC(), trainingImage.getC(), trainingImage.getZ(), trainingImage.getZ(), trainingImage.getT(), trainingImage.getT() );
-
-		trainingImage.setRoi( roi );
-
-		reviewLabelsFlag = true;
-
-	}
 
 
 	/**
@@ -2412,40 +2390,26 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
     }
 
 
-    public void analyzeObjects()
+    public void segmentObjects()
 	{
-		GenericDialog gd = new GenericDialogPlus( "Analyze Object" );
-		gd.addNumericField( "Minimum number of voxels", 5, 0 );
-
-		gd.showDialog(); if ( gd.wasCanceled() ) return;
-
-		int minNumVoxels = (int) gd.getNextNumber();
-
-		win.setButtonsEnabled( false );
-
-		Thread task = new Thread() {
-			public void run()
-			{
-				// TODO: make user chose frame
-				/*
-				int frame = 1;
-				ImagePlus labelMask = deepSegmentation.createLabelMask( frame, minNumVoxels, 11, 20 );
-				labelMask.show();
-
-				ResultsTable rt_bb = GeometricMeasures3D.boundingBox( labelMask.getStack() );
-				rt_bb.show( "Bounding boxes" );
-
-				ResultsTable rt_v = GeometricMeasures3D.volume( labelMask.getStack() , new double[]{1,1,1});
-				rt_v.show( "Volumes" );
-
-				logger.info( "Number of objects: " + rt_v.size() );
-				*/
-
-				win.setButtonsEnabled( true );
-			}
-		}; task.start();
-
+	    deepSegmentation.segmentObjects();
 	}
+
+	public void reviewObjects()
+    {
+        reviewRoisFlag = true;
+
+        SegmentedObjects segmentedObjects = deepSegmentation.getSegmentedObjectsList().get( 0 );
+
+        ObjectsReview objectsReview = new ObjectsReview( deepSegmentation );
+        objectsReview.reviewObjectsUsingRoiManager( segmentedObjects );
+
+        //RoiManager3D_2 manager3D = new RoiManager3D_2();
+        //manager3D.setVisible( false );
+        //manager3D.addObjects3DPopulation( objects3DPopulation );
+        //manager3D.setVisible( true );
+
+    }
 
 	void updateLabelInstancesAndTrainClassifier()
 	{

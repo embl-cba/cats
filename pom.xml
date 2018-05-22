@@ -190,6 +190,12 @@
             <artifactId>imagej-legacy</artifactId>
         </dependency>
 
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>LocalThickness_</artifactId>
+		</dependency>
+
+
 		<!-- Github dependencies -->
         <!--
 		<dependency>
@@ -200,8 +206,22 @@
 		-->
 
 		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>LocalThickness_</artifactId>
+			<groupId>com.github.mcib3d</groupId>
+			<artifactId>mcib3d-core</artifactId>
+			<version>master-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>  <!-- declare the exclusion here -->
+					<groupId>weka</groupId>
+					<artifactId>weka</artifactId>
+					<version>3.7.6</version>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.mcib3d</groupId>
+			<artifactId>mcib3d-plugins</artifactId>
+			<version>master-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>

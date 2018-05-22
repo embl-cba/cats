@@ -500,7 +500,7 @@ public final class Utils {
 	}
 	
 	/**
-	 * Post-process probability image to getInstancesAndMetadata more reasonable objects
+	 * Post-process probability image to getInstancesAndMetadata more reasonable objects3DPopulation
 	 * at a certain threshold
 	 * 
 	 * @param probabilityMap probability image
@@ -571,10 +571,10 @@ public final class Utils {
 	}
 	
 	/**
-	 * Filter small objects and holes at a specific threshold value
+	 * Filter small objects3DPopulation and holes at a specific threshold value
 	 * @param probabilityMap probability image
 	 * @param thresholdValue threshold to use
-	 * @param minSize minimum size of the objects (in pixels)
+	 * @param minSize minimum size of the objects3DPopulation (in pixels)
 	 */
 	public static void filterSmallObjectsAndHoles(
 			FloatProcessor probabilityMap,
@@ -589,10 +589,10 @@ public final class Utils {
 		
 		//res.allRegions.show();
 		
-		// Binarize components image (after removing small objects)
+		// Binarize components image (after removing small objects3DPopulation)
 		ByteProcessor th = threshold( res.allRegions.getProcessor(), 0.5 );
 		
-		// Localize small objects by the difference with the original thresholded image
+		// Localize small objects3DPopulation by the difference with the original thresholded image
 		ByteProcessor th2 = (ByteProcessor) th.duplicate();
 		th2.copyBits(thresholded, 0, 0, Blitter.DIFFERENCE);				
 		
@@ -607,7 +607,7 @@ public final class Utils {
 		}
 				
 		// Localize holes by the removing them first from the image
-		// without small objects and then looking at the difference
+		// without small objects3DPopulation and then looking at the difference
 		th2 = (ByteProcessor) th.duplicate();
 		
 		// Fill holes in the thresholded components image

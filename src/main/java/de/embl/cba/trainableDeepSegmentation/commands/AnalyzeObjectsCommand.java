@@ -10,7 +10,6 @@ import inra.ijpb.measure.GeometricMeasures3D;
 
 import net.imagej.DatasetService;
 import net.imagej.ops.OpService;
-import org.scijava.ItemVisibility;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
@@ -18,7 +17,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
-import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectAnalysis;
+import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectSegmentation;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,7 +31,7 @@ import static de.embl.cba.trainableDeepSegmentation.commands.AnalyzeObjectsComma
 public class AnalyzeObjectsCommand implements Command
 {
 
-    public static final String PLUGIN_NAME = "Analyze Objects";
+    public static final String PLUGIN_NAME = "Analyze SegmentedObjects";
 
     @Parameter
     public UIService uiService;
@@ -97,7 +96,7 @@ public class AnalyzeObjectsCommand implements Command
         inputImage = IOUtils.openImageWithIJOpenImage( inputImageFile );
 
         logService.info( "Creating label mask");
-        ImagePlus labelMask = ObjectAnalysis.createLabelMaskForChannelAndFrame( inputImage, 1, 1, minNumVoxels, lowerThreshold, upperThreshold );
+        ImagePlus labelMask = ObjectSegmentation.createLabelMaskForChannelAndFrame( inputImage, 1, 1, minNumVoxels, lowerThreshold, upperThreshold );
 
         ArrayList< ResultsTable > resultsTables = new ArrayList<>(  );
         ArrayList< String > resultsTableNames = new ArrayList<>(  );

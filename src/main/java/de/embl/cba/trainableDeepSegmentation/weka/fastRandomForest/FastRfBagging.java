@@ -51,7 +51,7 @@ import weka.core.WeightedInstancesHandler;
  * <li>Instead of Instances, produces DataCaches; consequently, FastRfBagging
  * is compatible only with FastRandomTree as base classifier</li>
  * <li>The function for resampling the data is removed; this is a responsibility
- * of the DataCache objects now</li>
+ * of the DataCache objects3DPopulation now</li>
  * <li>Not a TechnicalInformationHandler anymore</li>
  * <li>The classifiers are trained in separate "tasks" which are handled by
  * an ExecutorService (the FixedThreadPool) which runs the tasks in
@@ -83,7 +83,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
   private static final long serialVersionUID = -505879962237199702L;
 
   /**
-   * Bagging method. Produces DataCache objects with bootstrap samples of
+   * Bagging method. Produces DataCache objects3DPopulation with bootstrap samples of
    * the original data, and feeds them to the base classifier (which can only
    * be a FastRandomTree).
    *

@@ -441,7 +441,7 @@ public class VariationOfInformation extends Metrics
 				pij[ i ][ j ] /= n;
 		
 		// sum of squares of sums of rows
-		// (skip background objects in the first cluster)
+		// (skip background objects3DPopulation in the first cluster)
 		double[] ai = new double[ pij.length ];
 		for(int i=1; i<pij.length; i++)
 			for(int j=0; j<pij[0].length; j++)
@@ -624,7 +624,7 @@ public class VariationOfInformation extends Metrics
 		double[] dis = new double[ pij.length ];
 		
 		// sum of squares of sums of rows
-		// (skip background objects in the first cluster)
+		// (skip background objects3DPopulation in the first cluster)
 		double[] ai = new double[ pij.length ];
 		for(int i=1; i<pij.length; i++)
 		{
@@ -1336,7 +1336,7 @@ public class VariationOfInformation extends Metrics
 				pij[ i ][ j ] /= n;
 		
 		// sum of squares of sums of rows
-		// (skip background objects in the first cluster)
+		// (skip background objects3DPopulation in the first cluster)
 		double[] ai = new double[ pij.length ];
 		for(int i=1; i<pij.length; i++)
 			for(int j=0; j<pij[0].length; j++)
@@ -1462,7 +1462,7 @@ public class VariationOfInformation extends Metrics
 			}
 		
 		// sum of squares of sums of rows
-		// (skip background objects in the first cluster)
+		// (skip background objects3DPopulation in the first cluster)
 		double[] ai = new double[ pij.length ];
 		for(int i=1; i<pij.length; i++)
 		{
