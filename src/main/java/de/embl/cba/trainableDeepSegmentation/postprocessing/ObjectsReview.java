@@ -6,6 +6,7 @@ import de.embl.cba.trainableDeepSegmentation.labels.LabelManager;
 import fiji.util.gui.GenericDialogPlus;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
+import ij.gui.OvalRoi;
 import ij.gui.PointRoi;
 import ij.gui.Roi;
 import ij.plugin.frame.RoiManager;
@@ -54,7 +55,6 @@ public class ObjectsReview
     private void setSettingsFromUI( GenericDialog gd )
     {
         objectsId = gd.getNextChoiceIndex();
-
     }
 
 
@@ -80,6 +80,25 @@ public class ObjectsReview
         for ( double[] centroid : centroids )
         {
             Roi roi = new PointRoi( centroid[ 1 ], centroid[ 2 ] );
+            roi.setPosition( 1, (int) centroid[ 3 ] + 1, objects.t + 1 );
+            rois.add( roi );
+        }
+
+        return rois;
+    }
+
+
+    public static ArrayList< Roi > getOvalRoisFromObjects( SegmentedObjects objects )
+    {
+        double width = 10.0;
+
+        ArrayList< double[] > centroids = objects.objects3DPopulation.getMeasureCentroid();
+
+        ArrayList< Roi > rois = new ArrayList<>();
+
+        for ( double[] centroid : centroids )
+        {
+            Roi roi = new OvalRoi( centroid[ 1 ], centroid[ 2 ], width, width );
             roi.setPosition( 1, (int) centroid[ 3 ] + 1, objects.t + 1 );
             rois.add( roi );
         }

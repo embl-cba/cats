@@ -103,7 +103,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	private DeepSegmentation deepSegmentation = null;
 
 	/** image to be used in the instances */
-	private ImagePlus trainingImage = null;
+	public ImagePlus trainingImage = null;
 	/** resultImagePlus image after classification */
 	private CustomWindow win = null;
 	/** number of classes in the GUI */

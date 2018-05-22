@@ -28,6 +28,7 @@ public class Objects3d
         deepSegmentation.loadInstancesAndMetadata( TEST_RESOURCES + "3d-objects-instances/3d-objects.ARFF"  );
 
         DeepSegmentationIJ1Plugin plugin = new DeepSegmentationIJ1Plugin();
+        plugin.trainingImage = inputImagePlus;
         plugin.setDeepSegmentation( deepSegmentation );
 
         plugin.segmentObjects();
