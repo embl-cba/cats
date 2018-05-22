@@ -7,7 +7,6 @@ import ij.ImagePlus;
 
 public class AshnaCluster
 {
-
     public static void main( final String[] args )
     {
         final net.imagej.ImageJ ij = new net.imagej.ImageJ();

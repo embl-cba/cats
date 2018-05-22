@@ -58,8 +58,8 @@ public class ApplyClassifierOnSlurmCommand implements Command
     public static final String IMAGEJ_FILE = "imageJFile";
     */
 
-    @Parameter( label = "Job status monitoring interval [s]", required = true)
-    public int jobStatusMonitoringInterval = 15;
+    @Parameter( label = "Job status monitoring interval [s]" )
+    public int jobStatusMonitoringInterval = 60;
     public static final String JOB_STATUS_MONITORING_INTERVAL = "jobStatusMonitoringInterval";
 
     @Parameter()

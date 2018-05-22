@@ -141,9 +141,9 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
 
     // sorting is performed inside this constructor
-    IJ.log( "Creating instances data cache..." );
+    IJ.log( "\nCreating instances data cache..." );
     DataCache myData = new DataCache( data );
-    IJ.log( "...done.\n" );
+    IJ.log( "...done." );
 
     int bagSize = data.numInstances() * m_BagSizePercent / 100;
     Random random = new Random(m_Seed);
@@ -241,6 +241,8 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
       // only the attributes in the window will be present.
       if ( motherForest.attIndicesWindowExternallySet  )
       {
+          IJ.log("\nClassifier trained with attribute subset => reindexing all tree nodes...");
+
         ArrayList<Integer> attIndicesList = new ArrayList<Integer>();
 
         int[] window = motherForest.getAttIndicesWindow();
@@ -254,6 +256,9 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
           FastRandomTree tree = (FastRandomTree) m_Classifiers[ i ];
           tree.reassignAttributes( attIndicesList );
         }
+
+        IJ.log("...done.");
+
 
       }
 

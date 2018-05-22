@@ -81,7 +81,7 @@ public class BatchClassificationOnSlurm implements Command
                 dataSetPatterns );
 
         SlurmJobMonitor slurmJobMonitor = new SlurmJobMonitor( logger );
-        slurmJobMonitor.monitorJobProgress( jobFutures, 15, 5 );
+        slurmJobMonitor.monitorJobProgress( jobFutures, 60, 5 );
 
     }
 
