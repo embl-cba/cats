@@ -18,6 +18,7 @@ import ij.measure.Calibration;
 import ij.plugin.MacroInstaller;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.Recorder;
+import ij.plugin.frame.RoiManager;
 import ij.process.*;
 
 import java.awt.*;
@@ -344,7 +345,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	private boolean isFirstTime = true;
 
-	private boolean reviewRoisFlag = false;
+	public boolean reviewRoisFlag = false;
 
 	private Logger logger;
 
@@ -679,8 +680,25 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		}
 	};
 
+    public static void configureRoiManagerClosingEventListener( RoiManager manager,
+                                                                DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin)
+    {
+        manager.addWindowListener( new WindowAdapter()
+        {
+            @Override
+            public void windowClosing( WindowEvent we )
+            {
+                IJ.log( "RoiManager closed.");
+                deepSegmentationIJ1Plugin.reviewRoisFlag = false;
+                deepSegmentationIJ1Plugin.trainingImage.killRoi();
+                deepSegmentationIJ1Plugin.trainingImage.setOverlay( new Overlay(  ) );
 
-	private void stopCurrentWekaSegmentationTasks()
+            }
+        });
+    }
+
+
+    private void stopCurrentWekaSegmentationTasks()
 	{
 
 		deepSegmentation.stopCurrentTasks = true;
@@ -707,6 +725,20 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		win.setButtonsEnabled( true );
 
 	}
+
+
+    public void makeTrainingImageTheActiveWindow()
+    {
+        sleep(); // otherwise below select window does not always work...
+
+        IJ.selectWindow( trainingImage.getID() );
+
+        if ( ! trainingImage.getWindow().isActive() )
+        {
+            sleep(); // otherwise below select window does not always work...
+            IJ.selectWindow( trainingImage.getID() );
+        }
+    }
 
 	private void loadLabelImage()
 	{
@@ -744,11 +776,11 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		// remove all drawing elements
 		trainingImage.killRoi();
 		removeAllRoiOverlays();
-		win.resultOverlay.setImage(null);
+		win.resultOverlay.setImage( null );
 		trainingImage.updateAndDraw();
 
 		// show labels
-		labelManager = new LabelManager( trainingImage );
+		labelManager = new LabelManager( this );
 		labelManager.setExamples( deepSegmentation.getExamples() );
 		String order = labelManager.showOrderGUI();
 		labelManager.reviewLabelsInRoiManager( classNum, order );
@@ -779,8 +811,6 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 						zoomToSelection();
 					}
 				}
-
-
 
 			}
 		}
@@ -894,17 +924,24 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		IJ.run("To Selection");
 
-		IJ.run("Add Selection...");
+        // remove old overlay
+		trainingImage.setOverlay( new Overlay(  ) );
 
+		// add new overlay
+        IJ.run("Add Selection...");
+
+        // remove roi
 		trainingImage.killRoi();
 
-		//int margin = getMargin( roi );
+        updateResultOverlay();
+
+        //int margin = getMargin( roi );
 
 		//setImageAroundRoi( roi, margin );
 
 		//showImageAroundRoi( roi, margin );
 
-		LabelManager.zoomOut( 5 );
+		LabelManager.zoomOut( 7 );
 
 		// makeTrainingImageTheActiveWindow();
 
@@ -1302,17 +1339,17 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 						{
 							if ( e.getKeyChar() == 'r' )
 							{
-								toggleOverlay("resultImagePlus");
+								toggleOverlay(OVERLAY_MODE_SEGMENTATION);
 							}
 
 							if ( e.getKeyChar() == 'p' )
 							{
-								toggleOverlay("probability");
+								toggleOverlay(OVERLAY_MODE_PROBABILITIES);
 							}
 
 							if ( e.getKeyChar() == 'u' )
 							{
-								toggleOverlay("uncertainty");
+								toggleOverlay(OVERLAY_MODE_UNCERTAINTY);
 							}
 
 							if ( e.getKeyChar() == 'g' )
@@ -1831,19 +1868,25 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		synchronized void updateOverlay()
 		{
-			if ( showColorOverlay ) win.toggleOverlay();
-			win.toggleOverlay();
+			if ( showColorOverlay ) win.toggleOverlay( recentOverlayMode );
+			win.toggleOverlay( recentOverlayMode );
 		}
 
 		synchronized void toggleOverlay()
 		{
-			toggleOverlay("resultImagePlus");
+			toggleOverlay( OVERLAY_MODE_PROBABILITIES );
 		}
+
+		public static final String OVERLAY_MODE_SEGMENTATION = "Segmentation";
+        public static final String OVERLAY_MODE_PROBABILITIES = "Probabilities";
+        public static final String OVERLAY_MODE_UNCERTAINTY = "Uncertainty";
+
+        String recentOverlayMode = OVERLAY_MODE_PROBABILITIES;
 
 		/**
 		 * Toggle between overlay and original image with markings
 		 */
-		synchronized void toggleOverlay(String mode)
+		synchronized void toggleOverlay( String mode )
 		{
 
 			// create overlay LUT
@@ -1851,12 +1894,13 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			final byte[] green = new byte[ 256 ];
 			final byte[] blue = new byte[ 256 ];
 
-			if ( mode.equals("resultImagePlus") )
+			if ( mode.equals( OVERLAY_MODE_SEGMENTATION ) )
 			{
 				// assign colors to classes
 				for ( int iClass = 0; iClass < DeepSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
 					int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
+
 					for ( int i = 1; i <= ResultImageDisk.CLASS_LUT_WIDTH; i++)
 					{
 						red[offset + i] = (byte) ( colors[iClass].getRed() );
@@ -1868,23 +1912,24 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			}
 
 
-			if ( mode.equals("probability") )
+			if ( mode.equals( OVERLAY_MODE_PROBABILITIES ) )
 			{
 				// assign colors to classes
 				for ( int iClass = 0; iClass < DeepSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
 					int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
+
 					for ( int i = 1; i <= ResultImageDisk.CLASS_LUT_WIDTH; i++)
 					{
-						red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / ( ResultImageDisk.CLASS_LUT_WIDTH - 1));
-						green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / ( ResultImageDisk.CLASS_LUT_WIDTH - 1));
-						blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue() * i / ( ResultImageDisk.CLASS_LUT_WIDTH - 1));
+						red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / ( ResultImageDisk.CLASS_LUT_WIDTH ));
+						green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / ( ResultImageDisk.CLASS_LUT_WIDTH ));
+						blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue() * i / ( ResultImageDisk.CLASS_LUT_WIDTH ));
 					}
 				}
 				overlayLUT = new LUT(red, green, blue);
 			}
 
-			if ( mode.equals("uncertainty") )
+			if ( mode.equals( OVERLAY_MODE_UNCERTAINTY ) )
 			{
 				// assign colors to classes
 				for ( int iClass = 0; iClass < DeepSegmentation.MAX_NUM_CLASSES; iClass++)
@@ -1992,6 +2037,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 				DeepSegmentation.RESULT_IMAGE_RAM);
 
 
+		/*
 		gd.addMessage( "IMAGING MODALITY\n \n" +
 				"For optimal segmentation performance, please choose your imaging modality." );
 				gd.addChoice( "Modality" ,
@@ -2000,7 +2046,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 								EM_IMAGING,
 								TRANSMISSION_LM_IMAGING },
 						EM_IMAGING);
+						*/
 
+        /*
 		IJ.run("Set Measurements...", "mean redirect=None decimal=4");
 
 		gd.addMessage( "IMAGE BACKGROUND\n \n" +
@@ -2010,6 +2058,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 				"a background region of your image and then measure the mean intensity." );
 
 		gd.addNumericField( "Value", 0, 0 );
+		*/
 
 		gd.showDialog();
 
@@ -2017,8 +2066,10 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
         assignImageName( gd.getNextString() );
 		assignResultImage( gd.getNextChoice() );
-		setImagingModality( gd.getNextChoice() );
-		deepSegmentation.setImageBackground( (int) gd.getNextNumber() );
+		// setImagingModality( gd.getNextChoice() );
+		//deepSegmentation.setImageBackground( (int) gd.getNextNumber() );
+        setImagingModality( EM_IMAGING );
+        deepSegmentation.setImageBackground( 0 );
 
 		return true;
 	}
@@ -2213,7 +2264,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		ImageProcessor overlay = deepSegmentation.getResultImage().getSlice( trainingImage.getZ(), trainingImage.getT() );
 
 		overlay = overlay.convertToByte( false );
-		overlay.setColorModel(overlayLUT);
+		overlay.setColorModel( overlayLUT );
 
 		win.resultOverlay.setImage(overlay);
 	}
@@ -2387,11 +2438,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	public void reviewObjects()
     {
-        reviewRoisFlag = true;
 
-        SegmentedObjects segmentedObjects = deepSegmentation.getSegmentedObjectsList().get( 0 );
-
-        ObjectsReview objectsReview = new ObjectsReview( deepSegmentation );
+        ObjectsReview objectsReview = new ObjectsReview( deepSegmentation, this );
 
         objectsReview.runUI( );
 

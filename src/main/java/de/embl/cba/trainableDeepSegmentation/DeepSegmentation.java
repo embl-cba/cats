@@ -144,19 +144,19 @@ public class DeepSegmentation
 
 	}
 
-	public ArrayList< SegmentedObjects > getSegmentedObjectsList()
+	public Map< String, SegmentedObjects > getSegmentedObjectsMap()
 	{
-		return segmentedObjectsList;
+		return segmentedObjectsMap;
 	}
 
 	public void addObjects( SegmentedObjects segmentedObjects )
 	{
-		if ( segmentedObjectsList == null  )
+		if ( segmentedObjectsMap == null  )
 		{
-			segmentedObjectsList = new ArrayList<>(  );
+			segmentedObjectsMap = new HashMap<>(  );
 		}
 
-		segmentedObjectsList.add( segmentedObjects );
+		segmentedObjectsMap.put( segmentedObjects.name, segmentedObjects );
 	}
 
 	public void segmentObjects()
@@ -169,19 +169,6 @@ public class DeepSegmentation
 			addObjects( objects );
 		}
 
-	}
-
-	public void makeInputImageTheActiveWindow()
-	{
-		sleep(); // otherwise below select window does not always work...
-
-		IJ.selectWindow( inputImage.getID() );
-
-		if ( ! inputImage.getWindow().isActive() )
-		{
-			sleep(); // otherwise below select window does not always work...
-			IJ.selectWindow( inputImage.getID() );
-		}
 	}
 
 
@@ -197,7 +184,7 @@ public class DeepSegmentation
 		}
 	}
 
-	private ArrayList< SegmentedObjects > segmentedObjectsList;
+	private Map< String, SegmentedObjects > segmentedObjectsMap;
 
 	private ResultImage resultImageBgFg = null;
 
@@ -764,7 +751,7 @@ public class DeepSegmentation
 			}
 			*/
 
-		//logger.info( "\n# True number of segmentedObjectsList in training image: " + numTrueObjects);
+		//logger.info( "\n# True number of segmentedObjectsMap in training image: " + numTrueObjects);
 
 		//segmentObjects( minNumVoxels, 0 , "" + i + "-train" , directory );
 
@@ -792,7 +779,7 @@ public class DeepSegmentation
 		//classLabelMask.show();
 
 		ResultsTable rt = GeometricMeasures3D.volume( classLabelMask.getStack() , new double[]{1,1,1});
-		logger.info( "\n# Classified number of segmentedObjectsList in " + title + ": " + rt.size() );
+		logger.info( "\n# Classified number of segmentedObjectsMap in " + title + ": " + rt.size() );
 	}
 
 	private void saveImage( ImagePlus imp, String directory )
@@ -3154,19 +3141,16 @@ public class DeepSegmentation
 		return featureSettings.classNames;
 	}
 
-	public ArrayList<String> getSegmentedObjectsNames()
+	public Set<String> getSegmentedObjectsNames()
 	{
-		ArrayList< String > segmentedObjectsNames = new ArrayList<>(  );
-
-		if ( segmentedObjectsList != null )
+		if ( segmentedObjectsMap != null )
 		{
-			for ( SegmentedObjects segmentedObjects : segmentedObjectsList )
-			{
-				segmentedObjectsNames.add( segmentedObjects.name );
-			}
+			return segmentedObjectsMap.keySet();
 		}
-
-		return segmentedObjectsNames;
+		else
+		{
+			return null;
+		}
 	}
 
 }

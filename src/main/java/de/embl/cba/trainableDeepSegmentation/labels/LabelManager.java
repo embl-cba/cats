@@ -1,5 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.labels;
 
+import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
@@ -14,6 +15,8 @@ import java.util.*;
 
 public class LabelManager {
 
+    DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin;
+
     ImagePlus imp;
 
     ImagePlus imageAroundCurrentSelection;
@@ -25,9 +28,10 @@ public class LabelManager {
 
     private final static String KEY = "key";
 
-    public LabelManager ( ImagePlus imp )
+    public LabelManager ( DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin )
     {
-        this.imp = imp;
+        this.deepSegmentationIJ1Plugin = deepSegmentationIJ1Plugin;
+        this.imp = deepSegmentationIJ1Plugin.trainingImage;
     }
 
     private static void zoomIn()
@@ -106,6 +110,8 @@ public class LabelManager {
             addRoiToManager( manager, imp, roi );
             underReview.add ( roi.getProperty( KEY ) ) ;
         }
+
+        DeepSegmentationIJ1Plugin.configureRoiManagerClosingEventListener( manager, deepSegmentationIJ1Plugin );
 
     }
 

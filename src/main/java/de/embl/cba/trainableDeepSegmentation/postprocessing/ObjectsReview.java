@@ -1,34 +1,30 @@
 package de.embl.cba.trainableDeepSegmentation.postprocessing;
 
-import de.embl.cba.bigDataTools.utils.Utils;
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
 import de.embl.cba.trainableDeepSegmentation.labels.LabelManager;
+import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
 import fiji.util.gui.GenericDialogPlus;
-import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.gui.OvalRoi;
 import ij.gui.PointRoi;
 import ij.gui.Roi;
 import ij.plugin.frame.RoiManager;
-import mcib3d.geom.Objects3DPopulation;
-import mcib3d.image3d.ImageShort;
-import mcib_plugins.tools.RoiManager3D_2;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Set;
 
 public class ObjectsReview
 {
     RoiManager manager;
     DeepSegmentation deepSegmentation;
-    int objectsId;
+    DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin;
+    String objectsName;
 
-    public ObjectsReview( DeepSegmentation deepSegmentation )
+
+    public ObjectsReview( DeepSegmentation deepSegmentation,
+                          DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin)
     {
         this.deepSegmentation = deepSegmentation;
+        this.deepSegmentationIJ1Plugin = deepSegmentationIJ1Plugin;
     }
 
     public void runUI( )
@@ -37,9 +33,7 @@ public class ObjectsReview
         if ( gd == null ) return;
         setSettingsFromUI( gd );
 
-        deepSegmentation.makeInputImageTheActiveWindow();
-
-        reviewObjectsUsingRoiManager( deepSegmentation.getSegmentedObjectsList().get( objectsId ) );
+        reviewObjectsUsingRoiManager( deepSegmentation.getSegmentedObjectsMap().get( objectsName ) );
     }
 
     private GenericDialog openGenericDialog()
@@ -56,13 +50,18 @@ public class ObjectsReview
 
     private void setSettingsFromUI( GenericDialog gd )
     {
-        objectsId = gd.getNextChoiceIndex();
+        objectsName = gd.getNextChoice();
     }
 
 
     public void reviewObjectsUsingRoiManager( SegmentedObjects objects )
     {
+
+        deepSegmentationIJ1Plugin.reviewRoisFlag = true;
+
         ArrayList< Roi > rois = getCentroidRoisFromObjects( objects );
+
+        deepSegmentationIJ1Plugin.makeTrainingImageTheActiveWindow();
 
         manager = new RoiManager();
 
@@ -70,19 +69,25 @@ public class ObjectsReview
         {
             LabelManager.addRoiToManager( manager, deepSegmentation.getInputImage(), roi );
         }
+
+        DeepSegmentationIJ1Plugin.configureRoiManagerClosingEventListener( manager, deepSegmentationIJ1Plugin );
     }
 
 
     public static ArrayList< Roi > getCentroidRoisFromObjects( SegmentedObjects objects )
     {
+
         ArrayList< double[] > centroids = objects.objects3DPopulation.getMeasureCentroid();
 
         ArrayList< Roi > rois = new ArrayList<>();
 
+        double scaleXY = objects.objects3DPopulation.getScaleXY();
+        double scaleZ = objects.objects3DPopulation.getScaleZ();
+
         for ( double[] centroid : centroids )
         {
-            Roi roi = new PointRoi( centroid[ 1 ], centroid[ 2 ] );
-            roi.setPosition( 1, (int) centroid[ 3 ] + 1, objects.t + 1 );
+            Roi roi = new PointRoi( centroid[ 1 ] * scaleXY, centroid[ 2 ] * scaleXY );
+            roi.setPosition( 1, (int) ( centroid[ 3 ] * scaleZ ) + 1, objects.t + 1 );
             rois.add( roi );
         }
 
@@ -107,5 +112,6 @@ public class ObjectsReview
 
         return rois;
     }
+
 
 }
