@@ -910,20 +910,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	}
 
-	private void makeTrainingImageTheActiveWindow()
-	{
-		sleep(); // otherwise below select window does not always work...
 
-		IJ.selectWindow( trainingImage.getID() );
 
-		if ( ! trainingImage.getWindow().isActive() )
-		{
-			sleep(); // otherwise below select window does not always work...
-			IJ.selectWindow( trainingImage.getID() );
-		}
-	}
-
-	private void sleep()
+	private static void sleep()
 	{
 		try
 		{

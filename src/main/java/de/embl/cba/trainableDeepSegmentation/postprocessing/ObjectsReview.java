@@ -37,6 +37,8 @@ public class ObjectsReview
         if ( gd == null ) return;
         setSettingsFromUI( gd );
 
+        deepSegmentation.makeInputImageTheActiveWindow();
+
         reviewObjectsUsingRoiManager( deepSegmentation.getSegmentedObjectsList().get( objectsId ) );
     }
 

@@ -30,6 +30,7 @@ public class ObjectSegmentation
         public double probabilityThreshold;
         public float threshold;
         public String method;
+        public boolean showProbabilityImage;
 
     }
 
@@ -38,7 +39,7 @@ public class ObjectSegmentation
         this.deepSegmentation = deepSegmentation;
     }
 
-    public SegmentedObjects runUI( )
+    public SegmentedObjects runFromUI( )
     {
 
         GenericDialog gd = openGenericDialog();
@@ -102,6 +103,8 @@ public class ObjectSegmentation
 
         gd.addStringField( "Binning during segmentation", "1,1,1", 10  );
 
+        gd.addCheckbox( "Show (binned) probability image", true );
+
         gd.showDialog();
 
         if ( gd.wasCanceled() ) return null;
@@ -116,18 +119,14 @@ public class ObjectSegmentation
         settings.probabilityThreshold = gd.getNextNumber();
         settings.method = gd.getNextChoice();
         settings.binning =  Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
+        settings.showProbabilityImage = gd.getNextBoolean();
 
     }
 
     private SegmentedObjects segmentUsingMorphoLibJ( ObjectSegmentationSettings settings )
     {
 
-        ResultExportSettings resultExportSettings = new ResultExportSettings();
-        resultExportSettings.resultImagePlus = deepSegmentation.getResultImage().getWholeImageCopy();
-        resultExportSettings.binning = settings.binning;
-        resultExportSettings.classLutWidth = deepSegmentation.getResultImage().getProbabilityRange();
-
-        ImagePlus probabilities = ResultUtils.getBinnedClassImage( settings.classId, resultExportSettings, settings.t );
+        ImagePlus probabilities = getBinnedProbabilityImage( settings );
 
         double threshold = deepSegmentation.getResultImage().getProbabilityRange() * settings.probabilityThreshold;
 
@@ -159,16 +158,30 @@ public class ObjectSegmentation
 
     }
 
-
-    private SegmentedObjects segmentUsing3dImageSuite( ObjectSegmentationSettings settings )
+    private ImagePlus getBinnedProbabilityImage( ObjectSegmentationSettings settings )
     {
-
         ResultExportSettings resultExportSettings = new ResultExportSettings();
         resultExportSettings.resultImagePlus = deepSegmentation.getResultImage().getWholeImageCopy();
         resultExportSettings.binning = settings.binning;
         resultExportSettings.classLutWidth = deepSegmentation.getResultImage().getProbabilityRange();
 
-        ImagePlus probabilities = ResultUtils.getBinnedClassImage( settings.classId, resultExportSettings, settings.t );
+        ImagePlus probabilities =  ResultUtils.getBinnedClassImage( settings.classId, resultExportSettings, settings.t );
+        probabilities.setTitle( "probabilities" );
+
+        if ( settings.showProbabilityImage )
+        {
+            probabilities.show();
+            probabilities.setDisplayRange( 0, deepSegmentation.getResultImage().getProbabilityRange() );
+        }
+        
+        return probabilities;
+    }
+
+
+    private SegmentedObjects segmentUsing3dImageSuite( ObjectSegmentationSettings settings )
+    {
+
+        ImagePlus probabilities = getBinnedProbabilityImage( settings );
 
         deepSegmentation.logger.info( "\nSegmenting image..." );
         Segment3DImage segment3DImage = new Segment3DImage( probabilities, settings.threshold, Float.MAX_VALUE );

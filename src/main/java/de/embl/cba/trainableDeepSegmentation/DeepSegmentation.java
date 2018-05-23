@@ -162,13 +162,39 @@ public class DeepSegmentation
 	public void segmentObjects()
 	{
 		ObjectSegmentation objectSegmentation = new ObjectSegmentation( this );
-		SegmentedObjects objects = objectSegmentation.runUI( );
+		SegmentedObjects objects = objectSegmentation.runFromUI( );
 
 		if ( objects != null )
 		{
 			addObjects( objects );
 		}
 
+	}
+
+	public void makeInputImageTheActiveWindow()
+	{
+		sleep(); // otherwise below select window does not always work...
+
+		IJ.selectWindow( inputImage.getID() );
+
+		if ( ! inputImage.getWindow().isActive() )
+		{
+			sleep(); // otherwise below select window does not always work...
+			IJ.selectWindow( inputImage.getID() );
+		}
+	}
+
+
+	private static void sleep()
+	{
+		try
+		{
+			Thread.sleep( 300 );
+		}
+		catch ( InterruptedException e )
+		{
+			e.printStackTrace();
+		}
 	}
 
 	private ArrayList< SegmentedObjects > segmentedObjectsList;
