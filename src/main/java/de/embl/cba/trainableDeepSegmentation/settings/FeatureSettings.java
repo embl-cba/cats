@@ -21,7 +21,7 @@ public class FeatureSettings
 
     public int maxDeepConvLevel;
 
-    public int imageBackground;
+    public int imageBackground = 0;
 
     public boolean log2 = false;
 

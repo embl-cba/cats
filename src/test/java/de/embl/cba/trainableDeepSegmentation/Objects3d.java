@@ -28,8 +28,8 @@ public class Objects3d
 
         DeepSegmentationIJ1Plugin plugin = new DeepSegmentationIJ1Plugin();
         plugin.initialise( deepSegmentation, false );
-        plugin.segmentObjects();
-        plugin.reviewObjects();
+        //plugin.segmentObjects();
+        //plugin.reviewObjects();
 
     }
 

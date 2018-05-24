@@ -145,7 +145,7 @@ public class BatchClassificationOnSlurm implements Command
                 /*
                 try
                 {
-                    HashMap< String, Object > output = jobFuture.get();
+                    HashMap< String, Object > output = jobFuture.getBinned();
                 } catch ( InterruptedException e )
                 {
                     e.printStackTrace();

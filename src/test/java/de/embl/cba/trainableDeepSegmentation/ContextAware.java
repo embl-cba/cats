@@ -34,7 +34,7 @@ public class ContextAware
         deepSegmentation.featureSettings.boundingBoxExpansionsForGeneratingInstancesFromLabels.add( 7 );
 
         //deepSegmentation.recomputeLabelInstances = true;
-        //deepSegmentation.updateExamplesInstancesAndMetadata();
+        //deepSegmentation.updateLabelInstancesAndMetadata();
 
         configureIlastikSettings( deepSegmentation );
 
@@ -60,7 +60,7 @@ public class ContextAware
         deepSegmentation.featureSettings.binFactors.set( 3,  -1 );
 
         deepSegmentation.recomputeLabelInstances = true;
-        deepSegmentation.updateExamplesInstancesAndMetadata();
+        deepSegmentation.updateLabelInstancesAndMetadata();
     }
 
 

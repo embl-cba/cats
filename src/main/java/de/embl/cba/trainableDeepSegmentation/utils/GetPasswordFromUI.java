@@ -20,7 +20,7 @@ public class GetPasswordFromUI
     public String getPassword()
     {
 
-        // Module module = moduleService.run( GetPasswordCommand.class, "", true ).get();
+        // Module module = moduleService.run( GetPasswordCommand.class, "", true ).getBinned();
 
         // String password = (String) module.getOutput( "password" );
 

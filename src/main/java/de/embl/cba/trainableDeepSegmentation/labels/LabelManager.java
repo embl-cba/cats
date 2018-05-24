@@ -31,7 +31,7 @@ public class LabelManager {
     public LabelManager ( DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin )
     {
         this.deepSegmentationIJ1Plugin = deepSegmentationIJ1Plugin;
-        this.imp = deepSegmentationIJ1Plugin.trainingImage;
+        this.imp = deepSegmentationIJ1Plugin.inputImage;
     }
 
     private static void zoomIn()

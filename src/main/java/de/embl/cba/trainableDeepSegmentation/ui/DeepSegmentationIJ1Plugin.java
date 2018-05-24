@@ -12,8 +12,6 @@ import ij.*;
 import ij.gui.*;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
-import ij.measure.Calibration;
-import ij.plugin.MacroInstaller;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.Recorder;
 import ij.plugin.frame.RoiManager;
@@ -100,7 +98,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	private DeepSegmentation deepSegmentation = null;
 
 	/** image to be used in the instances */
-	public ImagePlus trainingImage = null;
+	public ImagePlus inputImage = null;
 	/** resultImagePlus image after classification */
 	private CustomWindow win = null;
 	/** number of classes in the GUI */
@@ -144,7 +142,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public static final String APPLY_CLASSIFIER = "Apply classifier";
 	public static final String ADD_CLASS = "Add class";
 	public static final String CHANGE_CLASS_NAMES = "Change class names";
-	public static final String CHANGE_COLORS = "Change colors";
+	public static final String CHANGE_COLORS = "Change classColors";
 	public static final String CHANGE_RESULT_OVERLAY_OPACITY = "Overlay opacity";
 	public static final String UPDATE_LABELS_AND_TRAIN = "Update labels and train classifier";
     public static final String UPDATE_LABELS = "Update labels";
@@ -233,7 +231,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	/** array of roi list overlays to paint the transparent rois of each class */
 	private RoiListOverlay[] roiOverlay = null;
 
-	/** available colors for available classes */
+	/** available classColors for available classes */
 	private Color[] colors = new Color[]{
 			Color.gray,
 			Color.green,
@@ -358,33 +356,15 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			return;
 		}
 
-		// reserve shortcuts
-		String macros = "macro 'shortcut 1 [1]' {};\n"
-				+ "macro 'shortcut 2 [2]' {};"
-				+ "macro 'shortcut 3 [3]' {};"
-				+ "macro 'shortcut 4 [4]' {};"
-				+ "macro 'shortcut 5 [5]' {};"
-				+ "macro 'shortcut 6 [6]' {};"
-				+ "macro 'shortcut 7 [7]' {};"
-				+ "macro 'shortcut 8 [8]' {};"
-				+ "macro 'shortcut 9 [9]' {};"
-				+ "macro 'shortcut r [r]' {};"
-				+ "macro 'shortcut p [p]' {};"
-				+ "macro 'shortcut u [u]' {};"
-				+ "macro 'shortcut g [g]' {};"
-				+ "macro 'shortcut n [n]' {};"
-				+ "macro 'shortcut b [b]' {};"
-				+ "macro 'shortcut d [d]' {};"
-				+ "macro 'shortcut s [s]' {};"
-				;
-		new MacroInstaller().install(macros);
+        DeepSegmentation.reserveKeyboardShortcuts();
 
-		// create overlay LUT
+
+        // create overlay LUT
 		final byte[] red = new byte[ 256 ];
 		final byte[] green = new byte[ 256 ];
 		final byte[] blue = new byte[ 256 ];
 
-		// assign colors to classes
+		// assign classColors to classes
 		for( int iClass = 0; iClass < DeepSegmentation.MAX_NUM_CLASSES; iClass++)
 		{
 			int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
@@ -462,7 +442,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		IJ.setTool("freeline");
 	}
 
-	/** Thread that runs the instances. We store it to be able to
+    /** Thread that runs the instances. We store it to be able to
 	 * to interrupt it from the GUI */
 	private Thread trainingTask = null;
 
@@ -497,7 +477,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 					}
 					else if( e.getSource() == assignResultImageButton )
 					{
-						assignResultImage( (String) resultImageComboBox.getSelectedItem() );
+						deepSegmentation.assignResultImage( (String) resultImageComboBox.getSelectedItem() );
 
 						if ( deepSegmentation.hasResultImage() )
 						{
@@ -517,7 +497,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 						}
 						else
 						{
-							trainingImage.setOverlay( new Overlay() );
+							inputImage.setOverlay( new Overlay() );
 							//IJ.run("Remove Overlay");
 
 							labelManager.updateExamples();
@@ -552,10 +532,10 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 								showClassifierSettingsDialog();
 								break;
 							case CHANGE_FEATURE_COMPUTATION_SETTINGS:
-								showFeatureSettingsDialog( false );
+								showFeatureSettingsDialogIJ1Plugin( false );
 								break;
                             case CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS:
-                                showFeatureSettingsDialog( true );
+                                showFeatureSettingsDialogIJ1Plugin( true );
                                 break;
                             case IO_LOAD_CLASSIFIER:
 								loadClassifier();
@@ -579,7 +559,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 								loadInstances();
 								break;
 							case IO_SAVE_INSTANCES:
-								saveInstances( trainingImage.getTitle() );
+								saveInstances( inputImage.getTitle() );
 								break;
 							case IO_LOAD_LABEL_IMAGE:
 								loadLabelImage();
@@ -686,8 +666,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
             {
                 // IJ.log( "RoiManager closed.");
                 deepSegmentationIJ1Plugin.reviewRoisFlag = false;
-                deepSegmentationIJ1Plugin.trainingImage.killRoi();
-                deepSegmentationIJ1Plugin.trainingImage.setOverlay( new Overlay(  ) );
+                deepSegmentationIJ1Plugin.inputImage.killRoi();
+                deepSegmentationIJ1Plugin.inputImage.setOverlay( new Overlay(  ) );
 
             }
         });
@@ -727,12 +707,12 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
     {
         sleep(); // otherwise below select window does not always work...
 
-        IJ.selectWindow( trainingImage.getID() );
+        IJ.selectWindow( inputImage.getID() );
 
-        if ( ! trainingImage.getWindow().isActive() )
+        if ( ! inputImage.getWindow().isActive() )
         {
             sleep(); // otherwise below select window does not always work...
-            IJ.selectWindow( trainingImage.getID() );
+            IJ.selectWindow( inputImage.getID() );
         }
     }
 
@@ -770,10 +750,10 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	private void reviewLabels( int classNum )
 	{
 		// remove all drawing elements
-		trainingImage.killRoi();
+		inputImage.killRoi();
 		removeAllRoiOverlays();
 		win.resultOverlay.setImage( null );
-		trainingImage.updateAndDraw();
+		inputImage.updateAndDraw();
 
 		// show labels
 		labelManager = new LabelManager( this );
@@ -788,22 +768,22 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	@Override
 	public void roiModified( ImagePlus imagePlus, int actionId )
 	{
-		if ( ( imagePlus != null ) && ( imagePlus == trainingImage ) )
+		if ( ( imagePlus != null ) && ( imagePlus == inputImage ) )
 		{
 			if ( actionId == RoiListener.CREATED && reviewRoisFlag )
 			{
 				if ( currentlyDisplayedRoi == null)
 				{
-					currentlyDisplayedRoi = trainingImage.getRoi();
+					currentlyDisplayedRoi = inputImage.getRoi();
 					zoomToSelection();
 				}
 				else
 				{
-					int x = trainingImage.getRoi().getBounds().x;
+					int x = inputImage.getRoi().getBounds().x;
 					int x2 = currentlyDisplayedRoi.getBounds().x;
 					if ( x != x2 )
 					{
-						currentlyDisplayedRoi = trainingImage.getRoi();
+						currentlyDisplayedRoi = inputImage.getRoi();
 						zoomToSelection();
 					}
 				}
@@ -823,7 +803,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		 */
 		private static final long serialVersionUID = 1L;
 
-		CustomCanvas(ImagePlus imp)
+		CustomCanvas( ImagePlus imp )
 		{
 			super(imp);
 			Dimension dim = new Dimension(Math.min(512, imp.getWidth()), Math.min(512, imp.getHeight()));
@@ -914,20 +894,20 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	private void zoomToSelection()
 	{
 
-		Roi roi = trainingImage.getRoi(); if ( roi == null ) return;
+		Roi roi = inputImage.getRoi(); if ( roi == null ) return;
 
 		// makeTrainingImageTheActiveWindow();
 
 		IJ.run("To Selection");
 
         // remove old overlay
-		trainingImage.setOverlay( new Overlay(  ) );
+		inputImage.setOverlay( new Overlay(  ) );
 
 		// add new overlay
         IJ.run("Add Selection...");
 
         // remove roi
-		trainingImage.killRoi();
+		inputImage.killRoi();
 
         updateResultOverlay();
 
@@ -1011,9 +991,11 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		 *
 		 * @param imp input image
 		 */
+
 		CustomWindow( ImagePlus imp )
 		{
 			super( imp, new CustomCanvas( imp ) );
+
 			final CustomCanvas canvas = ( CustomCanvas ) getCanvas();
 
 			// add roi list overlays (one per class)
@@ -1028,7 +1010,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 			removeAll();
 
-			setTitle( de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin.PLUGIN_NAME + ": " + trainingImage.getTitle() );
+			setTitle( de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin.PLUGIN_NAME + ": " + inputImage.getTitle() );
 
 			setupAnnotationsPanel();
 
@@ -1037,6 +1019,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			addStackListeners( imp );
 
 			addKeyListeners( canvas );
+
 
 			// Labels panel (includes annotations panel)
 			GridBagConstraints labelsConstraints = new GridBagConstraints();
@@ -1282,8 +1265,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 
 			// Propagate all listeners
-			for (Component p : new Component[]{all, buttonsPanel}) {
-				for (KeyListener kl : getKeyListeners()) {
+			for ( Component p : new Component[]{all, buttonsPanel} ) {
+				for ( KeyListener kl : getKeyListeners() ) {
 					p.addKeyListener(kl);
 				}
 			}
@@ -1417,13 +1400,13 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 									e.getKeyCode() == KeyEvent.VK_PERIOD)
 							{
 								//IJ.log("moving scroll " + e.getKeyCode());
-								trainingImage.killRoi();
+								inputImage.killRoi();
 								updateExampleLists();
 								drawExamples();
 								if( showColorOverlay )
 								{
 									updateResultOverlay();
-									trainingImage.updateAndDraw();
+									inputImage.updateAndDraw();
 								}
 							}
 						}
@@ -1457,13 +1440,13 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 								if (e.getSource() == zSelector)
 								{
 									//IJ.log("moving scroll");
-									trainingImage.killRoi();
+									inputImage.killRoi();
 									drawExamples();
 									updateExampleLists();
 									if (showColorOverlay)
 									{
 										updateResultOverlay();
-										trainingImage.updateAndDraw();
+										inputImage.updateAndDraw();
 									}
 								}
 
@@ -1490,13 +1473,13 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 									if (e.getSource() == tSelector)
 									{
 										//IJ.log("moving scroll");
-										trainingImage.killRoi();
+										inputImage.killRoi();
 										drawExamples();
 										updateExampleLists();
 										if (showColorOverlay)
 										{
 											updateResultOverlay();
-											trainingImage.updateAndDraw();
+											inputImage.updateAndDraw();
 										}
 									}
 
@@ -1519,13 +1502,13 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 							public void run()
 							{
 								//IJ.log("moving scroll");
-								trainingImage.killRoi();
+								inputImage.killRoi();
 								drawExamples();
 								updateExampleLists();
 								if (showColorOverlay)
 								{
 									updateResultOverlay();
-									trainingImage.updateAndDraw();
+									inputImage.updateAndDraw();
 								}
 							}
 						});
@@ -1539,7 +1522,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		{
 			resultOverlay = new ImageOverlay();
 			resultOverlay.setComposite( overlayAlpha );
-			((OverlayedImageCanvas )ic).addOverlay(resultOverlay);
+			((OverlayedImageCanvas )ic).addOverlay( resultOverlay );
 		}
 
 		public JButton getAnnotationButton( int iClass )
@@ -1620,18 +1603,18 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 				UncertaintyRegion uncertaintyRegion = deepSegmentation.getUncertaintyRegion( iRegion );
 				if ( uncertaintyRegion != null )
 				{
-					trainingImage.setT(uncertaintyRegion.xyzt[3] + 1);
-					trainingImage.setZ(uncertaintyRegion.xyzt[2] + 1);
+					inputImage.setT(uncertaintyRegion.xyzt[3] + 1);
+					inputImage.setZ(uncertaintyRegion.xyzt[2] + 1);
 					int x = uncertaintyRegion.xyzt[0] - deepSegmentation.minTileSizes[0] / 2;
 					int y = uncertaintyRegion.xyzt[1] - deepSegmentation.minTileSizes[1] / 2;
-					trainingImage.setRoi(
+					inputImage.setRoi(
 							x, y,
 							deepSegmentation.minTileSizes[0],
 							deepSegmentation.minTileSizes[1]
 					);
 					// TODO: below does not work
-					//zoomToSelection( trainingImage, 3.0 );
-					trainingImage.updateAndDraw();
+					//zoomToSelection( inputImage, 3.0 );
+					inputImage.updateAndDraw();
 				}
 				else
 				{
@@ -1647,21 +1630,43 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		}
 
 
-
-		private void zoomToSelection( ImagePlus imp, double marginFactor )
-		{
-			ImageCanvas ic = imp.getCanvas();
+		void zoomToSelection(ImagePlus imp, ImageCanvas ic) {
 			Roi roi = imp.getRoi();
 			ic.unzoom();
 			if (roi==null) return;
 			Rectangle w = imp.getWindow().getBounds();
 			Rectangle r = roi.getBounds();
 			double mag = ic.getMagnification();
+			int marginw = (int)((w.width - mag * imp.getWidth()));
+			int marginh = (int)((w.height - mag * imp.getHeight()));
+			int x = r.x+r.width/2;
+			int y = r.y+r.height/2;
+			mag = ic.getHigherZoomLevel(mag);
+			while(r.width*mag<w.width - marginw && r.height*mag<w.height - marginh) {
+				ic.zoomIn(ic.screenX(x), ic.screenY(y));
+				double cmag = ic.getMagnification();
+				if (cmag==32.0) break;
+				mag = ic.getHigherZoomLevel(cmag);
+				w = imp.getWindow().getBounds();
+			}
+		}
+
+		private void zoomToSelectionTest( ImagePlus imp, double marginFactor )
+		{
+			//ImageCanvas ic = imp.getCanvas();
+			Roi roi = imp.getRoi();
+
+			ic.unzoom();
+			if (roi==null) return;
+			Rectangle w = imp.getWindow().getBounds();
+			Rectangle r = roi.getBounds();
+
+			double mag = ic.getMagnification();
 			int marginw = (int)(marginFactor * (w.width - mag * imp.getWidth()));
 			int marginh = marginw;
 			//int marginh = (int)(marginFactor * (w.height - mag * imp.getHeight()));
-			int x = r.x+r.width/2;
-			int y = r.y+r.height/2;
+			int x = r.x + r.width/2;
+			int y = r.y + r.height/2;
 			mag = ic.getHigherZoomLevel(mag);
 			while( (r.width*mag < w.width-marginw) && (r.height*mag<w.height-marginh) )
 			{
@@ -1672,6 +1677,34 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 				w = imp.getWindow().getBounds();
 			}
 		}
+
+		private void zoomToPointSelection( ImagePlus imp, double marginFactor )
+		{
+			//ImageCanvas ic = imp.getCanvas();
+			Roi roi = imp.getRoi();
+
+			ic.unzoom();
+			if (roi==null) return;
+			Rectangle w = imp.getWindow().getBounds();
+			Rectangle r = roi.getBounds();
+
+			double mag = ic.getMagnification();
+			int marginw = (int)(marginFactor * (w.width - mag * imp.getWidth()));
+			int marginh = marginw;
+			//int marginh = (int)(marginFactor * (w.height - mag * imp.getHeight()));
+			int x = r.x + r.width/2;
+			int y = r.y + r.height/2;
+			mag = ic.getHigherZoomLevel(mag);
+			while( (r.width*mag < w.width-marginw) && (r.height*mag<w.height-marginh) )
+			{
+				ic.zoomIn(ic.screenX(x), ic.screenY(y));
+				double cmag = ic.getMagnification();
+				if (cmag==32.0) break;
+				mag = ic.getHigherZoomLevel(cmag);
+				w = imp.getWindow().getBounds();
+			}
+		}
+
 
 		/**
 		 * Get the Weka segmentation object. This tricks allows to
@@ -1699,8 +1732,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		 */
 		protected void drawExamples()
 		{
-			final int frame = trainingImage.getT();
-			final int slice = trainingImage.getZ();
+			final int frame = inputImage.getT();
+			final int slice = inputImage.getZ();
 
 			int numClasses = deepSegmentation.getNumClasses();
 			for(int iClass = 0; iClass < numClasses; iClass++)
@@ -1712,7 +1745,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 								iClass, slice-1, frame-1));
 			}
 
-			trainingImage.updateAndDraw();
+			inputImage.updateAndDraw();
 		}
 
 		/**
@@ -1720,8 +1753,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		 */
 		protected void updateExampleLists()
 		{
-			final int frame = trainingImage.getT();
-			final int slice = trainingImage.getZ();
+			final int frame = inputImage.getT();
+			final int slice = inputImage.getZ();
 
 			for( int i = 0; i < deepSegmentation.getNumClasses(); i++)
 			{
@@ -1786,7 +1819,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			int classNum = numOfClasses;
 
 			exampleList[classNum] = new java.awt.List( numShownLabelsPerClass );
-			//exampleList[classNum].setForeground(colors[classNum]);
+			//exampleList[classNum].setForeground(classColors[classNum]);
 			exampleList[classNum].setForeground( Color.black );
 
 			exampleList[classNum].addActionListener(listener);
@@ -1892,7 +1925,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 			if ( mode.equals( OVERLAY_MODE_SEGMENTATION ) )
 			{
-				// assign colors to classes
+				// assign classColors to classes
 				for ( int iClass = 0; iClass < DeepSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
 					int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
@@ -1910,7 +1943,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 			if ( mode.equals( OVERLAY_MODE_PROBABILITIES ) )
 			{
-				// assign colors to classes
+				// assign classColors to classes
 				for ( int iClass = 0; iClass < DeepSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
 					int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
@@ -1927,7 +1960,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 			if ( mode.equals( OVERLAY_MODE_UNCERTAINTY ) )
 			{
-				// assign colors to classes
+				// assign classColors to classes
 				for ( int iClass = 0; iClass < DeepSegmentation.MAX_NUM_CLASSES; iClass++)
 				{
 					int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
@@ -1952,7 +1985,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			else
 				resultOverlay.setImage(null);
 
-			trainingImage.updateAndDraw();
+			inputImage.updateAndDraw();
 		}
 
 		/**
@@ -1991,7 +2024,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		 */
 		public ImagePlus getTrainingImage()
 		{
-			return trainingImage;
+			return inputImage;
 		}
 
 
@@ -1999,7 +2032,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	private boolean initialisation()
 	{
-		IJ.run( trainingImage, "Properties...", "");
+		IJ.run( inputImage, "Properties...", "");
 
 		GenericDialog gd = new NonBlockingGenericDialog("Set up");
 
@@ -2018,7 +2051,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		gd.addMessage( "DATA SET NAME\n \n" +
 				"Please enter/confirm the name of this data set.\n" +
 				"This is important for keeping track of which instances have been trained with which image." );
-		gd.addStringField( "Name", trainingImage.getTitle(), 50 );
+		gd.addStringField( "Name", inputImage.getTitle(), 50 );
 
 		gd.addMessage( "RESULT IMAGE\n \n" +
 				"For large data sets it can be necessary to store the results " +
@@ -2061,10 +2094,11 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
         if ( gd.wasCanceled() ) return false;
 
         assignImageName( gd.getNextString() );
-		assignResultImage( gd.getNextChoice() );
+		deepSegmentation.assignResultImage( gd.getNextChoice() );
 		// setImagingModality( gd.getNextChoice() );
 		//deepSegmentation.setImageBackground( (int) gd.getNextNumber() );
-        setImagingModality( EM_IMAGING );
+        //deepSegmentation.setImagingModality( EM_IMAGING );
+
         deepSegmentation.setImageBackground( 0 );
 
 		return true;
@@ -2072,7 +2106,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	private void assignImageName( String imageName )
 	{
-		trainingImage.setTitle( imageName );
+		inputImage.setTitle( imageName );
 		deepSegmentation.getInputImage().setTitle( imageName );
 	}
 
@@ -2099,7 +2133,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
         for( int i = 0; i < deepSegmentation.getNumClasses() ; i++)
         {
             exampleList[i] = new java.awt.List( numShownLabelsPerClass );
-            //exampleList[i].setForeground(colors[i]);
+            //exampleList[i].setForeground(classColors[i]);
             exampleList[i].setForeground( Color.black );
 
         }
@@ -2109,83 +2143,36 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
         //getInstancesAndMetadata current image
         if ( null == WindowManager.getCurrentImage() )
         {
-            trainingImage = IJ.openImage(); // this implicitely gets the open="..." filePath
-            if (null == trainingImage) return; // user canceled open dialog
+            inputImage = IJ.openImage(); // this implicitely gets the open="..." filePath
+            if (null == inputImage ) return; // user canceled open dialog
         }
         else
         {
-            trainingImage = WindowManager.getCurrentImage(); //.duplicate();
-            trainingImage.setSlice(WindowManager.getCurrentImage().getSlice());
+            inputImage = WindowManager.getCurrentImage(); //.duplicate();
+            inputImage.setSlice(WindowManager.getCurrentImage().getSlice());
         }
 
-        deepSegmentation.setInputImage( trainingImage );
+        deepSegmentation.setInputImage( inputImage );
 
         if ( showUIs ) if ( ! initialisation() ) return;
 
-        Calibration calibration = trainingImage.getCalibration();
-        deepSegmentation.featureSettings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
-
-        if( calibration.pixelWidth != calibration.pixelHeight )
-        {
-            logger.error("Image calibration in x and y is not the same; currently cannot take this into " +
-                    "account; but you can still use this plugin, may work anyway...");
-        }
-
-        Set< Integer > channelsToConsider = new TreeSet<>();
-        for ( int c = 0; c < trainingImage.getNChannels(); c++ )
-        {
-            channelsToConsider.add(c); // zero-based
-        }
-
-        deepSegmentation.featureSettings.activeChannels = channelsToConsider;
-
-        //ij.gui.Toolbar.getInstance().setTool(ij.gui.Toolbar.FREELINE);
-
         reviewLabelsClassComboBox = new JComboBox( deepSegmentation.getClassNames().toArray() );
 
-        if ( showUIs ) showFeatureSettingsDialog( false );
+        if ( showUIs ) showFeatureSettingsDialogIJ1Plugin( false );
 
         //Build GUI
         SwingUtilities.invokeLater(
                 new Runnable() {
                     public void run()
                     {
-                        win = new CustomWindow( trainingImage );
+						win = new CustomWindow( inputImage );
                         win.pack();
                     }
                 });
+
     }
 
-	public void assignResultImage( String resultImageType )
-	{
-		deepSegmentation.resultImageType = resultImageType;
-
-		if ( resultImageType.equals( DeepSegmentation.RESULT_IMAGE_DISK_SINGLE_TIFF ) )
-		{
-			String directory = IJ.getDirectory("Select directory with pixel probabilities");
-			if( directory == null )
-			{
-				logger.error( "No resultImagePlus image was assigned now.\n " +
-						"You can later click [FeatureSettings] and assign one." );
-				return;
-			}
-
-			deepSegmentation.setResultImageDisk( directory  );
-
-
-		}
-		else if ( resultImageType.equals( DeepSegmentation.RESULT_IMAGE_RAM ))
-		{
-
-			deepSegmentation.setResultImageRAM();
-
-			logger.info("Allocated memoryMB for classification resultImagePlus image." );
-
-		}
-
-	}
-
-	/**
+    /**
 	 * Add examples defined by the user to the corresponding list
 	 * in the GUI and the example list in the segmentation object.
 	 *
@@ -2205,14 +2192,14 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			return;
 		}
 
-		final Roi roi = trainingImage.getRoi();
+		final Roi roi = inputImage.getRoi();
 		if (null == roi) return;
-		trainingImage.killRoi();
+		inputImage.killRoi();
 
 		Point[] points = roi.getContainedPoints();
 
-		final int z = trainingImage.getZ() - 1;
-		final int t = trainingImage.getT() - 1;
+		final int z = inputImage.getZ() - 1;
+		final int t = inputImage.getT() - 1;
 
 		Example newExample = deepSegmentation.createExample( classNum, points, (int)roi.getStrokeWidth(), z, t );
 
@@ -2224,7 +2211,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
             {
                 public void run()
                 {
-                    deepSegmentation.updateExamplesInstancesAndMetadata();
+                    deepSegmentation.updateLabelInstancesAndMetadata();
                     updateComboBoxes();
                 }
             }; thread.start();
@@ -2235,7 +2222,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		win.updateExampleLists();
 
 		// Record
-		final int n = trainingImage.getCurrentSlice();
+		final int n = inputImage.getCurrentSlice();
 		String[] arg = new String[]{ Integer.toString(classNum), Integer.toString(n)};
 		record(ADD_TRACE, arg);
 
@@ -2260,7 +2247,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	 */
 	public void updateResultOverlay()
 	{
-		ImageProcessor overlay = deepSegmentation.getResultImage().getSlice( trainingImage.getZ(), trainingImage.getT() );
+		ImageProcessor overlay = deepSegmentation.getResultImage().getSlice( inputImage.getZ(), inputImage.getT() );
 
 		overlay = overlay.convertToByte( false );
 		overlay.setColorModel( overlayLUT );
@@ -2279,7 +2266,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		// i is the classnum
 
 		// win.drawExamples();
-		trainingImage.setColor(Color.YELLOW);
+		inputImage.setColor(Color.YELLOW);
 
 		int selectedIndex = 0;
 
@@ -2293,15 +2280,15 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 					ArrayList < Roi > exampleRois =
 							deepSegmentation.getExampleRois(iClass,
-							trainingImage.getZ() - 1,
-							trainingImage.getT() - 1);
+							inputImage.getZ() - 1,
+							inputImage.getT() - 1);
 
 					if ( selectedIndex < exampleRois.size() )
 					{
 						final Roi newRoi = exampleRois.get( selectedIndex );
 						// Set selected trace as current ROI
-						newRoi.setImage( trainingImage );
-						trainingImage.setRoi( newRoi );
+						newRoi.setImage( inputImage );
+						inputImage.setRoi( newRoi );
 					}
 				}
 			}
@@ -2315,7 +2302,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			}
 		}
 
-		trainingImage.updateAndDraw();
+		inputImage.updateAndDraw();
 	}
 
 	/**
@@ -2337,27 +2324,27 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 				ArrayList<Roi> exampleRois = deepSegmentation.getExampleRois(
 						iClass,
-						trainingImage.getZ()-1,
-						trainingImage.getT()-1);
+						inputImage.getZ()-1,
+						inputImage.getT()-1);
 
 				Roi selectedRoi = exampleRois.get(index);
 				Roi activeRoiOnImage = null;
 
-				if ( trainingImage.getRoi() != null )
-					activeRoiOnImage = trainingImage.getRoi();
+				if ( inputImage.getRoi() != null )
+					activeRoiOnImage = inputImage.getRoi();
 				else
 					return;
 
 				if( activeRoiOnImage.getBounds().equals(selectedRoi.getBounds()) )
-					trainingImage.killRoi();
+					inputImage.killRoi();
 				else
 					return;
 
 				// delete item from the list of ROIs of that class and slice
 				deepSegmentation.removeExample(
 						iClass,
-						trainingImage.getZ()-1,
-						trainingImage.getT()-1,
+						inputImage.getZ()-1,
+						inputImage.getT()-1,
 						index);
 
 				//delete item from GUI list
@@ -2366,7 +2353,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 				// Record
 				String[] arg = new String[] {
 						Integer.toString(iClass),
-						Integer.toString( trainingImage.getCurrentSlice() ),
+						Integer.toString( inputImage.getCurrentSlice() ),
 						Integer.toString(index)};
 				record(DELETE_TRACE, arg);
 			}
@@ -2391,7 +2378,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			public void run()
 			{
 
-				deepSegmentation.updateExamplesInstancesAndMetadata();
+				deepSegmentation.updateLabelInstancesAndMetadata();
 
 				updateComboBoxes();
 
@@ -2417,7 +2404,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
             public void run()
             {
 
-                deepSegmentation.updateExamplesInstancesAndMetadata();
+                deepSegmentation.updateLabelInstancesAndMetadata();
 
                 updateComboBoxes();
 
@@ -2456,9 +2443,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		Thread task = new Thread() {
 			public void run()
 			{
-				deepSegmentation.updateExamplesInstancesAndMetadata();
+				deepSegmentation.updateLabelInstancesAndMetadata();
                 trainClassifier( deepSegmentation.getCurrentLabelInstancesAndMetadata() );
-				updateComboBoxes();
+				updateComboBoxes( );
 				win.setButtonsEnabled( true );
 			}
 
@@ -2476,21 +2463,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		} ); thread.start();
 	}
 
-	public void setImagingModality( String imagingModality )
-	{
-		imagingModalityComboBox.setSelectedItem( imagingModality );
-		if ( imagingModality.equals( FLUORESCENCE_IMAGING ) )
-		{
-			deepSegmentation.featureSettings.log2 = true;
-		}
-		else
-		{
-			deepSegmentation.featureSettings.log2 = false;
-		}
-	}
 
-
-	/**
+    /**
 	 * Run/stop the classifier instances
 	 *
 	 * @param command current text of the instances button ("Train classifier" or "STOP")
@@ -2556,7 +2530,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 					String directory = null;
 
-					if ( ! showFeatureSettingsDialog( false ) ) return;
+					if ( ! showFeatureSettingsDialogIJ1Plugin( false ) ) return;
 					//if ( ! showClassifierSettingsDialog() ) return;
 
 					if ( autoSaveInstances )
@@ -2887,7 +2861,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
     private FinalInterval getIntervalFromRoi( String rangeString )
     {
-        Roi roi = trainingImage.getRoi();
+        Roi roi = inputImage.getRoi();
 
         if ( roi == null || !( roi.getType() == Roi.RECTANGLE || roi.getType() == Roi.FREELINE) )
         {
@@ -2915,16 +2889,16 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
         min[ Y ] = ( int ) rectangle.getY();
         max[ Y ] = min[ 1 ] + ( int ) rectangle.getHeight() - 1;
 
-        min[ Z ] = max[ Z ] = trainingImage.getZ() - 1;
+        min[ Z ] = max[ Z ] = inputImage.getZ() - 1;
 
         if ( rangeString.equals( SELECTION_PM10Z ))
         {
-            min[ Z ] = trainingImage.getZ() - 1 - 10;
-            max[ Z ] = trainingImage.getZ() - 1 + 10;
+            min[ Z ] = inputImage.getZ() - 1 - 10;
+            max[ Z ] = inputImage.getZ() - 1 + 10;
         }
 
-        min[ T ] = max[ T ] = trainingImage.getT() - 1;
-        min[ C ] = max[ C ] = trainingImage.getC() - 1;
+        min[ T ] = max[ T ] = inputImage.getT() - 1;
+        min[ C ] = max[ C ] = inputImage.getC() - 1;
 
 
         adaptZTtoUsersInput( rangeString, min, max );
@@ -2933,7 +2907,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
     private void ensureToStayWithinBounds( long[] min, long[] max )
     {
         if ( min[ Z ] < 0 ) min[ Z ] = 0;
-        if ( max[ Z ] > trainingImage.getNSlices() - 1 ) max[ Z ] = trainingImage.getNSlices() - 1;
+        if ( max[ Z ] > inputImage.getNSlices() - 1 ) max[ Z ] = inputImage.getNSlices() - 1;
     }
 
     private void adaptZTtoUsersInput( String rangeString, long[] min, long[] max )
@@ -2942,12 +2916,12 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
         {
             int[] range = de.embl.cba.bigDataTools.utils.Utils.delimitedStringToIntegerArray( rangeString, "," );
 
-            if ( trainingImage.getNFrames() == 1 )
+            if ( inputImage.getNFrames() == 1 )
             {
                 min[ Z ] = range[ 0 ] - 1;
                 max[ Z ] = range[ 1 ] - 1;
             }
-            else if ( trainingImage.getNSlices() == 1 )
+            else if ( inputImage.getNSlices() == 1 )
             {
                 min[ T ] = range[ 0 ] - 1;
                 max[ T ] = range[ 1 ] - 1;
@@ -3267,7 +3241,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			win.resultOverlay.setComposite(win.overlayAlpha);
 
 			if( showColorOverlay )
-				trainingImage.updateAndDraw();
+				inputImage.updateAndDraw();
 		}
 
 		return true;
@@ -3397,7 +3371,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		return true;
 	}
 
-	public boolean showFeatureSettingsDialog( boolean showAdvancedSettings )
+	public boolean showFeatureSettingsDialogIJ1Plugin( boolean showAdvancedSettings )
 	{
 		GenericDialogPlus gd = new GenericDialogPlus("Segmentation featureSettings");
 
@@ -3439,7 +3413,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		if ( gd.wasCanceled() )
 			return false;
 
-        FeatureSettings newFeatureSettings = getSettingsFromGenericDialog( gd, showAdvancedSettings );
+        FeatureSettings newFeatureSettings = deepSegmentation.getFeatureSettingsFromGenericDialog( gd, showAdvancedSettings );
         boolean settingsChanged = ! deepSegmentation.featureSettings.equals( newFeatureSettings );
         deepSegmentation.featureSettings = newFeatureSettings;
 
@@ -3452,33 +3426,6 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
         }
 
 		return true;
-	}
-
-	private FeatureSettings getSettingsFromGenericDialog( GenericDialogPlus gd, boolean showAdvancedSettings )
-	{
-		FeatureSettings newFeatureSettings = deepSegmentation.featureSettings.copy();
-
-		for ( int i = 0; i < 5; ++i )
-		{
-			newFeatureSettings.binFactors.set( i, (int) gd.getNextNumber() );
-		}
-
-		newFeatureSettings.maxDeepConvLevel = (int) gd.getNextNumber();
-		newFeatureSettings.anisotropy = gd.getNextNumber();
-		newFeatureSettings.setActiveChannels( gd.getNextString() );
-
-		if ( showAdvancedSettings )
-		{
-			newFeatureSettings.setBoundingBoxExpansionsForGeneratingInstancesFromLabels( gd.getNextString() );
-			newFeatureSettings.downSamplingMethod = DownSampler.getID( gd.getNextChoice() );
-			newFeatureSettings.setSmoothingScales( gd.getNextString() );
-			newFeatureSettings.computeGaussian = gd.getNextBoolean();
-			newFeatureSettings.log2 = gd.getNextBoolean();
-			deepSegmentation.considerMultipleBoundingBoxOffsetsDuringInstancesLoading = gd.getNextBoolean();
-
-		}
-
-		return newFeatureSettings;
 	}
 
 

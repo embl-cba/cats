@@ -82,7 +82,7 @@ public final class PrincipalComponentAnalysis
 			
 		final Array2DRowRealMatrix m = new Array2DRowRealMatrix(matrix); 
 		
-		// Calculate SVD and get V
+		// Calculate SVD and getBinned V
 		final long start = System.currentTimeMillis();
 
 		final SingularValueDecomposition svd = new SingularValueDecomposition( m );

@@ -18,6 +18,7 @@ import net.imglib2.FinalInterval;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -129,6 +130,8 @@ public abstract class ResultUtils
             de.embl.cba.utils.logging.Logger logger, int numThreads )
     {
 
+        logger.info( "\nComputing binned probability image using " + numThreads + " threads." );
+
         int nz = (int) resultExportSettings.resultImage.getDimensions()[ Z ];
         int nx = (int) resultExportSettings.resultImage.getDimensions()[ X ];
         int ny = (int) resultExportSettings.resultImage.getDimensions()[ Y ];
@@ -147,29 +150,46 @@ public abstract class ResultUtils
         long startTime = System.currentTimeMillis();
 
         ExecutorService exe = Executors.newFixedThreadPool( numThreads );
-        ArrayList< Future > futures = new ArrayList<>(  );
+        ArrayList< Future< ImagePlus > > futures = new ArrayList<>(  );
 
         for ( int iz = 0; iz < nz; iz += dz )
         {
-            //futures.add(
-            //        exe.submit(
-
-            // TODO: put into callable function, returing the binned processors and put them later in a stack
-            ImageStack tmpStack = new ImageStack ( nx , ny );
-
-            for ( int iz2 = iz; iz2 < iz + dz; ++iz2 )
-            {
-                tmpStack.addSlice( resultExportSettings.resultImage.getSlice( iz2 + 1, t + 1 )  );
-            }
-
-            ImagePlus tmpImage = new ImagePlus( "", tmpStack );
-            de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( tmpImage, intensityGate );
-            ImagePlus tmpBinned = binner.shrink( tmpImage, dx, dy, dz, Binner.AVERAGE );
-
-            binnedStack.setProcessor( tmpBinned.getProcessor(), ( iz / dz )  + 1 );
-
-            logger.progress( "Creating binned class image", null, startTime, iz, nz   );
+            futures.add(
+                    exe.submit(
+                            CallableResultImageBinner.getBinned(
+                                    resultExportSettings.resultImage,
+                                    classId,
+                                    resultExportSettings.binning,
+                                    iz, iz + dz - 1, t,
+                                    logger,
+                                    startTime,
+                                    nz )
+                    )
+            );
         }
+
+
+        int i = 0;
+        for ( Future<ImagePlus> future : futures )
+        {
+            // getInstancesAndMetadata feature images
+            try
+            {
+                ImagePlus binnedSlice = future.get();
+                binnedStack.setProcessor( binnedSlice.getProcessor(), ++i );
+            } catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            } catch ( ExecutionException e )
+            {
+                e.printStackTrace();
+            }
+        }
+
+        futures = null;
+        exe.shutdown();
+        System.gc();
+
 
         ImagePlus binnedClassImage = new ImagePlus( "binnedClassImage", binnedStack );
 

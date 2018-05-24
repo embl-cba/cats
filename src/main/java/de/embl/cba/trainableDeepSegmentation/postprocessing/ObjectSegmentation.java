@@ -41,11 +41,23 @@ public class ObjectSegmentation
     {
 
         GenericDialog gd = openGenericDialog();
+
         if ( gd == null ) return null;
+
         setSettingsFromUI( gd );
 
         setThreshold();
 
+        ImagePlus probabilities = getBinnedProbabilityImage( settings );
+
+        SegmentedObjects segmentedObjects = getSegmentedObjects( probabilities );
+
+        return segmentedObjects;
+
+    }
+
+    private SegmentedObjects getSegmentedObjects( ImagePlus probabilities )
+    {
         long start = System.currentTimeMillis();
 
         SegmentedObjects segmentedObjects;
@@ -53,10 +65,10 @@ public class ObjectSegmentation
         switch ( settings.method )
         {
             case MORPHOLIBJ:
-                segmentedObjects = segmentUsingMorphoLibJ( settings );
+                segmentedObjects = segmentUsingMorphoLibJ( settings, probabilities );
                 break;
             case IMAGE_SUITE_3D:
-                segmentedObjects = segmentUsing3dImageSuite( settings );
+                segmentedObjects = segmentUsing3dImageSuite( settings, probabilities );
                 break;
             default:
                 segmentedObjects = null;
@@ -64,9 +76,7 @@ public class ObjectSegmentation
 
 
         deepSegmentation.logger.info( "\nSegmentation done in [s]: " + ( System.currentTimeMillis() - start ) / 1000 );
-
         return segmentedObjects;
-
     }
 
     private void setThreshold()
@@ -124,10 +134,8 @@ public class ObjectSegmentation
 
     }
 
-    private SegmentedObjects segmentUsingMorphoLibJ( ObjectSegmentationSettings settings )
+    private SegmentedObjects segmentUsingMorphoLibJ( ObjectSegmentationSettings settings, ImagePlus probabilities )
     {
-
-        ImagePlus probabilities = getBinnedProbabilityImage( settings );
 
         double threshold = deepSegmentation.getResultImage().getProbabilityRange() * settings.probabilityThreshold;
 
@@ -182,10 +190,8 @@ public class ObjectSegmentation
     }
 
 
-    private SegmentedObjects segmentUsing3dImageSuite( ObjectSegmentationSettings settings )
+    private SegmentedObjects segmentUsing3dImageSuite( ObjectSegmentationSettings settings, ImagePlus probabilities )
     {
-
-        ImagePlus probabilities = getBinnedProbabilityImage( settings );
 
         deepSegmentation.logger.info( "\nSegmenting image..." );
 
@@ -205,9 +211,10 @@ public class ObjectSegmentation
 
         deepSegmentation.logger.info( "...done. " );
 
-
         deepSegmentation.logger.info( "\nCreating objects..." );
         SegmentedObjects segmentedObjects = getSegmentedObjects( lbl );
+        segmentedObjects.objects3DPopulation.setScaleXY( settings.binning[ 0 ] );
+        segmentedObjects.objects3DPopulation.setScaleZ( settings.binning[ 2 ] );
         deepSegmentation.logger.info( "...found objects: " + segmentedObjects.objects3DPopulation.getNbObjects()  );
 
         return segmentedObjects;

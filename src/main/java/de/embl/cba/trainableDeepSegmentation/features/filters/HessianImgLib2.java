@@ -128,7 +128,7 @@ public class HessianImgLib2
             double maxVal = -Double.MIN_VALUE;
             for ( final DoubleType h : hs )
             {
-                final double dd = h.get();
+                final double dd = h.getBinned();
                 minVal = Math.min( dd, minVal );
                 maxVal = Math.max( dd, maxVal );
             }

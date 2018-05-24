@@ -82,7 +82,7 @@ public class ImageOverlay implements Overlay{
 	 * 
 	 * @param imp input image
 	 */
-	public void setImage ( ImageProcessor imp)
+	public void setImage ( ImageProcessor imp )
 	{this.imp = imp;}
 
 }

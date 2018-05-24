@@ -72,7 +72,7 @@ public class TestAshnaBgFg {
             /*
             ws.recomputeLabelInstances = true;
             ws.featureSettings.log2 = true;
-            ws.updateExamplesInstancesAndMetadata( "updated" );
+            ws.updateLabelInstancesAndMetadata( "updated" );
             ws.saveInstances( "updated",
                     "/Users/de.embl.cba.trainableDeepSegmentation.weka/Documents/ashna/instances/",
                     "bin_1_2_3_4--log2--001.ARFF");

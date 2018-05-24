@@ -1,7 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation;
 
-import java.awt.Point;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.image.ColorModel;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,22 +17,29 @@ import java.util.zip.GZIPOutputStream;
 
 import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierOnSlurmCommand;
+import de.embl.cba.trainableDeepSegmentation.features.DownSampler;
 import de.embl.cba.trainableDeepSegmentation.labelimagetraining.AccuracyEvaluation;
 import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectSegmentation;
 import de.embl.cba.trainableDeepSegmentation.postprocessing.SegmentedObjects;
 import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
+import de.embl.cba.trainableDeepSegmentation.ui.ContextAwareTrainableSegmentationPlugin;
 import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import de.embl.cba.utils.logging.Logger;
 
 import de.embl.cba.trainableDeepSegmentation.weka.fastRandomForest.FastRandomForest;
+import fiji.util.gui.GenericDialogPlus;
 import ij.*;
+import ij.gui.GenericDialog;
+import ij.gui.NonBlockingGenericDialog;
 import ij.gui.PolygonRoi;
 import ij.io.FileInfo;
 import ij.io.FileSaver;
+import ij.measure.Calibration;
 import ij.measure.ResultsTable;
 import ij.plugin.Duplicator;
+import ij.plugin.MacroInstaller;
 import ij.process.ImageProcessor;
 import inra.ijpb.binary.BinaryImages;
 import inra.ijpb.measure.GeometricMeasures3D;
@@ -90,6 +96,31 @@ public class DeepSegmentation
 	public static final String WHOLE_DATA_SET = "Whole data set";
 
 
+    /** available classColors for available classes */
+    public Color[] classColors = new Color[]{
+            Color.gray,
+            Color.green,
+            Color.red,
+            Color.blue,
+            Color.cyan,
+            Color.pink,
+            Color.white,
+            Color.magenta,
+            Color.orange,
+            Color.black,
+            Color.yellow,
+            Color.gray,
+            Color.green,
+            Color.red,
+            Color.blue,
+            Color.cyan,
+            Color.pink,
+            Color.white,
+            Color.magenta,
+            Color.orange,
+            Color.black
+    };
+
 	public String resultImageType = RESULT_IMAGE_RAM;
 
 	/**
@@ -104,7 +135,31 @@ public class DeepSegmentation
 
 	private ResultImage resultImage = null;
 
-	public void setMaxMemory( long maxMemory )
+    public static void reserveKeyboardShortcuts()
+    {
+        // reserve shortcuts
+        String macros = "macro 'shortcut 1 [1]' {};\n"
+                + "macro 'shortcut 2 [2]' {};"
+                + "macro 'shortcut 3 [3]' {};"
+                + "macro 'shortcut 4 [4]' {};"
+                + "macro 'shortcut 5 [5]' {};"
+                + "macro 'shortcut 6 [6]' {};"
+                + "macro 'shortcut 7 [7]' {};"
+                + "macro 'shortcut 8 [8]' {};"
+                + "macro 'shortcut 9 [9]' {};"
+                + "macro 'shortcut r [r]' {};"
+                + "macro 'shortcut p [p]' {};"
+                + "macro 'shortcut u [u]' {};"
+                + "macro 'shortcut g [g]' {};"
+                + "macro 'shortcut n [n]' {};"
+                + "macro 'shortcut b [b]' {};"
+                + "macro 'shortcut d [d]' {};"
+                + "macro 'shortcut s [s]' {};"
+                ;
+        new MacroInstaller().install(macros);
+    }
+
+    public void setMaxMemory( long maxMemory )
 	{
 		this.maxMemory = maxMemory;
 	}
@@ -919,7 +974,27 @@ public class DeepSegmentation
 		}
 
 		this.inputImage = imp;
-	}
+
+
+		Calibration calibration = inputImage.getCalibration();
+
+        featureSettings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
+
+        if( calibration.pixelWidth != calibration.pixelHeight )
+        {
+            logger.error("Image calibration in x and y is not the same; currently cannot take this into " +
+                    "account; but you can still use this plugin, may work anyway...");
+        }
+
+        Set< Integer > channelsToConsider = new TreeSet<>();
+        for ( int c = 0; c < inputImage.getNChannels(); c++ )
+        {
+            channelsToConsider.add(c); // zero-based
+        }
+
+        featureSettings.activeChannels = channelsToConsider;
+
+    }
 
 	/**
 	 * Adds a ROI to the list of examples for a certain class
@@ -1146,8 +1221,169 @@ public class DeepSegmentation
 		return ( resultImage );
 	}
 
+    public void assignResultImage( String resultImageType )
+    {
+        this.resultImageType = resultImageType;
 
-	/**
+        if ( resultImageType.equals( RESULT_IMAGE_DISK_SINGLE_TIFF ) )
+        {
+            String directory = IJ.getDirectory("Select directory with pixel probabilities");
+
+            if( directory == null )
+            {
+                logger.error( "No resultImagePlus image was assigned now.\n " +
+                        "You can later click [FeatureSettings] and assign one." );
+                return;
+            }
+
+            setResultImageDisk( directory  );
+
+
+        }
+        else if ( resultImageType.equals( RESULT_IMAGE_RAM ))
+        {
+
+            setResultImageRAM();
+
+            logger.info("Allocated memoryMB for classification resultImagePlus image." );
+
+        }
+
+    }
+
+    public boolean featureSettingsDialog( boolean showAdvancedSettings )
+    {
+        GenericDialogPlus gd = new GenericDialogPlus("Segmentation featureSettings");
+
+        for ( int i = 0; i < 5; ++i )
+        {
+            gd.addNumericField( "Binning " + ( i + 1 ), featureSettings.binFactors.get( i ), 0 );
+        }
+
+        gd.addNumericField("Maximal convolution depth", featureSettings.maxDeepConvLevel, 0);
+        gd.addNumericField("z/xy featureSettings.anisotropy", featureSettings.anisotropy, 10);
+        gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
+                FeatureSettings.getAsCSVString( featureSettings.activeChannels, 1 ) );
+
+        if ( showAdvancedSettings )
+        {
+            gd.addStringField( "Bounding box offsets ",
+                    FeatureSettings.getAsCSVString( featureSettings.boundingBoxExpansionsForGeneratingInstancesFromLabels, 0 ) );
+
+            gd.addChoice( "Downsampling method", new String[]{
+                            DownSampler.BIN_AVERAGE,
+                            DownSampler.BIN_MAXIMUM,
+                            DownSampler.TRANSFORMJ_SCALE_LINEAR,
+                            DownSampler.TRANSFORMJ_SCALE_CUBIC },
+                    DownSampler.getString( featureSettings.downSamplingMethod ) );
+
+            gd.addStringField( "Smoothing sigmas [pixels x/y] ",
+                    FeatureSettings.getAsCSVString( featureSettings.smoothingScales, 0 ) );
+
+            gd.addCheckbox( "Compute Gaussian filter", featureSettings.computeGaussian );
+
+            gd.addCheckbox( "Use log2 transformation", featureSettings.log2 );
+
+            gd.addCheckbox( "Consider multiple bounding box offsets during loading", considerMultipleBoundingBoxOffsetsDuringInstancesLoading );
+
+        }
+
+        gd.showDialog();
+
+        if ( gd.wasCanceled() )
+            return false;
+
+        FeatureSettings newFeatureSettings = getFeatureSettingsFromGenericDialog( gd, showAdvancedSettings );
+        boolean settingsChanged = ! featureSettings.equals( newFeatureSettings );
+        featureSettings = newFeatureSettings;
+
+        if ( settingsChanged )
+        {
+            if ( getInstancesManager().getNumInstancesSets() > 0 )
+            {
+                recomputeLabelFeaturesAndRetrainClassifier();
+            }
+        }
+
+        return true;
+    }
+
+
+    public void recomputeLabelFeaturesAndRetrainClassifier()
+    {
+        recomputeLabelInstances = true;
+
+        updateLabelInstancesAndMetadata();
+
+        trainClassifierWithFeatureSelection( getCurrentLabelInstancesAndMetadata() );
+    }
+
+
+    public FeatureSettings getFeatureSettingsFromGenericDialog( GenericDialogPlus gd, boolean showAdvancedSettings )
+    {
+        FeatureSettings newFeatureSettings = featureSettings.copy();
+
+        for ( int i = 0; i < 5; ++i )
+        {
+            newFeatureSettings.binFactors.set( i, (int) gd.getNextNumber() );
+        }
+
+        newFeatureSettings.maxDeepConvLevel = (int) gd.getNextNumber();
+        newFeatureSettings.anisotropy = gd.getNextNumber();
+        newFeatureSettings.setActiveChannels( gd.getNextString() );
+
+        if ( showAdvancedSettings )
+        {
+            newFeatureSettings.setBoundingBoxExpansionsForGeneratingInstancesFromLabels( gd.getNextString() );
+            newFeatureSettings.downSamplingMethod = DownSampler.getID( gd.getNextChoice() );
+            newFeatureSettings.setSmoothingScales( gd.getNextString() );
+            newFeatureSettings.computeGaussian = gd.getNextBoolean();
+            newFeatureSettings.log2 = gd.getNextBoolean();
+            considerMultipleBoundingBoxOffsetsDuringInstancesLoading = gd.getNextBoolean();
+
+        }
+
+        return newFeatureSettings;
+    }
+
+    public boolean initialisationDialog(  )
+    {
+
+        IJ.run( inputImage, "Properties...", "");
+
+        GenericDialog gd = new NonBlockingGenericDialog("Set up");
+
+        gd.addMessage( "DATA SET NAME\n \n" +
+                "Please enter/confirm the name of this data set.\n" +
+                "This is important for keeping track of which instances have been trained with which image." );
+        gd.addStringField( "Name", contextAwareTrainableSegmentationPlugin.inputImage.getTitle(), 50 );
+
+        gd.addMessage( "RESULT IMAGE\n \n" +
+                "For large data sets it can be necessary to store the results " +
+                "on disk rather than in RAM.\n" +
+                "The speed of this plugin does hardly depend on this choice.\n" +
+                "If you choose 'Disk' a dialog window will appear to select the storage directory.\n" +
+                "You can point to a directory containing previous segmentation results and they will be loaded (not overwritten)." );
+
+        gd.addChoice( "Location" ,
+                new String[]{
+                        RESULT_IMAGE_DISK_SINGLE_TIFF,
+                        RESULT_IMAGE_RAM },
+                        RESULT_IMAGE_RAM );
+
+
+        gd.showDialog();
+
+        if ( gd.wasCanceled() ) return false;
+
+        inputImage.setTitle( gd.getNextString()  );
+        assignResultImage( gd.getNextChoice() );
+
+        return true;
+    }
+
+
+    /**
 	 * bag class for getting the resultImagePlus of the loaded classifier
 	 */
 	private static class LoadedProject {
@@ -1426,7 +1662,7 @@ public class DeepSegmentation
 		logger.info( "\n# Recomputing instances including distance image" );
 		String bgFgInstancesKey = "BgFgTraining";
 		recomputeLabelInstances = true;
-		updateExamplesInstancesAndMetadata( bgFgInstancesKey );
+		updateLabelInstancesAndMetadata( bgFgInstancesKey );
 		recomputeLabelInstances = false;
 
 		// Retrain classifier
@@ -1517,10 +1753,10 @@ public class DeepSegmentation
 		return success;
 	}
 
-	public void updateExamplesInstancesAndMetadata()
+	public void updateLabelInstancesAndMetadata()
 	{
 		currentLabelsInstancesKey = getKeyFromImageTitle();
-		updateExamplesInstancesAndMetadata( currentLabelsInstancesKey );
+		updateLabelInstancesAndMetadata( currentLabelsInstancesKey );
 	}
 
 	private String currentLabelsInstancesKey;
@@ -1535,7 +1771,7 @@ public class DeepSegmentation
 		return getInstancesManager().getInstancesAndMetadata( currentLabelsInstancesKey );
 	}
 
-	public void updateExamplesInstancesAndMetadata( String instancesAndMetadataKey )
+	public void updateLabelInstancesAndMetadata( String instancesAndMetadataKey )
 	{
 		computeUpdatedExamplesInstances();
 		putExamplesIntoInstancesAndMetadata( instancesAndMetadataKey );

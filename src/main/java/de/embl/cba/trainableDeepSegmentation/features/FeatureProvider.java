@@ -1651,7 +1651,7 @@ public class FeatureProvider
 
     }
 
-    public Callable<ImagePlus> filter3d( ImagePlus inputImage, int[] radii )
+    public static Callable<ImagePlus> filter3d( ImagePlus inputImage, int[] radii )
     {
         return () -> {
 

@@ -31,7 +31,7 @@ public class FIBSEMCell
         deepSegmentation.loadInstancesAndMetadata( "/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/fib-sem--cell--8x8x8nm.ARFF" );
 
         //deepSegmentation.recomputeLabelInstances = true;
-        //deepSegmentation.updateExamplesInstancesAndMetadata();
+        //deepSegmentation.updateLabelInstancesAndMetadata();
 
         //configureIlastikSettings( deepSegmentation );
 
@@ -66,7 +66,7 @@ public class FIBSEMCell
         deepSegmentation.featureSettings.computeGaussian = true;
 
         deepSegmentation.recomputeLabelInstances = true;
-        deepSegmentation.updateExamplesInstancesAndMetadata();
+        deepSegmentation.updateLabelInstancesAndMetadata();
     }
 
 
