@@ -19,10 +19,12 @@ import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import de.embl.cba.trainableDeepSegmentation.commands.ApplyClassifierOnSlurmCommand;
 import de.embl.cba.trainableDeepSegmentation.features.DownSampler;
 import de.embl.cba.trainableDeepSegmentation.labelimagetraining.AccuracyEvaluation;
+import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectReview;
 import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectSegmentation;
 import de.embl.cba.trainableDeepSegmentation.postprocessing.SegmentedObjects;
 import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.trainableDeepSegmentation.ui.ContextAwareTrainableSegmentationPlugin;
+import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
 import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
@@ -93,7 +95,6 @@ public class DeepSegmentation
 	public static final int MAX_NUM_CLASSES = 20;
 	public static final String RESULT_IMAGE_DISK_SINGLE_TIFF = "Disk";
 	public static final String RESULT_IMAGE_RAM = "RAM";
-	public static final String WHOLE_DATA_SET = "Whole data set";
 
 
     /** available classColors for available classes */
@@ -120,6 +121,8 @@ public class DeepSegmentation
             Color.orange,
             Color.black
     };
+
+    public DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin;
 
 	public String resultImageType = RESULT_IMAGE_RAM;
 
@@ -1099,7 +1102,7 @@ public class DeepSegmentation
 	 * @param classNum the number of the examples' class
 	 * @param n        the slice number
 	 */
-	public ArrayList<Roi> getExampleRois(int classNum, int z, int t)
+	public ArrayList<Roi> getLabelRois( int classNum, int z, int t)
 	{
 		ArrayList<Roi> rois = new ArrayList<>();
 
@@ -1185,8 +1188,51 @@ public class DeepSegmentation
 	 */
 	public void addClass(String className)
 	{
+        if( getNumClasses() == MAX_NUM_CLASSES )
+        {
+            IJ.showMessage("Sorry...", "Maximum number of classes has been reached. Class could not be added");
+            return;
+        }
+
 		featureSettings.classNames.add(className);
 	}
+
+
+    public boolean showClassNamesDialog()
+    {
+        GenericDialogPlus gd = new GenericDialogPlus("Class names");
+
+        for( int i = 0; i < getNumClasses(); i++)
+            gd.addStringField("Class "+(i+1), getClassName(i), 15);
+
+        gd.showDialog();
+
+        if ( gd.wasCanceled() )
+            return false;
+
+        boolean classNameChanged = false;
+
+        for( int i = 0; i < getNumClasses(); i++)
+        {
+            String s = gd.getNextString();
+            if (null == s || 0 == s.length()) {
+                IJ.log("Invalid name for class " + (i+1));
+                continue;
+            }
+            s = s.trim();
+            if( ! s.equals( getClassName(i) ) )
+            {
+                if (0 == s.toLowerCase().indexOf("add to "))
+                    s = s.substring(7);
+
+                setClassLabel(i, s);
+                classNameChanged = true;
+            }
+        }
+
+        return true;
+    }
+
 
 	public void setResultImage( ResultImage resultImage )
 	{
@@ -1318,6 +1364,18 @@ public class DeepSegmentation
         trainClassifierWithFeatureSelection( getCurrentLabelInstancesAndMetadata() );
     }
 
+    public void updateLabelInstancesAndTrainClassifier()
+    {
+        recomputeLabelInstances = false;
+
+        updateLabelInstancesAndMetadata();
+
+        trainClassifierWithFeatureSelection( getCurrentLabelInstancesAndMetadata() );
+    }
+
+
+
+
 
     public FeatureSettings getFeatureSettingsFromGenericDialog( GenericDialogPlus gd, boolean showAdvancedSettings )
     {
@@ -1356,7 +1414,7 @@ public class DeepSegmentation
         gd.addMessage( "DATA SET NAME\n \n" +
                 "Please enter/confirm the name of this data set.\n" +
                 "This is important for keeping track of which instances have been trained with which image." );
-        gd.addStringField( "Name", contextAwareTrainableSegmentationPlugin.inputImage.getTitle(), 50 );
+        gd.addStringField( "Name", inputImage.getTitle(), 50 );
 
         gd.addMessage( "RESULT IMAGE\n \n" +
                 "For large data sets it can be necessary to store the results " +
@@ -1378,6 +1436,51 @@ public class DeepSegmentation
 
         inputImage.setTitle( gd.getNextString()  );
         assignResultImage( gd.getNextChoice() );
+
+        return true;
+    }
+
+    public void reviewObjects( )
+    {
+
+        ObjectReview objectReview = new ObjectReview( this );
+        objectReview.runUI( );
+
+    }
+
+    public boolean showClassifierSettingsDialog()
+    {
+        GenericDialogPlus gd = new GenericDialogPlus("Classifier featureSettings");
+
+        gd.addNumericField("Number of trees",
+                classifierNumTrees, 0);
+
+        gd.addStringField("Batch size per tree in percent", classifierBatchSizePercent) ;
+
+        gd.addNumericField("Fraction of random features per node", classifierFractionFeaturesPerNode, 2);
+
+        gd.addChoice("Feature selection method", new String[]
+                        {
+                                FEATURE_SELECTION_RELATIVE_USAGE,
+                                FEATURE_SELECTION_ABSOLUTE_USAGE,
+                                FEATURE_SELECTION_TOTAL_NUMBER,
+                                FEATURE_SELECTION_NONE,
+                        },
+                FEATURE_SELECTION_RELATIVE_USAGE );
+
+        gd.addNumericField("Feature selection value", featureSelectionValue, 1);
+
+        gd.showDialog();
+
+        if ( gd.wasCanceled() )
+            return false;
+
+        // Set classifier and options
+        classifierNumTrees = (int) gd.getNextNumber();
+        setBatchSizePercent( gd.getNextString() );
+        classifierFractionFeaturesPerNode = (double) gd.getNextNumber();
+        featureSelectionMethod = gd.getNextChoice();
+        featureSelectionValue = gd.getNextNumber();
 
         return true;
     }
@@ -2643,6 +2746,11 @@ public class DeepSegmentation
 		applyClassifierOnSlurm( parameters, interval );
 	}
 
+    public void applyClassifierOnSlurm( FinalInterval interval )
+    {
+        applyClassifierOnSlurm( new HashMap<>(  ), interval );
+    }
+
 	public void applyClassifierOnSlurm(  Map< String, Object > parameters, FinalInterval interval )
     {
         configureInputImageLoading( parameters );
@@ -2655,6 +2763,48 @@ public class DeepSegmentation
 
         CommandUtils.runSlurmCommand( parameters );
 	}
+
+    public void addLabelFromImageRoi( int classNum )
+    {
+
+        if ( classNum >= getNumClasses() )
+        {
+            logger.error( "Class number " + classNum + " does not exist; cannot add label.");
+            return;
+        }
+
+        if ( isBusy )
+        {
+            logger.error( "Sorry, but I am busy and cannot add a new label right now...");
+            return;
+        }
+
+        final Roi roi = inputImage.getRoi();
+        if (null == roi) return;
+        inputImage.killRoi();
+
+        Point[] points = roi.getContainedPoints();
+
+        final int z = inputImage.getZ() - 1;
+        final int t = inputImage.getT() - 1;
+
+        Example newExample = createExample( classNum, points, (int)roi.getStrokeWidth(), z, t );
+
+        addExample( newExample );
+
+        if ( false ) // TODO: instant label update
+        {
+            Thread thread = new Thread()
+            {
+                public void run()
+                {
+                    updateLabelInstancesAndMetadata();
+                }
+            }; thread.start();
+        }
+
+
+    }
 
 	private void configureInputImageLoading( Map< String, Object > parameters )
     {

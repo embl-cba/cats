@@ -5,10 +5,10 @@
 		// FLY EYE
 		/*
 		IJ.open("/Users/de.embl.cba.trainableDeepSegmentation.weka/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
-		ImagePlus imp = IJ.getImage();
-		ImagePlus impClass = IJ.createImage("classification_result",imp.getWidth(),imp.getHeight(),1,8);
+		ImagePlus inputImage = IJ.getImage();
+		ImagePlus impClass = IJ.createImage("classification_result",inputImage.getWidth(),inputImage.getHeight(),1,8);
 		impClass.show();
-		imp.hide(); imp.show();
+		inputImage.hide(); inputImage.show();
 
 		IJ.wait(100);
 		Weka_Deep_Segmentation weka_segmentation = new Weka_Deep_Segmentation();
@@ -48,7 +48,7 @@
 		Weka_Deep_Segmentation weka_segmentation = new Weka_Deep_Segmentation();
 		weka_segmentation.run("");
 
-		//ImagePlus imp = IJ.openImage( "/Users/de.embl.cba.trainableDeepSegmentation.weka/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train" +
+		//ImagePlus inputImage = IJ.openImage( "/Users/de.embl.cba.trainableDeepSegmentation.weka/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train" +
 		//		"-labels/train-labels-binary-larger-borders.tif" );
 
 		//weka_segmentation.getWekaSegmentation().setLabelImage( inputImagePlus );
@@ -68,8 +68,8 @@
 
 
 		/*
-		ImagePlus imp = IJ.getImage();
-		VirtualStackOfStacks vss = (VirtualStackOfStacks) imp.getStack();
+		ImagePlus inputImage = IJ.getImage();
+		VirtualStackOfStacks vss = (VirtualStackOfStacks) inputImage.getStack();
 		Region5D region5D = new Region5D();
 		region5D.size = new Point3D(40.0,40.0,40.0);
 		region5D.offset = new Point3D(0,0,0);

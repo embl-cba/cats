@@ -3,7 +3,6 @@ package de.embl.cba.trainableDeepSegmentation.ui;
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImage;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageDisk;
-import fiji.util.gui.OverlayedImageCanvas;
 import ij.ImagePlus;
 import ij.gui.ImageRoi;
 import ij.gui.Overlay;
@@ -12,6 +11,7 @@ import ij.process.ImageProcessor;
 import ij.process.LUT;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 public class Overlays
 {
@@ -23,31 +23,20 @@ public class Overlays
 
     Color[] colors;
     final ResultImage resultImage;
-    final ImagePlus imp;
-
-
-    OverlayedImageCanvas overlayedImageCanvas;
+    final ImagePlus inputImage;
+    final DeepSegmentation deepSegmentation;
 
     private LUT overlayLUT = null;
     private int overlayOpacity = 33;
     boolean isOverlayShown = false;
 
 
-
-
-    public Overlays( Color[] colors, ImagePlus imp, ResultImage resultImage )
+    public Overlays( Color[] colors, ImagePlus inputImage, ResultImage resultImage, DeepSegmentation deepSegmentation )
     {
         this.colors = colors;
         this.resultImage = resultImage;
-        this.imp = imp;
-        this.overlayedImageCanvas = new OverlayedImageCanvas( imp );
-
-
-    }
-
-    public OverlayedImageCanvas getOverlayedImageCanvas()
-    {
-        return overlayedImageCanvas;
+        this.inputImage = inputImage;
+        this.deepSegmentation = deepSegmentation;
     }
 
 
@@ -64,7 +53,7 @@ public class Overlays
 
         if ( isOverlayShown )
         {
-            imp.setOverlay( new Overlay( ) );
+            inputImage.setOverlay( new Overlay( ) );
             isOverlayShown = false;
             return;
         }
@@ -107,44 +96,17 @@ public class Overlays
             overlayLUT = new LUT(red, green, blue);
         }
 
-        /*
-        if ( mode.equals( OVERLAY_MODE_UNCERTAINTY ) )
-        {
-            // assign classColors to classes
-            for ( int iClass = 0; iClass < DeepSegmentation.MAX_NUM_CLASSES; iClass++)
-            {
-                int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
-                for ( int i = 1; i <= ResultImageDisk.CLASS_LUT_WIDTH; i++)
-                {
-                    // TODO:
-                    // - check whether this is correct
-                    red[offset + i] = (byte) ( 255.0 * Math.exp( - deepSegmentation.uncertaintyLutDecay * i  ));
-                    green[offset + i] = (byte) ( 0 );
-                    blue[offset + i] = (byte) ( 255.0 * Math.exp( - deepSegmentation.uncertaintyLutDecay * i  ));
-                }
-            }
-            overlayLUT = new LUT(red, green, blue);
-        }*/
-
-        //showColorOverlay = !showColorOverlay;
-        //IJ.log("toggle overlay to: " + showColorOverlay);
-        //if (showColorOverlay && null != deepSegmentation.getResultImage())
-     //   {
-  ///      }
-//        else
-        //    resultOverlay.setImage(null);
-
         isOverlayShown = true;
-        updateResultOverlay();
-        imp.updateAndDraw();
+        updateProbabilities();
+        inputImage.updateAndDraw();
 
     }
 
-    public void updateResultOverlay()
+    public void updateProbabilities()
     {
         if ( isOverlayShown )
         {
-            ImageProcessor overlayImage = resultImage.getSlice( imp.getZ(), imp.getT() );
+            ImageProcessor overlayImage = resultImage.getSlice( inputImage.getZ(), inputImage.getT() );
             overlayImage = overlayImage.convertToByte( false );
             overlayImage.setColorModel( overlayLUT );
 
@@ -153,9 +115,32 @@ public class Overlays
             roi.setName( "result overlay" );
             Overlay overlay = new Overlay( roi );
 
-            imp.setOverlay( overlay );
+            inputImage.setOverlay( overlay );
         }
 
+    }
+
+    protected void updateLabels()
+    {
+        final int frame = inputImage.getT();
+        final int slice = inputImage.getZ();
+
+        int numClasses = deepSegmentation.getNumClasses();
+
+        inputImage.setOverlay( new Overlay( ) );
+
+        for(int iClass = 0; iClass < numClasses; iClass++)
+        {
+            ArrayList< Roi > classRois = deepSegmentation.getLabelRois( iClass, slice-1, frame-1);
+            for ( Roi roi : classRois )
+            {
+                roi.setStrokeColor( colors[ iClass ] );
+                roi.setStrokeWidth( 2.0 );
+                inputImage.getOverlay().add( roi );
+            }
+        }
+
+        inputImage.updateAndDraw();
     }
 
 

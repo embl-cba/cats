@@ -1,8 +1,9 @@
 package de.embl.cba.trainableDeepSegmentation.ui;
 
+import de.embl.cba.trainableDeepSegmentation.classification.ClassificationRangeUtils;
 import de.embl.cba.trainableDeepSegmentation.features.DownSampler;
-import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectReview;
 import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
+import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.utils.logging.Logger;
 
 
@@ -10,8 +11,6 @@ import fiji.util.gui.GenericDialogPlus;
 import fiji.util.gui.OverlayedImageCanvas;
 import ij.*;
 import ij.gui.*;
-import ij.io.OpenDialog;
-import ij.io.SaveDialog;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.Recorder;
 import ij.plugin.frame.RoiManager;
@@ -51,8 +50,6 @@ import de.embl.cba.trainableDeepSegmentation.results.ResultImage;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageDisk;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageExportGUI;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
-import weka.classifiers.AbstractClassifier;
-import weka.core.SerializationHelper;
 import weka.gui.GUIChooserApp;
 
 /**
@@ -333,9 +330,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public static final String TRAINING_DATA_LABEL_IMAGE = "Label image";
 
 	public static final String SELECTION = "Selected roi";
-	public static final String SELECTION_PM10Z = "Selected roi +- 10 slices";
 
-	private LabelManager labelManager = null;
+    private LabelManager labelManager = null;
 
 	private boolean isFirstTime = true;
 
@@ -409,8 +405,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		rangeComboBox = new JComboBox( new String[]
 				{ SELECTION,
-						SELECTION_PM10Z,
-						DeepSegmentation.WHOLE_DATA_SET,
+						ClassificationRangeUtils.SELECTION_PM10Z,
+						ClassificationRangeUtils.WHOLE_DATA_SET,
 						"1,10,1,2"
 				});
 
@@ -460,7 +456,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 			// listen to the buttons on separate numWorkers not to block
 			// the event dispatch thread
-			new Thread(new Runnable(){
+			new Thread( new Runnable(){
 			//exec.submit(new Runnable() {
 
 				public void run()
@@ -523,13 +519,13 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 						switch ( action )
 						{
 							case SEGMENT_OBJECTS:
-								segmentObjects();
+                                deepSegmentation.segmentObjects();
 								break;
                             case REVIEW_OBJECTS:
-                                reviewObjects();
+                                deepSegmentation.reviewObjects();
                                 break;
 							case CHANGE_CLASSIFIER_SETTINGS:
-								showClassifierSettingsDialog();
+								deepSegmentation.showClassifierSettingsDialog();
 								break;
 							case CHANGE_FEATURE_COMPUTATION_SETTINGS:
 								showFeatureSettingsDialogIJ1Plugin( false );
@@ -538,7 +534,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
                                 showFeatureSettingsDialogIJ1Plugin( true );
                                 break;
                             case IO_LOAD_CLASSIFIER:
-								loadClassifier();
+								loadClassifierDialog();
 								break;
 							case ADD_CLASS:
 								addNewClass();
@@ -1653,7 +1649,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		private void zoomToSelectionTest( ImagePlus imp, double marginFactor )
 		{
-			//ImageCanvas ic = imp.getCanvas();
+			//ImageCanvas ic = inputImage.getCanvas();
 			Roi roi = imp.getRoi();
 
 			ic.unzoom();
@@ -1664,7 +1660,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			double mag = ic.getMagnification();
 			int marginw = (int)(marginFactor * (w.width - mag * imp.getWidth()));
 			int marginh = marginw;
-			//int marginh = (int)(marginFactor * (w.height - mag * imp.getHeight()));
+			//int marginh = (int)(marginFactor * (w.height - mag * inputImage.getHeight()));
 			int x = r.x + r.width/2;
 			int y = r.y + r.height/2;
 			mag = ic.getHigherZoomLevel(mag);
@@ -1680,7 +1676,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		private void zoomToPointSelection( ImagePlus imp, double marginFactor )
 		{
-			//ImageCanvas ic = imp.getCanvas();
+			//ImageCanvas ic = inputImage.getCanvas();
 			Roi roi = imp.getRoi();
 
 			ic.unzoom();
@@ -1691,7 +1687,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 			double mag = ic.getMagnification();
 			int marginw = (int)(marginFactor * (w.width - mag * imp.getWidth()));
 			int marginh = marginw;
-			//int marginh = (int)(marginFactor * (w.height - mag * imp.getHeight()));
+			//int marginh = (int)(marginFactor * (w.height - mag * inputImage.getHeight()));
 			int x = r.x + r.width/2;
 			int y = r.y + r.height/2;
 			mag = ic.getHigherZoomLevel(mag);
@@ -1741,7 +1737,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 				roiOverlay[iClass].setColor( colors[iClass] );
 
 				roiOverlay[iClass].setRoi(
-						deepSegmentation.getExampleRois(
+						deepSegmentation.getLabelRois(
 								iClass, slice-1, frame-1));
 			}
 
@@ -1761,7 +1757,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 				exampleList[i].removeAll();
 				exampleList[i].addActionListener(listener);
 				exampleList[i].addItemListener(itemListener);
-				int numExamples = deepSegmentation.getExampleRois(i, slice-1, frame-1).size();
+				int numExamples = deepSegmentation.getLabelRois(i, slice-1, frame-1).size();
 				for(int j = 0; j < numExamples; j++)
 				{
 					exampleList[ i ].add( "trace " + j + " (Z=" + slice + " T=" + frame + ")" );
@@ -2117,7 +2113,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	 */
 	public void run( String arg )
 	{
-	    initialise( new DeepSegmentation(), true );
+	    deepSegmentation = new DeepSegmentation(  );
+	    deepSegmentation.deepSegmentationIJ1Plugin = this;
+	    initialise( deepSegmentation, true );
     }
 
 
@@ -2265,7 +2263,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	{
 		// i is the classnum
 
-		// win.drawExamples();
+		// win.updateLabels();
 		inputImage.setColor(Color.YELLOW);
 
 		int selectedIndex = 0;
@@ -2279,7 +2277,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 				{
 
 					ArrayList < Roi > exampleRois =
-							deepSegmentation.getExampleRois(iClass,
+							deepSegmentation.getLabelRois(iClass,
 							inputImage.getZ() - 1,
 							inputImage.getT() - 1);
 
@@ -2322,7 +2320,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 				if ( index == -1 )
 					return; // has been deleted already
 
-				ArrayList<Roi> exampleRois = deepSegmentation.getExampleRois(
+				ArrayList<Roi> exampleRois = deepSegmentation.getLabelRois(
 						iClass,
 						inputImage.getZ()-1,
 						inputImage.getT()-1);
@@ -2417,26 +2415,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
     }
 
 
-    public void segmentObjects()
-	{
-	    deepSegmentation.segmentObjects();
-	}
-
-	public void reviewObjects()
-    {
-
-        ObjectReview objectReview = new ObjectReview( deepSegmentation, this );
-
-        objectReview.runUI( );
-
-        //RoiManager3D_2 manager3D = new RoiManager3D_2();
-        //manager3D.setVisible( false );
-        //manager3D.addObjects3DPopulation( objects3DPopulation );
-        //manager3D.setVisible( true );
-
-    }
-
-	void updateLabelInstancesAndTrainClassifier()
+    void updateLabelInstancesAndTrainClassifier()
 	{
 	    win.setButtonsEnabled( false );
 
@@ -2848,160 +2827,25 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		String rangeString = (String) rangeComboBox.getSelectedItem();
 
-		if ( rangeString.equals( DeepSegmentation.WHOLE_DATA_SET) )
+		if ( rangeString.equals( ClassificationRangeUtils.WHOLE_DATA_SET) )
 		{
 			return ( IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( deepSegmentation.getInputImage() ) );
 		}
 		else
 		{
-			return ( getIntervalFromRoi( rangeString ) );
+			return ( ClassificationRangeUtils.getIntervalFromRoi( inputImage, rangeString ) );
 		}
 
 	}
 
-    private FinalInterval getIntervalFromRoi( String rangeString )
-    {
-        Roi roi = inputImage.getRoi();
 
-        if ( roi == null || !( roi.getType() == Roi.RECTANGLE || roi.getType() == Roi.FREELINE) )
-        {
-            IJ.showMessage( "Please use ImageJ's rectangle or freeline tool to select a region." );
-            return null;
-        }
-
-        long[] min = new long[ 5 ];
-        long[] max = new long[ 5 ];
-
-        setMinMax( rangeString, roi, min, max );
-
-        ensureToStayWithinBounds( min, max );
-
-        return new FinalInterval( min, max );
-    }
-
-    private void setMinMax( String rangeString, Roi roi, long[] min, long[] max )
-    {
-        Rectangle rectangle = roi.getBounds();
-
-        min[ X ] = ( int ) rectangle.getX();
-        max[ X ] = min[ 0 ] + ( int ) rectangle.getWidth() - 1;
-
-        min[ Y ] = ( int ) rectangle.getY();
-        max[ Y ] = min[ 1 ] + ( int ) rectangle.getHeight() - 1;
-
-        min[ Z ] = max[ Z ] = inputImage.getZ() - 1;
-
-        if ( rangeString.equals( SELECTION_PM10Z ))
-        {
-            min[ Z ] = inputImage.getZ() - 1 - 10;
-            max[ Z ] = inputImage.getZ() - 1 + 10;
-        }
-
-        min[ T ] = max[ T ] = inputImage.getT() - 1;
-        min[ C ] = max[ C ] = inputImage.getC() - 1;
-
-
-        adaptZTtoUsersInput( rangeString, min, max );
-    }
-
-    private void ensureToStayWithinBounds( long[] min, long[] max )
-    {
-        if ( min[ Z ] < 0 ) min[ Z ] = 0;
-        if ( max[ Z ] > inputImage.getNSlices() - 1 ) max[ Z ] = inputImage.getNSlices() - 1;
-    }
-
-    private void adaptZTtoUsersInput( String rangeString, long[] min, long[] max )
-    {
-        try
-        {
-            int[] range = de.embl.cba.bigDataTools.utils.Utils.delimitedStringToIntegerArray( rangeString, "," );
-
-            if ( inputImage.getNFrames() == 1 )
-            {
-                min[ Z ] = range[ 0 ] - 1;
-                max[ Z ] = range[ 1 ] - 1;
-            }
-            else if ( inputImage.getNSlices() == 1 )
-            {
-                min[ T ] = range[ 0 ] - 1;
-                max[ T ] = range[ 1 ] - 1;
-            }
-            else
-            {
-                min[ Z ] = range[ 0 ] - 1;
-                max[ Z ] = range[ 1 ] - 1;
-
-                if ( range.length == 4 )
-                {
-                    min[ T ] = range[ 2 ] - 1;
-                    max[ T ] = range[ 3 ] - 1;
-                }
-            }
-            logger.info( "Using selected z and t range: " );
-            logger.info( "..." );
-            // TODO: make function to print range
-        } catch ( NumberFormatException e )
-        {
-            logger.info( "No (or invalid) z and t range selected." );
-        }
-    }
-
-    private boolean projectIOFlag = false;
-
-	/**
-	 * Save current project into a file
-	 */
-	public void saveProject()
-	{
-
-		SaveDialog sd = new SaveDialog("Save project as...",
-				"project",
-				".tsp");
-
-		if (sd.getFileName()==null) return;
-
-		// Record
-		String[] arg = new String[] { sd.getDirectory() + sd.getFileName() };
-		record(SAVE_CLASSIFIER, arg);
-
-		win.setButtonsEnabled( false );
-		deepSegmentation.isBusy = true;
-
-		if( ! deepSegmentation.saveProject( sd.getDirectory() + sd.getFileName()) )
-		{
-			IJ.error("Error while writing project to file");
-		}
-
-		win.setButtonsEnabled( true );
-		deepSegmentation.isBusy = false;
-
-	}
-
-	/**
-	 * Write classifier into a file
-	 *
-	 * @param cls classifier
-	 * @param filename name (with complete path) of the destination file
-	 * @return false if error
-	 */
-	public static boolean writeClassifier(AbstractClassifier cls, String filename)
-	{
-		try {
-			SerializationHelper.write(filename, cls);
-		} catch (Exception e) {
-			IJ.log("Error while writing classifier into a file");
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
 
 	/**
 	 * Save instances to a file
 	 */
 	public void saveInstances( String key )
 	{
-		String[] dirFile = getSaveDirFile( "Save instance file", ".ARFF" );
+		String[] dirFile = IOUtils.getSaveDirFile( "Save instance file", ".ARFF" );
 
 		if ( dirFile != null )
 		{
@@ -3016,30 +2860,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	}
 
-	private String[] getSaveDirFile( String title, String extension )
-	{
-		SaveDialog sd = new SaveDialog("Save as...", "", extension);
 
-		if ( sd.getFileName() == null ) return null;
-
-		String[] dirFile = new String[] { sd.getDirectory(), sd.getFileName() };
-
-		return dirFile;
-	}
-
-
-	private String[] getOpenDirFile( String title )
-	{
-		OpenDialog od = new OpenDialog(title, OpenDialog.getLastDirectory(), "");
-		if ( od.getFileName() == null ) return null;
-
-		String[] dirFile = new String[]{ od.getDirectory(), od.getFileName() };
-
-		return dirFile;
-	}
-
-
-	private void removeAllRoiOverlays()
+    private void removeAllRoiOverlays()
 	{
 		for ( int i = 0; i < roiOverlay.length; ++i )
 		{
@@ -3053,7 +2875,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public void loadInstances()
 	{
 
-	    String[] dirFile = getOpenDirFile( "Please choose instance file" );
+	    String[] dirFile = IOUtils.getOpenDirFile( "Please choose instance file" );
 
 	    if ( dirFile != null )
 		{
@@ -3081,10 +2903,10 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
     }
 
 
-    public void loadClassifier()
+    public void loadClassifierDialog()
 	{
 
-		String[] dirFile = getOpenDirFile( "Please choose a classifier file" );
+		String[] dirFile = IOUtils.getOpenDirFile( "Please choose a classifier file" );
 
 		if ( dirFile != null )
 		{
@@ -3121,7 +2943,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public void saveClassifier()
 	{
 
-		String[] dirFile = getSaveDirFile("Please choose a output file", ".classifier" );
+		String[] dirFile = IOUtils.getSaveDirFile("Please choose a output file", ".classifier" );
 
 		if ( dirFile != null )
 		{
@@ -3141,27 +2963,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	 */
 	private void addNewClass()
 	{
-		if( deepSegmentation.getNumClasses() == DeepSegmentation.MAX_NUM_CLASSES )
-		{
-			IJ.showMessage("Trainable Deep Segmentation", "Sorry, maximum number of classes has been reached");
-			return;
-		}
 
-		String inputName = JOptionPane.showInputDialog("Please input a new label name");
-
-		if(null == inputName)
-			return;
-
-
-		if (null == inputName || 0 == inputName.length())
-		{
-			IJ.error("Invalid name for class");
-			return;
-		}
-		inputName = inputName.trim();
-
-		if (0 == inputName.toLowerCase().indexOf("add to "))
-			inputName = inputName.substring(7);
+        String inputName = IOUtils.classNameDialog();
+        if ( inputName == null ) return;
 
 		// Add new name to the list of labels
 		deepSegmentation.addClass( inputName );
@@ -3177,7 +2981,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		record(CREATE_CLASS, arg);
 	}
 
-	private void updateComboBoxes()
+    private void updateComboBoxes()
 	{
 		reviewLabelsClassComboBox.setModel( new DefaultComboBoxModel( deepSegmentation.getClassNames().toArray() ) );
 
@@ -3334,44 +3138,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	}
 
 
-	public boolean showClassifierSettingsDialog()
-	{
-		GenericDialogPlus gd = new GenericDialogPlus("Classifier featureSettings");
-
-		gd.addNumericField("Number of trees",
-				deepSegmentation.classifierNumTrees, 0);
-
-		gd.addStringField("Batch size per tree in percent", deepSegmentation.classifierBatchSizePercent) ;
-
-		gd.addNumericField("Fraction of random features per node", deepSegmentation.classifierFractionFeaturesPerNode, 2);
-
-		gd.addChoice("Feature selection method", new String[]
-						{
-								DeepSegmentation.FEATURE_SELECTION_RELATIVE_USAGE,
-								DeepSegmentation.FEATURE_SELECTION_ABSOLUTE_USAGE,
-								DeepSegmentation.FEATURE_SELECTION_TOTAL_NUMBER,
-								DeepSegmentation.FEATURE_SELECTION_NONE,
-						},
-						DeepSegmentation.FEATURE_SELECTION_RELATIVE_USAGE);
-
-		gd.addNumericField("Feature selection value", deepSegmentation.featureSelectionValue, 1);
-
-		gd.showDialog();
-
-		if ( gd.wasCanceled() )
-			return false;
-
-		// Set classifier and options
-		deepSegmentation.classifierNumTrees = (int) gd.getNextNumber();
-		deepSegmentation.setBatchSizePercent( gd.getNextString() );
-		deepSegmentation.classifierFractionFeaturesPerNode = (double) gd.getNextNumber();
-		deepSegmentation.featureSelectionMethod = gd.getNextChoice();
-		deepSegmentation.featureSelectionValue = gd.getNextNumber();
-
-		return true;
-	}
-
-	public boolean showFeatureSettingsDialogIJ1Plugin( boolean showAdvancedSettings )
+    public boolean showFeatureSettingsDialogIJ1Plugin( boolean showAdvancedSettings )
 	{
 		GenericDialogPlus gd = new GenericDialogPlus("Segmentation featureSettings");
 
@@ -3595,7 +3362,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 					labelImage.setZ(z);
 					for( int j=0; j<numClasses; j++ )
 					{
-						 ArrayList<Roi> rois = deepSegmentation.getExampleRois(j,z-1,t-1);
+						 ArrayList<Roi> rois = deepSegmentation.getLabelRois(j,z-1,t-1);
 						 for( final Roi r : rois )
 						 {
 							 final ImageProcessor ip = labelImage.getProcessor();

@@ -332,4 +332,10 @@ public abstract class IntervalUtils {
         }
         return intervalXYZT;
     }
+
+    public static void ensureToStayWithinBounds( ImagePlus inputImage, long[] min, long[] max )
+    {
+        if ( min[ Z ] < 0 ) min[ Z ] = 0;
+        if ( max[ Z ] > inputImage.getNSlices() - 1 ) max[ Z ] = inputImage.getNSlices() - 1;
+    }
 }

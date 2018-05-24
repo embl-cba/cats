@@ -23,11 +23,10 @@ public class ObjectReview
     public int minVolumeInPixels;
 
 
-    public ObjectReview( DeepSegmentation deepSegmentation,
-                         DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin)
+    public ObjectReview( DeepSegmentation deepSegmentation )
     {
         this.deepSegmentation = deepSegmentation;
-        this.deepSegmentationIJ1Plugin = deepSegmentationIJ1Plugin;
+        this.deepSegmentationIJ1Plugin = deepSegmentation.deepSegmentationIJ1Plugin;
     }
 
     public void runUI( )

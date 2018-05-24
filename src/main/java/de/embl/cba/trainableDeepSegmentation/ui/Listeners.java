@@ -1,5 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.ui;
 
+import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
 import ij.ImageListener;
 import ij.ImagePlus;
 
@@ -12,19 +13,22 @@ import static de.embl.cba.trainableDeepSegmentation.ui.Overlays.OVERLAY_MODE_UNC
 public class Listeners
 {
 
-    Overlays overlays;
+    final Overlays overlays;
     final ImagePlus imp;
+    final DeepSegmentation deepSegmentation;
 
     int c;
     int t;
     int z;
 
-    public Listeners( ImagePlus imagePlus, Overlays overlays)
+    public Listeners( ImagePlus imagePlus, Overlays overlays, DeepSegmentation deepSegmentation )
     {
-       this.overlays = overlays;
-       this.imp = imagePlus;
-       addKeyListeners( );
-       addStackListeners( );
+        this.overlays = overlays;
+        this.imp = imagePlus;
+        this.deepSegmentation = deepSegmentation;
+
+        addKeyListeners( );
+        addStackListeners( );
 
     }
 
@@ -52,19 +56,16 @@ public class Listeners
                             overlays.toggleOverlay( OVERLAY_MODE_UNCERTAINTY);
                         }
 
-
-                        /*
                         try
                         {
-                            int iClass = Integer.parseInt("" + e.getKeyChar());
-                            addAnnotation( iClass - 1  );
+                            int iClass = Integer.parseInt("" + e.getKeyChar() );
+                            deepSegmentation.addLabelFromImageRoi(  iClass - 1  );
+                            overlays.updateLabels( );
                         }
                         catch (NumberFormatException e )
                         {
                             // do nothing
                         }
-                        */
-
                     }
                 }).start();
             }
@@ -86,10 +87,10 @@ public class Listeners
                             //IJ.log("moving scroll " + e.getKeyCode());
                             inputImage.killRoi();
                             updateExampleLists();
-                            drawExamples();
+                            updateLabels();
                             if( showColorOverlay )
                             {
-                                updateResultOverlay();
+                                updateProbabilities();
                                 inputImage.updateAndDraw();
                             }
                         }*/
@@ -132,7 +133,8 @@ public class Listeners
             {
                 if ( updatePosition() )
                 {
-                    overlays.updateResultOverlay();
+                    overlays.updateProbabilities();
+                    overlays.updateLabels();
                 }
             }
         };

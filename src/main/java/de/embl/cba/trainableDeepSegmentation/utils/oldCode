@@ -151,34 +151,34 @@
 	/**
 	 * Apply current classifier to a given image with precomputed features.
 	 *
-	 * @param imp image (2D single image or stack)
+	 * @param inputImage image (2D single image or stack)
 	 * @param filters stack of filters to apply to the original image in order to create the features
 	 * @param numThreads The number of threads to use. Set to zero for auto-detection.
 	 * @param probabilityMaps create probability maps for each class instead of a classification
 	 * @return result image
 	 */
 	public ImagePlus applyClassifier(
-			final ImagePlus imp,
+			final ImagePlus inputImage,
 			final ImagePlus filters,
 			int numThreads,
 			final boolean probabilityMaps)
 	{
 		IJ.showMessage("applyClassifier: not implemented.");
 		return (null);
-		//return applyClassifier(imp, new FeatureImages(imp), numThreads, probabilityMaps);
+		//return applyClassifier(inputImage, new FeatureImages(inputImage), numThreads, probabilityMaps);
 	}
 
 	/**
 	 * Apply current classifier to a given image with precomputed features.
 	 *
-	 * @param imp image (2D single image or stack)
+	 * @param inputImage image (2D single image or stack)
 	 * @param featureImages precomputed feature stack array
 	 * @param numThreads The number of threads to use. Set to zero for auto-detection.
 	 * @param probabilityMaps create probability maps for each class instead of a classification
 	 * @return result image
 	 */
 	public ImagePlus applyClassifier(
-			final ImagePlus imp,
+			final ImagePlus inputImage,
 			FeatureImages featureImages,
 			int numThreads,
 			final boolean probabilityMaps)
@@ -193,11 +193,11 @@
 			if (numThreads == 0)
 				numThreads = Prefs.getThreads();
 
-			final int numSliceThreads = Math.min(imp.getStackSize(), numThreads);
+			final int numSliceThreads = Math.min(inputImage.getStackSize(), numThreads);
 			final int numClasses = numOfClasses;
 			final int numChannels = (probabilityMaps ? numClasses : 1);
 
-			IJ.log("Processing slices of " + imp.getTitle() + " in " + numSliceThreads + " thread(s)...");
+			IJ.log("Processing slices of " + inputImage.getTitle() + " in " + numSliceThreads + " thread(s)...");
 
 			// Set proper class names (skip empty list ones)
 			ArrayList<String> classNames = new ArrayList<String>();
@@ -214,7 +214,7 @@
 			else
 				classNames = loadedClassNames;
 
-			final ImagePlus[] classifiedSlices = new ImagePlus[imp.getStackSize()];
+			final ImagePlus[] classifiedSlices = new ImagePlus[inputImage.getStackSize()];
 
 			class ApplyClassifierThread extends Thread {
 
@@ -245,7 +245,7 @@
 				/*
 				for (int i = startSlice; i < startSlice + numSlices; i++)
 				{
-					final ImagePlus slice = new ImagePlus(imp.getImageStack().getSliceLabel(i), imp.getImageStack().getProcessor(i));
+					final ImagePlus slice = new ImagePlus(inputImage.getImageStack().getSliceLabel(i), inputImage.getImageStack().getProcessor(i));
 
 					final Instances sliceData = featureImages.createInstances(classNames);
 					sliceData.setClassIndex(sliceData.numAttributes() - 1);
@@ -278,7 +278,7 @@
 
 			// calculate optimum number of slices per thread
 			int[] numSlicesPerThread = new int[numSliceThreads];
-			for (int i = 0; i < imp.getImageStackSize(); i++)
+			for (int i = 0; i < inputImage.getImageStackSize(); i++)
 			{
 				numSlicesPerThread[i % numSliceThreads]++;
 			}
@@ -298,7 +298,7 @@
 			}
 
 			// create classified image
-			final ImageStack classified = new ImageStack(imp.getWidth(), imp.getHeight());
+			final ImageStack classified = new ImageStack(inputImage.getWidth(), inputImage.getHeight());
 
 			// join threads
 			for (Thread thread : threads)
@@ -311,7 +311,7 @@
 				}
 
 			// assemble classified image
-			for (int i = 0; i < imp.getStackSize(); i++)
+			for (int i = 0; i < inputImage.getStackSize(); i++)
 				for (int c = 0; c < numChannels; c++)
 					classified.addSlice("", classifiedSlices[i].getStack().getProcessor(c + 1));
 
@@ -319,8 +319,8 @@
 
 			if (probabilityMaps)
 			{
-				result.setDimensions(numOfClasses, imp.getNSlices(), imp.getNFrames());
-				if (imp.getNSlices() * imp.getNFrames() > 1)
+				result.setDimensions(numOfClasses, inputImage.getNSlices(), inputImage.getNFrames());
+				if (inputImage.getNSlices() * inputImage.getNFrames() > 1)
 					result.setOpenAsHyperStack(true);
 			}
 
@@ -391,7 +391,7 @@
     	 * Each thread will sequentially process a whole  number of slices (first
     	 * feature calculation then classification).
     	 *
-    	 * @param imp image (2D single image or stack)
+    	 * @param inputImage image (2D single image or stack)
     	 * @param numThreads The number of threads to use. Set to zero for
     	 * auto-detection (set by the user on the ImageJ preferences)
     	 * @param probabilityMaps create probability maps for each class instead of
@@ -400,7 +400,7 @@
     	 */
     	/*
     	public ImagePlus applyClassifier(
-    			final ImagePlus imp,
+    			final ImagePlus inputImage,
     			Region5D region5D, // where to do the classification
     			//ImagePlus classImg, // classification results
     			boolean updateFeatureImages,
@@ -414,9 +414,9 @@
 
     		if ( region5D != null )
     		{
-    			if (imp.getImageStack() instanceof VirtualStackOfStacks)
+    			if (inputImage.getImageStack() instanceof VirtualStackOfStacks)
     			{
-    				VirtualStackOfStacks vss = (VirtualStackOfStacks) imp.getStack();
+    				VirtualStackOfStacks vss = (VirtualStackOfStacks) inputImage.getStack();
     				inputImage = vss.getDataCube(region5D, 0, numThreads);
     			}
     			else
@@ -427,7 +427,7 @@
     		}
     		else
     		{
-    			inputImage = imp;
+    			inputImage = inputImage;
     		}
 
     		if ( updateFeatureImages )
@@ -436,7 +436,7 @@
     			featureImages.updateFeaturesMT();
     		}
 
-    		final ImagePlus[] results = new ImagePlus[imp.getNFrames()];
+    		final ImagePlus[] results = new ImagePlus[inputImage.getNFrames()];
 
     		IJ.log("Classifying frame "+frame);
 
@@ -446,8 +446,8 @@
     		if (probabilityMaps)
     		{
     			results[region5D.t].setDimensions(
-    					numOfClasses, imp.getNSlices(), imp.getNFrames());
-    			if( imp.getNSlices() * imp.getNFrames() > 1)
+    					numOfClasses, inputImage.getNSlices(), inputImage.getNFrames());
+    			if( inputImage.getNSlices() * inputImage.getNFrames() > 1)
     				results[region5D.t].setOpenAsHyperStack(true);
     		}
 
@@ -462,11 +462,11 @@
     		return results[0]; // TODO: implement for multiple frames
 
     		/*
-    		final int numSliceThreads = Math.min(imp.getStackSize(), numThreads);
+    		final int numSliceThreads = Math.min(inputImage.getStackSize(), numThreads);
     		final int numClasses      = numOfClasses;
     		final int numChannels     = (probabilityMaps ? numClasses : 1);
 
-    		IJ.log("Processing slices of " + imp.getTitle() + " in " + numSliceThreads + " thread(s)...");
+    		IJ.log("Processing slices of " + inputImage.getTitle() + " in " + numSliceThreads + " thread(s)...");
 
     		// Set proper class names (skip empty list ones)
     		ArrayList<String> classNames = new ArrayList<String>();
@@ -483,7 +483,7 @@
     		else
     			classNames = loadedClassNames;
 
-    		final ImagePlus[] classifiedSlices = new ImagePlus[imp.getStackSize()];
+    		final ImagePlus[] classifiedSlices = new ImagePlus[inputImage.getStackSize()];
 
     		class ApplyClassifierThread extends Thread
     		{
@@ -512,7 +512,7 @@
 
     				for (int i = startSlice; i < startSlice + numSlices; i++)
     				{
-    					final ImagePlus slice = new ImagePlus(imp.getImageStack().getSliceLabel(i), imp.getImageStack().getProcessor(i));
+    					final ImagePlus slice = new ImagePlus(inputImage.getImageStack().getSliceLabel(i), inputImage.getImageStack().getProcessor(i));
                         // Create feature stack for slice
                         IJ.showStatus("Creating features...");
                         IJ.log("Creating features for slice " + i +  "...");
@@ -536,7 +536,7 @@
     						IJ.log("Error while applying classifier!");
     						return;
     					}
-    					classImage.setCalibration( imp.getCalibration() );
+    					classImage.setCalibration( inputImage.getCalibration() );
     					classImage.setTitle("classified_" + slice.getTitle());
 
     					classifiedSlices[i-1] = classImage;
@@ -553,7 +553,7 @@
 
     		// calculate optimum number of slices per thread
     		int[] numSlicesPerThread = new int [ numSliceThreads ];
-    		for(int i=0; i<imp.getImageStackSize(); i++)
+    		for(int i=0; i<inputImage.getImageStackSize(); i++)
     		{
     			numSlicesPerThread[ i % numSliceThreads ] ++;
     		}
@@ -573,7 +573,7 @@
     		}
 
     		// create classified image
-    		final ImageStack classified = new ImageStack(imp.getWidth(), imp.getHeight());
+    		final ImageStack classified = new ImageStack(inputImage.getWidth(), inputImage.getHeight());
 
     		// join threads
     		for(Thread thread : threads)
@@ -584,7 +584,7 @@
     			}
 
     		// assemble classified image
-    		for (int i = 0; i < imp.getStackSize(); i++)
+    		for (int i = 0; i < inputImage.getStackSize(); i++)
     			for (int c = 0; c < numChannels; c++)
     				classified.addSlice("", classifiedSlices[i].getStack().getProcessor(c+1));
 
@@ -592,11 +592,11 @@
 
     		if (probabilityMaps)
     		{
-    			result.setDimensions(numOfClasses, imp.getNSlices(), imp.getNFrames());
-    			if (imp.getNSlices()*imp.getNFrames() > 1)
+    			result.setDimensions(numOfClasses, inputImage.getNSlices(), inputImage.getNFrames());
+    			if (inputImage.getNSlices()*inputImage.getNFrames() > 1)
     				result.setOpenAsHyperStack(true);
     		}
-    		result.setCalibration(imp.getCalibration());
+    		result.setCalibration(inputImage.getCalibration());
 
     		return result;
     	}*/
@@ -608,14 +608,14 @@
 	 * Prefs.getThreads()). Each thread will sequentially process a whole
 	 * number of slices (first feature calculation then classification).
 	 *
-	 * @param imp image (2D single image or stack)
+	 * @param inputImage image (2D single image or stack)
 	 * @return result image (classification)
 	 */
-	public ImagePlus applyClassifierFullImage(final ImagePlus imp)
+	public ImagePlus applyClassifierFullImage(final ImagePlus inputImage)
 	{
 		IJ.log("not implemented");
 		return null;
-		//return applyClassifier(imp, 0, false);
+		//return applyClassifier(inputImage, 0, false);
 	}
 
 
@@ -624,7 +624,7 @@
 	 * This method is experimental, it divides the image(s) in pieces and
 	 * can cause artifacts using some filters.
 	 *
-	 * @param imp image (2D single image or stack)
+	 * @param inputImage image (2D single image or stack)
 	 * @param numThreads The number of threads to use. Set to zero for
 	 * auto-detection.
 	 * @param probabilityMaps create probability maps for each class instead of
@@ -632,7 +632,7 @@
 	 * @return result image
 	 */
 	public ImagePlus applyClassifierMT(
-			final ImagePlus imp,
+			final ImagePlus inputImage,
 			int numThreads,
 			final boolean probabilityMaps)
 	{
@@ -643,7 +643,7 @@
 		final int numClasses = numOfClasses;
 		final int numChannels = (probabilityMaps ? numClasses : 1);
 
-		IJ.log("Classifying data from image " + imp.getTitle() + " using " + numThreads + " thread(s)...");
+		IJ.log("Classifying data from image " + inputImage.getTitle() + " using " + numThreads + " thread(s)...");
 
 		// Set proper class names (skip empty list ones)
 		ArrayList<String> classNames = new ArrayList<String>();
@@ -683,14 +683,14 @@
 		final AtomicInteger counter = new AtomicInteger();
 
 		// slice dimensions
-		final int height = imp.getHeight();
-		final int width = imp.getWidth();
+		final int height = inputImage.getHeight();
+		final int width = inputImage.getWidth();
 		final int pad = (int) maximumSigma;
 
 		// Calculate number of rows per thread
 		// (with this division we may miss one row,
 		// but it will be added to the last thread)
-		int numOfRows = height * imp.getImageStackSize() / numThreads;
+		int numOfRows = height * inputImage.getImageStackSize() / numThreads;
 
 		// set each slice in a thread
 		Future<ArrayList <ImagePlus> >[] fu = new Future [ numThreads ];
@@ -710,7 +710,7 @@
 
 			// Calculate list of images to be classified on each thread
 			int firstRow = i * numOfRows;
-			int lastRow = i < (numThreads-1) ? (i+1) * numOfRows - 1 : height * imp.getImageStackSize()-1;
+			int lastRow = i < (numThreads-1) ? (i+1) * numOfRows - 1 : height * inputImage.getImageStackSize()-1;
 
 			//IJ.log("Thread " + i + ": first row = " + firstRow + ", last row = " + lastRow);
 
@@ -726,7 +726,7 @@
 				final int end = (begin + rowsToDo) > height ? height-1 : begin + rowsToDo-1;
 
 				// Create image
-				ImageProcessor sliceImage = imp.getImageStack().getProcessor(slice+1);
+				ImageProcessor sliceImage = inputImage.getImageStack().getProcessor(slice+1);
 
 				// We pad the images if necessary (for the filtering)
 				final int paddedBegin = begin - pad;
@@ -796,7 +796,7 @@
 			fu[i] = exe.submit( classifyListOfImages( list[ i ] , dataInfo, classifierCopy[ i ], counter, probabilityMaps ));
 		}
 
-		final int numInstances = imp.getHeight() * imp.getWidth() * imp.getStackSize();
+		final int numInstances = inputImage.getHeight() * inputImage.getWidth() * inputImage.getStackSize();
 
 		ScheduledExecutorService monitor = Executors.newScheduledThreadPool(1);
 		ScheduledFuture task = monitor.scheduleWithFixedDelay(new Runnable() {
@@ -835,8 +835,8 @@
 		}
 
 		// create classified image
-		final ImageStack classified = new ImageStack(imp.getWidth(), imp.getHeight() );
-		for(int i=0; i < imp.getStackSize(); i++)
+		final ImageStack classified = new ImageStack(inputImage.getWidth(), inputImage.getHeight() );
+		for(int i=0; i < inputImage.getStackSize(); i++)
 		{
 			if(numChannels > 1)
 			{
@@ -887,8 +887,8 @@
 
 		if (probabilityMaps)
 		{
-			result.setDimensions(numOfClasses, imp.getNSlices(), imp.getNFrames());
-			if (imp.getNSlices()*imp.getNFrames() > 1)
+			result.setDimensions(numOfClasses, inputImage.getNSlices(), inputImage.getNFrames());
+			if (inputImage.getNSlices()*inputImage.getNFrames() > 1)
 				result.setOpenAsHyperStack(true);
 		}
 
@@ -4839,19 +4839,19 @@
          */
         public double getFeatureValue( int x, int y, int z, int t, int iFeature )
         {
-            ImagePlus imp = multiResolutionFeatureImageArray[ t ][ iFeature ];
+            ImagePlus inputImage = multiResolutionFeatureImageArray[ t ][ iFeature ];
 
-            Calibration calibration = imp.getCalibration();
+            Calibration calibration = inputImage.getCalibration();
 
             int zSlice =  (int) ( z / calibration.pixelDepth ) + 1;
 
-            if ( zSlice == imp.getNSlices()+1 )
+            if ( zSlice == inputImage.getNSlices()+1 )
             {
                 // this can happen due to the binning
-                zSlice = imp.getNSlices();
+                zSlice = inputImage.getNSlices();
             }
 
-            ImageProcessor ip = imp.getStack().getProcessor(zSlice);
+            ImageProcessor ip = inputImage.getStack().getProcessor(zSlice);
 
             double value = ip.getPixelValue( (int) (x / calibration.pixelWidth) , (int) (y / calibration.pixelHeight) );
 
@@ -5249,8 +5249,8 @@
 
         for ( int f = 0; f < nf; f++ )
         {
-            ImagePlus imp = multiResolutionFeatureImageArray[ f ];
-            Calibration calibration = imp.getCalibration();
+            ImagePlus inputImage = multiResolutionFeatureImageArray[ f ];
+            Calibration calibration = inputImage.getCalibration();
             double xCal = calibration.pixelWidth;
             double yCal = calibration.pixelHeight;
             double zCal = calibration.pixelDepth;
@@ -5263,7 +5263,7 @@
             double xTmp, xBaseDist, xBaseDist2;
             int xBase, yBase, yBaseOffset, yAboveOffset, xAbove;
 
-            int nxFeatureImage = imp.getWidth();
+            int nxFeatureImage = inputImage.getWidth();
 
             // get feature values as doubles
             float[] pixelsBase = null;
@@ -5274,23 +5274,23 @@
             double zBaseDist = ( zTmp - zBase ) ;
             double zBaseDist2 = 1 - zBaseDist ;
 
-            if (imp.getBitDepth() == 8)
+            if (inputImage.getBitDepth() == 8)
             {
-                pixelsBase = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsBase = getBytesAsFloats((byte[]) (inputImage.getStack().getProcessor(zBase + 1).getPixels()));
                 if ( zBaseDist > 0 )
-                    pixelsAbove = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+                    pixelsAbove = getBytesAsFloats((byte[]) (inputImage.getStack().getProcessor(zBase + 1 + 1).getPixels()));
             }
-            else if (imp.getBitDepth() == 16)
+            else if (inputImage.getBitDepth() == 16)
             {
-                pixelsBase = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsBase = getShortsAsFloats((short[]) (inputImage.getStack().getProcessor(zBase + 1).getPixels()));
                 if ( zBaseDist > 0 )
-                    pixelsAbove = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+                    pixelsAbove = getShortsAsFloats((short[]) (inputImage.getStack().getProcessor(zBase + 1 + 1).getPixels()));
             }
-            else if (imp.getBitDepth() == 32)
+            else if (inputImage.getBitDepth() == 32)
             {
-                pixelsBase = (float[]) (imp.getStack().getProcessor(zBase + 1).getPixels());
+                pixelsBase = (float[]) (inputImage.getStack().getProcessor(zBase + 1).getPixels());
                 if ( zBaseDist > 0 )
-                    pixelsAbove = (float[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels());
+                    pixelsAbove = (float[]) (inputImage.getStack().getProcessor(zBase + 1 + 1).getPixels());
             }
 
             for (int y = ys; y <= ye; ++y)
@@ -5576,27 +5576,27 @@
 
 			long start = System.currentTimeMillis();
 
-			ImagePlus imp = null;
+			ImagePlus inputImage = null;
 
 			if (region5D != null)
 			{
-				imp = Utils.getDataCube(inputImage, region5D, new int[]{-1, -1}, 1);
+				inputImage = Utils.getDataCube(inputImage, region5D, new int[]{-1, -1}, 1);
 			}
 			else
 			{
-				imp = classifiedImage; // whole image
+				inputImage = classifiedImage; // whole image
 			}
 
 			// remove small objectsList
-			de.embl.cba.trainableDeepSegmentation.utils.Utils.filterSmallObjects3D(imp, sizesMinMax);
+			de.embl.cba.trainableDeepSegmentation.utils.Utils.filterSmallObjects3D(inputImage, sizesMinMax);
 
 			// save changed classification image
 			ExecutorService exe = Executors.newFixedThreadPool(threadsPerRegion);
 			ArrayList<Future> futures = new ArrayList<>();
-			for (int z = 0; z < imp.getNSlices(); ++z)
+			for (int z = 0; z < inputImage.getNSlices(); ++z)
 			{
 				Region5D region5DThisSlice = new Region5D();
-				region5DThisSlice.size = new Point3D(imp.getWidth(), imp.getHeight(), 1);
+				region5DThisSlice.size = new Point3D(inputImage.getWidth(), inputImage.getHeight(), 1);
 				region5DThisSlice.offset = new Point3D(
 						region5D.offset.getX(),
 						region5D.offset.getY(),
@@ -5604,7 +5604,7 @@
 				region5DThisSlice.t = region5D.t;
 				region5DThisSlice.c = 0;
 				region5DThisSlice.subSampling = new Point3D(1, 1, 1);
-				byte[] thisSlice = (byte[]) imp.getStack().getProcessor(z + 1).getPixels();
+				byte[] thisSlice = (byte[]) inputImage.getStack().getProcessor(z + 1).getPixels();
 				futures.add(
 						exe.submit(
 								setClassificationResult(
@@ -5817,8 +5817,8 @@ private static Runnable setClassificationResult(
 
 
             /*
-            imp = multiResolutionFeatureImageArray.get(f);
-            calibration = imp.getCalibration();
+            inputImage = multiResolutionFeatureImageArray.get(f);
+            calibration = inputImage.getCalibration();
             xCal = calibration.pixelWidth;
             yCal = calibration.pixelHeight;
             zCal = calibration.pixelDepth;
@@ -5826,7 +5826,7 @@ private static Runnable setClassificationResult(
             yHalfWidth = (yCal - 1) / 2 ;
             zHalfWidth = (zCal - 1) / 2 ;
 
-            nxFeatureImage = imp.getWidth();
+            nxFeatureImage = inputImage.getWidth();
 
             /*
 
@@ -5881,23 +5881,23 @@ private static Runnable setClassificationResult(
             zBaseDist = ( zTmp - zBase ) ;
             zBaseDist2 = 1 - zBaseDist ;
 
-            if (imp.getBitDepth() == 8)
+            if (inputImage.getBitDepth() == 8)
             {
-                pixelsBase = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsBase = getBytesAsFloats((byte[]) (inputImage.getStack().getProcessor(zBase + 1).getPixels()));
                 if ( zBaseDist > 0 )
-                    pixelsAbove = getBytesAsFloats((byte[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+                    pixelsAbove = getBytesAsFloats((byte[]) (inputImage.getStack().getProcessor(zBase + 1 + 1).getPixels()));
             }
-            else if (imp.getBitDepth() == 16)
+            else if (inputImage.getBitDepth() == 16)
             {
-                pixelsBase = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1).getPixels()));
+                pixelsBase = getShortsAsFloats((short[]) (inputImage.getStack().getProcessor(zBase + 1).getPixels()));
                 if ( zBaseDist > 0 )
-                    pixelsAbove = getShortsAsFloats((short[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels()));
+                    pixelsAbove = getShortsAsFloats((short[]) (inputImage.getStack().getProcessor(zBase + 1 + 1).getPixels()));
             }
-            else if (imp.getBitDepth() == 32)
+            else if (inputImage.getBitDepth() == 32)
             {
-                pixelsBase = (float[]) (imp.getStack().getProcessor(zBase + 1).getPixels());
+                pixelsBase = (float[]) (inputImage.getStack().getProcessor(zBase + 1).getPixels());
                 if ( zBaseDist > 0 )
-                    pixelsAbove = (float[]) (imp.getStack().getProcessor(zBase + 1 + 1).getPixels());
+                    pixelsAbove = (float[]) (inputImage.getStack().getProcessor(zBase + 1 + 1).getPixels());
             }
 
             for (y = ys; y <= ye; ++y)

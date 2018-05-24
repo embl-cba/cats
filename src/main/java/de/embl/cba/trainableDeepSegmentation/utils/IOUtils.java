@@ -4,7 +4,10 @@ import de.embl.cba.bigDataTools.dataStreamingTools.DataStreamingTools;
 import de.embl.cba.utils.fileutils.FileRegMatcher;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.io.OpenDialog;
+import ij.io.SaveDialog;
 
+import javax.swing.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -133,5 +136,46 @@ public class IOUtils
         }
 
         return filePatternPaths;
+    }
+
+    public static String[] getOpenDirFile( String title )
+    {
+        OpenDialog od = new OpenDialog(title, OpenDialog.getLastDirectory(), "");
+        if ( od.getFileName() == null ) return null;
+
+        String[] dirFile = new String[]{ od.getDirectory(), od.getFileName() };
+
+        return dirFile;
+    }
+
+    public static String classNameDialog()
+    {
+        String inputName = JOptionPane.showInputDialog("Please input a new class name");
+
+        if( null == inputName )
+            return null;
+
+
+        if ( null == inputName || 0 == inputName.length() )
+        {
+            IJ.error("Invalid name for class");
+            return null;
+        }
+        inputName = inputName.trim();
+
+        if (0 == inputName.toLowerCase().indexOf("add to "))
+            inputName = inputName.substring(7);
+        return inputName;
+    }
+
+    public static String[] getSaveDirFile( String title, String extension )
+    {
+        SaveDialog sd = new SaveDialog("Save as...", "", extension);
+
+        if ( sd.getFileName() == null ) return null;
+
+        String[] dirFile = new String[] { sd.getDirectory(), sd.getFileName() };
+
+        return dirFile;
     }
 }
