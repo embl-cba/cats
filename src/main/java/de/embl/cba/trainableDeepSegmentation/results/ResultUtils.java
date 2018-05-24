@@ -142,7 +142,7 @@ public abstract class ResultUtils
 
         Binner binner = new Binner();
 
-        ImageStack binnedStack = new ImageStack( nx / dx, ny / dy,  (int) Math.ceil( nz / dz ) );
+        ImageStack binnedStack = new ImageStack( nx / dx, ny / dy,  (int) Math.ceil( 1.0 * nz / dz ) );
 
         long startTime = System.currentTimeMillis();
 
@@ -166,7 +166,7 @@ public abstract class ResultUtils
             de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( tmpImage, intensityGate );
             ImagePlus tmpBinned = binner.shrink( tmpImage, dx, dy, dz, Binner.AVERAGE );
 
-            binnedStack.setProcessor( tmpBinned.getProcessor(), (iz / dz) + 1 );
+            binnedStack.setProcessor( tmpBinned.getProcessor(), ( iz / dz )  + 1 );
 
             logger.progress( "Creating binned class image", null, startTime, iz, nz   );
         }

@@ -79,6 +79,8 @@ public class ObjectReview
             LabelManager.addRoiToManager( manager, deepSegmentation.getInputImage(), roi );
         }
 
+        deepSegmentation.logger.info( "\nReviewing objects: " + rois.size() );
+
         DeepSegmentationIJ1Plugin.configureRoiManagerClosingEventListener( manager, deepSegmentationIJ1Plugin );
     }
 
