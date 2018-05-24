@@ -242,7 +242,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
                 resultsTable.addValue( "PathName_ApplyClassifier_" + className + "_IMG", outputDirectory.getPath() );
             }
 
-            logService.info( "Saving results table to + " + outputDirectory.getPath() + "/" + dataSetID + "--ApplyClassifier.csv" );
+            logService.info( "Saving results table: " + outputDirectory.getPath() + "/" + dataSetID + "--ApplyClassifier.csv" );
             resultsTable.save( outputDirectory.getPath() + "/" + dataSetID + "--ApplyClassifier.csv" );
             logService.info( "Saving results table: done!" );
 

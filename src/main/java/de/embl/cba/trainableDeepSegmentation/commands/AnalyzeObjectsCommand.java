@@ -31,7 +31,7 @@ import static de.embl.cba.trainableDeepSegmentation.commands.AnalyzeObjectsComma
 public class AnalyzeObjectsCommand implements Command
 {
 
-    public static final String PLUGIN_NAME = "Analyze SegmentedObjects";
+    public static final String PLUGIN_NAME = "Analyze Objects";
 
     @Parameter
     public UIService uiService;

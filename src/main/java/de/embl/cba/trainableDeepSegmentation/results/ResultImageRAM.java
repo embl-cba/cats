@@ -44,6 +44,10 @@ public class ResultImageRAM implements ResultImage {
         this.result = createImagePlus( dimensions);
     }
 
+    public long[] getDimensions()
+    {
+        return dimensions;
+    }
 
     @Override
     public void exportResults( ResultExportSettings resultExportSettings )

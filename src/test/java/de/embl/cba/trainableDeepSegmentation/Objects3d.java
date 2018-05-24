@@ -18,7 +18,6 @@ public class Objects3d
 
         // Open Image
         //
-
         ImagePlus inputImagePlus = IJ.openImage(TEST_RESOURCES + "3d-objects.zip" );
         inputImagePlus.show();
 
@@ -28,9 +27,7 @@ public class Objects3d
         deepSegmentation.loadInstancesAndMetadata( TEST_RESOURCES + "3d-objects-instances/3d-objects.ARFF"  );
 
         DeepSegmentationIJ1Plugin plugin = new DeepSegmentationIJ1Plugin();
-        plugin.trainingImage = inputImagePlus;
-        plugin.setDeepSegmentation( deepSegmentation );
-
+        plugin.initialise( deepSegmentation, false );
         plugin.segmentObjects();
         plugin.reviewObjects();
 

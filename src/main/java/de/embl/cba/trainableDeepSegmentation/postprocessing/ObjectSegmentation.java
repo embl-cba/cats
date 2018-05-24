@@ -12,9 +12,7 @@ import inra.ijpb.binary.BinaryImages;
 import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
 import mcib3d.geom.Objects3DPopulation;
-import mcib3d.image3d.ImageInt;
-import mcib3d.image3d.ImageShort;
-import mcib3d.image3d.Segment3DImage;
+import mcib3d.image3d.*;
 
 public class ObjectSegmentation
 {
@@ -24,7 +22,7 @@ public class ObjectSegmentation
 
     class ObjectSegmentationSettings
     {
-        public int minVolumeInPixels;
+        public int minVolumeInPixels = 0;
         public int[] binning;
         public int t;
         public int classId;
@@ -77,13 +75,15 @@ public class ObjectSegmentation
         settings.threshold  = ensureThresholdWithinRange( settings.threshold  );
     }
 
-    private SegmentedObjects getSegmentedObjects( ImagePlus labelMask )
+    private SegmentedObjects getSegmentedObjects( ImageInt labelMask )
     {
-        Objects3DPopulation objects3DPopulation = new Objects3DPopulation(  new ImageShort( labelMask ) );
+        Objects3DPopulation objects3DPopulation = new Objects3DPopulation(  labelMask );
+
         SegmentedObjects segmentedObjects = new SegmentedObjects();
         segmentedObjects.objects3DPopulation = objects3DPopulation;
         segmentedObjects.name = deepSegmentation.getClassName( settings.classId );
         return segmentedObjects;
+
     }
 
     private final static String MORPHOLIBJ = "MorphoLibJ";
@@ -99,8 +99,6 @@ public class ObjectSegmentation
         gd.addNumericField( "Time frame ", 1, 0 );
 
         gd.addNumericField( "Certainty threshold [0-1] ", 0.20, 2);
-
-        gd.addNumericField( "Minimum number of voxels [binned units]", 10, 0);
 
         gd.addChoice( "Do segmentation using ", new String[]{MORPHOLIBJ,IMAGE_SUITE_3D}, IMAGE_SUITE_3D);
 
@@ -120,7 +118,6 @@ public class ObjectSegmentation
         settings.classId = gd.getNextChoiceIndex();
         settings.t = (int) gd.getNextNumber() - 1;
         settings.probabilityThreshold = gd.getNextNumber();
-        settings.minVolumeInPixels = (int) gd.getNextNumber( );
         settings.method = gd.getNextChoice();
         settings.binning =  Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
         settings.showSegmentationImages = gd.getNextBoolean();
@@ -150,7 +147,7 @@ public class ObjectSegmentation
         deepSegmentation.logger.info( "...found objects: " + numObjects );
 
         deepSegmentation.logger.info( "\nConverting label mask to objects..." );
-        SegmentedObjects segmentedObjects = getSegmentedObjects( labelMask );
+        SegmentedObjects segmentedObjects = getSegmentedObjects( ImageInt.wrap( labelMask ) );
 
         return segmentedObjects;
 
@@ -165,11 +162,14 @@ public class ObjectSegmentation
     private ImagePlus getBinnedProbabilityImage( ObjectSegmentationSettings settings )
     {
         ResultExportSettings resultExportSettings = new ResultExportSettings();
-        resultExportSettings.resultImagePlus = deepSegmentation.getResultImage().getWholeImageCopy();
+        resultExportSettings.resultImage = deepSegmentation.getResultImage();
         resultExportSettings.binning = settings.binning;
         resultExportSettings.classLutWidth = deepSegmentation.getResultImage().getProbabilityRange();
 
-        ImagePlus probabilities =  ResultUtils.getBinnedClassImage( settings.classId, resultExportSettings, settings.t );
+        ImagePlus probabilities =  ResultUtils.getBinnedClassImageMemoryEfficient(
+                settings.classId, resultExportSettings, settings.t,
+                deepSegmentation.getLogger(), deepSegmentation.numThreads );
+
         probabilities.setTitle( "probabilities" );
 
         if ( settings.showSegmentationImages )
@@ -188,17 +188,27 @@ public class ObjectSegmentation
         ImagePlus probabilities = getBinnedProbabilityImage( settings );
 
         deepSegmentation.logger.info( "\nSegmenting image..." );
-        Segment3DImage segment3DImage = new Segment3DImage( probabilities, settings.threshold, Float.MAX_VALUE );
-        segment3DImage.setMinSizeObject( settings.minVolumeInPixels );
-        segment3DImage.setMaxSizeObject( Integer.MAX_VALUE );
-        segment3DImage.segment();
-        deepSegmentation.logger.info( "...done.");
 
-        deepSegmentation.logger.info( "\nFound objects: " + segment3DImage.getNbObj()  );
+        ImageLabeller labeler = new ImageLabeller();
 
-        deepSegmentation.logger.info( "\nCreating label mask and objects..." );
-        SegmentedObjects segmentedObjects = getSegmentedObjects( segment3DImage );
-        deepSegmentation.logger.info( "...done."  );
+        if ( settings.minVolumeInPixels > 0)
+        {
+            labeler.setMinSize( settings.minVolumeInPixels );
+        }
+        //if (max > 0) {
+        //    labeler.setMaxsize(max);
+        //}
+
+        ImageHandler img = ImageHandler.wrap( probabilities );
+        ImageInt bin = img.thresholdAboveInclusive( settings.threshold );
+        ImageInt lbl = labeler.getLabels( bin );
+
+        deepSegmentation.logger.info( "...done. " );
+
+
+        deepSegmentation.logger.info( "\nCreating objects..." );
+        SegmentedObjects segmentedObjects = getSegmentedObjects( lbl );
+        deepSegmentation.logger.info( "...found objects: " + segmentedObjects.objects3DPopulation.getNbObjects()  );
 
         return segmentedObjects;
 

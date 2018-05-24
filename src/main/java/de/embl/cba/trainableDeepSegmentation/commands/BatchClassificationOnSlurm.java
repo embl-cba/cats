@@ -8,6 +8,7 @@ import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.utils.fileutils.PathMapper;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
+import net.imagej.ops.image.ImageNamespace;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -57,9 +58,11 @@ public class BatchClassificationOnSlurm implements Command
     @Parameter (label = "Time per job in minutes" )
     public int timePerJobInMinutes = 120;
 
+    /*
     @Parameter( label = "ImageJ executable (must be linux and cluster accessible)", required = false )
     public File imageJFile;
     public static final String IMAGEJ_FILE = "imageJFile";
+    */
 
     static String masterRegExp="(?<treatment>.+)--W(?<well>\\d+)--P(?<position>\\d+)--Z(?<slice>\\d+)--T(?<timePoint>\\d+)--(?<channel>.+)\\.tif";
 
@@ -75,7 +78,7 @@ public class BatchClassificationOnSlurm implements Command
         List< Path > dataSetPatterns = getDataSetPatterns();
 
         ArrayList< JobFuture > jobFutures = submitJobsOnSlurm(
-                CommandUtils.getHeadlessImageJExecutionString( imageJFile ), // CommandUtils.getHeadlessImageJExecutionString( imageJFile ),
+                ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS,
                 jobDirectory.toPath() ,
                 classifierFile.toPath(),
                 dataSetPatterns );

@@ -9,19 +9,22 @@ import ij.gui.OvalRoi;
 import ij.gui.PointRoi;
 import ij.gui.Roi;
 import ij.plugin.frame.RoiManager;
+import mcib3d.geom.Object3D;
 
 import java.util.ArrayList;
 
-public class ObjectsReview
+public class ObjectReview
 {
     RoiManager manager;
     DeepSegmentation deepSegmentation;
     DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin;
+
     String objectsName;
+    public int minVolumeInPixels;
 
 
-    public ObjectsReview( DeepSegmentation deepSegmentation,
-                          DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin)
+    public ObjectReview( DeepSegmentation deepSegmentation,
+                         DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin)
     {
         this.deepSegmentation = deepSegmentation;
         this.deepSegmentationIJ1Plugin = deepSegmentationIJ1Plugin;
@@ -42,6 +45,8 @@ public class ObjectsReview
 
         gd.addChoice( "Objects", deepSegmentation.getSegmentedObjectsNames().toArray( new String[0] ), deepSegmentation.getClassNames().get( 0 ) );
 
+        gd.addNumericField( "Minimum number of voxels ", 10, 0);
+
         gd.showDialog();
 
         if ( gd.wasCanceled() ) return null;
@@ -50,7 +55,11 @@ public class ObjectsReview
 
     private void setSettingsFromUI( GenericDialog gd )
     {
+
         objectsName = gd.getNextChoice();
+
+        minVolumeInPixels = (int) gd.getNextNumber();
+
     }
 
 
@@ -74,21 +83,24 @@ public class ObjectsReview
     }
 
 
-    public static ArrayList< Roi > getCentroidRoisFromObjects( SegmentedObjects objects )
+    public ArrayList< Roi > getCentroidRoisFromObjects( SegmentedObjects objects )
     {
 
-        ArrayList< double[] > centroids = objects.objects3DPopulation.getMeasureCentroid();
+        ArrayList< Object3D > objects3D = objects.objects3DPopulation.getObjectsList();
 
         ArrayList< Roi > rois = new ArrayList<>();
 
         double scaleXY = objects.objects3DPopulation.getScaleXY();
         double scaleZ = objects.objects3DPopulation.getScaleZ();
 
-        for ( double[] centroid : centroids )
+        for ( Object3D object3D : objects3D )
         {
-            Roi roi = new PointRoi( centroid[ 1 ] * scaleXY, centroid[ 2 ] * scaleXY );
-            roi.setPosition( 1, (int) ( centroid[ 3 ] * scaleZ ) + 1, objects.t + 1 );
-            rois.add( roi );
+            if ( object3D.getVolumePixels() * scaleXY * scaleZ > minVolumeInPixels  )
+            {
+                Roi roi = new PointRoi( object3D.getCenterX() * scaleXY, object3D.getCenterY() * scaleXY );
+                roi.setPosition( 1, ( int ) ( object3D.getCenterZ() * scaleZ ) + 1, objects.t + 1 );
+                rois.add( roi );
+            }
         }
 
         return rois;
@@ -112,6 +124,5 @@ public class ObjectsReview
 
         return rois;
     }
-
 
 }

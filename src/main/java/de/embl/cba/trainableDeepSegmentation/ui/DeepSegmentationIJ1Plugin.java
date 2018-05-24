@@ -1,9 +1,7 @@
 package de.embl.cba.trainableDeepSegmentation.ui;
 
 import de.embl.cba.trainableDeepSegmentation.features.DownSampler;
-import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectSegmentation;
-import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectsReview;
-import de.embl.cba.trainableDeepSegmentation.postprocessing.SegmentedObjects;
+import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectReview;
 import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.utils.logging.Logger;
 
@@ -45,8 +43,6 @@ import java.util.concurrent.Executors;
 
 import javax.swing.*;
 
-import mcib3d.geom.Objects3DPopulation;
-import mcib_plugins.tools.RoiManager3D_2;
 import net.imglib2.FinalInterval;
 import de.embl.cba.trainableDeepSegmentation.*;
 import de.embl.cba.trainableDeepSegmentation.labels.examples.Example;
@@ -184,11 +180,11 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 					CHANGE_CLASS_NAMES,
 					CHANGE_COLORS,
 					UPDATE_LABELS_AND_TRAIN,
-					APPLY_CLASSIFIER,
+                    IO_SAVE_INSTANCES,
+                    APPLY_CLASSIFIER,
 					IO_SAVE_CLASSIFIER,
 					APPLY_CLASSIFIER_ON_SLURM,
 					TRAIN_CLASSIFIER,
-					IO_SAVE_INSTANCES,
                     IO_LOAD_INSTANCES,
                     SEGMENT_OBJECTS,
                     REVIEW_OBJECTS,
@@ -688,7 +684,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
             @Override
             public void windowClosing( WindowEvent we )
             {
-                IJ.log( "RoiManager closed.");
+                // IJ.log( "RoiManager closed.");
                 deepSegmentationIJ1Plugin.reviewRoisFlag = false;
                 deepSegmentationIJ1Plugin.trainingImage.killRoi();
                 deepSegmentationIJ1Plugin.trainingImage.setOverlay( new Overlay(  ) );
@@ -2087,75 +2083,78 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	 */
 	public void run( String arg )
 	{
-
-		// START
-		// instantiate segmentation backend
-		deepSegmentation = new DeepSegmentation();
-		logger = deepSegmentation.getLogger();
-
-		//IJ.open( "  /Users/de.embl.cba.trainableDeepSegmentation.weka/Desktop/brainiac2-mit-edu-SNEMI3D/train-labels/train-labels-binary-larger-borders.tif ");
-		//deepSegmentation.setLabelImage( IJ.getImage() );
-
-		for( int i = 0; i < deepSegmentation.getNumClasses() ; i++)
-		{
-			exampleList[i] = new java.awt.List( numShownLabelsPerClass );
-			//exampleList[i].setForeground(colors[i]);
-			exampleList[i].setForeground( Color.black );
-
-		}
-		numOfClasses = deepSegmentation.getNumClasses();
-
-		//getInstancesAndMetadata current image
-		if (null == WindowManager.getCurrentImage())
-		{
-			trainingImage = IJ.openImage(); // this implicitely gets the open="..." filePath
-			if (null == trainingImage) return; // user canceled open dialog
-		}
-		else
-		{
-			trainingImage = WindowManager.getCurrentImage(); //.duplicate();
-			trainingImage.setSlice(WindowManager.getCurrentImage().getSlice());
-		}
-
-		deepSegmentation.setInputImage( trainingImage );
+	    initialise( new DeepSegmentation(), true );
+    }
 
 
-		if ( ! initialisation() ) return;
+	public void initialise( DeepSegmentation deepSegmentation, boolean showUIs )
+    {
+        this.deepSegmentation = deepSegmentation;
 
-		Calibration calibration = trainingImage.getCalibration();
-		deepSegmentation.featureSettings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
+        logger = deepSegmentation.getLogger();
 
-		if( calibration.pixelWidth != calibration.pixelHeight )
-		{
-			logger.error("Image calibration in x and y is not the same; currently cannot take this into " +
-					"account; but you can still use this plugin, may work anyway...");
-		}
+        //IJ.open( "  /Users/de.embl.cba.trainableDeepSegmentation.weka/Desktop/brainiac2-mit-edu-SNEMI3D/train-labels/train-labels-binary-larger-borders.tif ");
+        //deepSegmentation.setLabelImage( IJ.getImage() );
 
-		Set< Integer > channelsToConsider = new TreeSet<>();
-		for ( int c = 0; c < trainingImage.getNChannels(); c++ )
-		{
-			channelsToConsider.add(c); // zero-based
-		}
+        for( int i = 0; i < deepSegmentation.getNumClasses() ; i++)
+        {
+            exampleList[i] = new java.awt.List( numShownLabelsPerClass );
+            //exampleList[i].setForeground(colors[i]);
+            exampleList[i].setForeground( Color.black );
 
-		deepSegmentation.featureSettings.activeChannels = channelsToConsider;
+        }
 
-		//ij.gui.Toolbar.getInstance().setTool(ij.gui.Toolbar.FREELINE);
+        numOfClasses = deepSegmentation.getNumClasses();
 
-		reviewLabelsClassComboBox = new JComboBox( deepSegmentation.getClassNames().toArray() );
+        //getInstancesAndMetadata current image
+        if ( null == WindowManager.getCurrentImage() )
+        {
+            trainingImage = IJ.openImage(); // this implicitely gets the open="..." filePath
+            if (null == trainingImage) return; // user canceled open dialog
+        }
+        else
+        {
+            trainingImage = WindowManager.getCurrentImage(); //.duplicate();
+            trainingImage.setSlice(WindowManager.getCurrentImage().getSlice());
+        }
 
-        showFeatureSettingsDialog( false );
+        deepSegmentation.setInputImage( trainingImage );
 
-		//Build GUI
-		SwingUtilities.invokeLater(
-				new Runnable() {
-					public void run()
-					{
-						win = new CustomWindow( trainingImage );
-						win.pack();
-					}
-				});
+        if ( showUIs ) if ( ! initialisation() ) return;
 
-	}
+        Calibration calibration = trainingImage.getCalibration();
+        deepSegmentation.featureSettings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
+
+        if( calibration.pixelWidth != calibration.pixelHeight )
+        {
+            logger.error("Image calibration in x and y is not the same; currently cannot take this into " +
+                    "account; but you can still use this plugin, may work anyway...");
+        }
+
+        Set< Integer > channelsToConsider = new TreeSet<>();
+        for ( int c = 0; c < trainingImage.getNChannels(); c++ )
+        {
+            channelsToConsider.add(c); // zero-based
+        }
+
+        deepSegmentation.featureSettings.activeChannels = channelsToConsider;
+
+        //ij.gui.Toolbar.getInstance().setTool(ij.gui.Toolbar.FREELINE);
+
+        reviewLabelsClassComboBox = new JComboBox( deepSegmentation.getClassNames().toArray() );
+
+        if ( showUIs ) showFeatureSettingsDialog( false );
+
+        //Build GUI
+        SwingUtilities.invokeLater(
+                new Runnable() {
+                    public void run()
+                    {
+                        win = new CustomWindow( trainingImage );
+                        win.pack();
+                    }
+                });
+    }
 
 	public void assignResultImage( String resultImageType )
 	{
@@ -2266,7 +2265,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		overlay = overlay.convertToByte( false );
 		overlay.setColorModel( overlayLUT );
 
-		win.resultOverlay.setImage(overlay);
+		win.resultOverlay.setImage( overlay );
 	}
 
 	/**
@@ -2439,9 +2438,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	public void reviewObjects()
     {
 
-        ObjectsReview objectsReview = new ObjectsReview( deepSegmentation, this );
+        ObjectReview objectReview = new ObjectReview( deepSegmentation, this );
 
-        objectsReview.runUI( );
+        objectReview.runUI( );
 
         //RoiManager3D_2 manager3D = new RoiManager3D_2();
         //manager3D.setVisible( false );

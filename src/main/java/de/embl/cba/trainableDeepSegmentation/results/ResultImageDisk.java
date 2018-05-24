@@ -34,6 +34,11 @@ public class ResultImageDisk implements ResultImage {
         this.result.setCalibration( deepSegmentation.getInputImage().getCalibration() );
     }
 
+    public long[] getDimensions()
+    {
+        return dimensions;
+    }
+
     @Override
     public void exportResults( ResultExportSettings resultExportSettings )
     {

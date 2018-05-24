@@ -11,7 +11,7 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>fiji_plugin_deepSegmentation</artifactId>
-	<version>0.6.0</version>
+	<version>0.6.1</version>
 
 	<name>Fiji plugin for trainable segmentation using deep convolution</name>
 	<description>A plugin for trainable segmentation using deep convolution.</description>
@@ -213,7 +213,6 @@
 				<exclusion>  <!-- declare the exclusion here -->
 					<groupId>weka</groupId>
 					<artifactId>weka</artifactId>
-					<version>3.7.6</version>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -245,7 +244,7 @@
 		<dependency>
 			<groupId>com.github.tischi</groupId>
 			<artifactId>fiji-slurm</artifactId>
-			<version>437a9cbdf085018cb06177cb8a14f9714289277e</version>
+			<version>1fce69acf22220c2335e3666a0e906ef58ba676e</version>
 		</dependency>
 
 		<!-- Fiji dependencies -->

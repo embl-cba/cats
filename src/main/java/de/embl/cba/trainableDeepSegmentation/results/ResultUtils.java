@@ -4,10 +4,13 @@ import de.embl.cba.bigDataTools.Hdf5DataCubeWriter;
 import de.embl.cba.bigDataTools.imaris.ImarisDataSet;
 import de.embl.cba.bigDataTools.imaris.ImarisUtils;
 import de.embl.cba.bigDataTools.imaris.ImarisWriter;
+import de.embl.cba.bigDataTools.logging.IJLazySwingLogger;
+import de.embl.cba.bigDataTools.logging.Logger;
 import de.embl.cba.trainableDeepSegmentation.postprocessing.ProximityFilter3D;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.plugin.Binner;
 import ij.plugin.Duplicator;
 import ij.process.ImageProcessor;
@@ -15,6 +18,9 @@ import net.imglib2.FinalInterval;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static de.embl.cba.trainableDeepSegmentation.DeepSegmentation.logger;
 import static de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils.*;
@@ -116,6 +122,60 @@ public abstract class ResultUtils
 
         return impClass;
     }
+
+
+    public static ImagePlus getBinnedClassImageMemoryEfficient(
+            int classId, ResultExportSettings resultExportSettings, int t,
+            de.embl.cba.utils.logging.Logger logger, int numThreads )
+    {
+
+        int nz = (int) resultExportSettings.resultImage.getDimensions()[ Z ];
+        int nx = (int) resultExportSettings.resultImage.getDimensions()[ X ];
+        int ny = (int) resultExportSettings.resultImage.getDimensions()[ Y ];
+
+        int dx = resultExportSettings.binning[0];
+        int dy = resultExportSettings.binning[1];
+        int dz = resultExportSettings.binning[2];
+
+        int classLutWidth = resultExportSettings.classLutWidth;
+        int[] intensityGate = new int[]{ classId * classLutWidth + 1, (classId + 1 ) * classLutWidth };
+
+        Binner binner = new Binner();
+
+        ImageStack binnedStack = new ImageStack( nx / dx, ny / dy,  (int) Math.ceil( nz / dz ) );
+
+        long startTime = System.currentTimeMillis();
+
+        ExecutorService exe = Executors.newFixedThreadPool( numThreads );
+        ArrayList< Future > futures = new ArrayList<>(  );
+
+        for ( int iz = 0; iz < nz; iz += dz )
+        {
+            //futures.add(
+            //        exe.submit(
+
+            // TODO: put into callable function, returing the binned processors and put them later in a stack
+            ImageStack tmpStack = new ImageStack ( nx , ny );
+
+            for ( int iz2 = iz; iz2 < iz + dz; ++iz2 )
+            {
+                tmpStack.addSlice( resultExportSettings.resultImage.getSlice( iz2 + 1, t + 1 )  );
+            }
+
+            ImagePlus tmpImage = new ImagePlus( "", tmpStack );
+            de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( tmpImage, intensityGate );
+            ImagePlus tmpBinned = binner.shrink( tmpImage, dx, dy, dz, Binner.AVERAGE );
+
+            binnedStack.setProcessor( tmpBinned.getProcessor(), (iz / dz) + 1 );
+
+            logger.progress( "Creating binned class image", null, startTime, iz, nz   );
+        }
+
+        ImagePlus binnedClassImage = new ImagePlus( "binnedClassImage", binnedStack );
+
+        return binnedClassImage;
+    }
+
 
     public static ImagePlus getBinnedAndProximityFilteredClassImage( int classId, ResultExportSettings resultExportSettings, int t )
     {
@@ -385,6 +445,7 @@ public abstract class ResultUtils
         ImagePlus impClass;
 
         Duplicator duplicator = new Duplicator();
+
         impClass = duplicator.run( result, 1, 1, 1, result.getNSlices(), t + 1, t + 1 );
 
         int[] intensityGate = new int[]{ classId * CLASS_LUT_WIDTH + 1, (classId + 1 ) * CLASS_LUT_WIDTH };

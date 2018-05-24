@@ -32,4 +32,6 @@ public interface ResultImage {
     ImagePlus getWholeImageCopy();
 
     FinalInterval getInterval();
+
+    long[] getDimensions();
 }
