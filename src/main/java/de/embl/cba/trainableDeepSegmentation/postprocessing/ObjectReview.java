@@ -73,14 +73,17 @@ public class ObjectReview
 
         roiManager = new RoiManager();
 
+        Overlays overlays = new Overlays( deepSegmentation );
+
         for ( Roi roi : rois )
         {
-            LabelReviewManager.addRoiToManager( roiManager, deepSegmentation.getInputImage(), roi );
+            overlays.addRoiToRoiManager( roiManager, deepSegmentation.getInputImage(), roi );
         }
 
         deepSegmentation.logger.info( "\nReviewing objects: " + rois.size() );
 
-        Overlays.removeAllOverlaysAndRoisWhenRoiManagerIsClosed( roiManager, deepSegmentation.getInputImage() );
+        overlays.zoomInOnRois( true );
+        overlays.removeAllOverlaysAndRoisWhenRoiManagerIsClosed( roiManager );
     }
 
     private static void makeImageTheActiveWindow( ImagePlus imp )
@@ -126,7 +129,16 @@ public class ObjectReview
             if ( object3D.getVolumePixels() * scaleXY * scaleZ > minVolumeInPixels  )
             {
                 Roi roi = new PointRoi( object3D.getCenterX() * scaleXY, object3D.getCenterY() * scaleXY );
-                roi.setPosition( 1, ( int ) ( object3D.getCenterZ() * scaleZ ) + 1, objects.t + 1 );
+
+                if ( deepSegmentation.getInputImage().isHyperStack() )
+                {
+                    roi.setPosition( 1, ( int ) ( object3D.getCenterZ() * scaleZ ) + 1, objects.t + 1 );
+                }
+                else
+                {
+                    roi.setPosition( ( int ) ( object3D.getCenterZ() * scaleZ ) + 1 );
+                }
+
                 rois.add( roi );
             }
         }

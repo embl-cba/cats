@@ -36,6 +36,11 @@ public class Overlays implements RoiListener
     private LUT overlayLUT = null;
     private int overlayOpacity = 33;
     private Roi probabilities;
+    Roi currentlyDisplayedRoi;
+    public boolean zoomInOnRois = false;
+    RoiManager roiManager;
+    LabelReviewManager labelReviewManager;
+
 
 
     public Overlays( DeepSegmentation deepSegmentation )
@@ -48,6 +53,8 @@ public class Overlays implements RoiListener
 
         setProbabilityOverlayLut( OVERLAY_MODE_PROBABILITIES );
         inputImage.setOverlay( new Overlay(  ) );
+
+        Roi.addRoiListener( this );
     }
 
 
@@ -204,14 +211,6 @@ public class Overlays implements RoiListener
 
 
 
-    Roi currentlyDisplayedRoi;
-
-    public boolean reviewRoisFlag = false;
-
-    RoiManager roiManager;
-    LabelReviewManager labelReviewManager;
-
-
     public String showOrderGUI()
     {
         GenericDialog gd = new GenericDialog("Label ordering");
@@ -239,6 +238,11 @@ public class Overlays implements RoiListener
         }
     }
 
+    public void zoomInOnRois( boolean zoomIn )
+    {
+        zoomInOnRois = zoomIn;
+    }
+
     private int getClassIdFromUI()
     {
         GenericDialog gd = new GenericDialogPlus("Labels Review");
@@ -251,11 +255,13 @@ public class Overlays implements RoiListener
 
     public void reviewLabelsInRoiManager( int classNum, String order )
     {
-        labelReviewManager = new LabelReviewManager( deepSegmentation.getExamples() );
+        labelReviewManager = new LabelReviewManager( deepSegmentation.getExamples(), deepSegmentation );
 
         ArrayList< Roi > rois = labelReviewManager.getRoisFromLabels( classNum, order );
 
         labelReviewManager.setLabelsCurrentlyBeingReviewed( rois );
+
+        zoomInOnRois = true;
 
         addRoisToRoiManager( rois );
 
@@ -275,31 +281,7 @@ public class Overlays implements RoiListener
 
     public static void addRoiToRoiManager( RoiManager manager, ImagePlus imp, Roi roi )
     {
-
-        int nSave = imp.getSlice();
-        int n = imp.getStackIndex(  roi.getCPosition(), roi.getZPosition(), roi.getTPosition());
-        imp.setSliceWithoutUpdate( n );
-
-        int tSave = 0, zSave = 0, cSave = 0;
-
-        if ( imp.isHyperStack() )
-        {
-            tSave = imp.getT();
-            zSave = imp.getZ();
-            cSave = imp.getC();
-            imp.setPositionWithoutUpdate( roi.getCPosition(), roi.getZPosition(), roi.getTPosition() );
-        }
-
-        manager.addRoi( roi );
-
-        if ( imp.isHyperStack() )
-        {
-            imp.setPositionWithoutUpdate( cSave, zSave, tSave );
-        }
-
-        imp.setSliceWithoutUpdate( nSave );
-
-
+        manager.add( imp, roi, -1 );
     }
 
 
@@ -308,9 +290,9 @@ public class Overlays implements RoiListener
     {
         if ( ( imagePlus != null ) && ( imagePlus == inputImage ) )
         {
-            if ( actionId == RoiListener.CREATED && reviewRoisFlag )
+            if ( actionId == RoiListener.CREATED && zoomInOnRois )
             {
-                if ( currentlyDisplayedRoi == null)
+                if ( currentlyDisplayedRoi == null )
                 {
                     currentlyDisplayedRoi = inputImage.getRoi();
                     zoomToSelection();
@@ -367,12 +349,13 @@ public class Overlays implements RoiListener
                 deepSegmentation.setExamples( approvedLabelList );
                 clearAllOverlaysAndRois();
                 addLabels();
+                zoomInOnRois = false;
 
             }
         });
     }
 
-    public static void removeAllOverlaysAndRoisWhenRoiManagerIsClosed( RoiManager manager, ImagePlus imp  )
+    public void removeAllOverlaysAndRoisWhenRoiManagerIsClosed( RoiManager manager  )
     {
         manager.addWindowListener( new WindowAdapter()
         {
@@ -380,8 +363,9 @@ public class Overlays implements RoiListener
             public void windowClosing( WindowEvent we )
             {
                 // IJ.log( "RoiManager closed.");
-                imp.killRoi();
-                imp.setOverlay( new Overlay(  ) );
+                inputImage.killRoi();
+                inputImage.setOverlay( new Overlay(  ) );
+                zoomInOnRois = false;
             }
         });
     }

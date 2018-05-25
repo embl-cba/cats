@@ -1,6 +1,8 @@
 package de.embl.cba.trainableDeepSegmentation.labels;
 
+import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
 import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
+import de.embl.cba.trainableDeepSegmentation.ui.Overlays;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.gui.PolygonRoi;
@@ -8,7 +10,6 @@ import ij.gui.Roi;
 import ij.plugin.Duplicator;
 import ij.plugin.frame.RoiManager;
 import de.embl.cba.trainableDeepSegmentation.labels.examples.Example;
-import mcib_plugins.tools.RoiManager3D_2;
 
 import java.awt.*;
 import java.util.*;
@@ -17,8 +18,9 @@ public class LabelReviewManager
 {
 
     DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin;
+    DeepSegmentation deepSegmentation;
 
-    ImagePlus imp;
+    ImagePlus inputImage;
 
     ImagePlus imageAroundCurrentSelection;
 
@@ -32,12 +34,14 @@ public class LabelReviewManager
     public LabelReviewManager( DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin )
     {
         this.deepSegmentationIJ1Plugin = deepSegmentationIJ1Plugin;
-        this.imp = deepSegmentationIJ1Plugin.inputImage;
+        this.inputImage = deepSegmentationIJ1Plugin.inputImage;
     }
 
-    public LabelReviewManager( ArrayList< Example > labelMap )
+    public LabelReviewManager( ArrayList< Example > labelMap, DeepSegmentation deepSegmentation )
     {
+        this.inputImage = deepSegmentation.getInputImage();
         setLabelsAsMap( labelMap );
+
     }
 
     public void setLabelsAsMap( ArrayList< Example > examples )
@@ -108,14 +112,17 @@ public class LabelReviewManager
 
         manager = new RoiManager();
 
+        Overlays overlays = new Overlays( deepSegmentation );
+
         for ( Roi roi : rois )
         {
-            addRoiToManager( manager, imp, roi );
+            overlays.addRoiToRoiManager( manager, inputImage, roi );
         }
 
         setLabelsCurrentlyBeingReviewed( rois );
 
-        DeepSegmentationIJ1Plugin.configureRoiManagerClosingEventListener( manager, deepSegmentationIJ1Plugin );
+        overlays.zoomInOnRois( true );
+        overlays.removeAllOverlaysAndRoisWhenRoiManagerIsClosed( manager );
 
     }
 
@@ -129,37 +136,7 @@ public class LabelReviewManager
         }
     }
 
-    public static void addRoiToManager( RoiManager manager, ImagePlus imp, Roi roi )
-    {
-
-        int nSave = imp.getSlice();
-        int n = imp.getStackIndex(  roi.getCPosition(), roi.getZPosition(), roi.getTPosition());
-        imp.setSliceWithoutUpdate( n );
-
-        int tSave = 0, zSave = 0, cSave = 0;
-
-        if ( imp.isHyperStack() )
-        {
-            tSave = imp.getT();
-            zSave = imp.getZ();
-            cSave = imp.getC();
-            imp.setPositionWithoutUpdate( roi.getCPosition(), roi.getZPosition(), roi.getTPosition() );
-        }
-
-        manager.addRoi( roi );
-
-        if ( imp.isHyperStack() )
-        {
-            imp.setPositionWithoutUpdate( cSave, zSave, tSave );
-        }
-
-        imp.setSliceWithoutUpdate( nSave );
-
-
-    }
-
-
-    private void removeRejectedExamples ( ArrayList< String > rejected )
+   private void removeRejectedExamples ( ArrayList< String > rejected )
     {
         for ( String key : rejected )
         {
@@ -242,7 +219,7 @@ public class LabelReviewManager
 
         for ( String key : keysRequestedClass )
         {
-            Roi roi = getRoiFromExample( labelMap.get( key ) );
+            Roi roi = getRoiFromLabel( labelMap.get( key ) );
             roi.setProperty( KEY, key );
             roi.setName( key );
             rois.add( roi );
@@ -252,7 +229,7 @@ public class LabelReviewManager
     }
 
 
-    private static Roi getRoiFromExample( Example example )
+    private Roi getRoiFromLabel( Example example )
     {
         float[] x = new float[example.points.length];
         float[] y = new float[example.points.length];
@@ -264,7 +241,16 @@ public class LabelReviewManager
         Roi roi = new PolygonRoi(x, y, PolygonRoi.FREELINE);
 
         roi.setStrokeWidth((double) example.strokeWidth);
-        roi.setPosition( 1, example.z + 1, example.t + 1 );
+
+        if ( inputImage.isHyperStack() )
+        {
+            roi.setPosition( 1, example.z + 1, example.t + 1 );
+        }
+        else
+        {
+            roi.setPosition( example.z + 1 );
+        }
+
         roi.setProperty( "classNum", "" + example.classNum );
 
         return ( roi );
