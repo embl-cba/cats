@@ -23,7 +23,6 @@ import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectReview;
 import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectSegmentation;
 import de.embl.cba.trainableDeepSegmentation.postprocessing.SegmentedObjects;
 import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
-import de.embl.cba.trainableDeepSegmentation.ui.ContextAwareTrainableSegmentationPlugin;
 import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
 import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
@@ -33,9 +32,7 @@ import de.embl.cba.utils.logging.Logger;
 import de.embl.cba.trainableDeepSegmentation.weka.fastRandomForest.FastRandomForest;
 import fiji.util.gui.GenericDialogPlus;
 import ij.*;
-import ij.gui.GenericDialog;
-import ij.gui.NonBlockingGenericDialog;
-import ij.gui.PolygonRoi;
+import ij.gui.*;
 import ij.io.FileInfo;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
@@ -49,7 +46,6 @@ import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
 import javafx.geometry.Point3D;
 
-import ij.gui.Roi;
 import net.imglib2.FinalInterval;
 import de.embl.cba.trainableDeepSegmentation.classification.AttributeSelector;
 import de.embl.cba.trainableDeepSegmentation.classification.ClassifierInstancesMetadata;
@@ -933,6 +929,9 @@ public class DeepSegmentation
 
 	private void initialize()
 	{
+
+        Roi.addRoiListener( this );
+
 		// set class label names
 		char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
 
@@ -1130,7 +1129,7 @@ public class DeepSegmentation
 
 	public ArrayList<Example> getExamples()
 	{
-		return examples;
+	    return examples;
 	}
 
 	public int getNumExamples()
@@ -1440,12 +1439,11 @@ public class DeepSegmentation
         return true;
     }
 
+
     public void reviewObjects( )
     {
-
         ObjectReview objectReview = new ObjectReview( this );
         objectReview.runUI( );
-
     }
 
     public boolean showClassifierSettingsDialog()
@@ -2805,6 +2803,8 @@ public class DeepSegmentation
 
 
     }
+
+
 
 	private void configureInputImageLoading( Map< String, Object > parameters )
     {

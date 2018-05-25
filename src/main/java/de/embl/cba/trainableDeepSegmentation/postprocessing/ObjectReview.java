@@ -1,7 +1,7 @@
 package de.embl.cba.trainableDeepSegmentation.postprocessing;
 
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
-import de.embl.cba.trainableDeepSegmentation.labels.LabelManager;
+import de.embl.cba.trainableDeepSegmentation.labels.LabelReviewManager;
 import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
 import fiji.util.gui.GenericDialogPlus;
 import ij.gui.GenericDialog;
@@ -65,8 +65,6 @@ public class ObjectReview
     public void reviewObjectsUsingRoiManager( SegmentedObjects objects )
     {
 
-        deepSegmentationIJ1Plugin.reviewRoisFlag = true;
-
         ArrayList< Roi > rois = getCentroidRoisFromObjects( objects );
 
         deepSegmentationIJ1Plugin.makeTrainingImageTheActiveWindow();
@@ -75,7 +73,7 @@ public class ObjectReview
 
         for ( Roi roi : rois )
         {
-            LabelManager.addRoiToManager( manager, deepSegmentation.getInputImage(), roi );
+            LabelReviewManager.addRoiToManager( manager, deepSegmentation.getInputImage(), roi );
         }
 
         deepSegmentation.logger.info( "\nReviewing objects: " + rois.size() );

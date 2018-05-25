@@ -1,7 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.labels;
 
 import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
-import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.gui.PolygonRoi;
@@ -9,11 +8,13 @@ import ij.gui.Roi;
 import ij.plugin.Duplicator;
 import ij.plugin.frame.RoiManager;
 import de.embl.cba.trainableDeepSegmentation.labels.examples.Example;
+import mcib_plugins.tools.RoiManager3D_2;
 
 import java.awt.*;
 import java.util.*;
 
-public class LabelManager {
+public class LabelReviewManager
+{
 
     DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin;
 
@@ -21,39 +22,28 @@ public class LabelManager {
 
     ImagePlus imageAroundCurrentSelection;
 
-    Map < String, Example > examples;
+    Map < String, Example > labelMap;
     ArrayList < String > underReview;
 
     RoiManager manager = null;
 
     private final static String KEY = "key";
 
-    public LabelManager ( DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin )
+    public LabelReviewManager( DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin )
     {
         this.deepSegmentationIJ1Plugin = deepSegmentationIJ1Plugin;
         this.imp = deepSegmentationIJ1Plugin.inputImage;
     }
 
-    private static void zoomIn()
+    public LabelReviewManager( ArrayList< Example > labelMap )
     {
-        IJ.run("In [+]", "");
-        IJ.run("In [+]", "");
-        IJ.run("In [+]", "");
-        IJ.run("In [+]", "");
+        setLabelsAsMap( labelMap );
     }
 
-    public static void zoomOut( int n )
-	{
-	    for ( int i = 0; i < n; ++i )
-        {
-            IJ.run( "Out [-]", "" );
-        }
-	}
-
-    public void setExamples( ArrayList< Example > examples )
+    public void setLabelsAsMap( ArrayList< Example > examples )
     {
 
-        this.examples = new LinkedHashMap<>();
+        this.labelMap = new LinkedHashMap<>();
 
         for ( int i = 0; i < examples.size(); ++i )
         {
@@ -62,21 +52,34 @@ public class LabelManager {
                     + "-t" + (example.t+1)
                     + "-z" + (example.z+1)
                     + "-i" + i;
-            this.examples.put( key, example );
+            this.labelMap.put( key, example );
         }
     }
 
-    public void updateExamples()
+    public void updateExamplesAccordingToWhatHasBeenRemovedInRoiManager(  )
     {
+        updateExamplesAccordingToWhatHasBeenRemovedInRoiManager( manager );
+    }
 
-        ArrayList< String > approved = getKeysFromRoiManager( manager );
+    public void updateExamplesAccordingToWhatHasBeenRemovedInRoiManager( RoiManager roiManager )
+    {
+        ArrayList< String > approved = getKeysFromRoiManager( roiManager );
         ArrayList< String > rejected = getRejectedKeys( underReview, approved );
         removeRejectedExamples ( rejected );
     }
 
-    public ArrayList< Example > getExamples()
+    public ArrayList< Example > getApprovedLabelList( RoiManager roiManager )
     {
-        ArrayList< Example > exampleArrayList = new ArrayList<>(  examples.values() );
+        updateExamplesAccordingToWhatHasBeenRemovedInRoiManager( roiManager );
+
+        ArrayList< Example > approvedLabels = new ArrayList<>( labelMap.values() );
+
+        return ( approvedLabels );
+    }
+
+    public ArrayList< Example > getExampleList()
+    {
+        ArrayList< Example > exampleArrayList = new ArrayList<>(  labelMap.values() );
 
         return ( exampleArrayList );
     }
@@ -101,18 +104,29 @@ public class LabelManager {
     public void reviewLabelsInRoiManager( int classNum, String order )
     {
 
-        ArrayList< Roi > rois = getRoisFromExamples( classNum, order );
+        ArrayList< Roi > rois = getRoisFromLabels( classNum, order );
+
         manager = new RoiManager();
-        underReview = new ArrayList<>();
 
         for ( Roi roi : rois )
         {
             addRoiToManager( manager, imp, roi );
-            underReview.add ( roi.getProperty( KEY ) ) ;
         }
+
+        setLabelsCurrentlyBeingReviewed( rois );
 
         DeepSegmentationIJ1Plugin.configureRoiManagerClosingEventListener( manager, deepSegmentationIJ1Plugin );
 
+    }
+
+    public void setLabelsCurrentlyBeingReviewed( ArrayList< Roi > rois )
+    {
+        underReview = new ArrayList<>();
+
+        for ( Roi roi : rois )
+        {
+            underReview.add ( roi.getProperty( KEY ) ) ;
+        }
     }
 
     public static void addRoiToManager( RoiManager manager, ImagePlus imp, Roi roi )
@@ -149,12 +163,12 @@ public class LabelManager {
     {
         for ( String key : rejected )
         {
-            examples.remove( key );
+            labelMap.remove( key );
         }
     }
 
     private static ArrayList< String > getRejectedKeys( ArrayList< String > underReview,
-                                                              ArrayList< String > approved )
+                                                        ArrayList< String > approved )
     {
         ArrayList< String > rejected = new ArrayList<>();
 
@@ -188,14 +202,15 @@ public class LabelManager {
         return ( keys );
     }
 
-    final static String ORDER_Z = "z-position";
-    final static String ORDER_TIME_ADDED = "time added";
+    public final static String ORDER_Z = "z-position";
+    public final static String ORDER_TIME_ADDED = "time added";
 
-    private ArrayList< Roi > getRoisFromExamples( int classNum, String ordering )
+
+    public ArrayList< Roi > getRoisFromLabels(  int classNum, String ordering )
     {
         ArrayList< Roi > rois = new ArrayList<>();
 
-        final Set< String > keys = examples.keySet();
+        final Set< String > keys = labelMap.keySet();
         final ArrayList< String > keysRequestedClass = new ArrayList<>();
         final ArrayList< Integer > zPositions = new ArrayList<>();
 
@@ -227,7 +242,7 @@ public class LabelManager {
 
         for ( String key : keysRequestedClass )
         {
-            Roi roi = getRoiFromExample( examples.get( key ) );
+            Roi roi = getRoiFromExample( labelMap.get( key ) );
             roi.setProperty( KEY, key );
             roi.setName( key );
             rois.add( roi );
@@ -237,7 +252,7 @@ public class LabelManager {
     }
 
 
-    private Roi getRoiFromExample( Example example )
+    private static Roi getRoiFromExample( Example example )
     {
         float[] x = new float[example.points.length];
         float[] y = new float[example.points.length];
@@ -299,6 +314,8 @@ public class LabelManager {
 
 
     }
+
+
 
 
 }

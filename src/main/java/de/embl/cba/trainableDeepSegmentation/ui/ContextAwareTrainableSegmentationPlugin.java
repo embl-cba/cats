@@ -99,7 +99,7 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
     public void init()
     {
         IJ.setTool("freeline");
-        
+
         deepSegmentation = new DeepSegmentation(  );
 
         deepSegmentation.setInputImage( inputImage );

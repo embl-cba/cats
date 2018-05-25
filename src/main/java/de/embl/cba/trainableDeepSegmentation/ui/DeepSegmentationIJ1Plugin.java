@@ -45,7 +45,7 @@ import de.embl.cba.trainableDeepSegmentation.*;
 import de.embl.cba.trainableDeepSegmentation.labels.examples.Example;
 import de.embl.cba.trainableDeepSegmentation.features.ImageScience;
 import de.embl.cba.trainableDeepSegmentation.instances.InstancesAndMetadata;
-import de.embl.cba.trainableDeepSegmentation.labels.LabelManager;
+import de.embl.cba.trainableDeepSegmentation.labels.LabelReviewManager;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImage;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageDisk;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageExportGUI;
@@ -83,7 +83,7 @@ import weka.gui.GUIChooserApp;
 // TODO: make IJ2 plugin?!
 
 
-public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
+public class DeepSegmentationIJ1Plugin implements PlugIn
 {
 
 	/** plugin's name */
@@ -331,11 +331,9 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 	public static final String SELECTION = "Selected roi";
 
-    private LabelManager labelManager = null;
+    private LabelReviewManager labelReviewManager = null;
 
 	private boolean isFirstTime = true;
-
-	public boolean reviewRoisFlag = false;
 
 	private Logger logger;
 
@@ -433,8 +431,6 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 
 		showColorOverlay = false;
 
-		Roi.addRoiListener( this );
-
 		IJ.setTool("freeline");
 	}
 
@@ -487,21 +483,18 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 							win.setButtonsEnabled( false );
 							reviewLabelsButton.setEnabled( true );
 							reviewLabelsButton.setText( REVIEW_END );
-							reviewRoisFlag = true;
-
-							reviewLabels( reviewLabelsClassComboBox.getSelectedIndex() );
+                            reviewLabels( reviewLabelsClassComboBox.getSelectedIndex() );
 						}
 						else
 						{
 							inputImage.setOverlay( new Overlay() );
 							//IJ.run("Remove Overlay");
 
-							labelManager.updateExamples();
-							ArrayList< Example > approvedExamples = labelManager.getExamples();
+							labelReviewManager.updateExamplesAccordingToWhatHasBeenRemovedInRoiManager();
+							ArrayList< Example > approvedExamples = labelReviewManager.getExampleList();
 							deepSegmentation.setExamples( approvedExamples );
-							labelManager.close();
+							labelReviewManager.close();
 							reviewLabelsButton.setText( REVIEW_LABELS_START );
-							reviewRoisFlag = false;
 
 							// imageAroundCurrentSelection.close();
 
@@ -661,7 +654,6 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
             public void windowClosing( WindowEvent we )
             {
                 // IJ.log( "RoiManager closed.");
-                deepSegmentationIJ1Plugin.reviewRoisFlag = false;
                 deepSegmentationIJ1Plugin.inputImage.killRoi();
                 deepSegmentationIJ1Plugin.inputImage.setOverlay( new Overlay(  ) );
 
@@ -752,46 +744,13 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		inputImage.updateAndDraw();
 
 		// show labels
-		labelManager = new LabelManager( this );
-		labelManager.setExamples( deepSegmentation.getExamples() );
-		String order = labelManager.showOrderGUI();
-		labelManager.reviewLabelsInRoiManager( classNum, order );
+		labelReviewManager = new LabelReviewManager( this );
+		labelReviewManager.setLabelsAsMap( deepSegmentation.getExamples() );
+		String order = labelReviewManager.showOrderGUI();
+		labelReviewManager.reviewLabelsInRoiManager( classNum, order );
 	};
 
 
-	Roi currentlyDisplayedRoi;
-
-	@Override
-	public void roiModified( ImagePlus imagePlus, int actionId )
-	{
-		if ( ( imagePlus != null ) && ( imagePlus == inputImage ) )
-		{
-			if ( actionId == RoiListener.CREATED && reviewRoisFlag )
-			{
-				if ( currentlyDisplayedRoi == null)
-				{
-					currentlyDisplayedRoi = inputImage.getRoi();
-					zoomToSelection();
-				}
-				else
-				{
-					int x = inputImage.getRoi().getBounds().x;
-					int x2 = currentlyDisplayedRoi.getBounds().x;
-					if ( x != x2 )
-					{
-						currentlyDisplayedRoi = inputImage.getRoi();
-						zoomToSelection();
-					}
-				}
-
-			}
-		}
-	}
-
-
-	/**
-	 * Custom canvas to deal with zooming an panning
-	 */
 	private class CustomCanvas extends OverlayedImageCanvas
 	{
 		/**
@@ -885,39 +844,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		}
 	}
 
-	ImagePlus imageAroundCurrentSelection;
 
-	private void zoomToSelection()
-	{
-
-		Roi roi = inputImage.getRoi(); if ( roi == null ) return;
-
-		// makeTrainingImageTheActiveWindow();
-
-		IJ.run("To Selection");
-
-        // remove old overlay
-		inputImage.setOverlay( new Overlay(  ) );
-
-		// add new overlay
-        IJ.run("Add Selection...");
-
-        // remove roi
-		inputImage.killRoi();
-
-        updateResultOverlay();
-
-        //int margin = getMargin( roi );
-
-		//setImageAroundRoi( roi, margin );
-
-		//showImageAroundRoi( roi, margin );
-
-		LabelManager.zoomOut( 7 );
-
-		// makeTrainingImageTheActiveWindow();
-
-	}
 
 
 
@@ -2228,7 +2155,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 		String numLabelsPerClassString = "";
 
 		int[] numLabelsPerClass = ExamplesUtils.getNumExamplesPerClass(
-				deepSegmentation.getExamples() );
+				deepSegmentation.getExampleList() );
 
 		for ( int i = 0 ; i <  numLabelsPerClass.length; i++ )
 		{
@@ -2263,7 +2190,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn, RoiListener
 	{
 		// i is the classnum
 
-		// win.updateLabels();
+		// win.addLabels();
 		inputImage.setColor(Color.YELLOW);
 
 		int selectedIndex = 0;

@@ -474,7 +474,7 @@
     		{
     			for(int i = 0; i < numOfClasses; i++)
     				for(int j=0; j<trainingImage.getImageStackSize(); j++)
-    					if(!examples[j].get(i).isEmpty())
+    					if(!labelMap[j].get(i).isEmpty())
     					{
     						classNames.add(getClassLabels()[i]);
     						break;
@@ -3799,10 +3799,10 @@
 				final String className = ( (String) classValues.nextElement() ).trim();
 				loadedClassNames.add(className);
 			}
-			IJ.log("Number of accumulated examples: " + loadedTrainingData.numInstances());
+			IJ.log("Number of accumulated labelMap: " + loadedTrainingData.numInstances());
 		}
 		else
-			IJ.log("Number of accumulated examples: 0");
+			IJ.log("Number of accumulated labelMap: 0");
 
 		// Updating image
 		IJ.log("Updating image...");
@@ -3815,16 +3815,16 @@
 
 		// Remove traces from the lists and ROI overlays and initialize each feature stack
 		IJ.log("Removing previous markings...");
-		examples = new ArrayList<>();
+		labelMap = new ArrayList<>();
 
 		/*
-		examples = new Vector[trainingImage.getImageStackSize()];
+		labelMap = new Vector[trainingImage.getImageStackSize()];
 		for(int i=0; i< trainingImage.getImageStackSize(); i++)
 		{
-			examples[i] = new Vector<ArrayList<Roi>>(MAX_NUM_CLASSES);
+			labelMap[i] = new Vector<ArrayList<Roi>>(MAX_NUM_CLASSES);
 
 			for(int j=0; j<MAX_NUM_CLASSES; j++)
-				examples[i].add(new ArrayList<Roi>());
+				labelMap[i].add(new ArrayList<Roi>());
 
 		}*/
 
@@ -4435,7 +4435,7 @@
 	}
 
 	/**
-	 * Returns a the trace training data or null, if no examples have been
+	 * Returns a the trace training data or null, if no labelMap have been
 	 * given.
 	 */
 	public Instances getTraceTrainingData() {

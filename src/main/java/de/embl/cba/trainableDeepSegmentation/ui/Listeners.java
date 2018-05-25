@@ -60,7 +60,7 @@ public class Listeners
                         {
                             int iClass = Integer.parseInt("" + e.getKeyChar() );
                             deepSegmentation.addLabelFromImageRoi(  iClass - 1  );
-                            overlays.updateLabels( );
+                            overlays.addLabels( );
                         }
                         catch (NumberFormatException e )
                         {
@@ -87,7 +87,7 @@ public class Listeners
                             //IJ.log("moving scroll " + e.getKeyCode());
                             inputImage.killRoi();
                             updateExampleLists();
-                            updateLabels();
+                            addLabels();
                             if( showColorOverlay )
                             {
                                 updateProbabilities();
@@ -133,8 +133,9 @@ public class Listeners
             {
                 if ( updatePosition() )
                 {
+                    overlays.clearAllOverlays();
                     overlays.updateProbabilities();
-                    overlays.updateLabels();
+                    overlays.addLabels();
                 }
             }
         };
