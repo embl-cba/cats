@@ -24,6 +24,7 @@ import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectSegmentation;
 import de.embl.cba.trainableDeepSegmentation.postprocessing.SegmentedObjects;
 import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
+import de.embl.cba.trainableDeepSegmentation.ui.Overlays;
 import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
@@ -930,8 +931,6 @@ public class DeepSegmentation
 	private void initialize()
 	{
 
-        Roi.addRoiListener( this );
-
 		// set class label names
 		char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
 
@@ -1440,11 +1439,20 @@ public class DeepSegmentation
     }
 
 
+
     public void reviewObjects( )
     {
         ObjectReview objectReview = new ObjectReview( this );
         objectReview.runUI( );
     }
+
+    public void reviewLabels( Overlays overlays )
+    {
+
+        overlays.reviewLabelsInRoiManagerUI(  );
+    }
+
+
 
     public boolean showClassifierSettingsDialog()
     {

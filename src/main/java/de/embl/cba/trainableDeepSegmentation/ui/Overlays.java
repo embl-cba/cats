@@ -5,6 +5,7 @@ import de.embl.cba.trainableDeepSegmentation.labels.LabelReviewManager;
 import de.embl.cba.trainableDeepSegmentation.labels.examples.Example;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImage;
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageDisk;
+import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.*;
@@ -37,13 +38,15 @@ public class Overlays implements RoiListener
     private Roi probabilities;
 
 
-    public Overlays( Color[] colors, ImagePlus inputImage, ResultImage resultImage, DeepSegmentation deepSegmentation )
+    public Overlays( DeepSegmentation deepSegmentation )
     {
-        this.colors = colors;
-        this.resultImage = resultImage;
-        this.inputImage = inputImage;
-        this.deepSegmentation = deepSegmentation;
 
+        this.deepSegmentation = deepSegmentation;
+        this.colors = deepSegmentation.classColors;
+        this.resultImage = deepSegmentation.getResultImage();
+        this.inputImage = deepSegmentation.getInputImage();
+
+        setProbabilityOverlayLut( OVERLAY_MODE_PROBABILITIES );
         inputImage.setOverlay( new Overlay(  ) );
     }
 
@@ -53,18 +56,24 @@ public class Overlays implements RoiListener
      */
     public synchronized void toggleOverlay( String mode )
     {
+        if ( inputImage.getOverlay().contains( probabilities ) )
+        {
+            inputImage.getOverlay().remove( probabilities );
+        }
+        else
+        {
+            setProbabilityOverlayLut( mode );
+            addProbabilities();
+        }
 
+    }
+
+    private void setProbabilityOverlayLut( String mode )
+    {
         // create overlay LUT
         final byte[] red = new byte[ 256 ];
         final byte[] green = new byte[ 256 ];
         final byte[] blue = new byte[ 256 ];
-
-
-        if ( inputImage.getOverlay().contains( probabilities ) )
-        {
-            inputImage.getOverlay().remove( probabilities );
-            return;
-        }
 
         if ( mode.equals( OVERLAY_MODE_SEGMENTATION ) )
         {
@@ -102,9 +111,6 @@ public class Overlays implements RoiListener
             overlayLUT = new LUT(red, green, blue);
         }
 
-        addProbabilities();
-        inputImage.updateAndDraw();
-
     }
 
     public void clearAllOverlays()
@@ -137,6 +143,37 @@ public class Overlays implements RoiListener
         ( ( ImageRoi ) probabilities ).setOpacity( overlayOpacity / 100.0 );
         probabilities.setName( RESULT_OVERLAY );
         inputImage.getOverlay().add( probabilities );
+        inputImage.updateAndDraw();
+    }
+
+    public void showProbabilities()
+    {
+        if ( inputImage.getOverlay().contains( probabilities ) )
+        {
+            updateProbabilities();
+        }
+        else
+        {
+            addProbabilities();
+        }
+
+    }
+
+    public void updateLabels()
+    {
+        Overlay overlay = inputImage.getOverlay();
+
+        Roi[] rois = overlay.toArray();
+
+        for ( Roi roi : rois )
+        {
+            if ( roi != probabilities )
+            {
+                overlay.remove( roi );
+            }
+        }
+
+        addLabels();
 
     }
 
@@ -200,6 +237,26 @@ public class Overlays implements RoiListener
 
     }
 
+    public void reviewLabelsInRoiManagerUI(  )
+    {
+        int classId = getClassIdFromUI();
+
+        if ( classId > 0 )
+        {
+            reviewLabelsInRoiManager( classId, ORDER_TIME_ADDED );
+        }
+    }
+
+    private int getClassIdFromUI()
+    {
+        GenericDialog gd = new GenericDialogPlus("Labels Review");
+        gd.addChoice( "Classes", deepSegmentation.getClassNames().toArray( new String[0] ), deepSegmentation.getClassNames().get( 0 ) );
+        gd.showDialog();
+        if ( gd.wasCanceled() ) return -1;
+        int classId = gd.getNextChoiceIndex();
+        return classId;
+    }
+
     public void reviewLabelsInRoiManager( int classNum, String order )
     {
         ArrayList< Roi > rois = labelReviewManager.getRoisFromLabels( classNum, order );
@@ -208,7 +265,7 @@ public class Overlays implements RoiListener
 
         addRoisToRoiManager( rois );
 
-        configureRoiManagerClosingEventListener( );
+        updateLabelsWhenRoiManagerIsClosed( );
 
     }
 
@@ -285,7 +342,7 @@ public class Overlays implements RoiListener
 
         Roi roi = inputImage.getRoi(); if ( roi == null ) return;
 
-        // makeTrainingImageTheActiveWindow();
+        // makeInputImageTheActiveWindow();
 
         IJ.run("To Selection");
 
@@ -304,7 +361,7 @@ public class Overlays implements RoiListener
 
     }
 
-    public void configureRoiManagerClosingEventListener(  )
+    public void updateLabelsWhenRoiManagerIsClosed(  )
     {
         roiManager.addWindowListener( new WindowAdapter()
         {
@@ -316,6 +373,20 @@ public class Overlays implements RoiListener
                 deepSegmentation.setExamples( approvedLabelList );
                 clearAllOverlaysAndRois();
 
+            }
+        });
+    }
+
+    public static void removeAllOverlaysAndRoisWhenRoiManagerIsClosed( RoiManager manager, ImagePlus imp  )
+    {
+        manager.addWindowListener( new WindowAdapter()
+        {
+            @Override
+            public void windowClosing( WindowEvent we )
+            {
+                // IJ.log( "RoiManager closed.");
+                imp.killRoi();
+                imp.setOverlay( new Overlay(  ) );
             }
         });
     }

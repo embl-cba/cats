@@ -691,19 +691,6 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	}
 
 
-    public void makeTrainingImageTheActiveWindow()
-    {
-        sleep(); // otherwise below select window does not always work...
-
-        IJ.selectWindow( inputImage.getID() );
-
-        if ( ! inputImage.getWindow().isActive() )
-        {
-            sleep(); // otherwise below select window does not always work...
-            IJ.selectWindow( inputImage.getID() );
-        }
-    }
-
 	private void loadLabelImage()
 	{
 

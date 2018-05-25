@@ -14,21 +14,22 @@ public class Listeners
 {
 
     final Overlays overlays;
-    final ImagePlus imp;
+    final ImagePlus inputImage;
     final DeepSegmentation deepSegmentation;
 
     int c;
     int t;
     int z;
 
-    public Listeners( ImagePlus imagePlus, Overlays overlays, DeepSegmentation deepSegmentation )
+    public Listeners( DeepSegmentation deepSegmentation, Overlays overlays )
     {
         this.overlays = overlays;
-        this.imp = imagePlus;
+        this.inputImage = deepSegmentation.getInputImage();
         this.deepSegmentation = deepSegmentation;
 
         addKeyListeners( );
-        addStackListeners( );
+        addImageListeners( );
+        updatePosition( );
 
     }
 
@@ -106,12 +107,12 @@ public class Listeners
         // addKeyListener( keyListener );
 
 
-        imp.getWindow().addKeyListener( keyListener );
-        imp.getWindow().getCanvas().addKeyListener( keyListener );
+        inputImage.getWindow().addKeyListener( keyListener );
+        inputImage.getWindow().getCanvas().addKeyListener( keyListener );
 
     }
 
-    private void addStackListeners(  )
+    private void addImageListeners(  )
     {
 
         ImageListener imageListener = new ImageListener()
@@ -133,14 +134,14 @@ public class Listeners
             {
                 if ( updatePosition() )
                 {
-                    overlays.clearAllOverlays();
+                    //overlays.clearAllOverlays();
                     overlays.updateProbabilities();
-                    overlays.addLabels();
+                    overlays.updateLabels();
                 }
             }
         };
 
-        imp.addImageListener( imageListener );
+        inputImage.addImageListener( imageListener );
 
     }
 
@@ -148,9 +149,9 @@ public class Listeners
     {
         boolean positionChanged = false;
 
-        int c = imp.getC();
-        int t = imp.getT();
-        int z = imp.getZ();
+        int c = inputImage.getC();
+        int t = inputImage.getT();
+        int z = inputImage.getZ();
 
         if ( this.c != c ) positionChanged = true;
         if ( this.t != t ) positionChanged = true;

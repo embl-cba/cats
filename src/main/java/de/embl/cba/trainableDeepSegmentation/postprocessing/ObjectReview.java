@@ -3,7 +3,10 @@ package de.embl.cba.trainableDeepSegmentation.postprocessing;
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
 import de.embl.cba.trainableDeepSegmentation.labels.LabelReviewManager;
 import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
+import de.embl.cba.trainableDeepSegmentation.ui.Overlays;
 import fiji.util.gui.GenericDialogPlus;
+import ij.IJ;
+import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.gui.OvalRoi;
 import ij.gui.PointRoi;
@@ -15,7 +18,7 @@ import java.util.ArrayList;
 
 public class ObjectReview
 {
-    RoiManager manager;
+    RoiManager roiManager;
     DeepSegmentation deepSegmentation;
     DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin;
 
@@ -64,22 +67,48 @@ public class ObjectReview
 
     public void reviewObjectsUsingRoiManager( SegmentedObjects objects )
     {
-
         ArrayList< Roi > rois = getCentroidRoisFromObjects( objects );
 
-        deepSegmentationIJ1Plugin.makeTrainingImageTheActiveWindow();
+        makeImageTheActiveWindow( deepSegmentation.getInputImage() );
 
-        manager = new RoiManager();
+        roiManager = new RoiManager();
 
         for ( Roi roi : rois )
         {
-            LabelReviewManager.addRoiToManager( manager, deepSegmentation.getInputImage(), roi );
+            LabelReviewManager.addRoiToManager( roiManager, deepSegmentation.getInputImage(), roi );
         }
 
         deepSegmentation.logger.info( "\nReviewing objects: " + rois.size() );
 
-        DeepSegmentationIJ1Plugin.configureRoiManagerClosingEventListener( manager, deepSegmentationIJ1Plugin );
+        Overlays.removeAllOverlaysAndRoisWhenRoiManagerIsClosed( roiManager, deepSegmentation.getInputImage() );
     }
+
+    private static void makeImageTheActiveWindow( ImagePlus imp )
+    {
+        sleep( 300 ); // otherwise below select window does not always work...
+
+        IJ.selectWindow( imp.getID() );
+
+        if ( ! imp.getWindow().isActive() )
+        {
+            sleep( 300 ); // otherwise below select window does not always work...
+            IJ.selectWindow( imp.getID() );
+        }
+    }
+
+
+    private static void sleep( long millis )
+    {
+        try
+        {
+            Thread.sleep( millis );
+        }
+        catch ( InterruptedException e )
+        {
+            e.printStackTrace();
+        }
+    }
+
 
 
     public ArrayList< Roi > getCentroidRoisFromObjects( SegmentedObjects objects )

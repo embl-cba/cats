@@ -48,6 +48,7 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
     public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature settings";
     public static final String SEGMENT_OBJECTS = "Segment objects";
     public static final String REVIEW_OBJECTS = "Review objects";
+    public static final String REVIEW_LABELS = "Review labels";
     public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
     public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
 
@@ -90,6 +91,10 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
 
     private DeepSegmentation deepSegmentation;
 
+    private Overlays overlays;
+
+    private Listeners listeners;
+
     @Override
     public void run()
     {
@@ -108,9 +113,9 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
 
         deepSegmentation.featureSettingsDialog( false );
 
-        Overlays overlays = new Overlays( deepSegmentation.classColors, deepSegmentation.getInputImage(), deepSegmentation.getResultImage(), deepSegmentation );
+        overlays = new Overlays( deepSegmentation );
 
-        Listeners listeners = new Listeners( inputImage, overlays, deepSegmentation );
+        listeners = new Listeners( deepSegmentation, overlays  );
 
         DeepSegmentation.reserveKeyboardShortcuts();
 
@@ -119,108 +124,123 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
     protected void performAction()
     {
 
-        FinalInterval interval;
-        String[] dirFile;
-
-        switch ( actionInput )
+        Thread thread = new Thread(new Runnable()
         {
-            case SEGMENT_OBJECTS:
-                deepSegmentation.segmentObjects();
-                break;
-            case REVIEW_OBJECTS:
-                deepSegmentation.reviewObjects();
-                break;
-            case CHANGE_CLASSIFIER_SETTINGS:
-                deepSegmentation.showClassifierSettingsDialog();
-                break;
-            case CHANGE_FEATURE_COMPUTATION_SETTINGS:
-                deepSegmentation.featureSettingsDialog( false );
-                break;
-            case CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS:
-                deepSegmentation.featureSettingsDialog( true );
-                break;
-            case IO_LOAD_CLASSIFIER:
-                dirFile = getOpenDirFile( "Please choose a classifier file" );
-                deepSegmentation.loadClassifier( dirFile[ 0 ], dirFile[ 1 ] );
-                break;
-            case ADD_CLASS:
-                String inputName = IOUtils.classNameDialog();
-                if ( inputName == null ) return;
-                deepSegmentation.addClass( inputName );
-                break;
-            case CHANGE_CLASS_NAMES:
-                deepSegmentation.showClassNamesDialog();
-                break;
-            case CHANGE_RESULT_OVERLAY_OPACITY:
-                //showResultsOverlayOpacityDialog();
-                break;
-            case CHANGE_COLORS:
-                //showColorsDialog();
-                break;
-            case IO_SAVE_CLASSIFIER:
-                dirFile = getSaveDirFile("Please choose a output file", ".classifier" );
-                deepSegmentation.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
-                break;
-            case IO_LOAD_INSTANCES:
-                dirFile = IOUtils.getOpenDirFile( "Please choose instances file" );
-                deepSegmentation.loadInstancesAndMetadata( dirFile[ 0 ], dirFile[ 1 ] );
-                break;
-            case IO_SAVE_INSTANCES:
-                dirFile = IOUtils.getSaveDirFile( "Save instance file", ".ARFF" );
-                deepSegmentation.saveInstances( inputImage.getTitle(), dirFile[0], dirFile[1] );
-                break;
-            case IO_LOAD_LABEL_IMAGE:
-                //loadLabelImage();
-                break;
-            case RECOMPUTE_LABEL_FEATURE_VALUES:
-                //recomputeLabelFeaturesAndRetrainClassifier();
-                break;
-            case CHANGE_DEBUG_SETTINGS:
-                //showDebugSettingsDialog();
-                break;
-            case IO_EXPORT_RESULT_IMAGE:
-                ResultImageExportGUI.showExportGUI(
-                        deepSegmentation.getInputImage().getTitle(),
-                        deepSegmentation.getResultImage(),
-                        deepSegmentation.getInputImage(),
-                        deepSegmentation.getClassNames() );
-                break;
-            case APPLY_CLASSIFIER:
-                deepSegmentation.applyClassifierWithTiling( getIntervalFromUI() );
-                break;
-            case APPLY_CLASSIFIER_ON_SLURM:
-                deepSegmentation.applyClassifierOnSlurm( getIntervalFromUI() );
-                break;
-            case APPLY_BG_FG_CLASSIFIER:
-                //applyBgFgClassification();
-                break;
-            case TRAIN_FROM_LABEL_IMAGE:
-                //trainFromLabelImage();
-                break;
-            case GET_LABEL_IMAGE_TRAINING_ACCURACIES:
-                //computeLabelImageBasedAccuracies();
-                break;
-            case UPDATE_LABELS:
-                //updateLabelsTrainingData();
-                break;
-            case UPDATE_LABELS_AND_TRAIN:
-                deepSegmentation.updateLabelInstancesAndTrainClassifier();
-                break;
-            case DUPLICATE_RESULT_IMAGE_TO_RAM:
-                ImagePlus imp = deepSegmentation.getResultImage().getWholeImageCopy();
-                if ( imp != null ) imp.show();
-                break;
-            case TRAIN_CLASSIFIER:
-                // getInstancesAndMetadata instances instances
-                //InstancesAndMetadata instancesAndMetadata = getCombinedSelectedInstancesFromGUI();
-                //if ( instancesAndMetadata == null )
-                //{
-                //    logger.error( "Please select one or multiple training instances." );
-                //    return;
-                //}
-                //trainClassifier( instancesAndMetadata );
-                break;
-        }
+            //exec.submit(new Runnable() {
+            public void run()
+            {
+
+
+                FinalInterval interval;
+                String[] dirFile;
+
+                switch ( actionInput )
+                {
+                    case SEGMENT_OBJECTS:
+                        deepSegmentation.segmentObjects();
+                        break;
+                    case REVIEW_OBJECTS:
+                        deepSegmentation.reviewObjects();
+                        break;
+                    case REVIEW_LABELS:
+                        overlays.reviewLabelsInRoiManagerUI();
+                        break;
+                    case CHANGE_CLASSIFIER_SETTINGS:
+                        deepSegmentation.showClassifierSettingsDialog();
+                        break;
+                    case CHANGE_FEATURE_COMPUTATION_SETTINGS:
+                        deepSegmentation.featureSettingsDialog( false );
+                        break;
+                    case CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS:
+                        deepSegmentation.featureSettingsDialog( true );
+                        break;
+                    case IO_LOAD_CLASSIFIER:
+                        dirFile = getOpenDirFile( "Please choose a classifier file" );
+                        deepSegmentation.loadClassifier( dirFile[ 0 ], dirFile[ 1 ] );
+                        break;
+                    case ADD_CLASS:
+                        String inputName = IOUtils.classNameDialog();
+                        if ( inputName == null ) return;
+                        deepSegmentation.addClass( inputName );
+                        break;
+                    case CHANGE_CLASS_NAMES:
+                        deepSegmentation.showClassNamesDialog();
+                        break;
+                    case CHANGE_RESULT_OVERLAY_OPACITY:
+                        //showResultsOverlayOpacityDialog();
+                        break;
+                    case CHANGE_COLORS:
+                        //showColorsDialog();
+                        break;
+                    case IO_SAVE_CLASSIFIER:
+                        dirFile = getSaveDirFile( "Please choose a output file", ".classifier" );
+                        deepSegmentation.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
+                        break;
+                    case IO_LOAD_INSTANCES:
+                        dirFile = IOUtils.getOpenDirFile( "Please choose instances file" );
+                        deepSegmentation.loadInstancesAndMetadata( dirFile[ 0 ], dirFile[ 1 ] );
+                        break;
+                    case IO_SAVE_INSTANCES:
+                        dirFile = IOUtils.getSaveDirFile( "Save instance file", ".ARFF" );
+                        deepSegmentation.saveInstances( inputImage.getTitle(), dirFile[ 0 ], dirFile[ 1 ] );
+                        break;
+                    case IO_LOAD_LABEL_IMAGE:
+                        //loadLabelImage();
+                        break;
+                    case RECOMPUTE_LABEL_FEATURE_VALUES:
+                        //recomputeLabelFeaturesAndRetrainClassifier();
+                        break;
+                    case CHANGE_DEBUG_SETTINGS:
+                        //showDebugSettingsDialog();
+                        break;
+                    case IO_EXPORT_RESULT_IMAGE:
+                        ResultImageExportGUI.showExportGUI(
+                                deepSegmentation.getInputImage().getTitle(),
+                                deepSegmentation.getResultImage(),
+                                deepSegmentation.getInputImage(),
+                                deepSegmentation.getClassNames() );
+                        break;
+                    case APPLY_CLASSIFIER:
+                        deepSegmentation.applyClassifierWithTiling( getIntervalFromUI() );
+                        overlays.showProbabilities();
+                        break;
+                    case APPLY_CLASSIFIER_ON_SLURM:
+                        deepSegmentation.applyClassifierOnSlurm( getIntervalFromUI() );
+                        break;
+                    case APPLY_BG_FG_CLASSIFIER:
+                        //applyBgFgClassification();
+                        break;
+                    case TRAIN_FROM_LABEL_IMAGE:
+                        //trainFromLabelImage();
+                        break;
+                    case GET_LABEL_IMAGE_TRAINING_ACCURACIES:
+                        //computeLabelImageBasedAccuracies();
+                        break;
+                    case UPDATE_LABELS:
+                        //updateLabelsTrainingData();
+                        break;
+                    case UPDATE_LABELS_AND_TRAIN:
+                        deepSegmentation.updateLabelInstancesAndTrainClassifier();
+                        break;
+                    case DUPLICATE_RESULT_IMAGE_TO_RAM:
+                        ImagePlus imp = deepSegmentation.getResultImage().getWholeImageCopy();
+                        if ( imp != null ) imp.show();
+                        break;
+                    case TRAIN_CLASSIFIER:
+                        // getInstancesAndMetadata instances instances
+                        //InstancesAndMetadata instancesAndMetadata = getCombinedSelectedInstancesFromGUI();
+                        //if ( instancesAndMetadata == null )
+                        //{
+                        //    logger.error( "Please select one or multiple training instances." );
+                        //    return;
+                        //}
+                        //trainClassifier( instancesAndMetadata );
+                        break;
+                }
+            }
+        } );
+
+        thread.start();
     }
 
 
