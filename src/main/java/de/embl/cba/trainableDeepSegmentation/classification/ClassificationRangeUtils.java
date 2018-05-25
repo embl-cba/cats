@@ -37,7 +37,7 @@ public class ClassificationRangeUtils
         IntervalUtils.ensureToStayWithinBounds( inputImage, min, max );
 
         inputImage.killRoi();
-        
+
         return new FinalInterval( min, max );
     }
 

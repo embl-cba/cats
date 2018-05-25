@@ -212,14 +212,6 @@ public class Overlays implements RoiListener
     LabelReviewManager labelReviewManager;
 
 
-    private void reviewLabels( int classNum )
-    {
-        labelReviewManager = new LabelReviewManager( deepSegmentation.getExamples() );
-        String order = LabelReviewManager.ORDER_TIME_ADDED; // showOrderGUI();
-        reviewLabelsInRoiManager( classNum, order );
-    };
-
-
     public String showOrderGUI()
     {
         GenericDialog gd = new GenericDialog("Label ordering");
@@ -241,7 +233,7 @@ public class Overlays implements RoiListener
     {
         int classId = getClassIdFromUI();
 
-        if ( classId > 0 )
+        if ( classId >= 0 )
         {
             reviewLabelsInRoiManager( classId, ORDER_TIME_ADDED );
         }
@@ -253,12 +245,14 @@ public class Overlays implements RoiListener
         gd.addChoice( "Classes", deepSegmentation.getClassNames().toArray( new String[0] ), deepSegmentation.getClassNames().get( 0 ) );
         gd.showDialog();
         if ( gd.wasCanceled() ) return -1;
-        int classId = gd.getNextChoiceIndex();
+        int classId = gd.getNextChoiceIndex() ;
         return classId;
     }
 
     public void reviewLabelsInRoiManager( int classNum, String order )
     {
+        labelReviewManager = new LabelReviewManager( deepSegmentation.getExamples() );
+
         ArrayList< Roi > rois = labelReviewManager.getRoisFromLabels( classNum, order );
 
         labelReviewManager.setLabelsCurrentlyBeingReviewed( rois );
@@ -372,6 +366,7 @@ public class Overlays implements RoiListener
                 ArrayList< Example > approvedLabelList = labelReviewManager.getApprovedLabelList( roiManager );
                 deepSegmentation.setExamples( approvedLabelList );
                 clearAllOverlaysAndRois();
+                addLabels();
 
             }
         });
