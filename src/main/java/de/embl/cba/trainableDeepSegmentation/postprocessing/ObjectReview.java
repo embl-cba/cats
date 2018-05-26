@@ -15,6 +15,9 @@ import ij.plugin.frame.RoiManager;
 import mcib3d.geom.Object3D;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ObjectReview
 {
@@ -67,7 +70,7 @@ public class ObjectReview
 
     public void reviewObjectsUsingRoiManager( SegmentedObjects objects )
     {
-        ArrayList< Roi > rois = getCentroidRoisFromObjects( objects );
+        ArrayList< Roi > rois = getCentroidRoisFromObjects( objects, SORT_BY_VOLUME );
 
         makeImageTheActiveWindow( deepSegmentation.getInputImage() );
 
@@ -114,36 +117,66 @@ public class ObjectReview
 
 
 
-    public ArrayList< Roi > getCentroidRoisFromObjects( SegmentedObjects objects )
+    public static final String SORT_BY_VOLUME = "volume";
+
+    public ArrayList< Roi > getCentroidRoisFromObjects( SegmentedObjects objects,
+                                                        String sorting )
     {
 
-        ArrayList< Object3D > objects3D = objects.objects3DPopulation.getObjectsList();
+        TreeMap< Double, Object3D > sortedObjectMap = getSortedObjectMap( objects );
 
         ArrayList< Roi > rois = new ArrayList<>();
 
         double scaleXY = objects.objects3DPopulation.getScaleXY();
         double scaleZ = objects.objects3DPopulation.getScaleZ();
 
-        for ( Object3D object3D : objects3D )
+        for ( Map.Entry< Double, Object3D > object3D : sortedObjectMap.entrySet() )
         {
-            if ( object3D.getVolumePixels() * scaleXY * scaleZ > minVolumeInPixels  )
+
+            double x = object3D.getValue().getCenterX() * scaleXY;
+            double y = object3D.getValue().getCenterY() * scaleXY;
+            double z = object3D.getValue().getCenterZ() * scaleZ;
+
+
+            Roi roi = new PointRoi( x, y );
+
+            if ( deepSegmentation.getInputImage().isHyperStack() )
             {
-                Roi roi = new PointRoi( object3D.getCenterX() * scaleXY, object3D.getCenterY() * scaleXY );
-
-                if ( deepSegmentation.getInputImage().isHyperStack() )
-                {
-                    roi.setPosition( 1, ( int ) ( object3D.getCenterZ() * scaleZ ) + 1, objects.t + 1 );
-                }
-                else
-                {
-                    roi.setPosition( ( int ) ( object3D.getCenterZ() * scaleZ ) + 1 );
-                }
-
-                rois.add( roi );
+                roi.setPosition( 1, ( int ) ( z ) + 1, objects.t + 1 );
             }
+            else
+            {
+                roi.setPosition( ( int ) ( z ) + 1 );
+            }
+
+            long scaledVolume = (int) ( object3D.getKey().intValue() * scaleXY * scaleZ );
+
+            roi.setName( "" + scaledVolume + "-" + (int) x + "-" + (int) y + "-" + (int) z );
+
+            rois.add( roi );
+
         }
 
         return rois;
+    }
+
+    private TreeMap< Double, Object3D >  getSortedObjectMap( SegmentedObjects objects )
+    {
+        ArrayList< Object3D > objects3D = objects.objects3DPopulation.getObjectsList();
+
+        TreeMap< Double, Object3D > sortedObjectMap = new TreeMap<>( Collections.reverseOrder() );
+
+        for ( Object3D object3D : objects3D )
+        {
+            double volume = object3D.getVolumePixels() ;
+
+            if ( volume > minVolumeInPixels )
+            {
+                sortedObjectMap.put( volume, object3D );
+            }
+        }
+
+        return sortedObjectMap;
     }
 
 
