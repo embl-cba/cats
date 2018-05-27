@@ -359,7 +359,7 @@ public class Overlays implements RoiListener
                 ArrayList< Example > approvedLabelList = labelReviewManager.getApprovedLabelList( roiManager );
                 deepSegmentation.setExamples( approvedLabelList );
                 clearAllOverlaysAndRois();
-                addLabels();
+                updateLabels();
                 zoomInOnRois = false;
 
             }
@@ -382,7 +382,7 @@ public class Overlays implements RoiListener
                     }
                 }
 
-                addLabels();
+                updateLabels();
                 zoomInOnRois = false;
             }
         });

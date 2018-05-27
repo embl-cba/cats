@@ -640,7 +640,6 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 				}
 
-
 			}).start();
 		}
 	};
@@ -1498,7 +1497,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 		private JButton createAnnotationButton( int classNum )
 		{
-			JButton button = new JButton( deepSegmentation.getClassName( classNum ) + " [" + (classNum+1) + "]" );
+
+		    JButton button = new JButton( deepSegmentation.getClassName( classNum ) + " [" + (classNum+1) + "]" );
 			button.setToolTipText("Add markings of label '" + deepSegmentation.getClassName( classNum ) + "'");
 			button.setOpaque( true );
 			button.setBackground( colors[classNum] );
@@ -2177,7 +2177,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	{
 		// i is the classnum
 
-		// win.addLabels();
+		// win.updateLabels();
 		inputImage.setColor(Color.YELLOW);
 
 		int selectedIndex = 0;

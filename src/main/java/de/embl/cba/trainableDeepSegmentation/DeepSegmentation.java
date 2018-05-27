@@ -199,6 +199,11 @@ public class DeepSegmentation
 
 	}
 
+	public Color[] getColors()
+    {
+        return classColors;
+    }
+
 	public Map< String, SegmentedObjects > getSegmentedObjectsMap()
 	{
 		return segmentedObjectsMap;

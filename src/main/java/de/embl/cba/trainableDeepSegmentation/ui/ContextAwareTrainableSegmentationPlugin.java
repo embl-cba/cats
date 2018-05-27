@@ -96,6 +96,8 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
 
     private Listeners listeners;
 
+    private LabelButtonsPanel labelButtonsPanel;
+
     @Override
     public void run()
     {
@@ -119,6 +121,8 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
         listeners = new Listeners( deepSegmentation, overlays  );
 
         DeepSegmentation.reserveKeyboardShortcuts();
+
+        labelButtonsPanel = new LabelButtonsPanel( deepSegmentation, overlays );
 
     }
 
@@ -163,6 +167,7 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
                         String inputName = IOUtils.classNameDialog();
                         if ( inputName == null ) return;
                         deepSegmentation.addClass( inputName );
+                        labelButtonsPanel.addButton();
                         break;
                     case CHANGE_CLASS_NAMES:
                         deepSegmentation.showClassNamesDialog();
