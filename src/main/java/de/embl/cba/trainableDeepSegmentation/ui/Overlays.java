@@ -27,6 +27,7 @@ public class Overlays implements RoiListener
     public static final String OVERLAY_MODE_PROBABILITIES = "Probabilities";
     public static final String OVERLAY_MODE_UNCERTAINTY = "Uncertainty";
     public static final String RESULT_OVERLAY = "result overlay";
+    public static final String REVIEW = "review";
 
     Color[] colors;
     final ResultImage resultImage;
@@ -292,18 +293,13 @@ public class Overlays implements RoiListener
         {
             if ( actionId == RoiListener.CREATED && zoomInOnRois )
             {
-                if ( currentlyDisplayedRoi == null )
+                Roi roi = inputImage.getRoi();
+
+                if ( isNewRoi( roi ) )
                 {
-                    currentlyDisplayedRoi = inputImage.getRoi();
-                    zoomToSelection();
-                }
-                else
-                {
-                    int x = inputImage.getRoi().getBounds().x;
-                    int x2 = currentlyDisplayedRoi.getBounds().x;
-                    if ( x != x2 )
+                    if ( roi.getName() != null && roi.getName().contains( REVIEW ) )
                     {
-                        currentlyDisplayedRoi = inputImage.getRoi();
+                        currentlyDisplayedRoi = roi;
                         zoomToSelection();
                     }
                 }
@@ -313,19 +309,34 @@ public class Overlays implements RoiListener
     }
 
 
+    private boolean isNewRoi( Roi roi )
+    {
+        if ( roi == null )
+        {
+            return false;
+        }
+        else if ( currentlyDisplayedRoi == null )
+        {
+            return true;
+        }
+        else
+        {
+            int x = roi.getBounds().x;
+            int x2 = currentlyDisplayedRoi.getBounds().x;
+            return x != x2;
+         }
+    }
+
     private void zoomToSelection()
     {
 
-        Roi roi = inputImage.getRoi(); if ( roi == null ) return;
+        Roi roi = inputImage.getRoi();
 
-        // makeInputImageTheActiveWindow();
+        if ( roi == null ) return;
 
         IJ.run("To Selection");
 
-        // remove old overlay
-        inputImage.setOverlay( new Overlay(  ) );
-
-        // add new overlay
+        // add roi as overlay to make it persists when the user clicks on the image
         IJ.run("Add Selection...");
 
         // remove roi
@@ -355,16 +366,23 @@ public class Overlays implements RoiListener
         });
     }
 
-    public void removeAllOverlaysAndRoisWhenRoiManagerIsClosed( RoiManager manager  )
+    public void cleanUpOverlaysAndRoisWhenRoiManagerIsClosed( RoiManager manager  )
     {
         manager.addWindowListener( new WindowAdapter()
         {
             @Override
             public void windowClosing( WindowEvent we )
             {
-                // IJ.log( "RoiManager closed.");
-                inputImage.killRoi();
-                inputImage.setOverlay( new Overlay(  ) );
+                Roi[] rois = inputImage.getOverlay().toArray();
+                for ( Roi roi : rois )
+                {
+                    if ( roi.getName() != RESULT_OVERLAY )
+                    {
+                        inputImage.getOverlay().remove( roi );
+                    }
+                }
+
+                addLabels();
                 zoomInOnRois = false;
             }
         });

@@ -1,7 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.postprocessing;
 
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
-import de.embl.cba.trainableDeepSegmentation.labels.LabelReviewManager;
 import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
 import de.embl.cba.trainableDeepSegmentation.ui.Overlays;
 import fiji.util.gui.GenericDialogPlus;
@@ -86,7 +85,7 @@ public class ObjectReview
         deepSegmentation.logger.info( "\nReviewing objects: " + rois.size() );
 
         overlays.zoomInOnRois( true );
-        overlays.removeAllOverlaysAndRoisWhenRoiManagerIsClosed( roiManager );
+        overlays.cleanUpOverlaysAndRoisWhenRoiManagerIsClosed( roiManager );
     }
 
     private static void makeImageTheActiveWindow( ImagePlus imp )
@@ -151,7 +150,8 @@ public class ObjectReview
 
             long scaledVolume = (int) ( object3D.getKey().intValue() * scaleXY * scaleZ );
 
-            roi.setName( "" + scaledVolume + "-" + (int) x + "-" + (int) y + "-" + (int) z );
+
+            roi.setName( "" + scaledVolume + "-" + (int) x + "-" + (int) y + "-" + (int) z + "-" + Overlays.REVIEW );
 
             rois.add( roi );
 

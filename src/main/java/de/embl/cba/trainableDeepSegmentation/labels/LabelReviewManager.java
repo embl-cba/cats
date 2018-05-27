@@ -122,7 +122,7 @@ public class LabelReviewManager
         setLabelsCurrentlyBeingReviewed( rois );
 
         overlays.zoomInOnRois( true );
-        overlays.removeAllOverlaysAndRoisWhenRoiManagerIsClosed( manager );
+        overlays.cleanUpOverlaysAndRoisWhenRoiManagerIsClosed( manager );
 
     }
 
@@ -210,8 +210,7 @@ public class LabelReviewManager
 
                 int extractInt( String s )
                 {
-                    int z = Integer.parseInt(
-                            s.split( "z" )[ 1 ].split( "-" )[ 0 ] );
+                    int z = Integer.parseInt( s.split( "z" )[ 1 ].split( "-" )[ 0 ] );
                     return z;
                 }
             } );
@@ -221,7 +220,7 @@ public class LabelReviewManager
         {
             Roi roi = getRoiFromLabel( labelMap.get( key ) );
             roi.setProperty( KEY, key );
-            roi.setName( key );
+            roi.setName( key + "-" + Overlays.REVIEW );
             rois.add( roi );
         }
 
