@@ -759,6 +759,23 @@ public class InstancesUtils {
 
     }
 
+    public static long[] getNumInstancesPerClass( Instances instances )
+    {
+        logger.info( "\n# Instances information" );
+        logger.info( "Number of instances: " + instances.size() );
+        logger.info( "Number of attributes: " + instances.numAttributes() );
+
+        long[] instancesPerClass = new long[ instances.numClasses() ];
+
+        for ( Instance instance : instances )
+        {
+            instancesPerClass[ (int) instance.classValue() ] ++;
+        }
+
+        return instancesPerClass;
+
+    }
+
     public static long[] getClassDistribution( Instances instances )
     {
 

@@ -168,14 +168,19 @@ public class IOUtils
         return inputName;
     }
 
-    public static String[] getSaveDirFile( String title, String extension )
+    public static String[] getSaveDirFile( String title, String defaultName , String extension )
     {
-        SaveDialog sd = new SaveDialog("Save as...", "", extension);
+        SaveDialog sd = new SaveDialog("Save as...", defaultName, extension);
 
         if ( sd.getFileName() == null ) return null;
 
         String[] dirFile = new String[] { sd.getDirectory(), sd.getFileName() };
 
         return dirFile;
+    }
+
+    public static String[] getSaveDirFile( String title, String extension )
+    {
+        return getSaveDirFile( title, "", extension );
     }
 }

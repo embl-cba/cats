@@ -5,6 +5,7 @@ import de.embl.cba.trainableDeepSegmentation.classification.ClassificationRangeU
 import de.embl.cba.trainableDeepSegmentation.results.ResultImageExportGUI;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
+import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
 import net.imglib2.FinalInterval;
@@ -28,15 +29,15 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
     public static final String IO_SAVE_CLASSIFIER = "Save classifier";
     public static final String APPLY_CLASSIFIER = "Apply classifier";
     public static final String ADD_CLASS = "Add class";
-    public static final String CHANGE_CLASS_NAMES = "Change class names";
-    public static final String CHANGE_COLORS = "Change classColors";
+    public static final String CHANGE_CLASS_NAMES = "Change class name";
+    public static final String CHANGE_COLORS = "Change class color";
     public static final String CHANGE_RESULT_OVERLAY_OPACITY = "Overlay opacity";
-    public static final String UPDATE_LABELS_AND_TRAIN = "Update labels and train classifier";
+    public static final String UPDATE_LABEL_INSTANCES = "Update label instances";
     public static final String UPDATE_LABELS = "Update labels";
     public static final String TRAIN_CLASSIFIER = "Train classifier";
     public static final String IO_LOAD_LABEL_IMAGE = "Load label image";
-    public static final String IO_LOAD_INSTANCES = "Load instances";
-    public static final String IO_SAVE_INSTANCES = "Save instances of current image";
+    public static final String IO_LOAD_LABEL_INSTANCES = "Load label instances";
+    public static final String IO_SAVE_LABELS = "Save label instances of current image";
     public static final String IO_EXPORT_RESULT_IMAGE = "Export results";
     public static final String TRAIN_FROM_LABEL_IMAGE = "Train from label image";
     public static final String APPLY_CLASSIFIER_ON_SLURM = "Apply classifier on cluster";
@@ -53,7 +54,7 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
     public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
 
 
-    @Parameter(label = "Perform Action", callback = "performAction")
+    @Parameter( label = "Perform Action", callback = "performAction" )
     private Button performActionButton;
 
     @Parameter(label = "Actions", persist = false,
@@ -61,34 +62,42 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
                     ADD_CLASS,
                     CHANGE_CLASS_NAMES,
                     CHANGE_COLORS,
-                    UPDATE_LABELS_AND_TRAIN,
-                    APPLY_CLASSIFIER,
-                    IO_SAVE_INSTANCES,
-                    IO_SAVE_CLASSIFIER,
-                    APPLY_CLASSIFIER_ON_SLURM,
-                    REVIEW_LABELS,
+                    UPDATE_LABEL_INSTANCES,
                     TRAIN_CLASSIFIER,
-                    IO_LOAD_INSTANCES,
+                    APPLY_CLASSIFIER,
+                    REVIEW_LABELS,
+//                    IO_SAVE_LABELS,
+                    APPLY_CLASSIFIER_ON_SLURM,
+//                    IO_SAVE_CLASSIFIER,
+                    IO_LOAD_LABEL_INSTANCES,
                     SEGMENT_OBJECTS,
                     REVIEW_OBJECTS,
-                    DUPLICATE_RESULT_IMAGE_TO_RAM,
                     IO_EXPORT_RESULT_IMAGE,
-                    CHANGE_FEATURE_COMPUTATION_SETTINGS,
-                    CHANGE_RESULT_OVERLAY_OPACITY,
+//                    CHANGE_FEATURE_COMPUTATION_SETTINGS,
+//                    CHANGE_RESULT_OVERLAY_OPACITY,
                     CHANGE_CLASSIFIER_SETTINGS,
-                    UPDATE_LABELS,
-                    IO_LOAD_LABEL_IMAGE,
-                    TRAIN_FROM_LABEL_IMAGE,
-                    GET_LABEL_IMAGE_TRAINING_ACCURACIES,
-                    IO_LOAD_CLASSIFIER,
-                    RECOMPUTE_LABEL_FEATURE_VALUES,
-                    CHANGE_DEBUG_SETTINGS,
-                    CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS } )
+//                    UPDATE_LABELS,
+//                    IO_LOAD_LABEL_IMAGE,
+//                    TRAIN_FROM_LABEL_IMAGE,
+//                    GET_LABEL_IMAGE_TRAINING_ACCURACIES,
+//                    IO_LOAD_CLASSIFIER
+//                    RECOMPUTE_LABEL_FEATURE_VALUES,
+//                    CHANGE_DEBUG_SETTINGS,
+//                    CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS
+            } )
     private String actionInput = ADD_CLASS;
 
-    @Parameter(label = "Range", persist = false,
+    @Parameter(label = "Classification range", persist = false,
         choices = { ClassificationRangeUtils.WHOLE_DATA_SET, ClassificationRangeUtils.SELECTION_PM10Z })
     private String range = ClassificationRangeUtils.SELECTION_PM10Z;
+
+    /*
+    @Parameter( visibility = ItemVisibility.MESSAGE )
+    private String classificationToggleMessage =
+            "<html> " +
+            "[ p ] toggle probability overlay <br>" +
+                    "[ r ] toggle result overlay <br>";
+                    */
 
     private DeepSegmentation deepSegmentation;
 
@@ -97,6 +106,11 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
     private Listeners listeners;
 
     private LabelButtonsPanel labelButtonsPanel;
+
+    private String instancesFilename;
+
+    private String classifierFilename;
+
 
     @Override
     public void run()
@@ -118,11 +132,16 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
 
         overlays = new Overlays( deepSegmentation );
 
-        listeners = new Listeners( deepSegmentation, overlays  );
+        labelButtonsPanel = new LabelButtonsPanel( deepSegmentation, overlays );
+
+        listeners = new Listeners( deepSegmentation, overlays, labelButtonsPanel );
 
         DeepSegmentation.reserveKeyboardShortcuts();
 
-        labelButtonsPanel = new LabelButtonsPanel( deepSegmentation, overlays );
+
+        instancesFilename = inputImage.getTitle() + ".ARFF";
+
+        classifierFilename = inputImage.getTitle() + ".classifier";
 
     }
 
@@ -135,9 +154,9 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
             public void run()
             {
 
-
                 FinalInterval interval;
                 String[] dirFile;
+                GenericDialogPlus gdWait;
 
                 switch ( actionInput )
                 {
@@ -148,7 +167,7 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
                         deepSegmentation.reviewObjects();
                         break;
                     case REVIEW_LABELS:
-                        overlays.reviewLabelsInRoiManagerUI();
+                        overlays.reviewLabelsInRoiManagerUI( listeners );
                         break;
                     case CHANGE_CLASSIFIER_SETTINGS:
                         deepSegmentation.showClassifierSettingsDialog();
@@ -167,38 +186,46 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
                         String inputName = IOUtils.classNameDialog();
                         if ( inputName == null ) return;
                         deepSegmentation.addClass( inputName );
-                        labelButtonsPanel.addButton();
+                        labelButtonsPanel.updateButtons();
                         break;
                     case CHANGE_CLASS_NAMES:
-                        deepSegmentation.showClassNamesDialog();
+                        deepSegmentation.changeClassNamesDialog();
+                        labelButtonsPanel.updateButtons();
                         break;
                     case CHANGE_RESULT_OVERLAY_OPACITY:
                         //showResultsOverlayOpacityDialog();
                         break;
                     case CHANGE_COLORS:
-                        //showColorsDialog();
+                        overlays.changeClassColorViaGUI( labelButtonsPanel );
                         break;
-                    case IO_SAVE_CLASSIFIER:
-                        dirFile = getSaveDirFile( "Please choose a output file", ".classifier" );
-                        deepSegmentation.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
-                        break;
-                    case IO_LOAD_INSTANCES:
+//                    case IO_SAVE_CLASSIFIER:
+//                        dirFile = getSaveDirFile( "Please choose a output file", ".classifier" );
+//                        deepSegmentation.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
+//                        break;
+                    case IO_LOAD_LABEL_INSTANCES:
                         dirFile = IOUtils.getOpenDirFile( "Please choose instances file" );
                         deepSegmentation.loadInstancesAndMetadata( dirFile[ 0 ], dirFile[ 1 ] );
+                        instancesFilename = dirFile[ 1 ];
+                        labelButtonsPanel.updateButtons();
                         break;
-                    case IO_SAVE_INSTANCES:
-                        dirFile = IOUtils.getSaveDirFile( "Save instance file", ".ARFF" );
-                        deepSegmentation.saveInstances( inputImage.getTitle(), dirFile[ 0 ], dirFile[ 1 ] );
-                        break;
-                    case IO_LOAD_LABEL_IMAGE:
-                        //loadLabelImage();
-                        break;
-                    case RECOMPUTE_LABEL_FEATURE_VALUES:
-                        //recomputeLabelFeaturesAndRetrainClassifier();
-                        break;
+//                    case IO_SAVE_LABELS:
+//                        dirFile = getSaveDirFile( "Save file", instancesFilename, ".ARFF" );
+//                        instancesFilename = dirFile[ 1 ];
+//                        gdWait = showWaitDialog( "Saving...\nPlease wait until this window disappears!" );
+//                        deepSegmentation.saveInstances( inputImage.getTitle(), dirFile[ 0 ], dirFile[ 1 ] );
+//                        gdWait.dispose();
+//                        break;
+//                    case IO_LOAD_LABEL_IMAGE:
+//                        //loadLabelImage();
+//                        break;
+//                    case RECOMPUTE_LABEL_FEATURE_VALUES:
+//                        //recomputeLabelFeaturesAndRetrainClassifier();
+//                        break;
+
                     case CHANGE_DEBUG_SETTINGS:
                         //showDebugSettingsDialog();
                         break;
+
                     case IO_EXPORT_RESULT_IMAGE:
                         ResultImageExportGUI.showExportGUI(
                                 deepSegmentation.getInputImage().getTitle(),
@@ -206,41 +233,75 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
                                 deepSegmentation.getInputImage(),
                                 deepSegmentation.getClassNames() );
                         break;
+
                     case APPLY_CLASSIFIER:
-                        deepSegmentation.applyClassifierWithTiling( getIntervalFromUI() );
-                        overlays.showProbabilities();
+
+                        if ( deepSegmentation.hasClassifier() )
+                        {
+                            deepSegmentation.applyClassifierWithTiling( getIntervalFromUI() );
+                            overlays.showProbabilities();
+                        }
+                        else
+                        {
+                            IJ.showMessage("Please train a classifier first." );
+                        }
+
                         break;
+
                     case APPLY_CLASSIFIER_ON_SLURM:
+
                         deepSegmentation.applyClassifierOnSlurm( getIntervalFromUI() );
+
                         break;
-                    case APPLY_BG_FG_CLASSIFIER:
-                        //applyBgFgClassification();
+
+//                    case APPLY_BG_FG_CLASSIFIER:
+//                        //applyBgFgClassification();
+//                        break;
+//                    case TRAIN_FROM_LABEL_IMAGE:
+//                        //trainFromLabelImage();
+//                        break;
+//                    case GET_LABEL_IMAGE_TRAINING_ACCURACIES:
+//                        //computeLabelImageBasedAccuracies();
+//                        break;
+//                    case UPDATE_LABELS:
+//                        //updateLabelsTrainingData();
+//                        break;
+
+                    case UPDATE_LABEL_INSTANCES:
+
+                        deepSegmentation.updateLabelInstances();
+
+                        final long[] numLabelInstancesPerClass = deepSegmentation.getNumLabelInstancesPerClass();
+                        labelButtonsPanel.addNumInstancesToButtonTexts( numLabelInstancesPerClass );
+
+                        dirFile = IOUtils.getSaveDirFile( "Save instances...", instancesFilename,".ARFF" );
+
+                        if ( dirFile != null )
+                        {
+                            instancesFilename = dirFile[ 1 ];
+                            gdWait = showWaitDialog( "I/O operation in progress...\nPlease wait until this window disappears!" );
+                            deepSegmentation.saveInstances( inputImage.getTitle(), dirFile[ 0 ], dirFile[ 1 ] );
+                            gdWait.dispose();
+                        }
+
+
                         break;
-                    case TRAIN_FROM_LABEL_IMAGE:
-                        //trainFromLabelImage();
-                        break;
-                    case GET_LABEL_IMAGE_TRAINING_ACCURACIES:
-                        //computeLabelImageBasedAccuracies();
-                        break;
-                    case UPDATE_LABELS:
-                        //updateLabelsTrainingData();
-                        break;
-                    case UPDATE_LABELS_AND_TRAIN:
-                        deepSegmentation.updateLabelInstancesAndTrainClassifier();
-                        break;
-                    case DUPLICATE_RESULT_IMAGE_TO_RAM:
-                        ImagePlus imp = deepSegmentation.getResultImage().getWholeImageCopy();
-                        if ( imp != null ) imp.show();
-                        break;
+//                    case DUPLICATE_RESULT_IMAGE_TO_RAM:
+//                        ImagePlus imp = deepSegmentation.getResultImage().getWholeImageCopy();
+//                        if ( imp != null ) imp.show();
+//                        break;
                     case TRAIN_CLASSIFIER:
-                        // getInstancesAndMetadata instances instances
-                        //InstancesAndMetadata instancesAndMetadata = getCombinedSelectedInstancesFromGUI();
-                        //if ( instancesAndMetadata == null )
-                        //{
-                        //    logger.error( "Please select one or multiple training instances." );
-                        //    return;
-                        //}
-                        //trainClassifier( instancesAndMetadata );
+
+                        deepSegmentation.trainClassifierFromCurrentLabelInstances();
+
+                        dirFile = getSaveDirFile( "Save classifier...", classifierFilename, ".classifier" );
+
+                        if ( dirFile != null )
+                        {
+                            classifierFilename = dirFile[ 1 ];
+                            deepSegmentation.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
+                        }
+
                         break;
                 }
             }
@@ -249,6 +310,16 @@ public class ContextAwareTrainableSegmentationPlugin implements Command, Interac
         thread.start();
     }
 
+
+    private GenericDialogPlus showWaitDialog( String text )
+    {
+        GenericDialogPlus gd = new GenericDialogPlus( "Save labels"  );
+        gd.setModal( false );
+        gd.hideCancelButton();
+        gd.addMessage(  text );
+        gd.showDialog();
+        return gd;
+    }
 
     private FinalInterval getIntervalFromUI()
     {

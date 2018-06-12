@@ -24,35 +24,81 @@ public class LabelButtonsPanel extends JPanel implements ActionListener
 
         for ( int i = 0; i < 2; ++i )
         {
-            buttons.add( createLabelButton(  i ) );
+            addLabelButton( i );
         }
 
         createAndShowGUI( );
     }
 
-    private JButton createLabelButton( int classNum )
+    private JButton addLabelButton( int classIndex )
     {
 
-        JButton button = new JButton( deepSegmentation.getClassName( classNum ) + " [" + ( classNum + 1 ) + "]" );
-        button.setToolTipText("Add markings of label '" + deepSegmentation.getClassName( classNum ) + "'");
+        JButton button = new JButton( getClassButtonText( classIndex ) );
+        button.setToolTipText("Add markings of label '" + deepSegmentation.getClassName( classIndex ) + "'");
         button.setOpaque( true );
-        button.setBackground( deepSegmentation.getColors()[ classNum ] );
+        button.setBackground( deepSegmentation.getColors()[ classIndex ] );
         button.addActionListener( this );
         button.setAlignmentX( Component.CENTER_ALIGNMENT );
 
-        add( button );
+        add( button ); // add to GUI
+
+        buttons.add( button ); // add to List
 
         return ( button );
     }
 
-    public void addButton()
+    private String getClassButtonText( int classIndex )
     {
-        int classNum = buttons.size();
-        buttons.add( createLabelButton(  classNum ) );
+        return deepSegmentation.getClassName( classIndex ) + " [" + ( classIndex + 1 ) + "]";
+    }
 
-        this.revalidate();
-        this.repaint( );
-        frame.pack();
+    public void setClassColor( int classIndex, Color color )
+    {
+        buttons.get( classIndex ).setBackground( color );
+
+        refreshGui();
+    }
+
+    public void addNumInstancesToButtonTexts( long[] numLabelInstancesPerClass )
+    {
+        for ( int c = 0; c < numLabelInstancesPerClass.length; ++c )
+        {
+            addNumInstancesToButtonText( c, numLabelInstancesPerClass[ c ] );
+        }
+    }
+
+    public void addNumInstancesToButtonText( int classIndex, long numInstances )
+    {
+
+        buttons.get( classIndex ).setText( getClassButtonText( classIndex ) + " ( " + numInstances + " )" );
+
+        refreshGui();
+    }
+
+    public void updateButtons( )
+    {
+
+        clearButtons();
+
+        int numClasses = deepSegmentation.getNumClasses();
+
+        for ( int classNum = 0; classNum < numClasses; ++classNum )
+        {
+            addLabelButton( classNum );
+        }
+
+        refreshGui();
+
+    }
+
+    private void clearButtons()
+    {
+        for ( JButton button : buttons )
+        {
+            remove( button );
+        }
+
+        buttons = new ArrayList<>(  );
     }
 
     @Override
@@ -94,6 +140,14 @@ public class LabelButtonsPanel extends JPanel implements ActionListener
         frame.pack();
         frame.setVisible( true );
     }
+
+    private void refreshGui()
+    {
+        this.revalidate();
+        this.repaint();
+        frame.pack();
+    }
+
 
 
 }

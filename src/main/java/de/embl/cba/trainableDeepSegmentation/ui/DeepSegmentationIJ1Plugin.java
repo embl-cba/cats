@@ -1960,15 +1960,14 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
 		gd.addMessage( "DATA SET NAME\n \n" +
 				"Please enter/confirm the name of this data set.\n" +
-				"This is important for keeping track of which instances have been trained with which image." );
+				"This is important for keeping track of which instances have been trained with this image." );
 		gd.addStringField( "Name", inputImage.getTitle(), 50 );
 
-		gd.addMessage( "RESULT IMAGE\n \n" +
-				"For large data sets it can be necessary to store the results " +
+		gd.addMessage( "PIXEL CLASSIFICATION PROBABILITIES\n \n" +
+				"For large data sets it can be necessary to store the pixel classification probabilities " +
 				"on disk rather than in RAM.\n" +
-				"The speed of this plugin does hardly depend on this choice.\n" +
-				"If you choose 'Disk' a dialog window will appear to select the storage directory.\n" +
-				"You can point to a directory containing previous segmentation results and they will be loaded (not overwritten)." );
+				"If you choose 'Disk' a dialog window will appear to select the storage folder.\n" +
+				"(It is possible to select a folder from a previous sesssion)\n");
 		gd.addChoice( "Location" ,
 				new String[]
 						{ DeepSegmentation.RESULT_IMAGE_DISK_SINGLE_TIFF,
@@ -2177,7 +2176,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	{
 		// i is the classnum
 
-		// win.updateLabels();
+		// win.updateLabelsWhenImageSliceIsChanged();
 		inputImage.setColor(Color.YELLOW);
 
 		int selectedIndex = 0;
@@ -3008,7 +3007,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 		// adapt to changes in class names
 		updateComboBoxes();
 
-		if(classNameChanged)
+		if( classNameChanged )
 		{
 			// Pack window to update buttons
 			win.pack();
@@ -3054,7 +3053,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
     public boolean showFeatureSettingsDialogIJ1Plugin( boolean showAdvancedSettings )
 	{
-		GenericDialogPlus gd = new GenericDialogPlus("Segmentation featureSettings");
+		GenericDialogPlus gd = new GenericDialogPlus("Image Feature Settings");
 
 		for ( int i = 0; i < 5; ++i )
 		{

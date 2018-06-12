@@ -227,7 +227,6 @@ public class LabelReviewManager
         return rois;
     }
 
-
     private Roi getRoiFromLabel( Example example )
     {
         float[] x = new float[example.points.length];

@@ -382,7 +382,6 @@ public class FeatureProvider
                         smallest.deleteSlice(1);
                         results[ ch ].add(new ImagePlus("S"+ filterNameIncludingSmoothing + originalImage.getTitle(), smallest));
                     }
-
                 }
 
                 return mergeResultChannels( results );
@@ -1593,7 +1592,6 @@ public class FeatureProvider
                 {
                     //ImagePlus imp = interpolateFast(featureImage);
                     featureImage.show();
-
                 }
 
                 if ( isFeatureNeeded( featureImage.getTitle() ) )

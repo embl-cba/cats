@@ -24,7 +24,6 @@ import de.embl.cba.trainableDeepSegmentation.postprocessing.ObjectSegmentation;
 import de.embl.cba.trainableDeepSegmentation.postprocessing.SegmentedObjects;
 import de.embl.cba.trainableDeepSegmentation.settings.FeatureSettings;
 import de.embl.cba.trainableDeepSegmentation.ui.DeepSegmentationIJ1Plugin;
-import de.embl.cba.trainableDeepSegmentation.ui.Overlays;
 import de.embl.cba.trainableDeepSegmentation.utils.CommandUtils;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
@@ -1201,7 +1200,7 @@ public class DeepSegmentation
 	}
 
 
-    public boolean showClassNamesDialog()
+    public boolean changeClassNamesDialog()
     {
         GenericDialogPlus gd = new GenericDialogPlus("Class names");
 
@@ -1212,8 +1211,6 @@ public class DeepSegmentation
 
         if ( gd.wasCanceled() )
             return false;
-
-        boolean classNameChanged = false;
 
         for( int i = 0; i < getNumClasses(); i++)
         {
@@ -1229,7 +1226,6 @@ public class DeepSegmentation
                     s = s.substring(7);
 
                 setClassLabel(i, s);
-                classNameChanged = true;
             }
         }
 
@@ -1294,7 +1290,7 @@ public class DeepSegmentation
 
             setResultImageRAM();
 
-            logger.info("Allocated memoryMB for classification resultImagePlus image." );
+            logger.info("Allocated memory for result image." );
 
         }
 
@@ -1302,7 +1298,7 @@ public class DeepSegmentation
 
     public boolean featureSettingsDialog( boolean showAdvancedSettings )
     {
-        GenericDialogPlus gd = new GenericDialogPlus("Segmentation featureSettings");
+        GenericDialogPlus gd = new GenericDialogPlus("Image Feature Settings");
 
         for ( int i = 0; i < 5; ++i )
         {
@@ -1310,7 +1306,7 @@ public class DeepSegmentation
         }
 
         gd.addNumericField("Maximal convolution depth", featureSettings.maxDeepConvLevel, 0);
-        gd.addNumericField("z/xy featureSettings.anisotropy", featureSettings.anisotropy, 10);
+        gd.addNumericField("z/xy anisotropy", featureSettings.anisotropy, 10);
         gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
                 FeatureSettings.getAsCSVString( featureSettings.activeChannels, 1 ) );
 
@@ -1373,11 +1369,21 @@ public class DeepSegmentation
 
         updateLabelInstancesAndMetadata();
 
-        trainClassifierWithFeatureSelection( getCurrentLabelInstancesAndMetadata() );
+		trainClassifierFromCurrentLabelInstances();
+
     }
 
+    public void trainClassifierFromCurrentLabelInstances()
+	{
+		trainClassifierWithFeatureSelection( getCurrentLabelInstancesAndMetadata() );
+	}
 
+	public void updateLabelInstances()
+	{
+		recomputeLabelInstances = false;
 
+		updateLabelInstancesAndMetadata();
+	}
 
 
     public FeatureSettings getFeatureSettingsFromGenericDialog( GenericDialogPlus gd, boolean showAdvancedSettings )
@@ -1450,14 +1456,6 @@ public class DeepSegmentation
         ObjectReview objectReview = new ObjectReview( this );
         objectReview.runUI( );
     }
-
-    public void reviewLabels( Overlays overlays )
-    {
-
-        overlays.reviewLabelsInRoiManagerUI(  );
-    }
-
-
 
     public boolean showClassifierSettingsDialog()
     {
@@ -1852,6 +1850,12 @@ public class DeepSegmentation
 		logger.info("\n# Saving instances " + key + " to " + directory + File.separator + filename );
 
 		InstancesAndMetadata instancesAndMetadata = getInstancesManager().getInstancesAndMetadata( key );
+
+		if ( instancesAndMetadata == null )
+        {
+            logger.error( "Saving instances failed." );
+            return false;
+        }
 
 		boolean success = InstancesUtils.saveInstancesAndMetadataAsARFF( instancesAndMetadata, directory, filename );
 
@@ -2619,6 +2623,11 @@ public class DeepSegmentation
 		return trainClassifier( getCurrentLabelInstancesAndMetadata(), null );
 	}
 
+	public long[] getNumLabelInstancesPerClass()
+	{
+		return InstancesUtils.getNumInstancesPerClass( getCurrentLabelInstancesAndMetadata().getInstances() );
+	}
+
 	public String trainClassifier( String key )
 	{
 		return trainClassifier( instancesManager.getInstancesAndMetadata( key ), null );
@@ -2744,6 +2753,10 @@ public class DeepSegmentation
 		applyClassifierWithTiling( mostRecentClassifierKey, interval, -1, null , false );
 	}
 
+	public boolean hasClassifier()
+	{
+		return getClassifierManager().getMostRecentClassifierKey() != null;
+	}
 
 	public void applyClassifierWithTiling( String classifierKey, FinalInterval interval )
 	{
@@ -2813,7 +2826,6 @@ public class DeepSegmentation
                 }
             }; thread.start();
         }
-
 
     }
 

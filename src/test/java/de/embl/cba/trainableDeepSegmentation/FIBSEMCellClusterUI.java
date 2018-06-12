@@ -3,7 +3,7 @@ package de.embl.cba.trainableDeepSegmentation;
 import ij.IJ;
 import ij.ImagePlus;
 
-public class FIBSEMCellCluster
+public class FIBSEMCellClusterUI
 {
     public final static String TEST_RESOURCES = "/Volumes/cba/tischer/projects/em-automated-segmentation--data/";
 

@@ -17,7 +17,7 @@ public class CatsUI
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        ImagePlus inputImagePlus = IJ.openImage(TEST_RESOURCES + "3d-objects.zip" );
+        ImagePlus inputImagePlus = IJ.openImage(TEST_RESOURCES + "mri-stack.zip" );
         inputImagePlus.show();
 
         ij.command().run( ContextAwareTrainableSegmentationPlugin.class, true );

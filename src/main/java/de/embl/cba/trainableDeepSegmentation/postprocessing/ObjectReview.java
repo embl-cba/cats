@@ -12,6 +12,7 @@ import ij.gui.PointRoi;
 import ij.gui.Roi;
 import ij.plugin.frame.RoiManager;
 import mcib3d.geom.Object3D;
+import mcib3d.geom.Objects3DPopulation;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,7 +26,7 @@ public class ObjectReview
     DeepSegmentationIJ1Plugin deepSegmentationIJ1Plugin;
 
     String objectsName;
-    public int minVolumeInPixels;
+    public double minCalibratedVolume;
 
 
     public ObjectReview( DeepSegmentation deepSegmentation )
@@ -49,7 +50,8 @@ public class ObjectReview
 
         gd.addChoice( "Objects", deepSegmentation.getSegmentedObjectsNames().toArray( new String[0] ), deepSegmentation.getClassNames().get( 0 ) );
 
-        gd.addNumericField( "Minimum number of voxels ", 10, 0);
+        String volumeUnit = deepSegmentation.getInputImage().getCalibration().getUnit();
+        gd.addNumericField( "Minimum volume [" + volumeUnit +"^3] ", 10, 0);
 
         gd.showDialog();
 
@@ -62,7 +64,7 @@ public class ObjectReview
 
         objectsName = gd.getNextChoice();
 
-        minVolumeInPixels = (int) gd.getNextNumber();
+        minCalibratedVolume = gd.getNextNumber();
 
     }
 
@@ -118,11 +120,10 @@ public class ObjectReview
 
     public static final String SORT_BY_VOLUME = "volume";
 
-    public ArrayList< Roi > getCentroidRoisFromObjects( SegmentedObjects objects,
-                                                        String sorting )
+    public ArrayList< Roi > getCentroidRoisFromObjects( SegmentedObjects objects, String sorting )
     {
 
-        TreeMap< Double, Object3D > sortedObjectMap = getSortedObjectMap( objects );
+        TreeMap< Double, Object3D > sortedObjectMap = getVolumeSortedAndVolumeFilteredObjectMap( objects );
 
         ArrayList< Roi > rois = new ArrayList<>();
 
@@ -136,8 +137,7 @@ public class ObjectReview
             double y = object3D.getValue().getCenterY() * scaleXY;
             double z = object3D.getValue().getCenterZ() * scaleZ;
 
-
-            Roi roi = new PointRoi( x, y );
+            PointRoi roi = new PointRoi( x, y );
 
             if ( deepSegmentation.getInputImage().isHyperStack() )
             {
@@ -148,10 +148,8 @@ public class ObjectReview
                 roi.setPosition( ( int ) ( z ) + 1 );
             }
 
-            long scaledVolume = (int) ( object3D.getKey().intValue() * scaleXY * scaleZ );
-
-
-            roi.setName( "" + scaledVolume + "-" + (int) x + "-" + (int) y + "-" + (int) z + "-" + Overlays.REVIEW );
+            roi.setName( "" + object3D.getKey().intValue() + "-" + (int) x + "-" + (int) y + "-" + (int) z + "-" + Overlays.REVIEW );
+            roi.setSize( 4 );
 
             rois.add( roi );
 
@@ -160,7 +158,26 @@ public class ObjectReview
         return rois;
     }
 
-    private TreeMap< Double, Object3D >  getSortedObjectMap( SegmentedObjects objects )
+
+    private double getCalibratedVolume(  Object3D object3D, Objects3DPopulation objects3DPopulation, ImagePlus imp )
+    {
+        double pixelVolumeInBinnedImage = object3D.getVolumePixels();
+        double scaleXY = objects3DPopulation.getScaleXY();
+        double scaleZ = objects3DPopulation.getScaleZ();
+
+        double pixelVolumeInOriginalImage = pixelVolumeInBinnedImage * scaleXY * scaleZ;
+
+        double calibrationX = imp.getCalibration().pixelWidth;
+        double calibrationY = imp.getCalibration().pixelHeight;
+        double calibrationZ = imp.getCalibration().pixelDepth;
+
+        double calibratedVolume = pixelVolumeInOriginalImage * calibrationX * calibrationY * calibrationZ;
+
+        return calibratedVolume;
+
+    }
+
+    private TreeMap< Double, Object3D > getVolumeSortedAndVolumeFilteredObjectMap( SegmentedObjects objects )
     {
         ArrayList< Object3D > objects3D = objects.objects3DPopulation.getObjectsList();
 
@@ -168,11 +185,11 @@ public class ObjectReview
 
         for ( Object3D object3D : objects3D )
         {
-            double volume = object3D.getVolumePixels() ;
+            double calibratedVolume = getCalibratedVolume( object3D, objects.objects3DPopulation, deepSegmentation.getInputImage() );
 
-            if ( volume > minVolumeInPixels )
+            if ( calibratedVolume > minCalibratedVolume )
             {
-                sortedObjectMap.put( volume, object3D );
+                sortedObjectMap.put( calibratedVolume, object3D );
             }
         }
 

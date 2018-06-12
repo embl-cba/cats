@@ -41,12 +41,12 @@ public class Overlays implements RoiListener
     public boolean zoomInOnRois = false;
     RoiManager roiManager;
     LabelReviewManager labelReviewManager;
+    private Listeners listeners;
 
-
+    private int roiStrokeWidthDuringLabelReview = 4;
 
     public Overlays( DeepSegmentation deepSegmentation )
     {
-
         this.deepSegmentation = deepSegmentation;
         this.colors = deepSegmentation.classColors;
         this.resultImage = deepSegmentation.getResultImage();
@@ -67,6 +67,7 @@ public class Overlays implements RoiListener
         if ( inputImage.getOverlay().contains( probabilities ) )
         {
             inputImage.getOverlay().remove( probabilities );
+            inputImage.updateAndDraw();
         }
         else
         {
@@ -169,6 +170,13 @@ public class Overlays implements RoiListener
 
     public void updateLabels()
     {
+        removeLabels();
+        addLabels();
+
+    }
+
+    public void removeLabels()
+    {
         Overlay overlay = inputImage.getOverlay();
 
         Roi[] rois = overlay.toArray();
@@ -180,10 +188,8 @@ public class Overlays implements RoiListener
                 overlay.remove( roi );
             }
         }
-
-        addLabels();
-
     }
+
 
     protected void addLabels()
     {
@@ -211,6 +217,36 @@ public class Overlays implements RoiListener
     }
 
 
+    public Color changeClassColorViaGUI( LabelButtonsPanel labelButtonsPanel )
+    {
+
+        GenericDialogPlus gd = new GenericDialogPlus("Change class color");
+
+        String[] classNames = new String[ deepSegmentation.getClassNames().size()];
+
+        gd.addChoice("Class", deepSegmentation.getClassNames().toArray( classNames ), deepSegmentation.getClassName( 0 ));
+
+        gd.showDialog();
+
+        if ( gd.wasCanceled() ) return null;
+
+        int classIndex = gd.getNextChoiceIndex();
+
+        ColorChooser colorChooser = new ColorChooser( "" + deepSegmentation.getClassName( classIndex ), colors[ classIndex ], false );
+
+        Color color = colorChooser.getColor();
+
+        setClassColor( classIndex, color );
+
+        labelButtonsPanel.setClassColor( classIndex, color );
+
+        return color;
+    }
+
+    public void setClassColor( int classIndex, Color color )
+    {
+        colors[ classIndex ] = color;
+    }
 
     public String showOrderGUI()
     {
@@ -229,14 +265,21 @@ public class Overlays implements RoiListener
 
     }
 
-    public void reviewLabelsInRoiManagerUI(  )
+    public void reviewLabelsInRoiManagerUI( Listeners listeners  )
     {
-        int classId = getClassIdFromUI();
 
-        if ( classId >= 0 )
-        {
-            reviewLabelsInRoiManager( classId, ORDER_TIME_ADDED );
-        }
+        this.listeners = listeners;
+
+        listeners.updateLabelsWhenImageSliceIsChanged( false );
+
+        int[] classIdAndLineSize = getClassIdAndLineSizeFromUI();
+
+        if ( classIdAndLineSize == null ) return;
+
+        roiStrokeWidthDuringLabelReview = classIdAndLineSize[ 1 ];
+
+        reviewLabelsInRoiManager( classIdAndLineSize[ 0 ], ORDER_TIME_ADDED );
+
     }
 
     public void zoomInOnRois( boolean zoomIn )
@@ -244,14 +287,17 @@ public class Overlays implements RoiListener
         zoomInOnRois = zoomIn;
     }
 
-    private int getClassIdFromUI()
+    private int[] getClassIdAndLineSizeFromUI()
     {
-        GenericDialog gd = new GenericDialogPlus("Labels Review");
-        gd.addChoice( "Classes", deepSegmentation.getClassNames().toArray( new String[0] ), deepSegmentation.getClassNames().get( 0 ) );
+        int[] classIdAndLineSize = new int[ 2 ];
+        GenericDialog gd = new GenericDialogPlus("Label Review");
+        gd.addChoice( "Review labels of class", deepSegmentation.getClassNames().toArray( new String[0] ), deepSegmentation.getClassNames().get( 0 ) );
+        gd.addNumericField( "Roi stroke width during review", roiStrokeWidthDuringLabelReview, 0 );
         gd.showDialog();
-        if ( gd.wasCanceled() ) return -1;
-        int classId = gd.getNextChoiceIndex() ;
-        return classId;
+        if ( gd.wasCanceled() ) return null;
+        classIdAndLineSize[ 0 ] = gd.getNextChoiceIndex() ;
+        classIdAndLineSize[ 1 ] = (int) gd.getNextNumber() ;
+        return classIdAndLineSize;
     }
 
     public void reviewLabelsInRoiManager( int classNum, String order )
@@ -265,6 +311,8 @@ public class Overlays implements RoiListener
         zoomInOnRois = true;
 
         addRoisToRoiManager( rois );
+
+        removeLabels();
 
         updateLabelsWhenRoiManagerIsClosed( );
 
@@ -283,29 +331,6 @@ public class Overlays implements RoiListener
     public static void addRoiToRoiManager( RoiManager manager, ImagePlus imp, Roi roi )
     {
         manager.add( imp, roi, -1 );
-    }
-
-
-    @Override
-    public void roiModified( ImagePlus imagePlus, int actionId )
-    {
-        if ( ( imagePlus != null ) && ( imagePlus == inputImage ) )
-        {
-            if ( actionId == RoiListener.CREATED && zoomInOnRois )
-            {
-                Roi roi = inputImage.getRoi();
-
-                if ( isNewRoi( roi ) )
-                {
-                    if ( roi.getName() != null && roi.getName().contains( REVIEW ) )
-                    {
-                        currentlyDisplayedRoi = roi;
-                        zoomToSelection();
-                    }
-                }
-
-            }
-        }
     }
 
 
@@ -337,14 +362,14 @@ public class Overlays implements RoiListener
         IJ.run("To Selection");
 
         // add roi as overlay to make it persists when the user clicks on the image
-        IJ.run("Add Selection...");
+        //IJ.run("Add Selection...");
 
         // remove roi
-        inputImage.killRoi();
+        //inputImage.killRoi();
 
         updateProbabilities();
 
-        zoomOut( 7 );
+        zoomOut( 9 );
 
     }
 
@@ -356,6 +381,7 @@ public class Overlays implements RoiListener
             public void windowClosing( WindowEvent we )
             {
 
+                listeners.updateLabelsWhenImageSliceIsChanged( true );
                 ArrayList< Example > approvedLabelList = labelReviewManager.getApprovedLabelList( roiManager );
                 deepSegmentation.setExamples( approvedLabelList );
                 clearAllOverlaysAndRois();
@@ -403,6 +429,34 @@ public class Overlays implements RoiListener
             IJ.run( "Out [-]", "" );
         }
     }
+
+
+    @Override
+    public void roiModified( ImagePlus imagePlus, int actionId )
+    {
+        if ( ( imagePlus != null ) && ( imagePlus == inputImage ) )
+        {
+            if ( actionId == RoiListener.CREATED && zoomInOnRois )
+            {
+                Roi roi = inputImage.getRoi();
+
+                roi.setStrokeWidth( roiStrokeWidthDuringLabelReview );
+
+
+                if ( isNewRoi( roi ) )
+                {
+                    if ( roi.getName() != null && roi.getName().contains( REVIEW ) )
+                    {
+                        currentlyDisplayedRoi = roi;
+                        zoomToSelection();
+                    }
+                }
+
+            }
+
+        }
+    }
+
 
 
 }

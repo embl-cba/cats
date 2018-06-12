@@ -16,16 +16,20 @@ public class Listeners
     final Overlays overlays;
     final ImagePlus inputImage;
     final DeepSegmentation deepSegmentation;
+    final LabelButtonsPanel labelButtonsPanel;
+
+    private boolean updateLabelsWhenImageSliceIsChanged = true;
 
     int c;
     int t;
     int z;
 
-    public Listeners( DeepSegmentation deepSegmentation, Overlays overlays )
+    public Listeners( DeepSegmentation deepSegmentation, Overlays overlays, LabelButtonsPanel labelButtonsPanel )
     {
         this.overlays = overlays;
         this.inputImage = deepSegmentation.getInputImage();
         this.deepSegmentation = deepSegmentation;
+        this.labelButtonsPanel = labelButtonsPanel;
 
         addKeyListeners( );
         addImageListeners( );
@@ -59,8 +63,8 @@ public class Listeners
 
                         try
                         {
-                            int iClass = Integer.parseInt("" + e.getKeyChar() );
-                            deepSegmentation.addLabelFromImageRoi(  iClass - 1  );
+                            int classIndex = Integer.parseInt("" + e.getKeyChar() ) - 1;
+                            deepSegmentation.addLabelFromImageRoi(  classIndex  );
                             overlays.updateLabels( );
                         }
                         catch (NumberFormatException e )
@@ -88,7 +92,7 @@ public class Listeners
                             //IJ.log("moving scroll " + e.getKeyCode());
                             inputImage.killRoi();
                             updateExampleLists();
-                            updateLabels();
+                            updateLabelsWhenImageSliceIsChanged();
                             if( showColorOverlay )
                             {
                                 updateProbabilities();
@@ -134,9 +138,12 @@ public class Listeners
             {
                 if ( updatePosition() )
                 {
-                    //overlays.clearAllOverlays();
                     overlays.updateProbabilities();
-                    overlays.updateLabels();
+
+                    if ( updateLabelsWhenImageSliceIsChanged )
+                    {
+                        overlays.updateLabels();
+                    }
                 }
             }
         };
@@ -163,6 +170,12 @@ public class Listeners
 
         return positionChanged;
 
+    }
+
+
+    public void updateLabelsWhenImageSliceIsChanged( boolean trueFalse )
+    {
+        this.updateLabelsWhenImageSliceIsChanged = trueFalse;
     }
 
 
