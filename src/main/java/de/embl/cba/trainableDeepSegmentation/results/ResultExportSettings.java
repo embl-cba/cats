@@ -17,7 +17,7 @@ public class ResultExportSettings
     public int[] binning;
     public String exportType;
     public ProximityFilterSettings proximityFilterSettings = new ProximityFilterSettings();
-    public ImagePlus rawData;
+    public ImagePlus inputImagePlus;
     public ImagePlus resultImagePlus;
     public ResultImage resultImage;
     public boolean saveRawData;

@@ -4,8 +4,6 @@ import de.embl.cba.bigDataTools.Hdf5DataCubeWriter;
 import de.embl.cba.bigDataTools.imaris.ImarisDataSet;
 import de.embl.cba.bigDataTools.imaris.ImarisUtils;
 import de.embl.cba.bigDataTools.imaris.ImarisWriter;
-import de.embl.cba.bigDataTools.logging.IJLazySwingLogger;
-import de.embl.cba.bigDataTools.logging.Logger;
 import de.embl.cba.trainableDeepSegmentation.postprocessing.ProximityFilter3D;
 import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import ij.IJ;
@@ -15,6 +13,10 @@ import ij.plugin.Binner;
 import ij.plugin.Duplicator;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.view.IntervalView;
+import net.imglib2.view.Views;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -42,11 +44,7 @@ public abstract class ResultUtils
                 fileName,
                 "/");
 
-        ArrayList< String > channelNames = new ArrayList<>();
-
-        channelNames.add( fileName );
-
-        imarisDataSet.setChannelNames( channelNames  );
+        setChannelName( fileName, imarisDataSet );
 
         ImarisWriter.writeHeader( imarisDataSet, resultExportSettings.directory, resultExportSettings.exportNamesPrefix + fileName + ".ims" );
 
@@ -65,43 +63,57 @@ public abstract class ResultUtils
 
     public static void saveRawDataAsImaris( ResultExportSettings resultExportSettings  )
     {
-        if ( resultExportSettings.rawData.getNChannels() > 1 )
-        {
-            logger.error( "Multi-channel raw data export for imaris is currently not implemented." );
-            return;
-        }
 
         String fileName = "raw-data";
 
         ImarisDataSet imarisDataSet = new ImarisDataSet();
 
         imarisDataSet.setFromImagePlus(
-                resultExportSettings.rawData,
+                resultExportSettings.inputImagePlus,
                 resultExportSettings.binning,
                 resultExportSettings.directory,
                 fileName,
-                "/");
-
-        ArrayList< String > channelNames = new ArrayList<>();
-
-        channelNames.add( fileName );
-
-        imarisDataSet.setChannelNames( channelNames  );
+                "/" );
 
         // Header
         ImarisWriter.writeHeader( imarisDataSet, resultExportSettings.directory, resultExportSettings.exportNamesPrefix + fileName + ".ims" );
 
         Hdf5DataCubeWriter writer = new Hdf5DataCubeWriter();
 
-        for ( int t = resultExportSettings.timePointsFirstLast[ 0 ]; t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
+        for ( int c = 0; c < imarisDataSet.getNumChannels(); ++c )
         {
-            ImagePlus rawDataFrame = getBinnedRawDataFrame( resultExportSettings, t );
+            for ( int t = resultExportSettings.timePointsFirstLast[ 0 ]; t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
+            {
+                ImagePlus rawDataFrame = getBinnedRawDataFrame( resultExportSettings, t );
 
-            logger.progress( "Writing " + fileName+ ", frame:", ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames() + "..." );
+                logger.progress( "Writing " + fileName,
+                        ", frame:" + ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames()
+                        + ", channel:"+ ( c + 1 ) + "/" + imarisDataSet.getNumChannels() + "..."
+                );
 
-            writer.writeImarisCompatibleResolutionPyramid( rawDataFrame, imarisDataSet, 0, t );
-
+                writer.writeImarisCompatibleResolutionPyramid( rawDataFrame, imarisDataSet, c, t );
+            }
         }
+
+
+    }
+
+
+    private ImagePlus getChannelView( final ImagePlus imp, final int channel )
+    {
+//        final int imagePlusChannelDimension = 2;
+//        RandomAccessibleInterval rai = ImageJFunctions.wrap( imp );
+//        final IntervalView singleChannelView = Views.hyperSlice( rai, imagePlusChannelDimension, channel );
+        return null;
+    }
+
+    private static void setChannelName( String fileName, ImarisDataSet imarisDataSet )
+    {
+        ArrayList< String > channelNames = new ArrayList<>();
+
+        channelNames.add( fileName );
+
+        imarisDataSet.setChannelNames( channelNames );
     }
 
 
@@ -260,7 +272,7 @@ public abstract class ResultUtils
     {
         Duplicator duplicator = new Duplicator();
 
-        ImagePlus rawDataFrame = duplicator.run( resultExportSettings.rawData, 1, 1, 1, resultExportSettings.rawData.getNSlices(), t + 1, t + 1 );
+        ImagePlus rawDataFrame = duplicator.run( resultExportSettings.inputImagePlus, 1, 1, 1, resultExportSettings.inputImagePlus.getNSlices(), t + 1, t + 1 );
 
         if ( resultExportSettings.binning[ 0 ] * resultExportSettings.binning[ 1 ] * resultExportSettings.binning[ 2 ] > 1 )
         {
@@ -293,9 +305,9 @@ public abstract class ResultUtils
             resultExportSettings.binning = new int[] { 1, 1, 1 };
         }
 
-        exportClasses( resultExportSettings );
-
         exportRawData( resultExportSettings );
+
+        exportClasses( resultExportSettings );
 
         createImarisHeader( resultExportSettings );
 

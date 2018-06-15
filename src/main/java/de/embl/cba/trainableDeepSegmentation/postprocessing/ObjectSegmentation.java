@@ -7,6 +7,7 @@ import de.embl.cba.trainableDeepSegmentation.results.ResultUtils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
+import ij.gui.NonBlockingGenericDialog;
 import ij.plugin.Duplicator;
 import inra.ijpb.binary.BinaryImages;
 import inra.ijpb.morphology.AttributeFiltering;
@@ -40,15 +41,19 @@ public class ObjectSegmentation
     public SegmentedObjects runFromUI( )
     {
 
-        GenericDialog gd = openGenericDialog();
+        GenericDialog gd = showInitialisationDialog();
 
         if ( gd == null ) return null;
 
-        setSettingsFromUI( gd );
-
-        setThreshold();
+        setSettingsFromInitialisationDialog( gd );
 
         ImagePlus probabilities = getBinnedProbabilityImage( settings );
+
+        probabilities.show();
+
+        NonBlockingGenericDialog thresholdDialog = showThresholdDialog();
+
+        setThreshold( (float) thresholdDialog.getNextNumber() );
 
         SegmentedObjects segmentedObjects = getSegmentedObjects( probabilities );
 
@@ -79,10 +84,10 @@ public class ObjectSegmentation
         return segmentedObjects;
     }
 
-    private void setThreshold()
+    private void setThreshold( float threshold )
     {
-        settings.threshold = (float) deepSegmentation.getResultImage().getProbabilityRange() * (float) settings.probabilityThreshold;
-        settings.threshold  = ensureThresholdWithinRange( settings.threshold  );
+        settings.threshold = threshold; // (float) deepSegmentation.getResultImage().getProbabilityRange() * (float) settings.probabilityThreshold;
+//        settings.threshold  = ensureThresholdWithinRange( settings.threshold  );
     }
 
     private SegmentedObjects getSegmentedObjects( ImageInt labelMask )
@@ -100,7 +105,7 @@ public class ObjectSegmentation
     private final static String IMAGE_SUITE_3D = "3D Image Suite";
 
 
-    private GenericDialog openGenericDialog()
+    private GenericDialog showInitialisationDialog()
     {
         GenericDialog gd = new GenericDialogPlus("Object Segmentation");
 
@@ -108,13 +113,13 @@ public class ObjectSegmentation
 
         gd.addNumericField( "Time frame ", 1, 0 );
 
-        gd.addNumericField( "Certainty threshold [0-1] ", 0.20, 2);
+//        gd.addNumericField( "Certainty threshold [0-1] ", 0.20, 2);
 
-        gd.addChoice( "Do segmentation using ", new String[]{MORPHOLIBJ,IMAGE_SUITE_3D}, IMAGE_SUITE_3D);
+//        gd.addChoice( "Do segmentation using ", new String[]{MORPHOLIBJ,IMAGE_SUITE_3D}, IMAGE_SUITE_3D);
 
         gd.addStringField( "Binning during segmentation", "1,1,1", 10  );
 
-        gd.addCheckbox( "Show (binned) segmentation images", true );
+//        gd.addCheckbox( "Show (binned) segmentation images", true );
 
         gd.showDialog();
 
@@ -122,16 +127,32 @@ public class ObjectSegmentation
         return gd;
     }
 
-    private void setSettingsFromUI( GenericDialog gd )
+    private NonBlockingGenericDialog showThresholdDialog()
+    {
+        NonBlockingGenericDialog gd = new NonBlockingGenericDialog("Probability threshold");
+
+        gd.addMessage( "Please inspect the probability image to decide on a threshold." );
+
+        int maxThreshold = deepSegmentation.getResultImage().getProbabilityRange();
+
+        gd.addNumericField( "Threshold [ 1 - " + maxThreshold + " ]", 3, 0 );
+
+        gd.showDialog();
+
+        if ( gd.wasCanceled() ) return null;
+
+        return gd;
+    }
+
+    private void setSettingsFromInitialisationDialog( GenericDialog gd )
     {
         settings = new ObjectSegmentationSettings();
         settings.classId = gd.getNextChoiceIndex();
         settings.t = (int) gd.getNextNumber() - 1;
-        settings.probabilityThreshold = gd.getNextNumber();
-        settings.method = gd.getNextChoice();
+//        settings.probabilityThreshold = gd.getNextNumber();
+        settings.method = IMAGE_SUITE_3D; //      settings.method = gd.getNextChoice();
         settings.binning =  Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
-        settings.showSegmentationImages = gd.getNextBoolean();
-
+        settings.showSegmentationImages = true; // gd.getNextBoolean();
     }
 
     private SegmentedObjects segmentUsingMorphoLibJ( ObjectSegmentationSettings settings, ImagePlus probabilities )

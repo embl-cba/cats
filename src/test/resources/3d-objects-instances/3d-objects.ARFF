@@ -1,4 +1,4 @@
-@relation 3d-objectsList.tif
+@relation 3d-objects.tif
 
 @attribute Metadata_Settings_Log2 numeric
 @attribute Metadata_Settings_DownSamplingMethod numeric

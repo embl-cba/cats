@@ -35,18 +35,18 @@ public abstract class ResultImageExportGUI
         }
 
 
-        gd.addMessage( "--- Spatial proximity filtering (currently not working for movies) ---" );
+//        gd.addMessage( "--- Spatial proximity filtering (currently not working for movies) ---" );
 
-        gd.addCheckbox( "Do spatial proximity filtering", false );
-        gd.addNumericField( "Distance (after binning) [pixels]:", 10, 0 );
+//        gd.addCheckbox( "Do spatial proximity filtering", false );
+//        gd.addNumericField( "Distance (after binning) [pixels]:", 10, 0 );
 
-        gd.addChoice( "Reference class:", classNames.toArray( new String[classNames.size()] ), classNames.get( 0 ) );
+//        gd.addChoice( "Reference class:", classNames.toArray( new String[classNames.size()] ), classNames.get( 0 ) );
 
         gd.addMessage( "--- Export modality ---" );
 
         gd.addChoice( "Export as:", exportChoices, ResultExportSettings.SEPARATE_IMARIS );
 
-        // gd.addStringField( "TimePoints [from, to] ", "1," + rawData.getNFrames());
+        // gd.addStringField( "TimePoints [from, to] ", "1," + inputImagePlus.getNFrames());
 
         gd.showDialog();
 
@@ -55,10 +55,10 @@ public abstract class ResultImageExportGUI
         ResultExportSettings resultExportSettings = new ResultExportSettings();
         resultExportSettings.classNames = classNames;
         resultExportSettings.resultImage = resultImage;
-        resultExportSettings.rawData = rawData;
+        resultExportSettings.inputImagePlus = rawData;
         resultExportSettings.timePointsFirstLast = new int[] { 0, rawData.getNFrames() - 1 };
 
-        setFromGUI( classNames, gd, resultExportSettings );
+        setSettingsFromGUI( classNames, gd, resultExportSettings );
 
         if ( getOutputDirectory( resultExportSettings ) ) return;
 
@@ -76,7 +76,7 @@ public abstract class ResultImageExportGUI
         return false;
     }
 
-    private static void setFromGUI( ArrayList< String > classNames, GenericDialog gd, ResultExportSettings resultExportSettings )
+    private static void setSettingsFromGUI( ArrayList< String > classNames, GenericDialog gd, ResultExportSettings resultExportSettings )
     {
         // resultExportSettings.exportNamesPrefix = gd.getNextString();
 
@@ -84,7 +84,7 @@ public abstract class ResultImageExportGUI
 
         setExport( classNames, gd, resultExportSettings );
 
-        setSpatialProximityFiltering( gd, resultExportSettings );
+//        setSpatialProximityFiltering( gd, resultExportSettings );
 
         resultExportSettings.exportType = gd.getNextChoice();
 
@@ -101,8 +101,6 @@ public abstract class ResultImageExportGUI
     private static void setExport( ArrayList< String > classNames, GenericDialog gd, ResultExportSettings resultExportSettings )
     {
         resultExportSettings.saveRawData = gd.getNextBoolean();
-
-
 
         resultExportSettings.classesToBeExported = new ArrayList<>();
 

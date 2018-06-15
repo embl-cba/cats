@@ -221,6 +221,7 @@ public class DeepSegmentation
 	public void segmentObjects()
 	{
 		ObjectSegmentation objectSegmentation = new ObjectSegmentation( this );
+
 		SegmentedObjects objects = objectSegmentation.runFromUI( );
 
 		if ( objects != null )
