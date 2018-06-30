@@ -75,7 +75,7 @@ public class ResultImageDisk implements ResultImage {
     public ImagePlus getDataCubeCopy( FinalInterval interval )
     {
         VirtualStackOfStacks vss = (VirtualStackOfStacks)result.getStack();
-        ImagePlus dataCube = vss.getDataCube( IntervalUtils.convertIntervalToRegion5D( interval ), new int[] {-1,-1,}, 1 );
+        ImagePlus dataCube = vss.getDataCube( IntervalUtils.convertIntervalToRegion5D( interval ), 1 );
         return dataCube;
     }
 

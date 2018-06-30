@@ -1,6 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.results;
 
-import de.embl.cba.bigDataTools.Hdf5DataCubeWriter;
+import de.embl.cba.bigDataTools.hdf5.H5DataCubeWriter;
 import de.embl.cba.bigDataTools.imaris.ImarisDataSet;
 import de.embl.cba.bigDataTools.imaris.ImarisUtils;
 import de.embl.cba.bigDataTools.imaris.ImarisWriter;
@@ -35,20 +35,16 @@ public abstract class ResultUtils
     {
         String fileName = resultExportSettings.classNames.get( classId );
 
-        ImarisDataSet imarisDataSet = new ImarisDataSet();
-
-        imarisDataSet.setFromImagePlus(
-                resultExportSettings.resultImagePlus,
+        ImarisDataSet imarisDataSet = new ImarisDataSet( resultExportSettings.resultImagePlus,
                 resultExportSettings.binning,
                 resultExportSettings.directory,
-                fileName,
-                "/");
+                fileName );
 
         setChannelName( fileName, imarisDataSet );
 
-        ImarisWriter.writeHeader( imarisDataSet, resultExportSettings.directory, resultExportSettings.exportNamesPrefix + fileName + ".ims" );
+        ImarisWriter.writeHeaderFile( imarisDataSet, resultExportSettings.directory, resultExportSettings.exportNamesPrefix + fileName + ".ims" );
 
-        Hdf5DataCubeWriter writer = new Hdf5DataCubeWriter();
+        H5DataCubeWriter writer = new H5DataCubeWriter();
 
         for ( int t = resultExportSettings.timePointsFirstLast[ 0 ]; t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
         {
@@ -66,19 +62,15 @@ public abstract class ResultUtils
 
         String fileName = "raw-data";
 
-        ImarisDataSet imarisDataSet = new ImarisDataSet();
-
-        imarisDataSet.setFromImagePlus(
-                resultExportSettings.inputImagePlus,
+        ImarisDataSet imarisDataSet = new ImarisDataSet( resultExportSettings.inputImagePlus,
                 resultExportSettings.binning,
                 resultExportSettings.directory,
-                fileName,
-                "/" );
+                fileName );
 
         // Header
-        ImarisWriter.writeHeader( imarisDataSet, resultExportSettings.directory, resultExportSettings.exportNamesPrefix + fileName + ".ims" );
+        ImarisWriter.writeHeaderFile( imarisDataSet, resultExportSettings.directory, resultExportSettings.exportNamesPrefix + fileName + ".ims" );
 
-        Hdf5DataCubeWriter writer = new Hdf5DataCubeWriter();
+        H5DataCubeWriter writer = new H5DataCubeWriter();
 
         for ( int c = 0; c < imarisDataSet.getNumChannels(); ++c )
         {

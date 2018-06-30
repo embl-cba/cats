@@ -229,11 +229,11 @@
 			<version>1.3.3</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.github.tischi</groupId>
-			<artifactId>fiji-plugin-bigDataTools</artifactId>
-            <version>612b229c4425b3fabc35ad93c1e87e43efa0fdd5</version>
-		</dependency>
+		<!--<dependency>-->
+			<!--<groupId>com.github.tischi</groupId>-->
+			<!--<artifactId>fiji-plugin-bigDataTools</artifactId>-->
+            <!--<version>dd35f382c9d6d82b965aa7726fb6b8df0110b3b4</version>-->
+		<!--</dependency>-->
 
         <dependency>
             <groupId>com.github.ssgpers</groupId>

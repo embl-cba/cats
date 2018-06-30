@@ -1,5 +1,6 @@
 package de.embl.cba.trainableDeepSegmentation.results;
 
+import de.embl.cba.bigDataTools.utils.Utils;
 import de.embl.cba.utils.logging.Logger;
 
 import de.embl.cba.trainableDeepSegmentation.DeepSegmentation;
@@ -8,13 +9,10 @@ import ij.ImageStack;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import de.embl.cba.trainableDeepSegmentation.utils.IntervalUtils;
-import de.embl.cba.trainableDeepSegmentation.utils.IOUtils;
 import net.imglib2.util.Intervals;
 
 import java.awt.image.ColorModel;
-import java.util.ArrayList;
 
-import static de.embl.cba.bigDataTools.utils.Utils.getDataCubeFromImagePlus;
 
 public class ResultImageRAM implements ResultImage {
 
@@ -143,8 +141,8 @@ public class ResultImageRAM implements ResultImage {
         assert interval.min( IntervalUtils.C ) == interval.max( IntervalUtils.C );
         assert interval.min( IntervalUtils.T ) == interval.max( IntervalUtils.T );
 
-        ImagePlus cube = getDataCubeFromImagePlus( result,
-                IntervalUtils.convertIntervalToRegion5D( interval ));
+        ImagePlus cube = Utils.getDataCube( result,
+                IntervalUtils.convertIntervalToRegion5D( interval ) );
 
         return cube;
     }
