@@ -11,7 +11,7 @@ You need Fiji running Java 1.8; older version will run Java 1.6, which does not 
 
 The plugin should work on any computer however the computations are quite heavy and can thus be slow. The code is multi-threaded such that the execution speed scales basically linearly with the number of cores. 
 
-Examples:
+Labels:
 - For a convolution depth of 3 we observed a pixel classification speed of ~100 kiloVoxel / second using a 32 core Linux CentOS 7 machine.
 - For a convolution depth of 3 we observed a pixel classification speed of ~10 kiloVoxel / second using a 4 core MacBook Air.
 
@@ -19,7 +19,7 @@ Examples:
 
 Download below files and place them in your Fiji plugins folder:
 - https://git.embl.de/grp-almf/fiji-plugin-deep-segmentation/blob/master/out/artifacts/fiji_plugin_trainableDeepSegmentation.jar
-- https://github.com/de.embl.cba.trainableDeepSegmentation.weka/fiji-plugin-bigDataTools/blob/master/out/artifacts/fiji_plugin_bigDataTools.jar
+- https://github.com/de.embl.cba.cats.weka/fiji-plugin-bigDataTools/blob/master/out/artifacts/fiji_plugin_bigDataTools.jar
 - install the ImageScience plugins:
 	- [Fiji > Help > Update ...] 
 	- [Manage update sites]

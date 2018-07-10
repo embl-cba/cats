@@ -139,8 +139,7 @@
 
     <!--
 	<scm>
-		<connection>scm:git:git://github.com/de.embl.cba.trainableDeepSegmentation.wekaconnection>
-		<developerConnection>scm:git:git@github.com:de.embl.cba.trainableDeepSegmentation.wekadeveloperConnection>
+		<connection>scm:git:git://github.com/de.embl.cba.catseveloperConnection>scm:git:git@github.com:de.embl.cba.catsion>
 		<tag>HEAD</tag>
 		<url>https://github.com/tischi</url>
 
@@ -153,7 +152,7 @@
     -->
 
 	<properties>
-		<package-name>de.embl.cba.trainableDeepSegmentation</package-name>
+		<package-name>de.embl.cba.cats</package-name>
         <license.licenseName>bsd_2</license.licenseName>
         <license.copyrightOwners>EMBL</license.copyrightOwners>
         <imagej.app.directory>/Applications/Fiji.app/</imagej.app.directory>
@@ -229,6 +228,7 @@
 			<version>1.3.3</version>
 		</dependency>
 
+		<!-- REPLACED BY LOCAL JAR, BECAUSE jitpack.io uses too old maven for compilation -->
 		<!--<dependency>-->
 			<!--<groupId>com.github.tischi</groupId>-->
 			<!--<artifactId>fiji-plugin-bigDataTools</artifactId>-->

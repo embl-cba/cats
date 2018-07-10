@@ -1,0 +1,86 @@
+
+
+				*/
+
+		// FLY EYE
+		/*
+		IJ.open("/Users/de.embl.cba.cats.weka/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
+		ImagePlus inputImage = IJ.getImage();
+		ImagePlus impClass = IJ.createImage("classification_result",inputImage.getWidth(),inputImage.getHeight(),1,8);
+		impClass.show();
+		inputImage.hide(); inputImage.show();
+
+		IJ.wait(100);
+		Weka_Deep_Segmentation weka_segmentation = new Weka_Deep_Segmentation();
+		weka_segmentation.run("");
+		*/
+
+
+		/*
+		DataStreamingTools dst = new DataStreamingTools();
+		dst.openFromDirectory(
+				"/Users/de.embl.cba.cats.weka/Desktop/raw/",
+				"None",
+				"raw--C.*",
+				"ResolutionLevel 0/Data",
+				null,
+				3,
+				true,
+				false);
+		*/
+
+
+		//IJ.open("/Users/de.embl.cba.cats.weka/Desktop/mitosis.tif");
+		//IJ.open( "/Users/de.embl.cba.cats.weka/Desktop/mri-stack-big-2d-movie.tif" );
+
+		//IJ.open( "/Users/de.embl.cba.cats.weka/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/combined-clahe.tif" );
+		//IJ.open( "/Users/de.embl.cba.cats.weka/Desktop/Nils.tif" );
+
+		//IJ.open("/Users/de.embl.cba.cats.weka/Documents/imagej-courses/data/supervised_segmentation/scanningEM_flyEye.tif");
+
+		//IJ.run("Image Sequence...", "open=/Users/tischer/Documents/transmission-3D-stitching-organoid-size-measurement--data/4x_2p7mm_50umsteps_trans_001/data file=P00001 sort");
+		ImagePlus inputImagePlus = IJ.openImage("/Users/tischer/Documents/arjen-jakobi--em-segmentation--data/p62_in_situ_tomo/e_267_16_B5_sec3_pos1.avi");
+		inputImagePlus.show();
+
+		IJ.wait(100);
+		//IJ.run("Properties...", "unit=nm pixel_width=309 pixel_height=309 voxel_depth=1000");
+
+		Weka_Deep_Segmentation weka_segmentation = new Weka_Deep_Segmentation();
+		weka_segmentation.run("");
+
+		//ImagePlus inputImage = IJ.openImage( "/Users/de.embl.cba.cats.weka/Desktop/segmentation-challenges/brainiac2-mit-edu-SNEMI3D/train" +
+		//		"-labels/train-labels-binary-larger-borders.tif" );
+
+		//weka_segmentation.getWekaSegmentation().setLabelImage( inputImagePlus );
+		//makeRectangle(430, 249, 50, 50);
+
+
+
+		/*
+		Thread t1 = new Thread(new Runnable() {
+			public void run() {
+				byte nIOthreads = 3;
+				dataStreamingTools.openFromDirectory("/Users/de.embl.cba.cats.weka/Documents/fiji-plugin-deep-segmentation/data",
+						"None", ".*--invert.tif", "data", nIOthreads);
+			}
+		}); t1.start();
+		*/
+
+
+		/*
+		ImagePlus inputImage = IJ.getImage();
+		VirtualStackOfStacks vss = (VirtualStackOfStacks) inputImage.getStack();
+		Region5D region5D = new Region5D();
+		region5D.size = new Point3D(40.0,40.0,40.0);
+		region5D.offset = new Point3D(0,0,0);
+		region5D.t = 0;
+		region5D.c = 0;
+		region5D.subSampling = new Point3D(1,1,1);
+		ImagePlus cube = vss.getDataCubeCopy(region5D, 0, 3);
+		cube.show();
+		*/
+
+		//Debug.run("Trainable Deep Weka Segmentation", "");
+
+		//Debug.run("Trainable Deep Weka Segmentation",
+		//		"open=/Users/de.embl.cba.cats.weka/Desktop/EM--crop--registered--iso10nm--invert.tif");
