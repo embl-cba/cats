@@ -260,7 +260,7 @@ public abstract class ResultUtils
     {
         Duplicator duplicator = new Duplicator();
 
-        ImagePlus rawDataFrame = duplicator.run( resultExportSettings.inputImagePlus, c, c, 1, resultExportSettings.inputImagePlus.getNSlices(), t + 1, t + 1 );
+        ImagePlus rawDataFrame = duplicator.run( resultExportSettings.inputImagePlus, c + 1, c + 1, 1, resultExportSettings.inputImagePlus.getNSlices(), t + 1, t + 1 );
 
         if ( resultExportSettings.binning[ 0 ] * resultExportSettings.binning[ 1 ] * resultExportSettings.binning[ 2 ] > 1 )
         {
