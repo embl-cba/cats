@@ -3,6 +3,7 @@ package de.embl.cba.cats.objects;
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.ui.DeepSegmentationIJ1Plugin;
 import de.embl.cba.cats.ui.Overlays;
+import de.embl.cba.cats.utils.Utils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
@@ -12,10 +13,12 @@ import mcib3d.geom.Object3D;
 import mcib3d.geom.Objects3DPopulation;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class ObjectReview
 {
-	public static final String OBJECT_ID = "Object";
+	public static final String OBJECT_ID = "ObjectId";
 	RoiManager roiManager;
     CATS cats;
     DeepSegmentationIJ1Plugin catsIJ1Plugin;
@@ -45,9 +48,9 @@ public class ObjectReview
 
     private GenericDialog openGenericDialog()
     {
-        GenericDialog gd = new GenericDialogPlus( OBJECT_ID + "s Review" );
+        GenericDialog gd = new GenericDialogPlus( "Objects Review" );
 
-        gd.addChoice( OBJECT_ID + "s", cats.getSegmentedObjectsNames().toArray( new String[0] ), cats.getClassNames().get( 0 ) );
+        gd.addChoice( "Objects", cats.getSegmentedObjectsNames().toArray( new String[0] ), cats.getClassNames().get( 0 ) );
 
         gd.addNumericField( "Minimum volume [ " + cats.getInputImage().getCalibration().getUnit() + "^3 ] ", 10, 0);
 
@@ -69,10 +72,15 @@ public class ObjectReview
 
     public void reviewObjectsUsingRoiManager( SegmentedObjects objects )
     {
-        ArrayList< Roi > rois = getCentroidRoisFromObjects( objects, SORT_BY_VOLUME );
+        ArrayList< Roi > rois = getCentroidRoisOfVolumeFilteredObjects( objects, SORT_BY_VOLUME );
 
         makeImageTheActiveWindow( cats.getInputImage() );
 
+        configureObjectOverlayAndRoiManager( rois );
+    }
+
+    private void configureObjectOverlayAndRoiManager( ArrayList< Roi > rois )
+    {
         roiManager = new RoiManager();
 
         Overlays overlays = new Overlays( cats );
@@ -84,7 +92,7 @@ public class ObjectReview
 
         cats.logger.info( "\nReviewing objects: " + rois.size() );
 
-        overlays.zoomInOnRois( true );
+        overlays.setZoomLevel( zoomLevel );
 
         overlays.cleanUpOverlaysAndRoisWhenRoiManagerIsClosed( roiManager );
     }
@@ -116,10 +124,9 @@ public class ObjectReview
 
     public static final String SORT_BY_VOLUME = "volume";
 
-    public ArrayList< Roi > getCentroidRoisFromObjects( SegmentedObjects objects, String sorting )
+    public ArrayList< Roi > getCentroidRoisOfVolumeFilteredObjects( SegmentedObjects objects, String sorting )
     {
-
-		reviewedObjects = getVolumeFilteredObjects( objects );
+        reviewedObjects = getVolumeFilteredObjects( objects, sorting );
 
 		ArrayList< Roi > rois = new ArrayList<>();
 
@@ -151,8 +158,8 @@ public class ObjectReview
 					objects.objects3DPopulation.getScaleZ(),
 					cats.getInputImage() );
 
-            roi.setName( "#" + objectID + " volume " + calibratedVolume);
-            roi.setProperty( Overlays.REVIEW, "" );
+            roi.setName( "#" + ( objectID + 1) + " volume " + calibratedVolume );
+            roi.setProperty( Overlays.REVIEW, "ObjectReview" );
 			roi.setProperty( OBJECT_ID,  "" + objectID );
 			roi.setSize( 4 );
             rois.add( roi );
@@ -180,28 +187,38 @@ public class ObjectReview
 
     }
 
-    private ArrayList< Object3D > getVolumeFilteredObjects( SegmentedObjects objects )
+    private ArrayList< Object3D > getVolumeFilteredObjects( SegmentedObjects segmentedObjects, String sorting )
     {
-        ArrayList< Object3D > objects3D = objects.objects3DPopulation.getObjectsList();
+        ArrayList< Object3D > allObjects = segmentedObjects.objects3DPopulation.getObjectsList();
 
-		ArrayList< Object3D > filteredObjects3D = new ArrayList<>( );
+        cats.getLogger().info( "Number of all objects: " + allObjects.size() );
 
-        for ( Object3D object3D : objects3D )
+        ArrayList< Object3D > objects = new ArrayList<>( );
+        ArrayList< Double > volumes = new ArrayList<>( );
+
+        for ( Object3D object3D : allObjects )
         {
             double calibratedVolume = getCalibratedVolume( object3D,
-					objects.objects3DPopulation.getScaleXY(),
-					objects.objects3DPopulation.getScaleZ(),
+					segmentedObjects.objects3DPopulation.getScaleXY(),
+					segmentedObjects.objects3DPopulation.getScaleZ(),
 					cats.getInputImage() );
 
             if ( calibratedVolume > minCalibratedVolume )
             {
-				filteredObjects3D.add( object3D );
+				objects.add( object3D );
+                volumes.add( calibratedVolume );
             }
         }
 
-        // TODO: sort array list by volume
+        cats.getLogger().info( "Number of objects after volume filter: " + objects.size() );
 
-        return filteredObjects3D;
+        if ( sorting.equals( SORT_BY_VOLUME ) )
+        {
+            Collections.sort( objects,
+                    Comparator.comparing( item -> - volumes.get( objects.indexOf( item ) ) ) );
+        }
+
+        return objects;
     }
 
     public static ArrayList< Roi > getOvalRoisFromObjects( SegmentedObjects objects )
@@ -222,7 +239,18 @@ public class ObjectReview
         return rois;
     }
 
-	public ArrayList< Object3D > getApprovedObjectsFromRoiManager( )
+    public ImagePlus getObjectsInRoiManagerAsImage( )
+    {
+        Objects3DPopulation objects3DPopulation = new Objects3DPopulation( getObjectsFromRoiManager() );
+
+        ImagePlus imp = Utils.create8bitImagePlus( cats.getInputImageDimensions() );
+
+        objects3DPopulation.draw( imp.getImageStack(), 255 );
+
+        return imp;
+    }
+
+	public ArrayList< Object3D > getObjectsFromRoiManager( )
 	{
 		Roi[] approvedRois = roiManager.getRoisAsArray();
 

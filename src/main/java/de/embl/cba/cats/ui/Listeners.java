@@ -95,7 +95,7 @@ public class Listeners
                             updateLabelsWhenImageSliceIsChanged();
                             if( showColorOverlay )
                             {
-                                updateProbabilities();
+                                updateProbabilitiesOverlay();
                                 inputImage.updateAndDraw();
                             }
                         }*/
@@ -138,7 +138,7 @@ public class Listeners
             {
                 if ( updatePosition() )
                 {
-                    overlays.updateProbabilities();
+                    overlays.updateProbabilitiesOverlay();
 
                     if ( updateLabelsWhenImageSliceIsChanged )
                     {

@@ -121,7 +121,7 @@ public class LabelReview
 
         setLabelsCurrentlyBeingReviewed( rois );
 
-        overlays.zoomInOnRois( true );
+        overlays.setZoomLevel( 3 );
         overlays.cleanUpOverlaysAndRoisWhenRoiManagerIsClosed( manager );
 
     }
@@ -201,7 +201,6 @@ public class LabelReview
 
         if ( ordering == ORDER_Z )
         {
-
             Collections.sort( keysRequestedClass, new Comparator< String >() {
                 public int compare( String o1, String o2 )
                 {
@@ -221,7 +220,7 @@ public class LabelReview
             Roi roi = getRoiFromLabel( labelMap.get( key ) );
             roi.setProperty( KEY, key );
             roi.setName( key );
-            roi.setProperty( Overlays.REVIEW, "" );
+            roi.setProperty( Overlays.REVIEW, Overlays.LABEL_REVIEW );
             rois.add( roi );
         }
 

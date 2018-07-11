@@ -29,6 +29,7 @@ public class Overlays implements RoiListener
     public static final String RESULT_OVERLAY = "result overlay";
     public static final String REVIEW = "review";
     public static final int ZOOM_LEVEL_MAX = 10;
+    public static final String LABEL_REVIEW = "LabelReview";
 
     Color[] colors;
     final ResultImage resultImage;
@@ -39,13 +40,13 @@ public class Overlays implements RoiListener
     private int overlayOpacity = 33;
     private Roi probabilities;
     Roi currentlyDisplayedRoi;
-    public boolean zoomInOnRois = false;
     RoiManager roiManager;
     LabelReview labelReview;
     private Listeners listeners;
 
     private int roiStrokeWidthDuringLabelReview = 4;
-    private int zoomLevel;
+    private int zoomLevel = 0;
+    private int classID;
 
     public Overlays( CATS CATS )
     {
@@ -55,7 +56,7 @@ public class Overlays implements RoiListener
         this.inputImage = CATS.getInputImage();
 
         setProbabilityOverlayLut( OVERLAY_MODE_PROBABILITIES );
-        inputImage.setOverlay( new Overlay(  ) );
+        inputImage.setOverlay( new Overlay( ) );
 
         Roi.addRoiListener( this );
     }
@@ -135,7 +136,7 @@ public class Overlays implements RoiListener
         inputImage.killRoi();
     }
 
-    public void updateProbabilities()
+    public void updateProbabilitiesOverlay()
     {
         if ( inputImage.getOverlay().contains( probabilities ) )
         {
@@ -161,7 +162,7 @@ public class Overlays implements RoiListener
     {
         if ( inputImage.getOverlay().contains( probabilities ) )
         {
-            updateProbabilities();
+            updateProbabilitiesOverlay();
         }
         else
         {
@@ -274,19 +275,10 @@ public class Overlays implements RoiListener
 
         listeners.updateLabelsWhenImageSliceIsChanged( false );
 
-        int[] classIdAndLineSize = getClassIdAndLineSizeFromUI();
+        if ( ! setLabelReviewSettingsFromUI() ) return;
 
-        if ( classIdAndLineSize == null ) return;
+        reviewLabelsInRoiManager( ORDER_TIME_ADDED );
 
-        roiStrokeWidthDuringLabelReview = classIdAndLineSize[ 1 ];
-
-        reviewLabelsInRoiManager( classIdAndLineSize[ 0 ], ORDER_TIME_ADDED );
-
-    }
-
-    public void zoomInOnRois( boolean zoomIn )
-    {
-        zoomInOnRois = zoomIn;
     }
 
     public void setZoomLevel( int zoomLevel )
@@ -294,35 +286,37 @@ public class Overlays implements RoiListener
         this.zoomLevel = zoomLevel;
     }
 
-    private int[] getClassIdAndLineSizeFromUI()
+    private boolean setLabelReviewSettingsFromUI()
     {
-        int[] classIdAndLineSize = new int[ 2 ];
         GenericDialog gd = new GenericDialogPlus("Label Review");
+
         gd.addChoice( "Review labels of class", CATS.getClassNames().toArray( new String[0] ), CATS.getClassNames().get( 0 ) );
         gd.addNumericField( "Roi stroke width during review", roiStrokeWidthDuringLabelReview, 0 );
+        gd.addNumericField( "Zoom level [ 0 - 10 ]", 5, 0 );
+
         gd.showDialog();
-        if ( gd.wasCanceled() ) return null;
-        classIdAndLineSize[ 0 ] = gd.getNextChoiceIndex() ;
-        classIdAndLineSize[ 1 ] = (int) gd.getNextNumber() ;
-        return classIdAndLineSize;
+        if ( gd.wasCanceled() ) return false;
+
+        classID = gd.getNextChoiceIndex();
+        roiStrokeWidthDuringLabelReview = (int) gd.getNextNumber();
+        zoomLevel = (int) gd.getNextNumber() ;
+
+        return true;
     }
 
-    public void reviewLabelsInRoiManager( int classNum, String order )
+    public void reviewLabelsInRoiManager( String order )
     {
         labelReview = new LabelReview( CATS.getLabelManager().getLabels(), CATS );
 
-        ArrayList< Roi > rois = labelReview.getRoisFromLabels( classNum, order );
+        ArrayList< Roi > rois = labelReview.getRoisFromLabels( classID, order );
 
         labelReview.setLabelsCurrentlyBeingReviewed( rois );
-
-        zoomInOnRois = true;
 
         addRoisToRoiManager( rois );
 
         removeLabels();
 
-        updateLabelsWhenRoiManagerIsClosed( );
-
+        configureLabelsReviewBehaviourWhenRoiManagerIsClosed();
     }
 
     private void addRoisToRoiManager( ArrayList< Roi > rois )
@@ -337,9 +331,8 @@ public class Overlays implements RoiListener
 
     public static void addRoiToRoiManager( RoiManager manager, ImagePlus imp, Roi roi )
     {
-        manager.add( imp, roi, -1 );
+        manager.add( imp, roi, -1 ); // TODO: bug in RoiManager -> submitted issue
     }
-
 
     private boolean isNewRoi( Roi roi )
     {
@@ -362,25 +355,22 @@ public class Overlays implements RoiListener
     private void zoomToSelection()
     {
 
-        Roi roi = inputImage.getRoi();
+        if ( zoomLevel > 0 )
+        {
+            Roi roi = inputImage.getRoi();
 
-        if ( roi == null ) return;
+            if ( roi == null ) return;
 
-        IJ.run("To Selection");
+            IJ.run( "To Selection" );
 
-        // add roi as overlay to make it persists when the user clicks on the image
-        //IJ.run("Add Selection...");
+            zoomOut( ZOOM_LEVEL_MAX - zoomLevel );
 
-        // remove roi
-        //inputImage.killRoi();
-
-        updateProbabilities();
-
-        zoomOut( ZOOM_LEVEL_MAX - zoomLevel );
+            updateProbabilitiesOverlay();
+        }
 
     }
 
-    public void updateLabelsWhenRoiManagerIsClosed(  )
+    public void configureLabelsReviewBehaviourWhenRoiManagerIsClosed(  )
     {
         roiManager.addWindowListener( new WindowAdapter()
         {
@@ -393,8 +383,7 @@ public class Overlays implements RoiListener
                 CATS.getLabelManager().setLabels( approvedLabelList );
                 clearAllOverlaysAndRois();
                 updateLabels();
-                zoomInOnRois = false;
-
+                zoomLevel = 0;
             }
         });
     }
@@ -416,7 +405,7 @@ public class Overlays implements RoiListener
                 }
 
                 updateLabels();
-                zoomInOnRois = false;
+                zoomLevel = 0;
             }
         });
     }
@@ -442,17 +431,21 @@ public class Overlays implements RoiListener
     {
         if ( ( imagePlus != null ) && ( imagePlus == inputImage ) )
         {
-            if ( actionId == RoiListener.CREATED && zoomInOnRois )
+            if ( actionId == RoiListener.CREATED )
             {
                 Roi roi = inputImage.getRoi();
-
-                roi.setStrokeWidth( roiStrokeWidthDuringLabelReview );
 
                 if ( isNewRoi( roi ) )
                 {
                     if ( roi.getName() != null && roi.getProperty( REVIEW ) != null )
                     {
+                        if ( roi.getProperty( REVIEW ).equals( LABEL_REVIEW ) )
+                        {
+                            roi.setStrokeWidth( roiStrokeWidthDuringLabelReview );
+                        }
+
                         currentlyDisplayedRoi = roi;
+
                         zoomToSelection();
                     }
                 }

@@ -50,7 +50,7 @@ public class CATSPlugin implements Command, Interactive
     public static final String SEGMENT_OBJECTS = "Segment objects";
     public static final String REVIEW_OBJECTS = "Review objects";
     public static final String REVIEW_LABELS = "Review labels";
-	public static final String CREATE_OBJECT_IMAGE = "Create object image";
+	public static final String CREATE_OBJECTS_IMAGE = "Create object image";
 
 	public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
     public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
@@ -74,6 +74,7 @@ public class CATSPlugin implements Command, Interactive
                     IO_LOAD_LABEL_INSTANCES,
                     SEGMENT_OBJECTS,
                     REVIEW_OBJECTS,
+                    CREATE_OBJECTS_IMAGE,
                     IO_EXPORT_RESULT_IMAGE,
 //                    CHANGE_FEATURE_COMPUTATION_SETTINGS,
 //                    CHANGE_RESULT_OVERLAY_OPACITY,
@@ -167,9 +168,9 @@ public class CATSPlugin implements Command, Interactive
                     case REVIEW_OBJECTS:
                         cats.reviewObjects();
                         break;
-					case CREATE_OBJECT_IMAGE:
-						cats.getObjectReview();
-						break;
+					case CREATE_OBJECTS_IMAGE:
+                        createObjectsImage();
+                        break;
 					case REVIEW_LABELS:
                         overlays.reviewLabelsInRoiManagerUI( listeners );
                         break;
@@ -311,6 +312,13 @@ public class CATSPlugin implements Command, Interactive
         } );
 
         thread.start();
+    }
+
+    private void createObjectsImage()
+    {
+        final ImagePlus objectsImage = cats.getObjectReview().getObjectsInRoiManagerAsImage();
+        objectsImage.setTitle( "objects" );
+        objectsImage.show();
     }
 
 

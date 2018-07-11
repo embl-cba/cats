@@ -8,10 +8,11 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
-import de.embl.cba.cats.utils.IntervalUtils;
 import net.imglib2.util.Intervals;
 
 import java.awt.image.ColorModel;
+
+import static de.embl.cba.cats.utils.IntervalUtils.*;
 
 
 public class ResultImageRAM implements ResultImage {
@@ -28,7 +29,7 @@ public class ResultImageRAM implements ResultImage {
     {
         this.CATS = CATS;
         this.logger = CATS.getLogger();
-        this.result = createImagePlus( dimensions );
+        this.result = de.embl.cba.cats.utils.Utils.create8bitImagePlus( dimensions );
         this.dimensions = dimensions;
         this.interval = null;
     }
@@ -39,7 +40,7 @@ public class ResultImageRAM implements ResultImage {
         this.logger = CATS.getLogger();
         this.interval = interval;
         this.dimensions = Intervals.dimensionsAsLongArray( interval );
-        this.result = createImagePlus( dimensions);
+        this.result = de.embl.cba.cats.utils.Utils.create8bitImagePlus( dimensions);
     }
 
     public long[] getDimensions()
@@ -63,8 +64,8 @@ public class ResultImageRAM implements ResultImage {
     {
         if ( interval != null )
         {
-            slice -= interval.min( IntervalUtils.Z );
-            frame -= interval.min( IntervalUtils.T );
+            slice -= interval.min( Z );
+            frame -= interval.min( T );
         }
 
         int stackIndex = result.getStackIndex(  0, slice, frame );
@@ -76,8 +77,8 @@ public class ResultImageRAM implements ResultImage {
     {
         if ( interval != null )
         {
-            slice -= interval.min( IntervalUtils.Z );
-            frame -= interval.min( IntervalUtils.T );
+            slice -= interval.min( Z );
+            frame -= interval.min( T );
         }
 
         int stackIndex = result.getStackIndex(  0, slice, frame );
@@ -94,10 +95,10 @@ public class ResultImageRAM implements ResultImage {
     {
         if ( interval != null )
         {
-            x -= interval.min( IntervalUtils.X );
-            y -= interval.min( IntervalUtils.Y );
-            z -= interval.min( IntervalUtils.Z );
-            t -= interval.min( IntervalUtils.T );
+            x -= interval.min( X );
+            y -= interval.min( Y );
+            z -= interval.min( Z );
+            t -= interval.min( T );
         }
 
         int lutCertainty = (int) ( certainty * ( CLASS_LUT_WIDTH - 1.0 ) );
@@ -106,27 +107,6 @@ public class ResultImageRAM implements ResultImage {
 
         int n = result.getStackIndex( 1, (int) z+1, (int) t+1 );
         result.getStack().getProcessor( n ).set( (int) x, (int) y, (byte) ( classOffset + lutCertainty ));
-    }
-
-    private ImagePlus createImagePlus( long[] dimensions )
-    {
-        ImageStack stack = ImageStack.create(
-                (int) dimensions[ IntervalUtils.X ],
-                (int) dimensions[ IntervalUtils.Y ],
-                (int) (dimensions[ IntervalUtils.Z ] * dimensions[ IntervalUtils.T ]),
-                8);
-
-        result = new ImagePlus( "results", stack  );
-
-        result.setDimensions(
-                1,
-                (int) dimensions[ IntervalUtils.Z ],
-                (int) dimensions[ IntervalUtils.T ]);
-
-        result.setOpenAsHyperStack(true);
-        result.setTitle("results");
-
-        return ( result );
     }
 
     @Override
@@ -138,11 +118,11 @@ public class ResultImageRAM implements ResultImage {
     @Override
     public ImagePlus getDataCubeCopy( FinalInterval interval )
     {
-        assert interval.min( IntervalUtils.C ) == interval.max( IntervalUtils.C );
-        assert interval.min( IntervalUtils.T ) == interval.max( IntervalUtils.T );
+        assert interval.min( C ) == interval.max( C );
+        assert interval.min( T ) == interval.max( T );
 
         ImagePlus cube = Utils.getDataCube( result,
-                IntervalUtils.convertIntervalToRegion5D( interval ) );
+                convertIntervalToRegion5D( interval ) );
 
         return cube;
     }

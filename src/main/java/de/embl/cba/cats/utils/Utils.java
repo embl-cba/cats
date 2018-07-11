@@ -47,6 +47,8 @@ import util.FindConnectedRegions.Results;
 
 import de.embl.cba.utils.logging.Logger;
 
+import static de.embl.cba.cats.utils.IntervalUtils.*;
+
 /**
  * This class implements useful methods for the Weka Segmentation library.
  */
@@ -837,4 +839,25 @@ public final class Utils {
 
 		return trimmedDataSetName;
     }
+
+	public static ImagePlus create8bitImagePlus( long[] dimensions )
+	{
+		ImageStack stack = ImageStack.create(
+				(int) dimensions[ X ],
+				(int) dimensions[ Y ],
+				(int) (dimensions[ Z ] * dimensions[ T ]),
+				8);
+
+		ImagePlus imp = new ImagePlus( "results", stack  );
+
+		imp.setDimensions(
+				1,
+				(int) dimensions[ Z ],
+				(int) dimensions[ T ]);
+
+		imp.setOpenAsHyperStack(true);
+		imp.setTitle("Objects");
+
+		return imp;
+	}
 }

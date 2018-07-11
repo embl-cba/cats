@@ -228,7 +228,6 @@ public class CATS
 
 	}
 
-
 	private static void sleep()
 	{
 		try
