@@ -244,14 +244,32 @@ public abstract class ResultUtils
 
         String className = resultExportSettings.classNames.get( classId );
 
+        final ImageStack stackOfAllTimepoints = new ImageStack( resultExportSettings.inputImagePlus.getWidth(), resultExportSettings.inputImagePlus.getHeight() );
+
+        int numSlices = resultExportSettings.inputImagePlus.getNSlices();
+
+        int numTimepoints = resultExportSettings.timePointsFirstLast[ 1 ] - resultExportSettings.timePointsFirstLast[ 0 ] + 1;
+
         for ( int t = resultExportSettings.timePointsFirstLast[ 0 ]; t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
         {
             ImagePlus impClass = getBinnedAndProximityFilteredClassImage( classId, resultExportSettings, t );
-            impClass.setTitle( resultExportSettings.exportNamesPrefix + className + "--T" + ( t + 1 ) );
-            impClass.show();
-            logDone( resultExportSettings, className, t, "Displayed " );
+
+            final ImageStack stackOfThisTimepoint = impClass.getStack();
+
+            for ( int slice = 0; slice < numSlices; ++slice )
+            {
+                stackOfAllTimepoints.addSlice( stackOfThisTimepoint.getProcessor( slice + 1 ) );
+            }
+
         }
 
+        final ImagePlus imp = new ImagePlus( resultExportSettings.exportNamesPrefix + className, stackOfAllTimepoints );
+        imp.setDimensions( 1, numSlices, numTimepoints );
+        imp.setOpenAsHyperStack( true );
+        imp.setDisplayRange( 0, resultExportSettings.classLutWidth );
+        imp.show();
+
+        logDone( resultExportSettings, className, numTimepoints, "Displayed " );
     }
 
 
@@ -297,7 +315,7 @@ public abstract class ResultUtils
 
     private static void createExportDirectory( ResultExportSettings resultExportSettings )
     {
-        if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_AS_SEPARATE_IMAGES ) )
+        if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
         {
             IOUtils.createDirectoryIfNotExists( resultExportSettings.directory );
         }
@@ -363,7 +381,7 @@ public abstract class ResultUtils
                     {
                         saveClassAsTiff( classIndex, resultExportSettings );
                     }
-                    else if ( resultExportSettings.exportType.equals( ResultExportSettings.SHOW_AS_SEPARATE_IMAGES ) )
+                    else if ( resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
                     {
                         showClassAsImage( classIndex, resultExportSettings );
                     }

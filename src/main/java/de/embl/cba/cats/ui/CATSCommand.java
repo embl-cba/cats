@@ -2,12 +2,14 @@ package de.embl.cba.cats.ui;
 
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.classification.ClassificationRangeUtils;
+import de.embl.cba.cats.instances.InstancesAndMetadata;
 import de.embl.cba.cats.results.ResultImageExportGUI;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.cats.utils.IntervalUtils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.GenericDialog;
 import net.imglib2.FinalInterval;
 import org.scijava.command.Command;
 import org.scijava.command.Interactive;
@@ -15,12 +17,18 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.Button;
 
+import java.util.ArrayList;
+import java.util.Set;
+
+import static de.embl.cba.cats.CATS.logger;
 import static de.embl.cba.cats.utils.IOUtils.getOpenDirFile;
 import static de.embl.cba.cats.utils.IOUtils.getSaveDirFile;
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>cats", initializer = "init")
-public class CATSPlugin implements Command, Interactive
+public class CATSCommand implements Command, Interactive
 {
+    public static final String ARFF = ".ARFF";
+    public static final String CLASSIFIER = ".classifier";
     @Parameter ( required = true )
     public ImagePlus inputImage;
 
@@ -29,14 +37,15 @@ public class CATSPlugin implements Command, Interactive
     public static final String IO_SAVE_CLASSIFIER = "Save classifier";
     public static final String APPLY_CLASSIFIER = "Apply classifier";
     public static final String ADD_CLASS = "Add class";
-    public static final String CHANGE_CLASS_NAMES = "Change class name";
-    public static final String CHANGE_COLORS = "Change class color";
+    public static final String CHANGE_CLASS_NAMES = "Change class names";
+    public static final String CHANGE_COLORS = "Change class colors";
     public static final String CHANGE_RESULT_OVERLAY_OPACITY = "Overlay opacity";
     public static final String UPDATE_LABEL_INSTANCES = "Update label instances";
     public static final String UPDATE_LABELS = "Update labels";
     public static final String TRAIN_CLASSIFIER = "Train classifier";
     public static final String IO_LOAD_LABEL_IMAGE = "Load label image";
     public static final String IO_LOAD_LABEL_INSTANCES = "Load label instances";
+    public static final String STOP_CLASSIFICATION = "Stop classification";
     public static final String IO_SAVE_LABELS = "Save label instances of current image";
     public static final String IO_EXPORT_RESULT_IMAGE = "Export results";
     public static final String TRAIN_FROM_LABEL_IMAGE = "Train from label image";
@@ -45,18 +54,21 @@ public class CATSPlugin implements Command, Interactive
     public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
     public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
     public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier settings";
-    public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature settings";
+    public static final String CHANGE_FEATURE_SETTINGS = "Change feature settings";
     public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature settings";
     public static final String SEGMENT_OBJECTS = "Segment objects";
     public static final String REVIEW_OBJECTS = "Review objects";
     public static final String REVIEW_LABELS = "Review labels";
 	public static final String CREATE_OBJECTS_IMAGE = "Create object image";
+    public static final String UPDATE_LABELS_AND_TRAIN_CLASSIFIER = "Update labels and train classifier";
+    public static final String LOAD_LABELS_AND_TRAIN_CLASSIFIER = "Load labels and train classifier";
 
-	public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
+
+    public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
     public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
 
 
-    @Parameter( label = "Perform Action", callback = "performAction" )
+    @Parameter( label = "Execute action", callback = "performBasicAction" )
     private Button performActionButton;
 
     @Parameter(label = "Actions", persist = false,
@@ -76,9 +88,10 @@ public class CATSPlugin implements Command, Interactive
                     REVIEW_OBJECTS,
                     CREATE_OBJECTS_IMAGE,
                     IO_EXPORT_RESULT_IMAGE,
-//                    CHANGE_FEATURE_COMPUTATION_SETTINGS,
+                    CHANGE_FEATURE_SETTINGS,
 //                    CHANGE_RESULT_OVERLAY_OPACITY,
                     CHANGE_CLASSIFIER_SETTINGS,
+                    STOP_CLASSIFICATION
 //                    UPDATE_LABELS,
 //                    IO_LOAD_LABEL_IMAGE,
 //                    TRAIN_FROM_LABEL_IMAGE,
@@ -88,11 +101,25 @@ public class CATSPlugin implements Command, Interactive
 //                    CHANGE_DEBUG_SETTINGS,
 //                    CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS
             } )
-    private String actionInput = ADD_CLASS;
+
+    private String basicActionInput = ADD_CLASS;
 
     @Parameter(label = "Classification range", persist = false,
         choices = { ClassificationRangeUtils.WHOLE_DATA_SET, ClassificationRangeUtils.SELECTION_PM10Z })
     private String range = ClassificationRangeUtils.SELECTION_PM10Z;
+
+
+    @Parameter( label = "Execute combined actions", callback = "performAdvancedAction" )
+    private Button performAdvancedActionButton;
+
+    @Parameter(label = "Combined actions", persist = false,
+            choices = {
+                    LOAD_LABELS_AND_TRAIN_CLASSIFIER,
+                    UPDATE_LABELS_AND_TRAIN_CLASSIFIER
+            } )
+
+    private String advancedActionInput = ADD_CLASS;
+
 
     /*
     @Parameter( visibility = ItemVisibility.MESSAGE )
@@ -110,11 +137,6 @@ public class CATSPlugin implements Command, Interactive
 
     private LabelButtonsPanel labelButtonsPanel;
 
-    private String instancesFilename;
-
-    private String classifierFilename;
-
-
     @Override
     public void run()
     {
@@ -129,6 +151,8 @@ public class CATSPlugin implements Command, Interactive
 
         cats.setInputImage( inputImage );
 
+        cats.imageCalibrationDialog();
+
         cats.initialisationDialog();
 
         cats.featureSettingsDialog( false );
@@ -141,13 +165,9 @@ public class CATSPlugin implements Command, Interactive
 
         cats.reserveKeyboardShortcuts();
 
-        instancesFilename = inputImage.getTitle() + ".ARFF";
-
-        classifierFilename = inputImage.getTitle() + ".classifier";
-
     }
 
-    protected void performAction()
+    protected void performBasicAction()
     {
 
         Thread thread = new Thread(new Runnable()
@@ -160,7 +180,7 @@ public class CATSPlugin implements Command, Interactive
                 String[] dirFile;
                 GenericDialogPlus gdWait;
 
-                switch ( actionInput )
+                switch ( basicActionInput )
                 {
                     case SEGMENT_OBJECTS:
                         cats.segmentObjects();
@@ -177,7 +197,7 @@ public class CATSPlugin implements Command, Interactive
                     case CHANGE_CLASSIFIER_SETTINGS:
                         cats.showClassifierSettingsDialog();
                         break;
-                    case CHANGE_FEATURE_COMPUTATION_SETTINGS:
+                    case CHANGE_FEATURE_SETTINGS:
                         cats.featureSettingsDialog( false );
                         break;
                     case CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS:
@@ -207,12 +227,30 @@ public class CATSPlugin implements Command, Interactive
 //                        dirFile = getSaveDirFile( "Please choose a output file", ".classifier" );
 //                        cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
 //                        break;
-                    case IO_LOAD_LABEL_INSTANCES:
-                        dirFile = IOUtils.getOpenDirFile( "Please choose instances file" );
-                        cats.loadInstancesAndMetadata( dirFile[ 0 ], dirFile[ 1 ] );
-                        instancesFilename = dirFile[ 1 ];
-                        labelButtonsPanel.updateButtons();
+                    case STOP_CLASSIFICATION:
+
+                        cats.stopCurrentTasks = true;
+
+                        String dotDotDot = "...";
+
+                        while ( cats.isBusy )
+                        {
+                            logger.progress( "Waiting for tasks to finish", dotDotDot );
+                            dotDotDot += ".";
+                            try { Thread.sleep( 3000 ); }
+                            catch ( InterruptedException e ) { e.printStackTrace(); };
+                        }
+
+                        logger.info("...all tasks finished.");
+
+                        cats.stopCurrentTasks = false;
                         break;
+
+                    case IO_LOAD_LABEL_INSTANCES:
+                        loadLabelInstances();
+                        break;
+
+
 //                    case IO_SAVE_LABELS:
 //                        dirFile = getSaveDirFile( "Save file", instancesFilename, ".ARFF" );
 //                        instancesFilename = dirFile[ 1 ];
@@ -254,9 +292,7 @@ public class CATSPlugin implements Command, Interactive
                         break;
 
                     case APPLY_CLASSIFIER_ON_SLURM:
-
                         cats.applyClassifierOnSlurm( getIntervalFromUI() );
-
                         break;
 
 //                    case APPLY_BG_FG_CLASSIFIER:
@@ -273,40 +309,142 @@ public class CATSPlugin implements Command, Interactive
 //                        break;
 
                     case UPDATE_LABEL_INSTANCES:
-
-                        cats.updateLabelInstances();
-
-                        labelButtonsPanel.setLabellingInformations( );
-
-                        dirFile = IOUtils.getSaveDirFile( "Save instances...", instancesFilename,".ARFF" );
-
-                        if ( dirFile != null )
-                        {
-                            instancesFilename = dirFile[ 1 ];
-                            gdWait = showWaitDialog( "I/O operation in progress...\nPlease wait until this window disappears!" );
-                            cats.saveInstances( inputImage.getTitle(), dirFile[ 0 ], dirFile[ 1 ] );
-                            gdWait.dispose();
-                        }
-
-
+                        updateLabelInstances( );
                         break;
-//                    case DUPLICATE_RESULT_IMAGE_TO_RAM:
-//                        ImagePlus imp = cats.getResultImage().getWholeImageCopy();
-//                        if ( imp != null ) imp.show();
-//                        break;
+
                     case TRAIN_CLASSIFIER:
-
-                        cats.trainClassifierFromCurrentLabelInstances();
-
-                        dirFile = getSaveDirFile( "Save classifier...", classifierFilename, ".classifier" );
-
-                        if ( dirFile != null )
-                        {
-                            classifierFilename = dirFile[ 1 ];
-                            cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
-                        }
-
+                        trainAndSaveClassifier();
                         break;
+                }
+            }
+        } );
+
+        thread.start();
+    }
+
+    private void loadLabelInstances()
+    {
+        String[] dirFile;
+        dirFile = IOUtils.getOpenDirFile( "Please choose instances file" );
+        final String key = cats.loadInstancesAndMetadata( dirFile[ 0 ], dirFile[ 1 ] );
+        labelButtonsPanel.updateButtons();
+        if ( key.equals( inputImage.getTitle() ) )
+		{
+			labelButtonsPanel.setLabellingInformations();
+		}
+    }
+
+    private void updateLabelInstances( )
+    {
+        String[] dirFile;
+        GenericDialogPlus gdWait;
+        cats.updateLabelInstances();
+
+        labelButtonsPanel.setLabellingInformations();
+
+        dirFile = IOUtils.getSaveDirFile( "Save instances...", inputImage.getTitle() + ARFF, ARFF );
+
+        if ( dirFile != null )
+        {
+            gdWait = showWaitDialog( "I/O operation in progress...\nPlease wait until this window disappears!" );
+            cats.saveInstances( inputImage.getTitle(), dirFile[ 0 ], dirFile[ 1 ] );
+            gdWait.dispose();
+        }
+    }
+
+    private void trainAndSaveClassifier()
+    {
+        String[] dirFile;
+        String classifierFilename = trainClassifier();
+
+        if ( classifierFilename == null ) return;
+
+        dirFile = getSaveDirFile( "Save classifier...", classifierFilename, ".classifier" );
+
+        if ( dirFile != null )
+		{
+			cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
+		}
+    }
+
+    private String trainClassifier()
+    {
+        final Set< String > keySet = cats.getInstancesManager().getKeys();
+        String[] keys = keySet.toArray( new String[keySet.size()] );
+        final int numInstances = keys.length;
+
+        if ( numInstances == 0 )
+		{
+			logger.error( "Please create or load some instances first!" );
+            return null;
+		}
+		else if ( numInstances == 1 )
+		{
+			final InstancesAndMetadata instancesAndMetadata = cats.getInstancesManager().getInstancesAndMetadata( keys[ 0 ] );
+			cats.trainClassifierWithFeatureSelection( instancesAndMetadata );
+		}
+		else
+		{
+			final GenericDialog gd = new GenericDialog( "Instances selection" );
+			gd.addCheckboxGroup( numInstances, 1, keys, new boolean[ numInstances ] );
+			gd.showDialog();
+
+			if ( gd.wasCanceled() ) return null;
+
+			ArrayList< String > selectedInstances = new ArrayList<>(  );
+
+			for( int i = 0; i < numInstances; ++i )
+			{
+				if ( gd.getNextBoolean() )
+				{
+					selectedInstances.add( keys[ i ] );
+				}
+			}
+
+			if ( selectedInstances.size() == 0 )
+            {
+                return null;
+            }
+            else if ( selectedInstances.size() == 1 )
+            {
+                String key = selectedInstances.get( 0 );
+                final InstancesAndMetadata instancesAndMetadata = cats.getInstancesManager().getInstancesAndMetadata( selectedInstances.get( 0 ) );
+                cats.trainClassifierWithFeatureSelection( instancesAndMetadata );
+                return key + ".classifier";
+            }
+            else
+            {
+                final InstancesAndMetadata combinedInstancesAndMetadata = cats.getInstancesManager().getCombinedInstancesAndMetadata( selectedInstances );
+                cats.trainClassifierWithFeatureSelection( combinedInstancesAndMetadata );
+                return "combined.classifier";
+            }
+		}
+
+		return null;
+    }
+
+    protected void performAdvancedAction()
+    {
+
+        Thread thread = new Thread(new Runnable()
+        {
+            //exec.submit(new Runnable() {
+            public void run()
+            {
+
+                switch ( advancedActionInput )
+                {
+
+                    case UPDATE_LABELS_AND_TRAIN_CLASSIFIER:
+                        updateLabelInstances();
+                        trainClassifier();
+                        break;
+
+                    case LOAD_LABELS_AND_TRAIN_CLASSIFIER:
+                        loadLabelInstances();
+                        trainClassifier();
+                        break;
+
                 }
             }
         } );
@@ -320,7 +458,6 @@ public class CATSPlugin implements Command, Interactive
         objectsImage.setTitle( "objects" );
         objectsImage.show();
     }
-
 
     private GenericDialogPlus showWaitDialog( String text )
     {

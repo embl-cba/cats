@@ -1330,8 +1330,8 @@
     		if( iw instanceof CustomWindow )
     		{
     			final CustomWindow win = (CustomWindow) iw;
-    			final WekaSegmentation CATS = win.getWekaSegmentation();
-    			final FeatureImages featureImages = CATS.getFeatureImages();
+    			final WekaSegmentation cats = win.getWekaSegmentation();
+    			final FeatureImages featureImages = cats.getFeatureImages();
     			if(featureImages.isEmpty())
     			{
     				featureImages.updateFeaturesMT();
@@ -3070,9 +3070,9 @@
 		if( iw instanceof CustomWindow )
 		{
 			final CustomWindow win = (CustomWindow) iw;
-			final WekaSegmentation CATS = win.getWekaSegmentation();
+			final WekaSegmentation cats = win.getWekaSegmentation();
 			final Roi roi = win.getDisplayImage().getRoi();
-			CATS.addLabel(Integer.parseInt(classNum),
+			cats.addLabel(Integer.parseInt(classNum),
 					roi,
 					Integer.parseInt(nSlice)-1,
 					Integer.parseInt(nTimePoint)-1);
@@ -3101,8 +3101,8 @@
 		//{
 		//	final CustomWindow win = (CustomWindow) iw;
 
-			final WekaSegmentation CATS = win.getWekaSegmentation();
-			CATS.deleteLabel(Integer.parseInt(classNum),
+			final WekaSegmentation cats = win.getWekaSegmentation();
+			cats.deleteLabel(Integer.parseInt(classNum),
 					Integer.parseInt(nSlice),
 					Integer.parseInt(nTimePoint),
 					Integer.parseInt(index));
@@ -4183,7 +4183,7 @@
     					IJ.log("Processing image " + file.getName() + " in thread " + numThread);
 
     					ImagePlus segmentation =
-    							CATS.applyClassifier( testImage,
+    							cats.applyClassifier( testImage,
     									numFurtherThreads, probabilityMaps );
     					if( null == segmentation )
     					{
@@ -4498,10 +4498,10 @@
     		IJ.log("Evaluating current data...");
     		win.setButtonsEnabled(false);
     		final Instances data;
-    		if (CATS.getTraceTrainingData() != null)
-    			data = CATS.getTraceTrainingData();
+    		if (cats.getTraceTrainingData() != null)
+    			data = cats.getTraceTrainingData();
     		else
-    			data = CATS.getLoadedTrainingData();
+    			data = cats.getLoadedTrainingData();
 
     		if(null == data)
     		{
@@ -4512,7 +4512,7 @@
     			return;
     		}
 
-    		displayGraphs(data, CATS.getClassifier());
+    		displayGraphs(data, cats.getClassifier());
     		win.updateButtonsEnabling();
     		IJ.showStatus("Done.");
     		IJ.log("Done");
@@ -4569,16 +4569,16 @@
 		if( iw instanceof CustomWindow )
 		{
 			final CustomWindow win = (CustomWindow) iw;
-			final WekaSegmentation CATS = win.getWekaSegmentation();
+			final WekaSegmentation cats = win.getWekaSegmentation();
 
 			IJ.showStatus("Evaluating current data...");
 			IJ.log("Evaluating current data...");
 			win.setButtonsEnabled(false);
 			final Instances data;
-			if (CATS.getTraceTrainingData() != null)
-				data = CATS.getTraceTrainingData();
+			if (cats.getTraceTrainingData() != null)
+				data = cats.getTraceTrainingData();
 			else
-				data = CATS.getLoadedTrainingData();
+				data = cats.getLoadedTrainingData();
 
 			if(null == data)
 			{
@@ -4586,7 +4586,7 @@
 				return;
 			}
 
-			displayGraphs(data, CATS.getClassifier());
+			displayGraphs(data, cats.getClassifier());
 			win.updateButtonsEnabling();
 			IJ.showStatus("Done.");
 			IJ.log("Done");
@@ -4617,7 +4617,7 @@
 		if( iw instanceof CustomWindow )
 		{
 			final CustomWindow win = (CustomWindow) iw;
-			final WekaSegmentation CATS = win.getWekaSegmentation();
+			final WekaSegmentation cats = win.getWekaSegmentation();
 			ImagePlus testImage =
 					IJ.openImage( dir + File.separator + fileName );
 
@@ -4634,7 +4634,7 @@
 
 			IJ.log( "Processing image " + dir + File.separator + fileName );
 
-			ImagePlus segmentation = CATS.applyClassifier(testImage, 0, probabilityMaps);
+			ImagePlus segmentation = cats.applyClassifier(testImage, 0, probabilityMaps);
 
 			if( !probabilityMaps )
 			{
@@ -4674,11 +4674,11 @@
     		if( iw instanceof CustomWindow )
     		{
     			final CustomWindow win = (CustomWindow) iw;
-    			final WekaSegmentation CATS = win.getWekaSegmentation();
+    			final WekaSegmentation cats = win.getWekaSegmentation();
 
     			win.setButtonsEnabled(false);
     			IJ.log("Loading data from " + arffFilePathName + "...");
-    			CATS.loadTrainingData( arffFilePathName );
+    			cats.loadTrainingData( arffFilePathName );
     			win.updateButtonsEnabling();
     		}
     	}
@@ -4695,9 +4695,9 @@
     		if( iw instanceof CustomWindow )
     		{
     			final CustomWindow win = (CustomWindow) iw;
-    			final WekaSegmentation CATS = win.getWekaSegmentation();
+    			final WekaSegmentation cats = win.getWekaSegmentation();
 
-    			if( !CATS.saveData( arffFilePathName ))
+    			if( !cats.saveData( arffFilePathName ))
     				IJ.showMessage("There is no data to save");
     		}*/
     	}
@@ -4993,18 +4993,18 @@
     		if( iw instanceof CustomWindow )
     		{
     			final CustomWindow win = (CustomWindow) iw;
-    			final WekaSegmentation CATS = win.getWekaSegmentation();
+    			final WekaSegmentation cats = win.getWekaSegmentation();
     			// Disable buttons until the training has finished
     			win.setButtonsEnabled(false);
 
     			win.setTrainingComplete(false);
 
-    			if( CATS.trainClassifier() )
+    			if( cats.trainClassifier() )
     			{
     				win.setTrainingComplete(true);
     				/*
-    				CATS.applyClassifier(false, null);
-    				win.setClassfiedImage( CATS.getClassifiedImage() );
+    				cats.applyClassifier(false, null);
+    				win.setClassfiedImage( cats.getClassifiedImage() );
     				if(win.isToogleEnabled())
     					win.toggleOverlay();
     				win.toggleOverlay();
@@ -5024,9 +5024,9 @@
     		if( iw instanceof CustomWindow )
     		{
     			final CustomWindow win = (CustomWindow) iw;
-    			final WekaSegmentation CATS = win.getWekaSegmentation();
+    			final WekaSegmentation cats = win.getWekaSegmentation();
 
-    			ImagePlus classifiedImage =  CATS.getClassifiedImage();
+    			ImagePlus classifiedImage =  cats.getClassifiedImage();
     			if( null == classifiedImage )
     			{
     				// check if the training is complete
@@ -5034,8 +5034,8 @@
     				{
     					// if not result image is there yet, calculate it
     					win.setButtonsEnabled( false );
-    					CATS.applyClassifier( false );
-    					classifiedImage = CATS.getClassifiedImage();
+    					cats.applyClassifier( false );
+    					classifiedImage = cats.getClassifiedImage();
     					win.updateButtonsEnabling();
     				}
     				else
@@ -5071,13 +5071,13 @@
     		if( iw instanceof CustomWindow )
     		{
     			final CustomWindow win = (CustomWindow) iw;
-    			final WekaSegmentation CATS = win.getWekaSegmentation();
+    			final WekaSegmentation cats = win.getWekaSegmentation();
 
     			IJ.showStatus("Calculating probability maps...");
     			IJ.log("Calculating probability maps...");
     			win.setButtonsEnabled(false);
-    			CATS.applyClassifier(true);
-    			final ImagePlus probImage = CATS.getClassifiedImage();
+    			cats.applyClassifier(true);
+    			final ImagePlus probImage = cats.getClassifiedImage();
     			if(null != probImage)
     			{
     				probImage.setOpenAsHyperStack( true );
@@ -5099,8 +5099,8 @@
 		{
 			// if not result image is there yet, calculate it
 			win.setButtonsEnabled( false );
-			CATS.applyClassifier( false );
-			classifiedImage = CATS.getClassifiedImage();
+			cats.applyClassifier( false );
+			classifiedImage = cats.getClassifiedImage();
 			win.updateButtonsEnabling();
 		}
 
@@ -5129,14 +5129,14 @@
     		IJ.log("Calculating probability maps...");
     		win.setButtonsEnabled(false);
     		try{
-    			CATS.applyClassifier(true);
+    			cats.applyClassifier(true);
     		}catch(Exception ex){
     			IJ.log("Error while applying classifier! (please send bug report)");
     			ex.printStackTrace();
     			win.updateButtonsEnabling();
     			return;
     		}
-    		final ImagePlus probImage = CATS.getClassifiedImage();
+    		final ImagePlus probImage = cats.getClassifiedImage();
     		if(null != probImage)
     		{
     			probImage.setDimensions( numOfClasses, displayImage.getNSlices(),
@@ -5239,7 +5239,7 @@
 
     public void setInterpolatedFeatureSlice(int z, double[][][] featureSlice)
     {
-        final int[] borderSizes = CATS.getFeatureBorderSizes();
+        final int[] borderSizes = cats.getFeatureBorderSizes();
         int xs = borderSizes[0];
         int xe = multiResolutionFeatureImageArray.get(0).getWidth() - borderSizes[0] - 1;
         int ys = borderSizes[1];
@@ -5637,7 +5637,7 @@
 		if ( command.equals("STOP") )
 		{
 			logger.info("Stopping post-processing thread...");
-			CATS.stopCurrentThreads = true;
+			cats.stopCurrentThreads = true;
 			postProcessButton.setText("Post process");
 			return;
 		}
@@ -5652,7 +5652,7 @@
 			}
 
 			postProcessButton.setText("STOP");
-			CATS.stopCurrentThreads = false;
+			cats.stopCurrentThreads = false;
 
 			Thread thread = new Thread() {
 				public void run()
@@ -5664,8 +5664,8 @@
 					if ( zRange.equals("None") )
 					{
 						zc = displayImage.getZ();
-						zs = zc - CATS.getFeatureVoxelSizeAtMaximumScale();
-						ze = zc + CATS.getFeatureVoxelSizeAtMaximumScale();
+						zs = zc - cats.getFeatureVoxelSizeAtMaximumScale();
+						ze = zc + cats.getFeatureVoxelSizeAtMaximumScale();
 					}
 					else
 					{
@@ -5682,7 +5682,7 @@
 					region5D.subSampling = new Point3D(1, 1, 1);
 					region5D.offset = new Point3D( rectangle.x,  rectangle.y, zs );
 
-					CATS.postProcess(region5D, sizesMinMax).run();
+					cats.postProcess(region5D, sizesMinMax).run();
 
 					if (showColorOverlay)
 						win.toggleOverlay();

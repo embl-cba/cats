@@ -141,9 +141,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
 
     // sorting is performed inside this constructor
-    IJ.log( "\nCreating instances data cache..." );
     DataCache myData = new DataCache( data );
-    IJ.log( "...done." );
 
     int bagSize = data.numInstances() * m_BagSizePercent / 100;
     Random random = new Random(m_Seed);

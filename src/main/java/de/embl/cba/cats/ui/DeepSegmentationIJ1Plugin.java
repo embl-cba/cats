@@ -2064,6 +2064,8 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
         CATS.setInputImage( inputImage );
 
+		cats.featureSettings.anisotropy = inputImage.getCalibration().pixelDepth / inputImage.getCalibration().pixelWidth;
+
         if ( showUIs ) if ( ! initialisation() ) return;
 
         reviewLabelsClassComboBox = new JComboBox( CATS.getClassNames().toArray() );
@@ -3136,7 +3138,6 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
         cats.recomputeLabelInstances = true;
 
         updateLabelInstancesAndTrainClassifier();
-
 
     }
 

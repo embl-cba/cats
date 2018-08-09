@@ -1,4 +1,4 @@
-import de.embl.cba.cats.ui.CATSPlugin;
+import de.embl.cba.cats.ui.CATSCommand;
 import ij.IJ;
 import ij.ImagePlus;
 import net.imagej.ImageJ;
@@ -16,7 +16,7 @@ public class CatsUi3dObjects
 		ImagePlus inputImagePlus = IJ.openImage(CatsObjects3d.class.getResource(  "3d-objects.zip" ).getFile() );
 		inputImagePlus.show();
 
-		ij.command().run( CATSPlugin.class, true );
+		ij.command().run( CATSCommand.class, true );
 
 	}
 

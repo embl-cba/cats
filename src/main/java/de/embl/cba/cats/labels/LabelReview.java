@@ -246,7 +246,14 @@ public class LabelReview
         }
         else
         {
-            roi.setPosition( label.z + 1 );
+            if ( inputImage.getNSlices() == 1 && inputImage.getNFrames() > 1 )
+            {
+                roi.setPosition( label.t + 1 );
+            }
+            else
+            {
+                roi.setPosition( label.z + 1 );
+            }
         }
 
         roi.setProperty( "classNum", "" + label.classNum );
@@ -258,48 +265,6 @@ public class LabelReview
     {
         manager.close();
     }
-
-    private static int getMargin( Roi roi )
-    {
-        return (int) ( Math.max( roi.getBounds().width, roi.getBounds().height ) * 2 );
-    }
-
-    private void showImageAroundRoi( Roi roi, int margin )
-    {
-        if ( ! imageAroundCurrentSelection.isVisible() )
-        {
-            imageAroundCurrentSelection.show();
-        }
-        imageAroundCurrentSelection.updateAndDraw();
-
-        Roi zoomedInROI = (Roi) roi.clone();
-        zoomedInROI.setLocation( margin, margin );
-        imageAroundCurrentSelection.setRoi( zoomedInROI );
-    }
-
-    private void setImageAroundRoi( ImagePlus trainingImage,  Roi roi, int margin )
-    {
-        Rectangle r = roi.getBounds();
-
-        Roi rectangleRoi = new Roi( r.x - margin, r.y - margin, r.width + 2 * margin, r.height + 2 * margin  );
-
-        trainingImage.setRoi( rectangleRoi );
-
-        Duplicator duplicator = new Duplicator();
-
-        if ( imageAroundCurrentSelection != null )
-        {
-            imageAroundCurrentSelection.close();
-        }
-
-        imageAroundCurrentSelection = duplicator.run( trainingImage, trainingImage.getC(), trainingImage.getC(), trainingImage.getZ(), trainingImage.getZ(), trainingImage.getT(), trainingImage.getT() );
-
-        trainingImage.setRoi( roi );
-
-
-    }
-
-
 
 
 }

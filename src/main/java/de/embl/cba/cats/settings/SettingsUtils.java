@@ -43,8 +43,11 @@ public abstract class SettingsUtils {
     }
 
 
-    public static void setSettingsFromInstancesMetadata( FeatureSettings featureSettings, InstancesAndMetadata instancesAndMetadata)
+    public static FeatureSettings getFeatureSettingsFromInstancesMetadata( InstancesAndMetadata instancesAndMetadata)
     {
+
+        final FeatureSettings featureSettings = new FeatureSettings();
+
         featureSettings.imageBackground = ( int ) instancesAndMetadata.getMetadata( Metadata_Settings_ImageBackground, 0 );
         featureSettings.maxDeepConvLevel = ( int ) instancesAndMetadata.getMetadata( Metadata_Settings_MaxDeepConvLevel, 0 );
         featureSettings.anisotropy = (double) instancesAndMetadata.getMetadata( Metadata_Settings_Anisotropy, 0 );
@@ -81,6 +84,7 @@ public abstract class SettingsUtils {
             }
         }
 
+        return featureSettings;
 
     }
 

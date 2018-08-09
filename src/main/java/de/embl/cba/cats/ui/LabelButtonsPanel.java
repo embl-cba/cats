@@ -11,13 +11,13 @@ import java.util.ArrayList;
 public class LabelButtonsPanel extends JPanel implements ActionListener
 {
     protected ArrayList< JButton > buttons;
-    final CATS CATS;
+    final CATS cats;
     final Overlays overlays;
     JFrame frame;
 
-    public LabelButtonsPanel( CATS CATS, Overlays overlays )
+    public LabelButtonsPanel( CATS cats, Overlays overlays )
     {
-        this.CATS = CATS;
+        this.cats = cats;
         this.overlays = overlays;
 
         buttons = new ArrayList<>(  );
@@ -34,9 +34,9 @@ public class LabelButtonsPanel extends JPanel implements ActionListener
     {
 
         JButton button = new JButton( getClassText( classIndex ) );
-        button.setToolTipText("Add label for class '" + CATS.getClassName( classIndex ) + "'");
+        button.setToolTipText("Add label for class '" + cats.getClassName( classIndex ) + "'");
         button.setOpaque( true );
-        button.setBackground( CATS.getColors()[ classIndex ] );
+        button.setBackground( cats.getColors()[ classIndex ] );
         button.addActionListener( this );
         button.setAlignmentX( Component.CENTER_ALIGNMENT );
 
@@ -49,7 +49,7 @@ public class LabelButtonsPanel extends JPanel implements ActionListener
 
     private String getClassText( int classIndex )
     {
-        return CATS.getClassName( classIndex ) + " [" + ( classIndex + 1 ) + "]";
+        return cats.getClassName( classIndex ) + " [" + ( classIndex + 1 ) + "]";
     }
 
     public void setClassColor( int classIndex, Color color )
@@ -61,10 +61,10 @@ public class LabelButtonsPanel extends JPanel implements ActionListener
 
     public void setLabellingInformations()
     {
-        final long[] numInstancesPerClass = CATS.getNumInstancesPerClass();
-        final int[] numLabelsPerClass = CATS.getLabelManager().getNumLabelsPerClass();
+        final long[] numInstancesPerClass = cats.getNumInstancesPerClass();
+        final int[] numLabelsPerClass = cats.getLabelManager().getNumLabelsPerClass();
 
-        for ( int classIndex = 0; classIndex < CATS.getNumClasses(); ++classIndex )
+        for ( int classIndex = 0; classIndex < cats.getNumClasses(); ++classIndex )
         {
             setLabellingInformation( classIndex, numLabelsPerClass[ classIndex ], numInstancesPerClass[ classIndex ] );
         }
@@ -84,7 +84,7 @@ public class LabelButtonsPanel extends JPanel implements ActionListener
 
         clearButtons();
 
-        int numClasses = CATS.getNumClasses();
+        int numClasses = cats.getNumClasses();
 
         for ( int classNum = 0; classNum < numClasses; ++classNum )
         {
@@ -113,7 +113,7 @@ public class LabelButtonsPanel extends JPanel implements ActionListener
         {
             if ( e.getSource() == buttons.get( i ) )
             {
-                CATS.addLabelFromImageRoi(  i  );
+                cats.addLabelFromImageRoi(  i  );
                 overlays.updateLabels( );
                 break;
             }
@@ -131,7 +131,7 @@ public class LabelButtonsPanel extends JPanel implements ActionListener
 
         //Create and set up the window.
         frame = new JFrame( "Labels" );
-        frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+        frame.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
 
         //Create and set up the content pane.
         setOpaque( true ); //content panes must be opaque

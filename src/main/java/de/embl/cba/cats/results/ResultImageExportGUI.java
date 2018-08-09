@@ -17,7 +17,7 @@ public abstract class ResultImageExportGUI
                                       ArrayList< String > classNames )
     {
 
-        String[] exportChoices = new String[]{ ResultExportSettings.SHOW_AS_SEPARATE_IMAGES, ResultExportSettings.SEPARATE_IMARIS, ResultExportSettings.SEPARATE_TIFF_FILES };
+        String[] exportChoices = new String[]{ ResultExportSettings.SHOW_IN_IMAGEJ, ResultExportSettings.SEPARATE_IMARIS, ResultExportSettings.SEPARATE_TIFF_FILES };
 
         GenericDialog gd = new GenericDialogPlus("Export Segmentation Results");
 
@@ -44,7 +44,7 @@ public abstract class ResultImageExportGUI
 
         gd.addMessage( "--- Export modality ---" );
 
-        gd.addChoice( "Export as:", exportChoices, ResultExportSettings.SEPARATE_IMARIS );
+        gd.addChoice( "Export as:", exportChoices, ResultExportSettings.SHOW_IN_IMAGEJ );
 
         // gd.addStringField( "TimePoints [from, to] ", "1," + inputImagePlus.getNFrames());
 
@@ -68,7 +68,7 @@ public abstract class ResultImageExportGUI
 
     private static boolean getOutputDirectory( ResultExportSettings resultExportSettings )
     {
-        if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_AS_SEPARATE_IMAGES ) )
+        if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
         {
             resultExportSettings.directory = IJ.getDirectory("Select output directory");
             if ( resultExportSettings.directory == null ) return true;

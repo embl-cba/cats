@@ -966,7 +966,6 @@ public class CATS
 
 		this.inputImage = imp;
 
-
 		Calibration calibration = inputImage.getCalibration();
 
         featureSettings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
@@ -1129,6 +1128,7 @@ public class CATS
 
     public boolean featureSettingsDialog( boolean showAdvancedSettings )
     {
+
         GenericDialogPlus gd = new GenericDialogPlus("Image Feature Settings");
 
         for ( int i = 0; i < 5; ++i )
@@ -1244,10 +1244,19 @@ public class CATS
         return newFeatureSettings;
     }
 
+
+    public void imageCalibrationDialog()
+	{
+		IJ.run( inputImage, "Properties...", "");
+
+		Calibration calibration = inputImage.getCalibration();
+
+		featureSettings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
+
+	}
+
     public boolean initialisationDialog(  )
     {
-
-        IJ.run( inputImage, "Properties...", "");
 
         GenericDialog gd = new NonBlockingGenericDialog("Set up");
 
@@ -1422,7 +1431,15 @@ public class CATS
 	public void loadClassifier( String directory, String filename )
 	{
 		ClassifierInstancesMetadata classifierInstancesMetadata = ClassifierUtils.loadClassifierInstancesMetadata( directory, filename );
-		SettingsUtils.setSettingsFromInstancesMetadata( featureSettings, classifierInstancesMetadata.instancesAndMetadata );
+		final FeatureSettings loadedFeatureSettings = SettingsUtils.getFeatureSettingsFromInstancesMetadata( classifierInstancesMetadata.instancesAndMetadata );
+
+		if ( ! featureSettings.equals( loadedFeatureSettings ) )
+		{
+			logger.info( "Feature settings have been changed!" );
+		}
+
+		featureSettings = loadedFeatureSettings;
+
 		classifierManager.setClassifier( classifierInstancesMetadata );
 	}
 
@@ -1654,23 +1671,29 @@ public class CATS
 
 		if ( InstancesUtils.getNumLabelIds( instancesAndMetadata ) > 1 && instancesAndMetadata.getRelationName().equals( inputImage.getTitle() ) )
 		{
-            logger.info( "# Loaded instances relation name matches image name => Populating labels..." );
-            logger.info( "Creating labels from instances..." );
+            logger.info( "# Loaded instances relation name matches image name => Populating image labels..." );
 			labelManager.setLabels( LabelUtils.getLabelsFromInstancesAndMetadata( instancesAndMetadata, considerMultipleBoundingBoxOffsetsDuringInstancesLoading ) );
 			labelsFeatureNames = instancesAndMetadata.getAttributeNames();
-			logger.info( "..done." );
 			currentLabelsInstancesKey = key;
 		}
 		else
         {
             logger.info( "\nLoaded instances relation name: " + instancesAndMetadata.getRelationName()
                             + "\ndoes not match image name: " + inputImage.getTitle()
-                            + "\nInstances can be used for training a classifier but not for adding more annotations"
-                            + " based on current image." );
+                            + "\nLabels will thus not be populated." );
         }
 
 
-		SettingsUtils.setSettingsFromInstancesMetadata( featureSettings, instancesAndMetadata );
+        logger.info( "Setting feature computation settings from loaded instances..." );
+
+		final FeatureSettings loadedFeatureSettings = SettingsUtils.getFeatureSettingsFromInstancesMetadata( instancesAndMetadata );
+
+		if ( ! featureSettings.equals( loadedFeatureSettings ) )
+		{
+			logger.info( "Feature settings have been changed!" );
+		}
+
+		featureSettings = loadedFeatureSettings;
 
 		setImageBackground( featureSettings.imageBackground );
 
@@ -2654,6 +2677,7 @@ public class CATS
 
     public void applyClassifierWithTiling( String classifierKey, FinalInterval interval, Integer numTiles, FeatureProvider externalFeatureProvider, boolean doNotLog )
 	{
+		isBusy = true;
 
 		logger.info("\n# Apply classifier");
 
@@ -2713,11 +2737,11 @@ public class CATS
 		int regionCounter = 0;
 		long maximumMemoryUsage = 0L;
 
-		for (Future future : futures)
+		for ( Future future : futures )
 		{
 			try
 			{
-				if ( !stopCurrentTasks )
+				if ( ! stopCurrentTasks )
 				{
 					future.get();
 
@@ -2744,6 +2768,8 @@ public class CATS
 
 		// we're done
 		exe.shutdown();
+
+		isBusy = false;
 
 	}
 

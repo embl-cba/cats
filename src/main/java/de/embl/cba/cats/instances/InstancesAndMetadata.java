@@ -161,12 +161,14 @@ public class InstancesAndMetadata {
                 {
                     metadata.get( Metadata.valueOf( attribute.name() ) ).add( instance.value( i ) );
                 }
+
                 instances.deleteAttributeAt( i );
             }
 
         }
 
         int classIndex = instances.numAttributes() - 1;
+
         instances.setClassIndex( classIndex );
     }
 
@@ -225,7 +227,6 @@ public class InstancesAndMetadata {
 
     public Map< Integer, ArrayList < Integer > >[] getLabelList()
     {
-
         Map< Integer, ArrayList < Integer > >[] labels = new LinkedHashMap[ instances.numClasses() ];
 
         for ( int c = 0; c < instances.numClasses(); ++c )
@@ -234,6 +235,7 @@ public class InstancesAndMetadata {
         }
 
         ArrayList< Double > labelIds = metadata.get( Metadata.Metadata_Label_Id );
+
         for ( int i = 0; i < labelIds.size(); ++i )
         {
             int c = ( int ) instances.get( i ).classValue();

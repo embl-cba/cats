@@ -67,7 +67,9 @@ public class Overlays implements RoiListener
      */
     public synchronized void toggleOverlay( String mode )
     {
-        if ( inputImage.getOverlay().contains( probabilities ) )
+		if ( inputImage.getOverlay() == null ) inputImage.setOverlay( new Overlay(  ) );
+
+		if ( inputImage.getOverlay().contains( probabilities ) )
         {
             inputImage.getOverlay().remove( probabilities );
             inputImage.updateAndDraw();
@@ -138,7 +140,9 @@ public class Overlays implements RoiListener
 
     public void updateProbabilitiesOverlay()
     {
-        if ( inputImage.getOverlay().contains( probabilities ) )
+		if ( inputImage.getOverlay() == null ) inputImage.setOverlay( new Overlay(  ) );
+
+		if ( inputImage.getOverlay().contains( probabilities ) )
         {
             inputImage.getOverlay().remove( probabilities );
             addProbabilities();
@@ -154,13 +158,23 @@ public class Overlays implements RoiListener
         probabilities = new ImageRoi( 0, 0, overlayImage );
         ( ( ImageRoi ) probabilities ).setOpacity( overlayOpacity / 100.0 );
         probabilities.setName( RESULT_OVERLAY );
-        inputImage.getOverlay().add( probabilities );
+
+		addOverlay( probabilities );
+
         inputImage.updateAndDraw();
     }
 
-    public void showProbabilities()
+	private void addOverlay( Roi roi )
+	{
+		if ( inputImage.getOverlay() == null ) inputImage.setOverlay( new Overlay( ) );
+		inputImage.getOverlay().add( roi );
+	}
+
+	public void showProbabilities()
     {
-        if ( inputImage.getOverlay().contains( probabilities ) )
+		if ( inputImage.getOverlay() == null ) inputImage.setOverlay( new Overlay(  ) );
+
+		if ( inputImage.getOverlay().contains( probabilities ) )
         {
             updateProbabilitiesOverlay();
         }
@@ -209,7 +223,9 @@ public class Overlays implements RoiListener
                 roi.setStrokeColor( colors[ iClass ] );
                 roi.setStrokeWidth( 1.0 );
 
-                if ( ! inputImage.getOverlay().contains( roi  ) )
+				if ( inputImage.getOverlay() == null ) inputImage.setOverlay( new Overlay(  ) );
+
+				if ( ! inputImage.getOverlay().contains( roi  ) )
                 {
                     inputImage.getOverlay().add( roi );
                 }

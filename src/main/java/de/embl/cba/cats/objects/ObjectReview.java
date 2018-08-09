@@ -66,8 +66,8 @@ public class ObjectReview
     private void setSettingsFromUI( GenericDialog gd )
     {
         objectsName = gd.getNextChoice();
-        zoomLevel = ( int ) gd.getNextNumber();
         minCalibratedVolume = gd.getNextNumber();
+        zoomLevel = ( int ) gd.getNextNumber();
     }
 
     public void reviewObjectsUsingRoiManager( SegmentedObjects objects )

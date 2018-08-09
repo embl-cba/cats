@@ -138,6 +138,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     {
 
         logService.info( "# " + PLUGIN_NAME );
+
         logCommandLineCall();
 
         logMultipleInstanceListenerState();
