@@ -1,4 +1,4 @@
-import de.embl.cba.cats.commands.BatchClassificationOnSlurm;
+import de.embl.cba.cats.commands.BatchClassificationOnSlurmCommand;
 import net.imagej.ImageJ;
 
 public class TestRunSylwiasWorkflowOnSlurm
@@ -9,7 +9,7 @@ public class TestRunSylwiasWorkflowOnSlurm
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        ij.command().run( BatchClassificationOnSlurm.class, true );
+        ij.command().run( BatchClassificationOnSlurmCommand.class, true );
     }
 
 }

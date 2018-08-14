@@ -9,6 +9,7 @@ import de.embl.cba.cats.utils.IntervalUtils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.Prefs;
 import ij.gui.GenericDialog;
 import net.imglib2.FinalInterval;
 import org.scijava.command.Command;

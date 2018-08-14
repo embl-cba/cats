@@ -14,6 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class IOUtils
 {
@@ -113,6 +115,41 @@ public class IOUtils
         }
 
         return path;
+    }
+
+
+    public static ArrayList< File > getFiles( String directoryName, String regExp )
+    {
+        final ArrayList< File > files = new ArrayList<>();
+        populateFileList( directoryName, files, regExp );
+        return files;
+    }
+
+    public static void populateFileList( String directoryName, List<File> files, String regExp ) {
+
+        File directory = new File( directoryName );
+
+        // Get all the files from a directory.
+        File[] fList = directory.listFiles();
+        if( fList != null )
+        {
+            for ( File file : fList )
+            {
+                if ( file.isFile() )
+                {
+                    final Matcher matcher = Pattern.compile( regExp ).matcher( file.getName() );
+
+                    if ( matcher.matches() )
+                    {
+                        files.add( file );
+                    }
+                }
+                else if (file.isDirectory())
+                {
+                    populateFileList( file.getAbsolutePath(), files, regExp );
+                }
+            }
+        }
     }
 
 

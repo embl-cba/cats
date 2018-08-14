@@ -26,7 +26,7 @@ import java.util.Map;
 import static de.embl.cba.cats.utils.Utils.getSimpleString;
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>Batch Classification On Cluster" )
-public class BatchClassificationOnSlurm implements Command
+public class BatchClassificationOnSlurmCommand implements Command
 {
     @Parameter
     public LogService logService;
