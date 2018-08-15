@@ -119,7 +119,9 @@ public class ApplyClassifierOnSlurmCommand implements Command
 
         ArrayList< JobFuture > jobFutures = new ArrayList<>( );
 
-        ArrayList< FinalInterval > tiles = IntervalUtils.createTiles( interval, interval, numJobs,true, null );
+        int numFeatures = 1500; // TODO: typically too conversative
+
+        ArrayList< FinalInterval > tiles = IntervalUtils.createTiles( interval, interval, numJobs, numFeatures,true, null );
 
         for ( Path dataSet : dataSets )
         {
@@ -151,7 +153,7 @@ public class ApplyClassifierOnSlurmCommand implements Command
         JobSettings jobSettings = new JobSettings();
         jobSettings.numWorkersPerNode = numWorkers;
         jobSettings.queue = JobSettings.DEFAULT_QUEUE;
-        jobSettings.memoryPerJobInMegaByte = getApproximatelyNeededMemoryMB( tile);
+        jobSettings.memoryPerJobInMegaByte = getApproximatelyNeededMemoryMB( tile );
         jobSettings.timePerJobInMinutes = getApproximatelyNeededTimeInMinutes( tile );
         return jobSettings;
     }

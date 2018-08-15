@@ -149,11 +149,12 @@ public abstract class IntervalUtils {
     public static ArrayList<FinalInterval> createTiles( FinalInterval classificationInterval,
                                                         FinalInterval wholeImageInterval,
                                                         Integer numTiles,
+                                                        int numFeatures,
                                                         boolean doNotTileInXY,
-                                                        CATS CATS )
+                                                        CATS cats )
     {
 
-        CATS.logger.info( "# Generating tiles for interval:" );
+        cats.logger.info( "# Generating tiles for interval:" );
         logInterval( classificationInterval );
 
         ArrayList<FinalInterval> tiles = new ArrayList<>();
@@ -179,7 +180,7 @@ public abstract class IntervalUtils {
                 {
                     tileSizes[ d ] = ( int ) Math.ceil( 1.0 * classificationInterval.dimension( d ) / Math.pow( numTilesPerTimePoint, 1.0 / volumeDimensionality ) );
                 }
-                else if ( classificationInterval.dimension( d ) <= CATS.getMaximalRegionSize() )
+                else if ( classificationInterval.dimension( d ) <= cats.getMaximalRegionWidth( numFeatures ) )
                 {
                     // everything can be computed at once
                     tileSizes[ d ] = classificationInterval.dimension( d );
@@ -187,7 +188,7 @@ public abstract class IntervalUtils {
                 else
                 {
                     // we need to tile
-                    int n = ( int ) Math.ceil( ( 1.0 * classificationInterval.dimension( d ) ) / CATS.getMaximalRegionSize() );
+                    int n = ( int ) Math.ceil( ( 1.0 * classificationInterval.dimension( d ) ) / cats.getMaximalRegionWidth( numFeatures ) );
                     tileSizes[ d ] = ( int ) Math.ceil( 1.0 * classificationInterval.dimension( d ) / n );
                 }
             }
@@ -202,7 +203,7 @@ public abstract class IntervalUtils {
 
         tileSizes[ T ] = 1;
 
-        CATS.logger.info("Tile sizes [x,y,z]: " + tileSizes[ X] + ", " + tileSizes[ Y]  + ", " + tileSizes[ Z ]);
+        cats.logger.info("Tile sizes [x,y,z]: " + tileSizes[ X] + ", " + tileSizes[ Y]  + ", " + tileSizes[ Z ]);
 
         for ( int t = (int) classificationInterval.min( T ); t <= classificationInterval.max( T ); t += 1)
         {
@@ -237,7 +238,7 @@ public abstract class IntervalUtils {
             }
         }
 
-        CATS.logger.info( "Number of tiles: " + tiles.size() );
+        cats.logger.info( "Number of tiles: " + tiles.size() );
 
         return ( tiles );
     }
@@ -301,17 +302,17 @@ public abstract class IntervalUtils {
         return imgDims;
     }
 
-    public static long getApproximatelyNeededBytesPerVoxel( double memoryFactor )
+    public static long getApproximatelyNeededBytesPerVoxel( double numFeatures )
     {
         long oneByte = 8;
         long floatingPointImp = 32;
-        long mem = (long) ( memoryFactor * floatingPointImp / oneByte );
+        long mem = (long) ( 2 * numFeatures * floatingPointImp / oneByte );
         return mem;
     }
 
-    public static long getApproximatelyNeededBytes( FinalInterval interval, double memoryFactor )
+    public static long getApproximatelyNeededBytes( FinalInterval interval, double numFeatures )
     {
-        long bytes = getApproximatelyNeededBytesPerVoxel( memoryFactor );
+        long bytes = getApproximatelyNeededBytesPerVoxel( numFeatures );
 
         for ( int d = 0; d < interval.numDimensions(); ++d )
         {

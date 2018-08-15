@@ -329,7 +329,7 @@ public class CATS
 
 	public double accuracy = 4.0;
 
-	public double memoryFactor = 10.0;
+	public double memoryFactor = 5;
 
 	public static final IJLazySwingLogger logger = new IJLazySwingLogger();
 
@@ -2076,38 +2076,47 @@ public class CATS
 						*/
 	}
 
-	public long getMaximalNumberOfVoxelsPerRegion()
+	public long getMaximalNumberOfVoxelsPerRegion( int numFeatures )
 	{
 		long currentMemory = IJ.currentMemory();
+
 		long freeMemory = maxMemory - currentMemory;
 
-		long maxNumVoxelsPerRegion = (long) 1.0 * freeMemory / ( getApproximatelyNeededBytesPerVoxel(  featureSettings.maxDeepConvLevel * memoryFactor ) * threadsRegion * threadsPerRegion);
+		double maxNumVoxelsPerRegion =  1.0 * freeMemory;
+		maxNumVoxelsPerRegion /= 1.0 * getApproximatelyNeededBytesPerVoxel( numFeatures );
+		maxNumVoxelsPerRegion /= 1.0 * threadsRegion * threadsPerRegion;
 
-		return maxNumVoxelsPerRegion;
+		return (long) maxNumVoxelsPerRegion;
 	}
 
-	public int getMaximalRegionSize()
-	{
-		int maxNumRegionWidth;
 
-		if ( inputImage.getNSlices() > 1 )
+	private boolean isInputImage2D()
+	{
+		return ( inputImage.getNSlices() == 1 );
+	}
+
+
+	public int getMaximalRegionWidth( int numFeatures )
+	{
+		int maxRegionWidth;
+
+//		instancesManager.getKeys().
+
+		if ( isInputImage2D() )
 		{
-			maxNumRegionWidth = ( int ) Math.pow( getMaximalNumberOfVoxelsPerRegion(), 1.0 / 3 );
+			maxRegionWidth = ( int ) Math.pow( getMaximalNumberOfVoxelsPerRegion( numFeatures ), 1.0 / 2.0 );
 		}
 		else
 		{
-			maxNumRegionWidth = ( int ) Math.pow( getMaximalNumberOfVoxelsPerRegion(), 1.0 / 2 );
+			maxRegionWidth = ( int ) Math.pow( getMaximalNumberOfVoxelsPerRegion( numFeatures ), 1.0 / 3.0 );
 		}
 
-		// to keep it kind of interactive limit the maximal size
-		// to something (500 is arbitrary)
-//		maxNumRegionWidth = Math.min( maxNumRegionWidth, 500 );
-
-		// remove borders, which go into the memoryMB
-		// considerations, but should not be explicitely
+		// remove borders, which go into the memory
+		// considerations, but should not be explicitly
 		// asked for
-		maxNumRegionWidth -= 2 * getFeatureBorderSizes()[ X];
-		return maxNumRegionWidth;
+		maxRegionWidth -= 2 * getFeatureBorderSizes()[ X];
+
+		return maxRegionWidth;
 	}
 
 	private int[] point3DToInt(Point3D point3D)
@@ -2580,7 +2589,6 @@ public class CATS
 		applyClassifierWithTiling(  classifierKey, interval, -1, null , false );
 	}
 
-
 	public void applyClassifierOnSlurm(  Map< String, Object > parameters )
 	{
 		FinalInterval interval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( inputImage );
@@ -2687,7 +2695,13 @@ public class CATS
             numTiles = 1;
         }
 
-		ArrayList<FinalInterval> tiles = createTiles( interval, IntervalUtils.getInterval( inputImage ), numTiles,false, this );
+		ArrayList<FinalInterval> tiles = createTiles(
+				interval,
+				IntervalUtils.getInterval( inputImage ),
+				numTiles,
+				classifierManager.getClassifierAttributeNames( classifierKey ).size(),
+				false,
+				this );
 
 		// set up multi-threading
 
