@@ -14,8 +14,9 @@ import static de.embl.cba.cats.utils.IntervalUtils.*;
 
 public class ClassificationRangeUtils
 {
-    public static final String SELECTION_PM10Z = "Selected roi +- 10 slices";
+    public static final String SELECTION_ROI = "Selected roi";
     public static final String WHOLE_DATA_SET = "Whole data set";
+    public static final String SELECTION_PM10Z = "Selected roi +/-10 z-slices";
     static Logger logger = CATS.logger;
 
 
@@ -58,6 +59,11 @@ public class ClassificationRangeUtils
         {
             min[ Z ] = inputImage.getZ() - 1 - 10;
             max[ Z ] = inputImage.getZ() - 1 + 10;
+        }
+        else if ( rangeString.equals( SELECTION_ROI ) )
+        {
+            min[ Z ] = inputImage.getZ() - 1;
+            max[ Z ] = inputImage.getZ() - 1;
         }
 
         min[ T ] = max[ T ] = inputImage.getT() - 1;

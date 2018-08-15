@@ -200,7 +200,7 @@ public abstract class IntervalUtils {
         }
 
 
-            tileSizes[ T ] = 1;
+        tileSizes[ T ] = 1;
 
         CATS.logger.info("Tile sizes [x,y,z]: " + tileSizes[ X] + ", " + tileSizes[ Y]  + ", " + tileSizes[ Z ]);
 
@@ -301,7 +301,7 @@ public abstract class IntervalUtils {
         return imgDims;
     }
 
-    public static long getApproximateNeededBytesPerVoxel( double memoryFactor )
+    public static long getApproximatelyNeededBytesPerVoxel( double memoryFactor )
     {
         long oneByte = 8;
         long floatingPointImp = 32;
@@ -309,9 +309,9 @@ public abstract class IntervalUtils {
         return mem;
     }
 
-    public static long getApproximateNeededBytes( FinalInterval interval, double memoryFactor )
+    public static long getApproximatelyNeededBytes( FinalInterval interval, double memoryFactor )
     {
-        long bytes = getApproximateNeededBytesPerVoxel( memoryFactor );
+        long bytes = getApproximatelyNeededBytesPerVoxel( memoryFactor );
 
         for ( int d = 0; d < interval.numDimensions(); ++d )
         {

@@ -3,7 +3,7 @@ package de.embl.cba.cats.objects;
 import de.embl.cba.bigDataTools.utils.Utils;
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.results.ResultExportSettings;
-import de.embl.cba.cats.results.ResultUtils;
+import de.embl.cba.cats.results.ResultExport;
 import fiji.util.gui.GenericDialogPlus;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
@@ -195,7 +195,7 @@ public class ObjectSegmentation
         resultExportSettings.binning = settings.binning;
         resultExportSettings.classLutWidth = CATS.getResultImage().getProbabilityRange();
 
-        ImagePlus probabilities =  ResultUtils.getBinnedClassImageMemoryEfficient(
+        ImagePlus probabilities =  ResultExport.getBinnedClassImageMemoryEfficient(
                 settings.classId, resultExportSettings, settings.t,
                 CATS.getLogger(), CATS.numThreads );
 

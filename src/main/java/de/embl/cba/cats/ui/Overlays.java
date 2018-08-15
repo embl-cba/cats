@@ -308,7 +308,7 @@ public class Overlays implements RoiListener
 
         gd.addChoice( "Review labels of class", CATS.getClassNames().toArray( new String[0] ), CATS.getClassNames().get( 0 ) );
         gd.addNumericField( "Roi stroke width during review", roiStrokeWidthDuringLabelReview, 0 );
-        gd.addNumericField( "Zoom level [ 0 - 10 ]", 5, 0 );
+        gd.addNumericField( "Zoom level [ 0 - 10 ]", 2, 0 );
 
         gd.showDialog();
         if ( gd.wasCanceled() ) return false;

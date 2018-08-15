@@ -158,7 +158,7 @@ public class ApplyClassifierOnSlurmCommand implements Command
 
     private int getApproximatelyNeededMemoryMB( FinalInterval tile )
     {
-        long memoryB = IntervalUtils.getApproximateNeededBytes( tile, memoryFactor );
+        long memoryB = IntervalUtils.getApproximatelyNeededBytes( tile, memoryFactor );
         int memoryMB = (int) ( 1.0 * memoryB / 1000000L );
         if ( memoryMB < 32000 ) memoryMB = 32000;
         return memoryMB;

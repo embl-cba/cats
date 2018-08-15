@@ -56,7 +56,7 @@ public class ResultImageRAM implements ResultImage {
         resultExportSettings.resultImagePlus = result;
         resultExportSettings.resultImage = this;
 
-        ResultUtils.exportResults( resultExportSettings );
+        ResultExport.exportResults( resultExportSettings );
     }
 
     @Override

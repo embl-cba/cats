@@ -106,17 +106,16 @@ public class CATSCommand implements Command, Interactive
     private String basicActionInput = ADD_CLASS;
 
     @Parameter(label = "Classification range", persist = false,
-        choices = { ClassificationRangeUtils.WHOLE_DATA_SET, ClassificationRangeUtils.SELECTION_PM10Z })
-    private String range = ClassificationRangeUtils.SELECTION_PM10Z;
-
+        choices = { ClassificationRangeUtils.SELECTION_ROI, ClassificationRangeUtils.WHOLE_DATA_SET, ClassificationRangeUtils.SELECTION_PM10Z })
+    private String range = ClassificationRangeUtils.SELECTION_ROI;
 
     @Parameter( label = "Execute combined actions", callback = "performAdvancedAction" )
     private Button performAdvancedActionButton;
 
     @Parameter(label = "Combined actions", persist = false,
             choices = {
-                    LOAD_LABELS_AND_TRAIN_CLASSIFIER,
-                    UPDATE_LABELS_AND_TRAIN_CLASSIFIER
+					UPDATE_LABELS_AND_TRAIN_CLASSIFIER,
+					LOAD_LABELS_AND_TRAIN_CLASSIFIER,
             } )
 
     private String advancedActionInput = ADD_CLASS;
@@ -199,7 +198,8 @@ public class CATSCommand implements Command, Interactive
                         cats.showClassifierSettingsDialog();
                         break;
                     case CHANGE_FEATURE_SETTINGS:
-                        cats.featureSettingsDialog( false );
+						final boolean settingsChanged = cats.featureSettingsDialog( false );
+						if ( settingsChanged ) saveLabelInstances();
                         break;
                     case CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS:
                         cats.featureSettingsDialog( true );
@@ -314,7 +314,7 @@ public class CATSCommand implements Command, Interactive
                         break;
 
                     case TRAIN_CLASSIFIER:
-                        trainAndSaveClassifier();
+                        trainClassifier();
                         break;
                 }
             }
@@ -337,23 +337,27 @@ public class CATSCommand implements Command, Interactive
 
     private void updateLabelInstances( )
     {
-        String[] dirFile;
-        GenericDialogPlus gdWait;
         cats.updateLabelInstances();
 
         labelButtonsPanel.setLabellingInformations();
 
-        dirFile = IOUtils.getSaveDirFile( "Save instances...", inputImage.getTitle() + ARFF, ARFF );
-
-        if ( dirFile != null )
-        {
-            gdWait = showWaitDialog( "I/O operation in progress...\nPlease wait until this window disappears!" );
-            cats.saveInstances( inputImage.getTitle(), dirFile[ 0 ], dirFile[ 1 ] );
-            gdWait.dispose();
-        }
+		saveLabelInstances();
     }
 
-    private void trainAndSaveClassifier()
+	private void saveLabelInstances()
+	{
+		String[] dirFile = IOUtils.getSaveDirFile( "Save instances...", inputImage.getTitle() + ARFF, ARFF );
+
+		if ( dirFile != null )
+		{
+			GenericDialogPlus gdWait;
+			gdWait = showWaitDialog( "I/O operation in progress...\nPlease wait until this window disappears!" );
+			cats.saveInstances( inputImage.getTitle(), dirFile[ 0 ], dirFile[ 1 ] );
+			gdWait.dispose();
+		}
+	}
+
+	private void trainAndSaveClassifier()
     {
         String[] dirFile;
         String classifierFilename = trainClassifier();
@@ -367,6 +371,8 @@ public class CATSCommand implements Command, Interactive
 			cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
 		}
     }
+
+    boolean[] instancesSelection;
 
     private String trainClassifier()
     {
@@ -387,7 +393,13 @@ public class CATSCommand implements Command, Interactive
 		else
 		{
 			final GenericDialog gd = new GenericDialog( "Instances selection" );
-			gd.addCheckboxGroup( numInstances, 1, keys, new boolean[ numInstances ] );
+
+			if ( instancesSelection == null || instancesSelection.length != numInstances )
+			{
+				instancesSelection = new boolean[ numInstances ];
+			}
+
+			gd.addCheckboxGroup( numInstances, 1, keys, instancesSelection );
 			gd.showDialog();
 
 			if ( gd.wasCanceled() ) return null;
@@ -399,6 +411,11 @@ public class CATSCommand implements Command, Interactive
 				if ( gd.getNextBoolean() )
 				{
 					selectedInstances.add( keys[ i ] );
+					instancesSelection[ i ] = true;
+				}
+				else
+				{
+					instancesSelection[ i ] = false;
 				}
 			}
 

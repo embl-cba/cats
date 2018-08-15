@@ -5,8 +5,10 @@ import de.embl.cba.cluster.JobFuture;
 import de.embl.cba.cluster.SlurmJobMonitor;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
+import ij.IJ;
 import ij.Prefs;
 import org.scijava.command.Command;
+import org.scijava.command.CommandModule;
 import org.scijava.command.CommandService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -19,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import static de.embl.cba.cats.utils.Utils.getSimpleString;
 
@@ -31,7 +34,7 @@ public class BatchClassificationCommand implements Command
 	@Parameter
 	public CommandService commandService;
 
-	@Parameter (label = "Data directory", style = "directory" )
+	@Parameter (label = "Input directory", style = "directory" )
 	public File inputDirectory;
 
 	@Parameter (label = "Filename regular expression" )
@@ -43,16 +46,14 @@ public class BatchClassificationCommand implements Command
 	@Parameter (label = "Minimum number of voxels per object" )
 	public int minNumVoxels = 100;
 
+	@Parameter (label = "Output directory", style = "directory" )
+	public File outputDirectory;
+
 	public int memoryMB = (int) ( Runtime.getRuntime().maxMemory() / 1000 / 1000 );
 
 	public int numWorkers = (int) Runtime.getRuntime().availableProcessors();
 
 	IJLazySwingLogger logger = new IJLazySwingLogger();
-
-	private static String masterRegExp = "(?<treatment>.+)--W(?<well>\\d+)--P(?<position>\\d+)--Z(?<slice>\\d+)--T(?<timePoint>\\d+)--(?<channel>.+)\\.tif";
-
-	private static String[] datasetGroups = {"treatment","well","position"};
-
 
 	public void run()
 	{
@@ -61,23 +62,23 @@ public class BatchClassificationCommand implements Command
 
 		List< File > filepaths = IOUtils.getFiles( inputDirectory.getAbsolutePath(), filenameRegExp );
 
-		executeClassificationTasks( classifierFile, filepaths );
+		executeClassificationTasks( classifierFile, filepaths, outputDirectory );
 
 	}
 
 
-	private void executeClassificationTasks( File classifierPath, List< File > filePaths )
+	private void executeClassificationTasks( File classifierPath, List< File > filePaths, File outputDirectory  )
 	{
 
 		for ( File filePath : filePaths )
 		{
 			logger.info( "Working on: " + filePath  );
-			executeClassificationTask( classifierPath, filePath );
+			executeClassificationTask( classifierPath, filePath, outputDirectory  );
 		}
 
 	}
 
-	private void executeClassificationTask( File classifierPath, File inputImagePath )
+	private void executeClassificationTask( File classifierPath, File inputImagePath, File outputDirectory )
 	{
 
 		logger.info( "Classifying pixels..." );
@@ -88,7 +89,6 @@ public class BatchClassificationCommand implements Command
 		// Pixel classification
 		//
 
-		Path outputDirectory = Paths.get ( inputImagePath.getParent() + "--analysis" + "/" ); //+ "DataSet--" + simpleDataSetName;
 		String dataSetID = getSimpleString( inputImagePath.getName() );
 
 		parameters.clear();
@@ -97,7 +97,7 @@ public class BatchClassificationCommand implements Command
 		parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGEJ1 );
 		parameters.put( IOUtils.INPUT_IMAGE_FILE,  inputImagePath );
 		parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, classifierPath );
-		parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, outputDirectory.toFile() );
+		parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, outputDirectory );
 		parameters.put( IOUtils.OUTPUT_MODALITY, IOUtils.SAVE_AS_TIFF_STACKS );
 		parameters.put( ApplyClassifierCommand.NUM_WORKERS, numWorkers );
 		parameters.put( ApplyClassifierCommand.MEMORY_MB, memoryMB );
@@ -110,7 +110,13 @@ public class BatchClassificationCommand implements Command
 		parameters.put( "inputImageVSSPattern", "" );
 		parameters.put( "inputImageVSSHdf5DataSetName", "" );
 
-		commandService.run( ApplyClassifierCommand.class, true, parameters );
+		final Future< CommandModule > run = commandService.run( ApplyClassifierCommand.class, true, parameters );
+
+		while ( ! run.isDone() )
+		{
+			IJ.wait( 1000 );
+		}
+
 
 		//
 		// Object analysis

@@ -1181,7 +1181,7 @@ public class CATS
             }
         }
 
-        return true;
+        return settingsChanged;
     }
 
 
@@ -2081,27 +2081,27 @@ public class CATS
 		long currentMemory = IJ.currentMemory();
 		long freeMemory = maxMemory - currentMemory;
 
-		long maxNumVoxelsPerRegion = (long) 1.0 * freeMemory / ( getApproximateNeededBytesPerVoxel( memoryFactor ) * threadsRegion * threadsPerRegion);
-
-		long maxNumRegionWidth = (long) Math.pow( maxNumVoxelsPerRegion, 1.0 / 3 );
-
-		//log.setShowDebug(true);
-		//log.debug("memoryMB factor " + memoryFactor);
-		//log.debug("maxNumVoxelsPerRegion " + maxNumVoxelsPerRegion);
-		//log.debug("memoryPerRegionMemoryEstimate [MB] " +
-		//		(maxNumVoxelsPerRegion * getApproximateNeededBytesPerVoxel() / 1000000));
+		long maxNumVoxelsPerRegion = (long) 1.0 * freeMemory / ( getApproximatelyNeededBytesPerVoxel(  featureSettings.maxDeepConvLevel * memoryFactor ) * threadsRegion * threadsPerRegion);
 
 		return maxNumVoxelsPerRegion;
 	}
 
-
 	public int getMaximalRegionSize()
 	{
-		// TODO: this is wrong if the regions are not cubic...
-		int maxNumRegionWidth = (int) Math.pow( getMaximalNumberOfVoxelsPerRegion(), 1.0 / 3 );
+		int maxNumRegionWidth;
+
+		if ( inputImage.getNSlices() > 1 )
+		{
+			maxNumRegionWidth = ( int ) Math.pow( getMaximalNumberOfVoxelsPerRegion(), 1.0 / 3 );
+		}
+		else
+		{
+			maxNumRegionWidth = ( int ) Math.pow( getMaximalNumberOfVoxelsPerRegion(), 1.0 / 2 );
+		}
+
 		// to keep it kind of interactive limit the maximal size
 		// to something (500 is arbitrary)
-		maxNumRegionWidth = Math.min( maxNumRegionWidth, 500 );
+//		maxNumRegionWidth = Math.min( maxNumRegionWidth, 500 );
 
 		// remove borders, which go into the memoryMB
 		// considerations, but should not be explicitely
