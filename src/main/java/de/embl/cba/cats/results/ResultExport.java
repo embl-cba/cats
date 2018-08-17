@@ -268,7 +268,6 @@ public abstract class ResultExport
         final ImagePlus imp = new ImagePlus( resultExportSettings.exportNamesPrefix + className, stackOfAllTimepoints );
         imp.setDimensions( 1, numSlices, numTimepoints );
         imp.setOpenAsHyperStack( true );
-        imp.setDisplayRange( 0, resultExportSettings.classLutWidth );
         imp.show();
 
         logDone( resultExportSettings, className, numTimepoints, "Displayed " );
