@@ -213,6 +213,7 @@ public class CATS
 		}
 
 		segmentedObjectsMap.put( segmentedObjects.name, segmentedObjects );
+
 	}
 
 	public void segmentObjects()

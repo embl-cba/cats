@@ -41,7 +41,7 @@ public class ObjectSegmentation
     public SegmentedObjects runFromUI( )
     {
 
-        GenericDialog gd = showInitialisationDialog();
+        GenericDialog gd = showSegmentationDialog();
 
         if ( gd == null ) return null;
 
@@ -105,7 +105,7 @@ public class ObjectSegmentation
     private final static String IMAGE_SUITE_3D = "3D Image Suite";
 
 
-    private GenericDialog showInitialisationDialog()
+    private GenericDialog showSegmentationDialog()
     {
         GenericDialog gd = new GenericDialogPlus("Object Segmentation");
 

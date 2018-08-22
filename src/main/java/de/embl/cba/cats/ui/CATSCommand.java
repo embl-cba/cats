@@ -83,7 +83,7 @@ public class CATSCommand implements Command, Interactive
                     REVIEW_LABELS,
 //                    IO_SAVE_LABELS,
                     APPLY_CLASSIFIER_ON_SLURM,
-//                    IO_SAVE_CLASSIFIER,
+                    IO_SAVE_CLASSIFIER,
                     IO_LOAD_LABEL_INSTANCES,
                     SEGMENT_OBJECTS,
                     REVIEW_OBJECTS,
@@ -224,10 +224,10 @@ public class CATSCommand implements Command, Interactive
                     case CHANGE_COLORS:
                         overlays.changeClassColorViaGUI( labelButtonsPanel );
                         break;
-//                    case IO_SAVE_CLASSIFIER:
-//                        dirFile = getSaveDirFile( "Please choose a output file", ".classifier" );
-//                        cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
-//                        break;
+                    case IO_SAVE_CLASSIFIER:
+                        dirFile = getSaveDirFile( "Please choose output file", ".classifier" );
+                        cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
+                        break;
                     case STOP_CLASSIFICATION:
 
                         cats.stopCurrentTasks = true;
@@ -293,6 +293,8 @@ public class CATSCommand implements Command, Interactive
                         break;
 
                     case APPLY_CLASSIFIER_ON_SLURM:
+                        dirFile = getSaveDirFile( "Please choose a output file", ".classifier" );
+                        cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
                         cats.applyClassifierOnSlurm( getIntervalFromUI() );
                         break;
 

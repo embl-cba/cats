@@ -13,7 +13,7 @@ public class CatsUi3dObjects
 		final ImageJ ij = new ImageJ();
 		ij.ui().showUI();
 
-		ImagePlus inputImagePlus = IJ.openImage(CatsObjects3d.class.getResource(  "3d-objects.zip" ).getFile() );
+		ImagePlus inputImagePlus = IJ.openImage( CatsObjects3d.class.getResource(  "3d-objects.zip" ).getFile() );
 		inputImagePlus.show();
 
 		ij.command().run( CATSCommand.class, true );

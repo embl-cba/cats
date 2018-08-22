@@ -37,7 +37,7 @@ public class ObjectReview
 
     public void runUI( )
     {
-        GenericDialog gd = openGenericDialog();
+        GenericDialog gd = openObjectReviewDialog();
 
         if ( gd == null ) return;
 
@@ -46,7 +46,7 @@ public class ObjectReview
         reviewObjectsUsingRoiManager( cats.getSegmentedObjectsMap().get( objectsName ) );
     }
 
-    private GenericDialog openGenericDialog()
+    private GenericDialog openObjectReviewDialog()
     {
         GenericDialog gd = new GenericDialogPlus( "Objects Review" );
 
