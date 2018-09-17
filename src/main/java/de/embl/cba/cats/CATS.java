@@ -1141,6 +1141,7 @@ public class CATS
         gd.addNumericField("z/xy anisotropy", featureSettings.anisotropy, 10);
         gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
                 FeatureSettings.getAsCSVString( featureSettings.activeChannels, 1 ) );
+        gd.addCheckbox( "Only use difference features", featureSettings.onlyUseDifferenceFeatures );
 
         if ( showAdvancedSettings )
         {
@@ -1163,7 +1164,7 @@ public class CATS
 
             gd.addCheckbox( "Consider multiple bounding box offsets during loading", considerMultipleBoundingBoxOffsetsDuringInstancesLoading );
 
-        }
+		}
 
         gd.showDialog();
 
@@ -1230,6 +1231,7 @@ public class CATS
         newFeatureSettings.maxDeepConvLevel = (int) gd.getNextNumber();
         newFeatureSettings.anisotropy = gd.getNextNumber();
         newFeatureSettings.setActiveChannels( gd.getNextString() );
+		newFeatureSettings.onlyUseDifferenceFeatures = gd.getNextBoolean();
 
         if ( showAdvancedSettings )
         {

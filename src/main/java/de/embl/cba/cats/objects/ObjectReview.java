@@ -11,6 +11,7 @@ import ij.gui.*;
 import ij.plugin.frame.RoiManager;
 import mcib3d.geom.Object3D;
 import mcib3d.geom.Objects3DPopulation;
+import mcib3d.geom.Objects3DPopulationAnalysis;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -187,14 +188,27 @@ public class ObjectReview
 
     }
 
+
+    private class ObjectAndSize
+    {
+        Object3D object;
+        double size;
+
+        public double getSize()
+        {
+            return size;
+        }
+
+    }
+
+
     private ArrayList< Object3D > getVolumeFilteredObjects( SegmentedObjects segmentedObjects, String sorting )
     {
         ArrayList< Object3D > allObjects = segmentedObjects.objects3DPopulation.getObjectsList();
 
         cats.getLogger().info( "Number of all objects: " + allObjects.size() );
 
-        ArrayList< Object3D > objects = new ArrayList<>( );
-        ArrayList< Double > volumes = new ArrayList<>( );
+        ArrayList< ObjectAndSize > objectsAndSizes = new ArrayList<>( );
 
         for ( Object3D object3D : allObjects )
         {
@@ -205,20 +219,28 @@ public class ObjectReview
 
             if ( calibratedVolume > minCalibratedVolume )
             {
-				objects.add( object3D );
-                volumes.add( calibratedVolume );
+                final ObjectAndSize objectAndSize = new ObjectAndSize();
+                objectAndSize.object = object3D;
+                objectAndSize.size = calibratedVolume;
+                objectsAndSizes.add( objectAndSize );
             }
         }
 
-        cats.getLogger().info( "Number of objects after volume filter: " + objects.size() );
+        cats.getLogger().info( "Number of objects after volume filter: " + objectsAndSizes.size() );
 
         if ( sorting.equals( SORT_BY_VOLUME ) )
         {
-            Collections.sort( objects,
-                    Comparator.comparing( item -> - volumes.get( objects.indexOf( item ) ) ) );
+            objectsAndSizes.sort( Comparator.comparing( ObjectAndSize::getSize ).reversed() );
         }
 
-        return objects;
+        ArrayList< Object3D > sortedAndFilteredObjects = new ArrayList<>(  );
+
+        for ( ObjectAndSize objectAndSize : objectsAndSizes )
+        {
+            sortedAndFilteredObjects.add( objectAndSize.object );
+        }
+
+        return sortedAndFilteredObjects;
     }
 
     public static ArrayList< Roi > getOvalRoisFromObjects( SegmentedObjects objects )

@@ -69,7 +69,8 @@ public class InstancesAndMetadata {
         Metadata_Settings_UseChannels,
         Metadata_Settings_MaxDeepConvLevel,
         Metadata_Settings_DownSamplingMethod,
-        Metadata_Settings_Log2;
+        Metadata_Settings_Log2,
+        Metadata_Settings_UseOnlyDifferenceFeatures;
 
 
         public static boolean contains( String test )

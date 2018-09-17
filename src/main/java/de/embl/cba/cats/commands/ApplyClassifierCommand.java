@@ -127,10 +127,10 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     public static final String SAVE_RESULTS_TABLE = "saveResultsTable";
 
     ImagePlus inputImage;
-    CATS CATS;
+    CATS cats;
     String outputFileType;
 
-    // /Applications/Fiji.app/Contents/MacOS/ImageJ-macosx --run "Apply Classifier" "quitAfterRun='true',inputImageFile='/Users/tischer/Documents/fiji-plugin-CATS/src/test/resources/image-sequence/.*--W00016--P00003--.*',classifierFile='/Users/tischer/Documents/fiji-plugin-CATS/src/test/resources/transmission-cells-3d.classifier',outputModality='Save class probabilities as tiff files',outputDirectory='/Users/tischer/Documents/fiji-plugin-CATS/src/test/resources/image-sequence--classified'"
+    // /Applications/Fiji.app/Contents/MacOS/ImageJ-macosx --run "Apply Classifier" "quitAfterRun='true',inputImageFile='/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/image-sequence/.*--W00016--P00003--.*',classifierFile='/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/transmission-cells-3d.classifier',outputModality='Save class probabilities as tiff files',outputDirectory='/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/image-sequence--classified'"
 
     // xvfb-run -a /g/almf/software/Fiji.app/ImageJ-linux64 --run "Apply Classifier" "quitAfterRun='true',inputImageFile='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences/.*--W00016--P00004--.*',classifierFile='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/transmission-cells-3d.classifier',outputDirectory='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences--classified/DataSet--W00016--P00004--',outputModality='Save class probabilities as tiff files'"
 
@@ -211,7 +211,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
         if ( outputModality.equals( IOUtils.SHOW_AS_ONE_IMAGE ) )
         {
-            CATS.getResultImage().getWholeImageCopy().show();
+            cats.getResultImage().getWholeImageCopy().show();
         }
         else
         {
@@ -236,7 +236,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
             resultsTable.addValue( "FileName_ApplyClassifier_InputImage_IMGR", inputImageFile.getName() );
             resultsTable.addValue( "PathName_ApplyClassifier_InputImage_IMGR", inputImageFile.getParent() );
 
-            for ( String className : CATS.getClassNames() )
+            for ( String className : cats.getClassNames() )
             {
                 resultsTable.addValue( "FileName_ApplyClassifier_" + className + "_IMG", dataSetID + "--" + className + outputFileType );
                 resultsTable.addValue( "PathName_ApplyClassifier_" + className + "_IMG", outputDirectory.getPath() );
@@ -256,7 +256,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         ResultExportSettings resultExportSettings = new ResultExportSettings();
         resultExportSettings.directory = outputDirectory.getAbsolutePath();
         resultExportSettings.exportNamesPrefix = dataSetID + "--";
-        resultExportSettings.classNames = CATS.getClassNames();
+        resultExportSettings.classNames = cats.getClassNames();
         resultExportSettings.saveRawData = false;
 
         if( outputModality.equals(  IOUtils.SAVE_AS_IMARIS ) )
@@ -264,7 +264,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
             logService.info( "Saving as Imaris..." );
             outputFileType = ".ims";
             resultExportSettings.exportType = ResultExportSettings.SEPARATE_IMARIS;
-            CATS.getResultImage().exportResults( resultExportSettings );
+            cats.getResultImage().exportResults( resultExportSettings );
         }
 
         if( outputModality.equals(  IOUtils.SAVE_AS_TIFF_STACKS ) )
@@ -272,15 +272,15 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
             logService.info( "Saving as Tiff stacks..." );
             outputFileType = ".tif";
             resultExportSettings.exportType = ResultExportSettings.SEPARATE_TIFF_FILES;
-            CATS.getResultImage().exportResults( resultExportSettings );
+            cats.getResultImage().exportResults( resultExportSettings );
         }
 
         if( outputModality.equals( IOUtils.SAVE_AS_MULTI_CLASS_TIFF_SLICES ) )
         {
-            logService.info( "Saving as Tiff stacks..." );
+            logService.info( "Saving as Tiff slices..." );
             outputFileType = ".tif";
             resultExportSettings.exportType = ResultExportSettings.SEPARATE_MULTI_CLASS_TIFF_SLICES;
-            CATS.getResultImage().exportResults( resultExportSettings );
+            cats.getResultImage().exportResults( resultExportSettings );
         }
 
 
@@ -290,37 +290,37 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     {
         logService.info( "Applying classifier: " + classifierFile );
 
-        CATS = new CATS();
-        CATS.setNumThreads( numWorkers );
-        CATS.setMaxMemory( memoryMB * 1000000L ); // MB -> Byte
-        CATS.setInputImage( inputImage );
+        cats = new CATS();
+        cats.setNumThreads( numWorkers );
+        cats.setMaxMemory( memoryMB * 1000000L ); // MB -> Byte
+        cats.setInputImage( inputImage );
 
         if ( outputModality.equals( IOUtils.STREAM_TO_RESULT_IMAGE_DISK ) )
         {
-            CATS.setResultImageDisk( outputDirectory.getAbsolutePath() );
+            cats.setResultImageDisk( outputDirectory.getAbsolutePath() );
         }
         else
         {
             if ( classificationIntervalXYZT.equals( WHOLE_IMAGE ) )
             {
-                CATS.setResultImageRAM();
+                cats.setResultImageRAM();
             }
             else
             {
-                CATS.setResultImageRAM( getInterval() );
+                cats.setResultImageRAM( getInterval() );
             }
         }
 
-        CATS.loadClassifier( classifierFile.getAbsolutePath() );
+        cats.loadClassifier( classifierFile.getAbsolutePath() );
 
         if ( classificationIntervalXYZT.equals( WHOLE_IMAGE ) )
         {
-            CATS.applyClassifierWithTiling();
+            cats.applyClassifierWithTiling();
         }
         else
         {
             FinalInterval interval = getInterval();
-            CATS.applyClassifierWithTiling( interval );
+            cats.applyClassifierWithTiling( interval );
         }
 
         logService.info( "Applying classifier: done." );

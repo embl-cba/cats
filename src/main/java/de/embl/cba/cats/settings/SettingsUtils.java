@@ -9,14 +9,14 @@ import static de.embl.cba.cats.instances.InstancesAndMetadata.Metadata.*;
 
 public abstract class SettingsUtils {
 
-    public static void addSettingsToMetadata( FeatureSettings featureSettings,
-                                       InstancesAndMetadata instancesAndMetadata)
+    public static void addSettingsToMetadata( FeatureSettings featureSettings, InstancesAndMetadata instancesAndMetadata)
     {
         instancesAndMetadata.addMetadata( Metadata_Settings_ImageBackground, featureSettings.imageBackground );
         instancesAndMetadata.addMetadata( Metadata_Settings_MaxDeepConvLevel, featureSettings.maxDeepConvLevel );
         instancesAndMetadata.addMetadata( Metadata_Settings_Anisotropy, featureSettings.anisotropy );
         instancesAndMetadata.addMetadata( Metadata_Settings_Log2, featureSettings.log2 == true ? 1 : 0 );
         instancesAndMetadata.addMetadata( Metadata_Settings_DownSamplingMethod, featureSettings.downSamplingMethod );
+        instancesAndMetadata.addMetadata( Metadata_Settings_UseOnlyDifferenceFeatures, featureSettings.onlyUseDifferenceFeatures == true ? 1 : 0 );
 
         int i = 0;
         instancesAndMetadata.addMetadata( Metadata_Settings_Binning_0, featureSettings.binFactors.get(i++) );
@@ -58,6 +58,18 @@ public abstract class SettingsUtils {
         {
             featureSettings.downSamplingMethod = DownSampler.getID( DownSampler.BIN_AVERAGE ); // this was the old default
         }
+
+        int useOnlyDifferences = ( int ) instancesAndMetadata.getMetadata( Metadata_Settings_UseOnlyDifferenceFeatures, 0 );
+
+        if ( useOnlyDifferences == -1 ) // was not present due to older version
+        {
+            featureSettings.onlyUseDifferenceFeatures = false; // this was the old default
+        }
+        else
+        {
+            featureSettings.onlyUseDifferenceFeatures = ( useOnlyDifferences == 1 );
+        }
+
 
         int iBinFactor = 0;
         featureSettings.binFactors.set( iBinFactor++ , (int) instancesAndMetadata.getMetadata( Metadata_Settings_Binning_0, 0 ));

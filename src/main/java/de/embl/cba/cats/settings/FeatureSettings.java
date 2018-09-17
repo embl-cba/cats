@@ -37,6 +37,8 @@ public class FeatureSettings
 
     public boolean computeGaussian = false;
 
+    public boolean onlyUseDifferenceFeatures;
+
     public boolean equals( FeatureSettings featureSettings )
     {
         if ( anisotropy != featureSettings.anisotropy ) return false;
@@ -50,6 +52,7 @@ public class FeatureSettings
         if ( ! ( smoothingScales.equals( featureSettings.smoothingScales ) ) ) return false;
         if ( ! ( computeGaussian == featureSettings.computeGaussian ) ) return false;
         if ( ! ( log2 == featureSettings.log2) ) return false;
+        if ( ! ( onlyUseDifferenceFeatures == featureSettings.onlyUseDifferenceFeatures) ) return false;
 
         return true;
     }
@@ -73,6 +76,7 @@ public class FeatureSettings
         boundingBoxExpansionsForGeneratingInstancesFromLabels.add( 0 );
         smoothingScales.add( 1 );
         downSamplingMethod = DownSampler.getID( DownSampler.BIN_AVERAGE );
+        onlyUseDifferenceFeatures = true;
     }
 
     public FeatureSettings copy()
@@ -89,6 +93,7 @@ public class FeatureSettings
         featureSettings.imageBackground = imageBackground;
         featureSettings.computeGaussian = computeGaussian;
         featureSettings.downSamplingMethod = downSamplingMethod;
+        featureSettings.onlyUseDifferenceFeatures = onlyUseDifferenceFeatures;
 
         return featureSettings;
     }

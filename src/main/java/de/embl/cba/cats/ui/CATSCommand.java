@@ -25,7 +25,7 @@ import static de.embl.cba.cats.CATS.logger;
 import static de.embl.cba.cats.utils.IOUtils.getOpenDirFile;
 import static de.embl.cba.cats.utils.IOUtils.getSaveDirFile;
 
-@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>cats", initializer = "init")
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>CATS", initializer = "init")
 public class CATSCommand implements Command, Interactive
 {
     public static final String ARFF = ".ARFF";

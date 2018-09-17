@@ -144,16 +144,16 @@ public class FeatureProvider
     };
 
 
-    public FeatureProvider( CATS CATS )
+    public FeatureProvider( CATS cats )
     {
-        this.CATS = CATS;
-        this.inputImage = CATS.getInputImage();
-        this.resultImageFgDistBg = CATS.getResultImageBgFg();
-        this.logger = CATS.getLogger();
-        this.featureSettings = CATS.featureSettings.copy();
+        this.CATS = cats;
+        this.inputImage = cats.getInputImage();
+        this.resultImageFgDistBg = cats.getResultImageBgFg();
+        this.logger = cats.getLogger();
+        this.featureSettings = cats.featureSettings.copy();
 
         // TODO: isn't below a job for the feature-provider?
-        featureImageBorderSizes = CATS.getFeatureBorderSizes();
+        featureImageBorderSizes = cats.getFeatureBorderSizes();
     }
 
     public void setInterval( FinalInterval interval )
@@ -1098,12 +1098,20 @@ public class FeatureProvider
 
     public boolean isFeatureNeeded( String featureImageTitle )
     {
+
+        if ( featureSettings.onlyUseDifferenceFeatures )
+        {
+            if ( !featureImageTitle.contains( CONV_DEPTH ) )
+            {
+                return false;
+            }
+        }
+
         if ( featureListSubset == null )
         {
             return true;
         }
-
-        if ( featureListSubset.contains( featureImageTitle ) )
+        else if ( featureListSubset.contains( featureImageTitle ) )
         {
             return true;
         }
@@ -1345,7 +1353,7 @@ public class FeatureProvider
                 logProgress( numThreads, start, resolutionLayer );
             }
 
-            putIntoFeatureImagesMap( multiResolutionFeatureImages );
+            putFeatureImagesIntoMap( multiResolutionFeatureImages );
 
         }
         catch (InterruptedException ie)
@@ -1578,7 +1586,7 @@ public class FeatureProvider
 
     }
 
-    private void putIntoFeatureImagesMap( ArrayList< ArrayList< ImagePlus > > multiResolutionFeatureImages )
+    private void putFeatureImagesIntoMap( ArrayList< ArrayList< ImagePlus > > multiResolutionFeatureImages )
     {
         for ( ArrayList<ImagePlus> featureImages : multiResolutionFeatureImages )
         {
@@ -1594,6 +1602,8 @@ public class FeatureProvider
                 {
                     this.featureImages.put(  featureImage.getTitle(), featureImage );
                 }
+
+
             }
         }
     }

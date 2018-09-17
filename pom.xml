@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>23.1.1</version>
+		<version>23.2.0</version>
 		<relativePath />
 	</parent>
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>fiji_plugin_deepSegmentation</artifactId>
-	<version>0.6.60</version>
+	<version>0.6.62</version>
 
 	<name>Fiji plugin for trainable segmentation using deep convolution</name>
 	<description>A plugin for trainable segmentation using deep convolution.</description>
