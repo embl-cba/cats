@@ -46,7 +46,6 @@ public class ResultImageDisk implements ResultImage {
         resultExportSettings.logger = logger;
         resultExportSettings.resultImagePlus = result;
         resultExportSettings.resultImage = this;
-
         ResultExport.exportResults( resultExportSettings );
     }
 

@@ -1219,6 +1219,13 @@ public class CATS
 	}
 
 
+	public void recomputeLabelInstances()
+	{
+		this.recomputeLabelInstances = true;
+
+		updateLabelInstancesAndMetadata();
+	}
+
     public FeatureSettings getFeatureSettingsFromGenericDialog( GenericDialogPlus gd, boolean showAdvancedSettings )
     {
         FeatureSettings newFeatureSettings = featureSettings.copy();
@@ -1358,47 +1365,6 @@ public class CATS
 		return classifier;
 	}
 
-	/**
-	 * Write current project into a file
-	 *
-	 * @param filename name (with complete path) of the destination file
-	 * @return false if error
-	 */
-	public boolean saveProject(String filename)
-	{
-		File sFile = null;
-		boolean saveOK = true;
-
-		logger.info("Saving project to disk...");
-
-		try
-		{
-			sFile = new File(filename);
-			OutputStream os = new FileOutputStream(sFile);
-			if (sFile.getName().endsWith(".gz"))
-			{
-				os = new GZIPOutputStream(os);
-			}
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(os);
-			objectOutputStream.writeObject(classifier);
-			objectOutputStream.writeObject( featureSettings );
-			objectOutputStream.writeObject( labelManager.getLabels());
-			objectOutputStream.flush();
-			objectOutputStream.close();
-		}
-		catch (Exception e)
-		{
-			IJ.error("Save Failed", "Error when saving project to disk");
-			logger.info(e.toString());
-			saveOK = false;
-		}
-		if (saveOK)
-		{
-			IJ.log("Saved project to " + filename);
-		}
-
-		return saveOK;
-	}
 
 	/**
 	 * Set current classifier
@@ -1677,7 +1643,7 @@ public class CATS
             logger.info( "# Loaded instances relation name matches image name => Populating image labels..." );
 			labelManager.setLabels( LabelUtils.getLabelsFromInstancesAndMetadata( instancesAndMetadata, considerMultipleBoundingBoxOffsetsDuringInstancesLoading ) );
 			labelsFeatureNames = instancesAndMetadata.getAttributeNames();
-			currentLabelsInstancesKey = key;
+			currentImageLabelInstancesKey = key;
 		}
 		else
         {
@@ -1703,6 +1669,35 @@ public class CATS
 		return key;
 
 	}
+
+	public boolean saveInstances(  String directory, String filename )
+	{
+		String key = getCurrentImageLabelInstancesKey();
+
+		logger.info("\n# Saving instances " + key + " to " + directory + File.separator + filename );
+
+		InstancesAndMetadata instancesAndMetadata = getInstancesManager().getInstancesAndMetadata( key );
+
+		if ( instancesAndMetadata == null )
+		{
+			logger.error( "Saving instances failed." );
+			return false;
+		}
+
+		boolean success = InstancesUtils.saveInstancesAndMetadataAsARFF( instancesAndMetadata, directory, filename );
+
+		if ( success )
+		{
+			logger.info( "...done." );
+		}
+		else
+		{
+			logger.error( "Saving instances failed." );
+		}
+
+		return success;
+	}
+
 
 	public boolean saveInstances( String key, String directory, String filename )
 	{
@@ -1732,20 +1727,20 @@ public class CATS
 
 	public void updateLabelInstancesAndMetadata()
 	{
-		currentLabelsInstancesKey = getKeyFromImageTitle();
-		updateLabelInstancesAndMetadata( currentLabelsInstancesKey );
+		currentImageLabelInstancesKey = getKeyFromImageTitle();
+		updateLabelInstancesAndMetadata( currentImageLabelInstancesKey );
 	}
 
-	private String currentLabelsInstancesKey;
+	private String currentImageLabelInstancesKey;
 
-	private String getCurrentLabelsInstancesKey()
+	private String getCurrentImageLabelInstancesKey()
 	{
-		return currentLabelsInstancesKey;
+		return currentImageLabelInstancesKey;
 	}
 
 	public InstancesAndMetadata getCurrentLabelInstancesAndMetadata()
 	{
-		return getInstancesManager().getInstancesAndMetadata( currentLabelsInstancesKey );
+		return getInstancesManager().getInstancesAndMetadata( currentImageLabelInstancesKey );
 	}
 
 	public void updateLabelInstancesAndMetadata( String instancesAndMetadataKey )

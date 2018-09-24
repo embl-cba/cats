@@ -17,7 +17,7 @@ public abstract class ResultImageExportGUI
                                       ArrayList< String > classNames )
     {
 
-        String[] exportChoices = new String[]{ ResultExportSettings.SHOW_IN_IMAGEJ, ResultExportSettings.SEPARATE_IMARIS, ResultExportSettings.SEPARATE_TIFF_FILES };
+        String[] exportChoices = new String[]{ ResultExportSettings.SHOW_IN_IMAGEJ, ResultExportSettings.SEPARATE_IMARIS, ResultExportSettings.TIFF_STACKS };
 
         GenericDialog gd = new GenericDialogPlus("Export Segmentation Results");
 

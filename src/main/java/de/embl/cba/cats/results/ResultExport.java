@@ -31,7 +31,8 @@ public abstract class ResultExport
     {
         String fileName = resultExportSettings.classNames.get( classId );
 
-        ImarisDataSet imarisDataSet = new ImarisDataSet( resultExportSettings.resultImagePlus,
+        ImarisDataSet imarisDataSet = new ImarisDataSet(
+                resultExportSettings.resultImagePlus,
                 resultExportSettings.binning,
                 resultExportSettings.directory,
                 fileName );
@@ -58,7 +59,8 @@ public abstract class ResultExport
 
         String fileName = "raw-data";
 
-        ImarisDataSet imarisDataSet = new ImarisDataSet( resultExportSettings.inputImagePlus,
+        ImarisDataSet imarisDataSet = new ImarisDataSet(
+                resultExportSettings.inputImagePlus,
                 resultExportSettings.binning,
                 resultExportSettings.directory,
                 fileName );
@@ -72,13 +74,16 @@ public abstract class ResultExport
         {
             for ( int t = resultExportSettings.timePointsFirstLast[ 0 ]; t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
             {
-                ImagePlus rawDataFrame = getBinnedRawDataFrame( resultExportSettings, c, t );
 
                 logger.progress( "Writing " + fileName,
-                        ", frame:" + ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames()
-                        + ", channel:"+ ( c + 1 ) + "/" + imarisDataSet.getNumChannels() + "..."
+                        ", frame: " + ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames()
+                                + ", channel: "+ ( c + 1 ) + "/" + imarisDataSet.getNumChannels() + "..."
                 );
 
+                //logger.info( "Copying into RAM..." );
+                ImagePlus rawDataFrame = getBinnedRawDataFrame( resultExportSettings, c, t );
+
+                //logger.info( "Writing as Imaris..." );
                 writer.writeImarisCompatibleResolutionPyramid( rawDataFrame, imarisDataSet, c, t );
             }
         }
@@ -113,7 +118,7 @@ public abstract class ResultExport
     public static ImagePlus getBinnedClassImage( int classId, ResultExportSettings resultExportSettings, int t )
     {
 
-        ImagePlus impClass = getClassImage( classId, t, resultExportSettings.resultImagePlus, resultExportSettings.classLutWidth );
+        ImagePlus impClass = getClassImage( classId, t, resultExportSettings );
 
         if ( resultExportSettings.binning[0] * resultExportSettings.binning[1] * resultExportSettings.binning[2] > 1 )
         {
@@ -199,7 +204,6 @@ public abstract class ResultExport
 
     public static ImagePlus getBinnedAndProximityFilteredClassImage( int classId, ResultExportSettings resultExportSettings, int t )
     {
-
         ImagePlus impClass = getBinnedClassImage( classId, resultExportSettings, t );
 
         if ( resultExportSettings.proximityFilterSettings.doSpatialProximityFiltering )
@@ -294,7 +298,10 @@ public abstract class ResultExport
     {
 
         logger.info( "Exporting results, using modality: " + resultExportSettings.exportType );
-        logger.info( "Exporting results to: " + resultExportSettings.directory );
+        if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
+        {
+            logger.info( "Exporting results to: " + resultExportSettings.directory );
+        }
 
         configureTimePointsExport( resultExportSettings );
 
@@ -372,7 +379,18 @@ public abstract class ResultExport
         {
             if ( resultExportSettings.saveRawData )
             {
-                saveRawDataAsImaris( resultExportSettings );
+                if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_IMARIS ) )
+                {
+                    saveRawDataAsImaris( resultExportSettings );
+                }
+                else if ( resultExportSettings.exportType.equals( ResultExportSettings.TIFF_STACKS ) )
+                {
+                    // TODO
+                }
+                else if ( resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
+                {
+                    // TODO
+                }
             }
         }
     }
@@ -396,7 +414,7 @@ public abstract class ResultExport
                     {
                         saveClassAsImaris( classIndex, resultExportSettings );
                     }
-                    else if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_TIFF_FILES ) )
+                    else if ( resultExportSettings.exportType.equals( ResultExportSettings.TIFF_STACKS ) )
                     {
                         saveClassAsTiff( classIndex, resultExportSettings );
                     }
@@ -460,7 +478,7 @@ public abstract class ResultExport
                 {
                     saveClassAsImaris( classIndex, resultExportSettings );
                 }
-                else if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_TIFF_FILES ) )
+                else if ( resultExportSettings.exportType.equals( ResultExportSettings.TIFF_STACKS ) )
                 {
                     saveClassAsTiff( classIndex, resultExportSettings );
                 }
@@ -501,21 +519,24 @@ public abstract class ResultExport
         return classesToBeSaved;
     }
 
-    private static ImagePlus getClassImage( int classId, int t, ImagePlus result, int CLASS_LUT_WIDTH )
+    private static ImagePlus getClassImage( int classId, int t, ResultExportSettings settings)
     {
-        ImagePlus impClass;
-
         Duplicator duplicator = new Duplicator();
 
-        impClass = duplicator.run( result, 1, 1, 1, result.getNSlices(), t + 1, t + 1 );
+        ImagePlus impClass = duplicator.run( settings.resultImagePlus, 1, 1, 1, settings.resultImagePlus.getNSlices(), t + 1, t + 1 );
 
-        int[] intensityGate = new int[]{ classId * CLASS_LUT_WIDTH + 1, (classId + 1 ) * CLASS_LUT_WIDTH };
+        if ( settings.inputImagePlus.getBitDepth() == 16 )
+        {
+            IJ.run( impClass, "16-bit", "" );
+        }
+
+        int[] intensityGate = new int[]{ classId * settings.classLutWidth + 1, (classId + 1 ) * settings.classLutWidth };
 
         de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( impClass, intensityGate );
 
-        int factorToFill8Bit = (int) ( 255 / CLASS_LUT_WIDTH );
+        int factorToFillBitDepth = (int) (  ( Math.pow( 2, settings.inputImagePlus.getBitDepth() ) - 1 )  / settings.classLutWidth );
 
-        IJ.run( impClass, "Multiply...", "value=" + factorToFill8Bit + " stack");
+        IJ.run( impClass, "Multiply...", "value=" + factorToFillBitDepth + " stack");
 
         return ( impClass );
 

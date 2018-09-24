@@ -34,30 +34,30 @@ public class MitochondriaLabelImageTraining
 
         // Set up segmentation
         //
-        final CATS ws = new CATS( );
-        ws.setInputImage( inputImage );
-        ws.setResultImageRAM( );
+        final CATS cats = new CATS( );
+        cats.setInputImage( inputImage );
+        cats.setResultImageRAM( );
         //ws.loadInstancesAndMetadata( INSTANCES_PATH );
 
-        ws.setNumThreads( 4 );
+        cats.setNumThreads( 4 );
 
-        ws.featureSettings.log2 = false;
+        cats.featureSettings.log2 = false;
 
         int level = 0;
-        ws.featureSettings.binFactors.set(level++ , 2);
-        ws.featureSettings.binFactors.set(level++ , 2);
-        ws.featureSettings.binFactors.set(level++ , 3);
-        ws.featureSettings.binFactors.set(level++ , -1);
-        ws.featureSettings.binFactors.set(level++ , -1);
+        cats.featureSettings.binFactors.set(level++ , 2);
+        cats.featureSettings.binFactors.set(level++ , 2);
+        cats.featureSettings.binFactors.set(level++ , 3);
+        cats.featureSettings.binFactors.set(level++ , -1);
+        cats.featureSettings.binFactors.set(level++ , -1);
 
-        ws.featureSettings.anisotropy = 1.0D;
-        ws.featureSettings.activeChannels.add( 0 );
+        cats.featureSettings.anisotropy = 1.0D;
+        cats.featureSettings.activeChannels.add( 0 );
 
 
         String loggingDirectory = LOGGING_DIRECTORY;
         String outputDirectory = OUTPUT_DIRECTORY;
 
-        for ( int b : ws.featureSettings.binFactors )
+        for ( int b : cats.featureSettings.binFactors )
         {
             if ( b == -1 ) break;
 
@@ -67,11 +67,11 @@ public class MitochondriaLabelImageTraining
 
         createIfNotExists( outputDirectory );
 
-        ws.setAndCreateLogDirAbsolute( loggingDirectory );
+        cats.setAndCreateLogDirAbsolute( loggingDirectory );
 
-        ws.classifierBatchSizePercent = "66";
-        ws.classifierNumTrees = 10;
-        ws.classifierFractionFeaturesPerNode = 0.1;
+        cats.classifierBatchSizePercent = "66";
+        cats.classifierNumTrees = 10;
+        cats.classifierFractionFeaturesPerNode = 0.1;
 
         FinalInterval inputImageInterval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( inputImage );
 
@@ -94,7 +94,7 @@ public class MitochondriaLabelImageTraining
         int minNumVoxels = 1000;
         int minNumInstancesBeforeNewTraining = 100; // to speed it up a bit
 
-        ws.trainFromLabelImage(
+        cats.trainFromLabelImage(
                 "mitochondria",
                 CATS.START_NEW_INSTANCES,
                 maxNumIterations,
@@ -112,7 +112,7 @@ public class MitochondriaLabelImageTraining
                 trainInterval,
                 applyInterval);
 
-        ws.getInputImage().show();
+        cats.getInputImage().show();
 
         //System.exit( 0 );
         //IJ.run("Quit");

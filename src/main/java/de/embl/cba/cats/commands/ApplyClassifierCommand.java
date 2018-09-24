@@ -271,7 +271,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         {
             logService.info( "Saving as Tiff stacks..." );
             outputFileType = ".tif";
-            resultExportSettings.exportType = ResultExportSettings.SEPARATE_TIFF_FILES;
+            resultExportSettings.exportType = ResultExportSettings.TIFF_STACKS;
             cats.getResultImage().exportResults( resultExportSettings );
         }
 
