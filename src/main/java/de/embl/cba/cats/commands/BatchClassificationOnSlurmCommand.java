@@ -64,9 +64,9 @@ public class BatchClassificationOnSlurmCommand implements Command
     public static final String IMAGEJ_FILE = "imageJFile";
     */
 
-    static String masterRegExp="(?<treatment>.+)--W(?<well>\\d+)--P(?<position>\\d+)--Z(?<slice>\\d+)--T(?<timePoint>\\d+)--(?<channel>.+)\\.tif";
+    static String masterRegExp = "(?<treatment>.+)--W(?<well>\\d+)--P(?<position>\\d+)--Z(?<slice>\\d+)--T(?<timePoint>\\d+)--(?<channel>.+)\\.tif";
 
-    static String[] datasetGroups={"treatment","well","position"};
+    static String[] datasetGroups = {"treatment","well","position"};
 
     IJLazySwingLogger logger = new IJLazySwingLogger();
 

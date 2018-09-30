@@ -21,16 +21,14 @@ package de.embl.cba.cats.features;
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
-import de.embl.cba.cats.settings.FeatureSettings;
+import de.embl.cba.cats.featuresettings.FeatureSettings;
 import de.embl.cba.utils.logging.Logger;
 import de.embl.cba.cats.CATS;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.measure.Calibration;
-import ij.process.ByteProcessor;
-import ij.process.ColorProcessor;
-import ij.process.StackProcessor;
+import ij.process.*;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessible;
@@ -1638,8 +1636,36 @@ public class FeatureProvider
             IJ.run( processedInputImage, "Log", "stack" ); // TODO: maybe too unstable for cluster computing?
         }
 
-        processedInputImage.setTitle( "Orig_ch" + channel );
-        return processedInputImage;
+        if ( CATS.featureSettings.normalize )
+        {
+            ImageStack stack = processedInputImage.getStack();
+            ImageStack normalisedStack = new ImageStack( processedInputImage.getWidth(), processedInputImage.getHeight() );
+
+            StackStatistics stats = new StackStatistics( processedInputImage );
+            for( int slice = 1; slice <= stack.getSize(); slice++)
+            {
+                ImageProcessor ip = stack.getProcessor( slice );
+                FloatProcessor fp = (FloatProcessor) ip.convertToFloat();
+                fp.subtract( stats.mean );
+                if ( stats.stdDev != 0 ) fp.multiply(1.0 / stats.stdDev );
+                normalisedStack.addSlice( "",  fp );
+            }
+
+            final ImagePlus normalisedInputImage = new ImagePlus( "Orig_ch" + channel, normalisedStack );
+
+//            normalisedInputImage.show();
+
+            return normalisedInputImage;
+        }
+        else
+        {
+            processedInputImage.setTitle( "Orig_ch" + channel );
+            return processedInputImage;
+        }
+
+
+
+
     }
 
     private void putDeepConvFeatLevelIntoTitle(ImagePlus imp)

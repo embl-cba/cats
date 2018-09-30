@@ -1,7 +1,7 @@
 package de.embl.cba.cats.instances;
 
 import de.embl.cba.cats.labels.Label;
-import de.embl.cba.cats.settings.FeatureSettings;
+import de.embl.cba.cats.featuresettings.FeatureSettings;
 import de.embl.cba.utils.logging.Logger;
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
@@ -9,7 +9,7 @@ import net.imglib2.FinalInterval;
 import de.embl.cba.cats.*;
 import de.embl.cba.cats.features.FeatureProvider;
 import de.embl.cba.cats.results.ResultImage;
-import de.embl.cba.cats.settings.SettingsUtils;
+import de.embl.cba.cats.featuresettings.FeatureSettingsUtils;
 import de.embl.cba.cats.utils.IntervalUtils;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -76,7 +76,7 @@ public class InstancesUtils {
                             instancesAndMetadata.addMetadata( Metadata_Position_Z, label.z );
                             instancesAndMetadata.addMetadata( Metadata_Position_T, label.t );
                             instancesAndMetadata.addMetadata( Metadata_Label_Id, e );
-                            SettingsUtils.addSettingsToMetadata( featureSettings, instancesAndMetadata );
+                            FeatureSettingsUtils.addSettingsToMetadata( featureSettings, instancesAndMetadata );
                             addedPoints.add( label.points[ p ] );
                         }
                         else
@@ -274,7 +274,7 @@ public class InstancesUtils {
                                 instancesAndMetadata.addMetadata( Metadata_Position_T, t );
                                 instancesAndMetadata.addMetadata( Metadata_Label_Id, -1 );
 
-                                SettingsUtils.addSettingsToMetadata( CATS.featureSettings, instancesAndMetadata );
+                                FeatureSettingsUtils.addSettingsToMetadata( CATS.featureSettings, instancesAndMetadata );
 
                                 pixelsPerClass[ localClass ]++;
 

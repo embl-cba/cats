@@ -54,9 +54,9 @@ public class CATSCommand implements Command, Interactive
     public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier (development)";
     public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
     public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
-    public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier settings";
-    public static final String CHANGE_FEATURE_SETTINGS = "Change feature settings";
-    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature settings";
+    public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier featuresettings";
+    public static final String CHANGE_FEATURE_SETTINGS = "Change feature featuresettings";
+    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature featuresettings";
     public static final String SEGMENT_OBJECTS = "Segment objects";
     public static final String REVIEW_OBJECTS = "Review objects";
     public static final String REVIEW_LABELS = "Review labels";
@@ -66,7 +66,7 @@ public class CATSCommand implements Command, Interactive
 
 
     public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
-    public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
+    public static final String CHANGE_DEBUG_SETTINGS = "Change development featuresettings";
 
 
     @Parameter( label = "Execute action", callback = "performBasicAction" )
@@ -293,7 +293,15 @@ public class CATSCommand implements Command, Interactive
                         break;
 
                     case APPLY_CLASSIFIER_ON_SLURM:
-                        dirFile = getSaveDirFile( "Please choose a output file", ".classifier" );
+
+                        if ( ! isSelectionFullWidthAndHeight() )
+                        {
+                            logger.error( "Classification on cluster is only possible when the whole xy range of the image is selected. " +
+                                    "You could use Ctrl+A on the image to do so. Or choose to classify the whole data set." );
+                            break;
+                        }
+
+                        dirFile = getSaveDirFile( "Save classifier", ".classifier" );
                         cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
                         cats.applyClassifierOnSlurm( getIntervalFromUI() );
                         break;
@@ -323,6 +331,19 @@ public class CATSCommand implements Command, Interactive
         } );
 
         thread.start();
+    }
+
+    private boolean isSelectionFullWidthAndHeight()
+    {
+        final FinalInterval selectedInterval = getIntervalFromUI();
+        final FinalInterval imageInterval = IntervalUtils.getInterval( cats.getInputImage() );
+        boolean fullWidthAndHeight = true;
+        for ( int d = 0; d < 2; ++d )
+		{
+			if ( selectedInterval.min(d) != imageInterval.min( d ) ) fullWidthAndHeight = false;
+			if ( selectedInterval.max(d) != imageInterval.max( d ) ) fullWidthAndHeight = false;
+		}
+        return fullWidthAndHeight;
     }
 
     private void loadLabelInstances()

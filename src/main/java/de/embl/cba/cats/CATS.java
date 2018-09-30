@@ -3,9 +3,6 @@ package de.embl.cba.cats;
 import java.awt.*;
 import java.awt.image.ColorModel;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -13,7 +10,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.zip.GZIPOutputStream;
 
 import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
 import de.embl.cba.cats.commands.ApplyClassifierOnSlurmCommand;
@@ -25,7 +21,7 @@ import de.embl.cba.cats.labels.LabelUtils;
 import de.embl.cba.cats.objects.ObjectReview;
 import de.embl.cba.cats.objects.ObjectSegmentation;
 import de.embl.cba.cats.objects.SegmentedObjects;
-import de.embl.cba.cats.settings.FeatureSettings;
+import de.embl.cba.cats.featuresettings.FeatureSettings;
 import de.embl.cba.cats.ui.DeepSegmentationIJ1Plugin;
 import de.embl.cba.cats.utils.CommandUtils;
 import de.embl.cba.cats.utils.IOUtils;
@@ -63,7 +59,7 @@ import de.embl.cba.cats.results.ResultImageFrameSetter;
 import de.embl.cba.cats.instances.InstancesUtils;
 import de.embl.cba.cats.instances.InstancesManager;
 import de.embl.cba.cats.results.ResultImageRAM;
-import de.embl.cba.cats.settings.SettingsUtils;
+import de.embl.cba.cats.featuresettings.FeatureSettingsUtils;
 
 //import inra.ijpb.segment.Threshold;
 
@@ -1142,6 +1138,7 @@ public class CATS
         gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
                 FeatureSettings.getAsCSVString( featureSettings.activeChannels, 1 ) );
         gd.addCheckbox( "Only use difference features", featureSettings.onlyUseDifferenceFeatures );
+		gd.addCheckbox( "Normalize", featureSettings.normalize );
 
         if ( showAdvancedSettings )
         {
@@ -1239,8 +1236,10 @@ public class CATS
         newFeatureSettings.anisotropy = gd.getNextNumber();
         newFeatureSettings.setActiveChannels( gd.getNextString() );
 		newFeatureSettings.onlyUseDifferenceFeatures = gd.getNextBoolean();
+		newFeatureSettings.normalize = gd.getNextBoolean();
 
-        if ( showAdvancedSettings )
+
+		if ( showAdvancedSettings )
         {
             newFeatureSettings.setBoundingBoxExpansionsForGeneratingInstancesFromLabels( gd.getNextString() );
             newFeatureSettings.downSamplingMethod = DownSampler.getID( gd.getNextChoice() );
@@ -1400,11 +1399,11 @@ public class CATS
 	public void loadClassifier( String directory, String filename )
 	{
 		ClassifierInstancesMetadata classifierInstancesMetadata = ClassifierUtils.loadClassifierInstancesMetadata( directory, filename );
-		final FeatureSettings loadedFeatureSettings = SettingsUtils.getFeatureSettingsFromInstancesMetadata( classifierInstancesMetadata.instancesAndMetadata );
+		final FeatureSettings loadedFeatureSettings = FeatureSettingsUtils.getFeatureSettingsFromInstancesMetadata( classifierInstancesMetadata.instancesAndMetadata );
 
 		if ( ! featureSettings.equals( loadedFeatureSettings ) )
 		{
-			logger.info( "Feature settings have been changed!" );
+			logger.info( "Feature featuresettings have been changed!" );
 		}
 
 		featureSettings = loadedFeatureSettings;
@@ -1653,13 +1652,13 @@ public class CATS
         }
 
 
-        logger.info( "Setting feature computation settings from loaded instances..." );
+        logger.info( "Setting feature computation featuresettings from loaded instances..." );
 
-		final FeatureSettings loadedFeatureSettings = SettingsUtils.getFeatureSettingsFromInstancesMetadata( instancesAndMetadata );
+		final FeatureSettings loadedFeatureSettings = FeatureSettingsUtils.getFeatureSettingsFromInstancesMetadata( instancesAndMetadata );
 
 		if ( ! featureSettings.equals( loadedFeatureSettings ) )
 		{
-			logger.info( "Feature settings have been changed!" );
+			logger.info( "Feature featuresettings have been changed!" );
 		}
 
 		featureSettings = loadedFeatureSettings;
@@ -2096,11 +2095,10 @@ public class CATS
 
 	public int getMaximalRegionWidth( int numFeatures )
 	{
+
 		int maxRegionWidth;
 
-//		instancesManager.getKeys().
-
-		if ( isInputImage2D() )
+		if ( isInputImage2D() || this.featureSettings.anisotropy > 10 )
 		{
 			maxRegionWidth = ( int ) Math.pow( getMaximalNumberOfVoxelsPerRegion( numFeatures ), 1.0 / 2.0 );
 		}
@@ -2109,10 +2107,19 @@ public class CATS
 			maxRegionWidth = ( int ) Math.pow( getMaximalNumberOfVoxelsPerRegion( numFeatures ), 1.0 / 3.0 );
 		}
 
+
 		// remove borders, which go into the memory
 		// considerations, but should not be explicitly
 		// asked for
 		maxRegionWidth -= 2 * getFeatureBorderSizes()[ X];
+
+//		if ( this.featureSettings.normalize )
+//		{
+//			// make it consistent with what has been used during training, otherwise
+//			// the normalisations might be very different.
+//			// this will make it slower of course
+//			maxRegionWidth = getFeatureVoxelSizeAtMaximumScale();
+//		}
 
 		return maxRegionWidth;
 	}
@@ -2186,29 +2193,28 @@ public class CATS
 		long[] min = new long[5];
 		long[] max = new long[5];
 
-		min[ X] = (int) rectangle.getMinX();
-		max[ X] = (int) rectangle.getMaxX();
+		min[ X ] = (int) rectangle.getMinX();
+		max[ X ] = (int) rectangle.getMaxX();
 
-		min[ Y] = (int) rectangle.getMinY();
-		max[ Y] = (int) rectangle.getMaxY();
+		min[ Y ] = (int) rectangle.getMinY();
+		max[ Y ] = (int) rectangle.getMaxY();
 
-		min[ Z] = labels.get(0).z;
-		max[ Z] = labels.get(0).z;
+		min[ Z ] = labels.get(0).z;
+		max[ Z ] = labels.get(0).z;
 
-		min[ T] = labels.get(0).t;
-		max[ T] = labels.get(0).t;
+		min[ T ] = labels.get(0).t;
+		max[ T ] = labels.get(0).t;
 
 		for ( Label label : labels )
 		{
 			rectangle = LabelUtils.getLabelRectangleBounds( label );
 
-			min[ X] = (int) rectangle.getMinX() < min[ X] ? (int) rectangle.getMinX() : min[ X];
-			max[ X] = (int) rectangle.getMaxX() > max[ X] ? (int) rectangle.getMaxX() : max[ X];
+			min[ X] = (int) rectangle.getMinX() < min[ X] ? (int) rectangle.getMinX() : min[ X ];
+			max[ X] = (int) rectangle.getMaxX() > max[ X] ? (int) rectangle.getMaxX() : max[ X ];
 
 
-			min[ Y] = (int) rectangle.getMinY() < min[ Y] ? (int) rectangle.getMinY() : min[
-					Y];
-			max[ Y] = (int) rectangle.getMaxY() > max[ Y] ? (int) rectangle.getMaxY() : max[ Y];
+			min[ Y] = (int) rectangle.getMinY() < min[ Y] ? (int) rectangle.getMinY() : min[ Y ];
+			max[ Y] = (int) rectangle.getMaxY() > max[ Y] ? (int) rectangle.getMaxY() : max[ Y ];
 
 			min[ Z] = label.z < min[ Z] ? label.z : min[ Z];
 			max[ Z] = label.z > max[ Z] ? label.z : max[ Z];
@@ -2279,7 +2285,8 @@ public class CATS
 
 		borderSize[ X ] = borderSize[ Y ] = getFeatureVoxelSizeAtMaximumScale();
 
-		// Z: deal with 2-D case and anisotropy
+		// TODO: deal with 2-D case and anisotropy
+
 		if ( getInputImageDimensions()[ Z ] == 1 )
 		{
 			borderSize[ Z ] = 0;

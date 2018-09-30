@@ -86,8 +86,8 @@ public class ObjectSegmentation
 
     private void setThreshold( float threshold )
     {
-        settings.threshold = threshold; // (float) cats.getResultImage().getProbabilityRange() * (float) settings.probabilityThreshold;
-//        settings.threshold  = ensureThresholdWithinRange( settings.threshold  );
+        settings.threshold = threshold; // (float) cats.getResultImage().getProbabilityRange() * (float) featuresettings.probabilityThreshold;
+//        featuresettings.threshold  = ensureThresholdWithinRange( featuresettings.threshold  );
     }
 
     private SegmentedObjects getSegmentedObjects( ImageInt labelMask )
@@ -149,8 +149,8 @@ public class ObjectSegmentation
         settings = new ObjectSegmentationSettings();
         settings.classId = gd.getNextChoiceIndex();
         settings.t = (int) gd.getNextNumber() - 1;
-//        settings.probabilityThreshold = gd.getNextNumber();
-        settings.method = IMAGE_SUITE_3D; //      settings.method = gd.getNextChoice();
+//        featuresettings.probabilityThreshold = gd.getNextNumber();
+        settings.method = IMAGE_SUITE_3D; //      featuresettings.method = gd.getNextChoice();
         settings.binning =  Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
         settings.showSegmentationImages = true; // gd.getNextBoolean();
     }

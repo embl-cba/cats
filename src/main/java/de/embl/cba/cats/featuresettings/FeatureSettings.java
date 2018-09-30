@@ -1,4 +1,4 @@
-package de.embl.cba.cats.settings;
+package de.embl.cba.cats.featuresettings;
 
 import de.embl.cba.cats.features.DownSampler;
 
@@ -39,7 +39,9 @@ public class FeatureSettings
 
     public boolean onlyUseDifferenceFeatures;
 
-    public boolean equals( FeatureSettings featureSettings )
+    public boolean normalize;
+
+	public boolean equals( FeatureSettings featureSettings )
     {
         if ( anisotropy != featureSettings.anisotropy ) return false;
         if ( maxDeepConvLevel != featureSettings.maxDeepConvLevel ) return false;
@@ -53,6 +55,7 @@ public class FeatureSettings
         if ( ! ( computeGaussian == featureSettings.computeGaussian ) ) return false;
         if ( ! ( log2 == featureSettings.log2) ) return false;
         if ( ! ( onlyUseDifferenceFeatures == featureSettings.onlyUseDifferenceFeatures) ) return false;
+        if ( ! ( normalize == featureSettings.normalize) ) return false;
 
         return true;
     }
@@ -77,6 +80,7 @@ public class FeatureSettings
         smoothingScales.add( 1 );
         downSamplingMethod = DownSampler.getID( DownSampler.BIN_AVERAGE );
         onlyUseDifferenceFeatures = true;
+        normalize = true;
     }
 
     public FeatureSettings copy()
@@ -94,6 +98,7 @@ public class FeatureSettings
         featureSettings.computeGaussian = computeGaussian;
         featureSettings.downSamplingMethod = downSamplingMethod;
         featureSettings.onlyUseDifferenceFeatures = onlyUseDifferenceFeatures;
+        featureSettings.normalize = normalize;
 
         return featureSettings;
     }

@@ -338,7 +338,7 @@ public final class Utils {
 	 * @param ip input image
 	 * @return normalized image (32-bit)
 	 */
-	private static FloatProcessor normalize(ImageProcessor ip) 
+	private static FloatProcessor normalize( ImageProcessor ip )
 	{
 		// getInstancesAndMetadata mean and standard deviation of input image
 		ImageStatistics stats = ImageStatistics.getStatistics( ip, Measurements.MEAN + Measurements.STD_DEV, null);

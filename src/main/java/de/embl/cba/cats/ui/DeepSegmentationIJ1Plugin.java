@@ -3,7 +3,7 @@ package de.embl.cba.cats.ui;
 import de.embl.cba.cats.classification.ClassificationRangeUtils;
 import de.embl.cba.cats.features.DownSampler;
 import de.embl.cba.cats.labels.LabelUtils;
-import de.embl.cba.cats.settings.FeatureSettings;
+import de.embl.cba.cats.featuresettings.FeatureSettings;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.utils.logging.Logger;
 
@@ -154,13 +154,13 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 	public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier (development)";
 	public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
 	public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
-	public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier settings";
-	public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature settings";
-    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature settings";
+	public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier featuresettings";
+	public static final String CHANGE_FEATURE_COMPUTATION_SETTINGS = "Change feature featuresettings";
+    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature featuresettings";
     public static final String SEGMENT_OBJECTS = "Segment objects";
     public static final String REVIEW_OBJECTS = "Review objects";
     public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
-    public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
+    public static final String CHANGE_DEBUG_SETTINGS = "Change development featuresettings";
 
 	public static final String NO_TRAINING_DATA = "No training data available";
 

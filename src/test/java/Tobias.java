@@ -24,9 +24,9 @@ public class Tobias
 	public static void main( final String[] args )
 	{
 
-		recomputeInstances();
+		//recomputeInstances();
 
-		buildClassifier();
+		//buildClassifier();
 
 		applyClassifier();
 

@@ -68,6 +68,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
             IOUtils.OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE,
             IOUtils.OPEN_USING_IMAGE_J1_VIRTUAL,
             IOUtils.OPEN_USING_LAZY_LOADING_TOOLS } , required = true )
+
     public String inputModality;
 
     @Parameter ( label = "Input image path" )

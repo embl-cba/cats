@@ -525,16 +525,23 @@ public abstract class ResultExport
 
         ImagePlus impClass = duplicator.run( settings.resultImagePlus, 1, 1, 1, settings.resultImagePlus.getNSlices(), t + 1, t + 1 );
 
+        int factorToFillBitDepth = (int) ( 255.0  / settings.classLutWidth );
+
         if ( settings.inputImagePlus.getBitDepth() == 16 )
         {
             IJ.run( impClass, "16-bit", "" );
+            factorToFillBitDepth = (int) ( 65535.0  / settings.classLutWidth );
+        }
+
+        if ( settings.inputImagePlus.getBitDepth() == 32 )
+        {
+            IJ.run( impClass, "32-bit", "" );
+            factorToFillBitDepth = (int) ( 255.0  / settings.classLutWidth );
         }
 
         int[] intensityGate = new int[]{ classId * settings.classLutWidth + 1, (classId + 1 ) * settings.classLutWidth };
 
         de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( impClass, intensityGate );
-
-        int factorToFillBitDepth = (int) (  ( Math.pow( 2, settings.inputImagePlus.getBitDepth() ) - 1 )  / settings.classLutWidth );
 
         IJ.run( impClass, "Multiply...", "value=" + factorToFillBitDepth + " stack");
 
