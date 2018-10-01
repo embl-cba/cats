@@ -1,4 +1,4 @@
-package tischi.ai;
+package de.embl.cba.cats.weka.ai;
 
 import java.io.Serializable;
 import java.util.ArrayList;
