@@ -150,6 +150,7 @@ public abstract class IntervalUtils {
                                                         FinalInterval wholeImageInterval,
                                                         Integer numTiles,
                                                         int numFeatures,
+                                                        boolean normalizeIntensities, // we do not
                                                         boolean doNotTileInXY,
                                                         CATS cats )
     {

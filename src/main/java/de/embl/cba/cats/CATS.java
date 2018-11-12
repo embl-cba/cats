@@ -2688,7 +2688,11 @@ public class CATS
     }
 
 
-    public void applyClassifierWithTiling( String classifierKey, FinalInterval interval, Integer numTiles, FeatureProvider externalFeatureProvider, boolean doNotLog )
+    public void applyClassifierWithTiling( String classifierKey,
+										   FinalInterval interval,
+										   Integer numTiles,
+										   FeatureProvider externalFeatureProvider,
+										   boolean doNotLog )
 	{
 		isBusy = true;
 
@@ -2700,11 +2704,13 @@ public class CATS
             numTiles = 1;
         }
 
+
 		ArrayList<FinalInterval> tiles = createTiles(
 				interval,
 				IntervalUtils.getInterval( inputImage ),
 				numTiles,
 				classifierManager.getClassifierAttributeNames( classifierKey ).size(),
+				featureSettings.normalize,
 				false,
 				this );
 

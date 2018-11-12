@@ -37,7 +37,6 @@ public class Tobias
 		for ( String test : TEST )
 		{
 			final CATS cats = new CATS();
-			// CATS needs one image even though it is not used at all here
 			cats.setInputImage( IJ.openImage( IMAGES_DIR + File.separator + test + IMAGE_FILE_EXTENSION ) );
 			cats.setResultImageRAM();
 			cats.loadClassifier( INSTANCES_DIR, CLASSIFIER );
