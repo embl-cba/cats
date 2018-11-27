@@ -9,6 +9,7 @@ import de.embl.cba.cats.utils.IOUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.Prefs;
 import ij.plugin.Binner;
 import ij.plugin.Duplicator;
 import ij.process.ImageProcessor;
@@ -145,11 +146,6 @@ public abstract class ResultExport
         int dy = resultExportSettings.binning[1];
         int dz = resultExportSettings.binning[2];
 
-        int classLutWidth = resultExportSettings.classLutWidth;
-        int[] intensityGate = new int[]{ classId * classLutWidth + 1, (classId + 1 ) * classLutWidth };
-
-        Binner binner = new Binner();
-
         ImageStack binnedStack = new ImageStack( nx / dx, ny / dy,  (int) Math.ceil( 1.0 * nz / dz ) );
 
         long startTime = System.currentTimeMillis();
@@ -162,9 +158,8 @@ public abstract class ResultExport
             futures.add(
                     exe.submit(
                             CallableResultImageBinner.getBinned(
-                                    resultExportSettings.resultImage,
+                                    resultExportSettings,
                                     classId,
-                                    resultExportSettings.binning,
                                     iz, iz + dz - 1, t,
                                     logger,
                                     startTime,
@@ -182,10 +177,13 @@ public abstract class ResultExport
             {
                 ImagePlus binnedSlice = future.get();
                 binnedStack.setProcessor( binnedSlice.getProcessor(), ++i );
-            } catch ( InterruptedException e )
+                System.gc();
+            }
+            catch ( InterruptedException e )
             {
                 e.printStackTrace();
-            } catch ( ExecutionException e )
+            }
+            catch ( ExecutionException e )
             {
                 e.printStackTrace();
             }
@@ -195,8 +193,7 @@ public abstract class ResultExport
         exe.shutdown();
         System.gc();
 
-
-        ImagePlus binnedClassImage = new ImagePlus( "binnedClassImage", binnedStack );
+        ImagePlus binnedClassImage = new ImagePlus( "binned_class_" + classId, binnedStack );
 
         return binnedClassImage;
     }
@@ -204,7 +201,7 @@ public abstract class ResultExport
 
     public static ImagePlus getBinnedAndProximityFilteredClassImage( int classId, ResultExportSettings resultExportSettings, int t )
     {
-        ImagePlus impClass = getBinnedClassImage( classId, resultExportSettings, t );
+        ImagePlus impClass = getBinnedClassImageMemoryEfficient( classId, resultExportSettings, t, logger, Prefs.getThreads() );
 
         if ( resultExportSettings.proximityFilterSettings.doSpatialProximityFiltering )
         {
@@ -525,6 +522,16 @@ public abstract class ResultExport
 
         ImagePlus impClass = duplicator.run( settings.resultImagePlus, 1, 1, 1, settings.resultImagePlus.getNSlices(), t + 1, t + 1 );
 
+        convertToProperBitDepth( impClass, settings, classId );
+
+        return ( impClass );
+
+    }
+
+    public static void convertToProperBitDepth( ImagePlus impClass,
+                                                ResultExportSettings settings,
+                                                int classId )
+    {
         int factorToFillBitDepth = (int) ( 255.0  / settings.classLutWidth );
 
         if ( settings.inputImagePlus.getBitDepth() == 16 )
@@ -544,8 +551,5 @@ public abstract class ResultExport
         de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( impClass, intensityGate );
 
         IJ.run( impClass, "Multiply...", "value=" + factorToFillBitDepth + " stack");
-
-        return ( impClass );
-
     }
 }

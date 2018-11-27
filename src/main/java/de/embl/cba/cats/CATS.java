@@ -1138,7 +1138,7 @@ public class CATS
         gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
                 FeatureSettings.getAsCSVString( featureSettings.activeChannels, 1 ) );
         gd.addCheckbox( "Only use difference features", featureSettings.onlyUseDifferenceFeatures );
-		gd.addCheckbox( "Normalize", featureSettings.normalize );
+		gd.addCheckbox( "Normalize intensities block-wise (not recommended...)", featureSettings.normalize );
 
         if ( showAdvancedSettings )
         {

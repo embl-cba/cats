@@ -3,27 +3,33 @@ import de.embl.cba.cats.results.ResultExportSettings;
 import de.embl.cba.cats.results.ResultImage;
 import ij.IJ;
 
-import java.io.File;
-
 public class TestMinimalAPI
 {
 	public static void main( String[] args )
 	{
-		// user input
+		// project dependent input parameters
 		final String inputImagePath = "";
 		final String classifierPath = "";
 		final String outputDirectory = "";
 		final String outputFileNamesPrefix = "";
-		
+
+		//
+		// project independent code
+		//
+
 		// create instance
 		final CATS cats = new CATS();
 
-		// load the image to be classified
+		// load and set the image to be classified
 		cats.setInputImage( IJ.openImage( inputImagePath ) );
+
+		// configure CATS such that the result (classified) image is allocated in RAM
+		// for big image data this is not possible and thus there is the other option:
+		// cats.setResultImageDisk( directory );
 		cats.setResultImageRAM();
 
-		// load classifier (to be trained and saved using the UI)
-		cats.loadClassifier( classifierPath);
+		// load classifier (to be trained and saved before using the UI)
+		cats.loadClassifier( classifierPath );
 
 		// apply classifier
 		cats.applyClassifierWithTiling();

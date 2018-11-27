@@ -39,7 +39,7 @@ public class FeatureSettings
 
     public boolean onlyUseDifferenceFeatures;
 
-    public boolean normalize;
+    public boolean normalize = false;
 
 	public boolean equals( FeatureSettings featureSettings )
     {
@@ -80,7 +80,7 @@ public class FeatureSettings
         smoothingScales.add( 1 );
         downSamplingMethod = DownSampler.getID( DownSampler.BIN_AVERAGE );
         onlyUseDifferenceFeatures = true;
-        normalize = true;
+        normalize = false;
     }
 
     public FeatureSettings copy()

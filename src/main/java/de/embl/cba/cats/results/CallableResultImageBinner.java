@@ -2,6 +2,7 @@ package de.embl.cba.cats.results;
 
 import de.embl.cba.cats.results.ResultImage;
 import de.embl.cba.utils.logging.Logger;
+import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.plugin.Binner;
@@ -17,9 +18,8 @@ public class CallableResultImageBinner
 {
 
 
-    public static Callable<ImagePlus> getBinned( ResultImage resultImage,
+    public static Callable<ImagePlus> getBinned( ResultExportSettings settings,
                                                  int classId,
-                                                 int[] binning,
                                                  int z0, int z1,
                                                  int t,
                                                  Logger logger,
@@ -28,21 +28,21 @@ public class CallableResultImageBinner
     {
         return () -> {
 
-            int nx = (int) resultImage.getDimensions()[ X ];
-            int ny = (int) resultImage.getDimensions()[ Y ];
+            int nx = (int) settings.resultImage.getDimensions()[ X ];
+            int ny = (int) settings.resultImage.getDimensions()[ Y ];
 
-            int dx = binning[0];
-            int dy = binning[1];
-            int dz = binning[2];
+            int dx = settings.binning[0];
+            int dy = settings.binning[1];
+            int dz = settings.binning[2];
 
-            int classLutWidth = resultImage.getProbabilityRange();
+            int classLutWidth = settings.resultImage.getProbabilityRange();
             int[] intensityGate = new int[]{ classId * classLutWidth + 1, (classId + 1 ) * classLutWidth };
 
             ImageStack tmpStack = new ImageStack ( nx , ny );
 
             for ( int z = z0; z <= z1; ++z )
             {
-                tmpStack.addSlice( resultImage.getSlice( z + 1, t + 1 )  );
+                tmpStack.addSlice( settings.resultImage.getSlice( z + 1, t + 1 )  );
             }
 
             ImagePlus tmpImage = new ImagePlus( "", tmpStack );
@@ -51,6 +51,7 @@ public class CallableResultImageBinner
             Binner binner = new Binner();
             ImagePlus binned = binner.shrink( tmpImage, dx, dy, dz, Binner.AVERAGE );
 
+            ResultExport.convertToProperBitDepth( binned, settings, classId );
 
             logger.progress( "Creating binned class image", null, startTime, z0, nz );
 

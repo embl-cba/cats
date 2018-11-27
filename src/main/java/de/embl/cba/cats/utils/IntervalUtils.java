@@ -155,7 +155,7 @@ public abstract class IntervalUtils {
                                                         CATS cats )
     {
 
-        cats.logger.info( "# Generating tiles for interval:" );
+        CATS.logger.info( "# Generating tiles for interval:" );
         logInterval( classificationInterval );
 
         ArrayList<FinalInterval> tiles = new ArrayList<>();
@@ -204,7 +204,7 @@ public abstract class IntervalUtils {
 
         tileSizes[ T ] = 1;
 
-        cats.logger.info("Tile sizes [x,y,z]: " + tileSizes[ X] + ", " + tileSizes[ Y]  + ", " + tileSizes[ Z ]);
+        CATS.logger.info("Tile sizes [x,y,z]: " + tileSizes[ X] + ", " + tileSizes[ Y]  + ", " + tileSizes[ Z ]);
 
         for ( int t = (int) classificationInterval.min( T ); t <= classificationInterval.max( T ); t += 1)
         {
@@ -239,7 +239,7 @@ public abstract class IntervalUtils {
             }
         }
 
-        cats.logger.info( "Number of tiles: " + tiles.size() );
+        CATS.logger.info( "Number of tiles: " + tiles.size() );
 
         return ( tiles );
     }

@@ -121,7 +121,7 @@ public class ApplyClassifierOnSlurmCommand implements Command
 
         int numFeatures = 1500; // TODO: typically too conversative
 
-        ArrayList< FinalInterval > tiles = IntervalUtils.createTiles( interval, interval, numJobs, numFeatures,true, null );
+        ArrayList< FinalInterval > tiles = IntervalUtils.createTiles( interval, interval, numJobs, numFeatures,false, true, null );
 
         for ( Path dataSet : dataSets )
         {

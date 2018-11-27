@@ -22,7 +22,9 @@ public class CatsUI
 //        ImagePlus imp = FolderOpener.open("/Users/tischer/Documents/andrea-callegari-stitching--data/MolDev/2018-08-10-raw-test--processed/", "virtual");
 //		imp.setDimensions( 1, 1, imp.getNSlices() );
 
-		ImagePlus imp = FolderOpener.open("/Users/tischer/Documents/sylwia-gawrzak-transmission-segmentation--data/cidre-out-2/");
+//		ImagePlus imp = FolderOpener.open("/Users/tischer/Documents/sylwia-gawrzak-transmission-segmentation--data/cidre-out-2/");
+
+		ImagePlus imp = FolderOpener.open("/Volumes/schwab/templin/FIB-SEM/Aligned data sets/20180820_6dpf platynereis parapodia/Crop_invert", "virtual");
 
 		imp.show();
 
