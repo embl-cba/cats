@@ -5,13 +5,14 @@ import ij.ImageJ;
 import ij.ImagePlus;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class ResultsExport2D
 {
 
 	public static void main( String[] args )
 	{
-
+		new ImageJ();
 
 		ImagePlus inputImagePlus = IJ.openImage( ResultsExport2D.class.getResource( "boat2d/boat2d.zip" ).getFile() );
 
@@ -20,7 +21,6 @@ public class ResultsExport2D
 		cats.setResultImageRAM( );
 		cats.loadClassifier( ResultsExport2D.class.getResource("boat2d/boat2d.classifier" ).getFile() );
 		cats.applyClassifierWithTiling();
-
 
 		ResultExportSettings resultExportSettings = new ResultExportSettings();
 
@@ -33,7 +33,7 @@ public class ResultsExport2D
 		resultExportSettings.resultImage = cats.getResultImage();
 		resultExportSettings.timePointsFirstLast = new int[]{ 0, 0 };
 
-		new ImageJ();
+
 		cats.getResultImage().exportResults( resultExportSettings );
 
 
@@ -51,6 +51,24 @@ public class ResultsExport2D
 
 		IJ.open( resultExportSettings.directory + File.separator + "background.tif" );
 		IJ.open( resultExportSettings.directory + File.separator + "foreground.tif" );
+
+
+		//
+		// Get as ImagePlus
+		//
+		resultExportSettings.exportType = ResultExportSettings.GET_AS_IMAGEPLUS_ARRAYLIST;
+		resultExportSettings.classNames = cats.getClassNames();
+		resultExportSettings.inputImagePlus = cats.getInputImage();
+		resultExportSettings.resultImage = cats.getResultImage();
+		resultExportSettings.timePointsFirstLast = new int[]{ 0, 0 };
+
+		final ArrayList< ImagePlus > classImps = cats.getResultImage().exportResults( resultExportSettings );
+
+		for ( ImagePlus classImp : classImps )
+		{
+			classImp.show();
+		}
+
 
 
 	}

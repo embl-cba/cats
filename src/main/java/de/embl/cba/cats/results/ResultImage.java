@@ -4,9 +4,11 @@ import ij.ImagePlus;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 
+import java.util.ArrayList;
+
 public interface ResultImage {
 
-    void exportResults( ResultExportSettings resultExportSettings );
+    ArrayList< ImagePlus > exportResults( ResultExportSettings resultExportSettings );
 
     ImageProcessor getSlice( int slice, int frame );
 

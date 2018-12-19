@@ -11,6 +11,7 @@ import net.imglib2.FinalInterval;
 import net.imglib2.util.Intervals;
 
 import java.awt.image.ColorModel;
+import java.util.ArrayList;
 
 import static de.embl.cba.cats.utils.IntervalUtils.*;
 
@@ -49,14 +50,14 @@ public class ResultImageRAM implements ResultImage {
     }
 
     @Override
-    public void exportResults( ResultExportSettings resultExportSettings )
+    public ArrayList< ImagePlus > exportResults( ResultExportSettings resultExportSettings )
     {
         resultExportSettings.classLutWidth = CLASS_LUT_WIDTH;
         resultExportSettings.logger = logger;
         resultExportSettings.resultImagePlus = result;
         resultExportSettings.resultImage = this;
 
-        ResultExport.exportResults( resultExportSettings );
+        return ResultExport.exportResults( resultExportSettings );
     }
 
     @Override

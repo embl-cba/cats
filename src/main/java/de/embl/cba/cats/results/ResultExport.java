@@ -240,7 +240,7 @@ public abstract class ResultExport
 
     }
 
-    private static void showClassAsImage( int classId, ResultExportSettings resultExportSettings )
+    private static ImagePlus createImagePlusForClass( int classId, ResultExportSettings resultExportSettings )
     {
 
         String className = resultExportSettings.classNames.get( classId );
@@ -269,9 +269,11 @@ public abstract class ResultExport
         final ImagePlus imp = new ImagePlus( resultExportSettings.exportNamesPrefix + className, stackOfAllTimepoints );
         imp.setDimensions( 1, numSlices, numTimepoints );
         imp.setOpenAsHyperStack( true );
-        imp.show();
 
-        logDone( resultExportSettings, className, numTimepoints, "Displayed " );
+        logDone( resultExportSettings, className, numTimepoints, "Created " );
+
+        return imp;
+
     }
 
 
@@ -291,10 +293,11 @@ public abstract class ResultExport
         return rawDataFrame;
     }
 
-    public static void exportResults( ResultExportSettings resultExportSettings )
+    public static ArrayList< ImagePlus > exportResults( ResultExportSettings resultExportSettings )
     {
 
         logger.info( "Exporting results, using modality: " + resultExportSettings.exportType );
+
         if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
         {
             logger.info( "Exporting results to: " + resultExportSettings.directory );
@@ -310,11 +313,13 @@ public abstract class ResultExport
 
         exportRawData( resultExportSettings );
 
-        exportClasses( resultExportSettings );
+        final ArrayList< ImagePlus > classImps = exportClasses( resultExportSettings );
 
         createImarisHeader( resultExportSettings );
 
         logger.info( "Export of results finished." );
+
+        return classImps;
 
     }
 
@@ -399,8 +404,9 @@ public abstract class ResultExport
         }
     }
 
-    private static void exportClasses( ResultExportSettings resultExportSettings )
+    private static ArrayList< ImagePlus > exportClasses( ResultExportSettings resultExportSettings )
     {
+        final ArrayList< ImagePlus > classImps = new ArrayList<>();
 
         if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_MULTI_CLASS_TIFF_SLICES ) )
         {
@@ -424,11 +430,17 @@ public abstract class ResultExport
                     }
                     else if ( resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
                     {
-                        showClassAsImage( classIndex, resultExportSettings );
+                        createImagePlusForClass( classIndex, resultExportSettings ).show();
+                    }
+                    else if ( resultExportSettings.exportType.equals( ResultExportSettings.GET_AS_IMAGEPLUS_ARRAYLIST ) )
+                    {
+                        classImps.add( createImagePlusForClass( classIndex, resultExportSettings ) );
                     }
                 }
             }
         }
+
+        return classImps;
 
     }
 
@@ -502,7 +514,7 @@ public abstract class ResultExport
         {
             if ( resultExportSettings.classesToBeExported.get( classIndex ) )
             {
-                showClassAsImage( classIndex, resultExportSettings );
+                createImagePlusForClass( classIndex, resultExportSettings );
             }
         }
 

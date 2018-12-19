@@ -13,6 +13,7 @@ import de.embl.cba.cats.utils.IntervalUtils;
 import de.embl.cba.cats.*;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class ResultImageDisk implements ResultImage {
 
@@ -40,13 +41,13 @@ public class ResultImageDisk implements ResultImage {
     }
 
     @Override
-    public void exportResults( ResultExportSettings resultExportSettings )
+    public ArrayList< ImagePlus > exportResults( ResultExportSettings resultExportSettings )
     {
         resultExportSettings.classLutWidth = CLASS_LUT_WIDTH;
         resultExportSettings.logger = logger;
         resultExportSettings.resultImagePlus = result;
         resultExportSettings.resultImage = this;
-        ResultExport.exportResults( resultExportSettings );
+        return ResultExport.exportResults( resultExportSettings );
     }
 
 
