@@ -286,7 +286,6 @@ public class Overlays implements RoiListener
 
     public void reviewLabelsInRoiManagerUI( Listeners listeners  )
     {
-
         this.listeners = listeners;
 
         listeners.updateLabelsWhenImageSliceIsChanged( false );
@@ -294,7 +293,6 @@ public class Overlays implements RoiListener
         if ( ! setLabelReviewSettingsFromUI() ) return;
 
         reviewLabelsInRoiManager( ORDER_TIME_ADDED );
-
     }
 
     public void setZoomLevel( int zoomLevel )

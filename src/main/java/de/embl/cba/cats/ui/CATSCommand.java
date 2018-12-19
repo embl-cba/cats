@@ -41,11 +41,11 @@ public class CATSCommand implements Command, Interactive
     public static final String CHANGE_CLASS_NAMES = "Change class names";
     public static final String CHANGE_COLORS = "Change class colors";
     public static final String CHANGE_RESULT_OVERLAY_OPACITY = "Overlay opacity";
-    public static final String UPDATE_LABEL_INSTANCES = "Update label instances";
+    public static final String UPDATE_LABEL_INSTANCES = "Update labels";
     public static final String UPDATE_LABELS = "Update labels";
     public static final String TRAIN_CLASSIFIER = "Train classifier";
     public static final String IO_LOAD_LABEL_IMAGE = "Load label image";
-    public static final String IO_LOAD_LABEL_INSTANCES = "Load label instances";
+    public static final String IO_LOAD_LABEL_INSTANCES = "Load labels";
     public static final String STOP_CLASSIFICATION = "Stop classification";
     public static final String IO_SAVE_LABELS = "Save label instances of current image";
     public static final String IO_EXPORT_RESULT_IMAGE = "Export results";
@@ -82,6 +82,7 @@ public class CATSCommand implements Command, Interactive
                     APPLY_CLASSIFIER,
                     REVIEW_LABELS,
 //                    IO_SAVE_LABELS,
+                    IO_LOAD_CLASSIFIER,
                     IO_SAVE_CLASSIFIER,
                     APPLY_CLASSIFIER_ON_SLURM,
                     IO_LOAD_LABEL_INSTANCES,

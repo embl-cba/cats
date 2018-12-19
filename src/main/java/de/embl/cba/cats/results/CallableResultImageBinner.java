@@ -42,16 +42,27 @@ public class CallableResultImageBinner
 
             for ( int z = z0; z <= z1; ++z )
             {
-                tmpStack.addSlice( settings.resultImage.getSlice( z + 1, t + 1 )  );
+                tmpStack.addSlice( settings.resultImage.getSlice( z + 1, t + 1 ).duplicate()  );
             }
 
-            ImagePlus tmpImage = new ImagePlus( "", tmpStack );
-            de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( tmpImage, intensityGate );
+            ImagePlus gated = new ImagePlus( "gated-" + classId, tmpStack );
+            de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( gated, intensityGate );
+//            tmpImage.show();
 
-            Binner binner = new Binner();
-            ImagePlus binned = binner.shrink( tmpImage, dx, dy, dz, Binner.AVERAGE );
+            ImagePlus binned = gated;
+
+            if ( dx != 1 || dy !=1 || dz != 1 )
+            {
+                Binner binner = new Binner();
+                binned = binner.shrink( gated, dx, dy, dz, Binner.AVERAGE );
+            }
+
+//            binned.setTitle( "binned-" + classId );
+//            binned.show();
 
             ResultExport.convertToProperBitDepth( binned, settings, classId );
+//            binned.setTitle( "binned-bitdepth-" + classId );
+//            binned.show();
 
             logger.progress( "Creating binned class image", null, startTime, z0, nz );
 

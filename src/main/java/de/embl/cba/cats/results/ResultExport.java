@@ -326,13 +326,20 @@ public abstract class ResultExport
         {
             String sliceLabel = source.getSliceLabel( planeId + 1);
 
-            if ( sliceLabel.contains( "." ) )
+            if ( sliceLabel != null )
             {
-                final String[] split = sliceLabel.split( "\\." );
-                sliceLabel = split[ 0 ];
-            }
+                if ( sliceLabel.contains( "." ) )
+                {
+                    final String[] split = sliceLabel.split( "\\." );
+                    sliceLabel = split[ 0 ];
+                }
 
-            target.setSliceLabel( sliceLabel + "-" + className, planeId + 1 );
+                target.setSliceLabel( sliceLabel + "-" + className, planeId + 1 );
+            }
+            else
+            {
+                target.setSliceLabel( className, planeId + 1 );
+            }
         }
     }
 
@@ -522,10 +529,19 @@ public abstract class ResultExport
 
         ImagePlus impClass = duplicator.run( settings.resultImagePlus, 1, 1, 1, settings.resultImagePlus.getNSlices(), t + 1, t + 1 );
 
+        applyClassIntensityGate( classId, settings, impClass );
+
         convertToProperBitDepth( impClass, settings, classId );
 
         return ( impClass );
 
+    }
+
+    private static void applyClassIntensityGate( int classId, ResultExportSettings settings, ImagePlus impClass )
+    {
+        int[] intensityGate = new int[]{ classId * settings.classLutWidth + 1, (classId + 1 ) * settings.classLutWidth };
+
+        de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( impClass, intensityGate );
     }
 
     public static void convertToProperBitDepth( ImagePlus impClass,
@@ -545,10 +561,6 @@ public abstract class ResultExport
             IJ.run( impClass, "32-bit", "" );
             factorToFillBitDepth = (int) ( 255.0  / settings.classLutWidth );
         }
-
-        int[] intensityGate = new int[]{ classId * settings.classLutWidth + 1, (classId + 1 ) * settings.classLutWidth };
-
-        de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( impClass, intensityGate );
 
         IJ.run( impClass, "Multiply...", "value=" + factorToFillBitDepth + " stack");
     }

@@ -25,8 +25,6 @@ public class ResultsExport
 
         objects3d2Channels();
 
-
-
     }
 
     private static void objects3d2Channels()

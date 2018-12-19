@@ -3049,7 +3049,7 @@ public class DeepSegmentationIJ1Plugin implements PlugIn
 
     public boolean showFeatureSettingsDialogIJ1Plugin( boolean showAdvancedSettings )
 	{
-		GenericDialogPlus gd = new GenericDialogPlus("Image Feature Settings");
+		NonBlockingGenericDialog gd = new NonBlockingGenericDialog("Image Feature Settings");
 
 		for ( int i = 0; i < 5; ++i )
 		{

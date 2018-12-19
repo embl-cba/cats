@@ -1126,7 +1126,7 @@ public class CATS
     public boolean featureSettingsDialog( boolean showAdvancedSettings )
     {
 
-        GenericDialogPlus gd = new GenericDialogPlus("Image Feature Settings");
+        NonBlockingGenericDialog gd = new NonBlockingGenericDialog("Image Feature Settings");
 
         for ( int i = 0; i < 5; ++i )
         {
@@ -1223,7 +1223,7 @@ public class CATS
 		updateLabelInstancesAndMetadata();
 	}
 
-    public FeatureSettings getFeatureSettingsFromGenericDialog( GenericDialogPlus gd, boolean showAdvancedSettings )
+    public FeatureSettings getFeatureSettingsFromGenericDialog( NonBlockingGenericDialog gd, boolean showAdvancedSettings )
     {
         FeatureSettings newFeatureSettings = featureSettings.copy();
 
