@@ -11,7 +11,7 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>fiji_plugin_deepSegmentation</artifactId>
-	<version>0.6.70</version>
+	<version>0.6.72</version>
 
 	<name>Fiji plugin for trainable segmentation using deep convolution</name>
 	<description>A plugin for trainable segmentation using deep convolution.</description>

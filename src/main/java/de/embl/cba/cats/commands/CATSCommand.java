@@ -1,9 +1,13 @@
-package de.embl.cba.cats.ui;
+package de.embl.cba.cats.commands;
 
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.classification.ClassificationRangeUtils;
+import de.embl.cba.cats.features.ImageScience;
 import de.embl.cba.cats.instances.InstancesAndMetadata;
 import de.embl.cba.cats.results.ResultImageExportGUI;
+import de.embl.cba.cats.ui.LabelButtonsPanel;
+import de.embl.cba.cats.ui.Listeners;
+import de.embl.cba.cats.ui.Overlays;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.cats.utils.IntervalUtils;
 import fiji.util.gui.GenericDialogPlus;
@@ -25,7 +29,7 @@ import static de.embl.cba.cats.CATS.logger;
 import static de.embl.cba.cats.utils.IOUtils.getOpenDirFile;
 import static de.embl.cba.cats.utils.IOUtils.getSaveDirFile;
 
-@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>CATS", initializer = "init")
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>CATS", initializer = "init")
 public class CATSCommand implements Command, Interactive
 {
     public static final String ARFF = ".ARFF";
@@ -54,9 +58,9 @@ public class CATSCommand implements Command, Interactive
     public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier (development)";
     public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
     public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
-    public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier featuresettings";
-    public static final String CHANGE_FEATURE_SETTINGS = "Change feature featuresettings";
-    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature featuresettings";
+    public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier settings";
+    public static final String CHANGE_FEATURE_SETTINGS = "Change feature settings";
+    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature settings";
     public static final String SEGMENT_OBJECTS = "Segment objects";
     public static final String REVIEW_OBJECTS = "Review objects";
     public static final String REVIEW_LABELS = "Review labels";
@@ -64,10 +68,8 @@ public class CATSCommand implements Command, Interactive
     public static final String UPDATE_LABELS_AND_TRAIN_CLASSIFIER = "Update labels and train classifier";
     public static final String LOAD_LABELS_AND_TRAIN_CLASSIFIER = "Load labels and train classifier";
 
-
     public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
     public static final String CHANGE_DEBUG_SETTINGS = "Change development featuresettings";
-
 
     @Parameter( label = "Execute action", callback = "performBasicAction" )
     private Button performActionButton;
@@ -146,6 +148,16 @@ public class CATSCommand implements Command, Interactive
 
     public void init()
     {
+        try
+        {
+            ImageScience.isAvailable();
+        }
+        catch (final NoClassDefFoundError err)
+        {
+            IJ.showMessage( "Please install ImageScience! [ Help > Update > Manage Update Sites ]" );
+        }
+
+
         IJ.setTool( "freeline" );
 
         cats = new CATS( );

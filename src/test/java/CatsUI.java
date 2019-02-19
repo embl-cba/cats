@@ -1,9 +1,7 @@
-import de.embl.cba.cats.ui.CATSCommand;
+import de.embl.cba.cats.commands.CATSCommand;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.plugin.FolderOpener;
 import net.imagej.ImageJ;
-import org.python.core.imp;
 
 public class CatsUI
 {
