@@ -79,7 +79,7 @@ public class FeatureSettings
         boundingBoxExpansionsForGeneratingInstancesFromLabels.add( 0 );
         smoothingScales.add( 1 );
         downSamplingMethod = DownSampler.getID( DownSampler.BIN_AVERAGE );
-        onlyUseDifferenceFeatures = true;
+        onlyUseDifferenceFeatures = false;
         normalize = false;
     }
 

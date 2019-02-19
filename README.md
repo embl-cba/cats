@@ -3,120 +3,130 @@
 
 ## Overview
 
-CATS is a Fiji PlugIn for trainable segmentation using "Deep Eigenvalue" features. The code is partly based on Fiji's [Trainable Weka Segmentation PlugIn](https://github.com/fiji/Trainable_Segmentation).
+CATS is a big image data compatible [Fiji](http://fiji.sc/) PlugIn for trainable image segmentation. 
+The code is partly based on Fiji's [Trainable Weka Segmentation](https://github.com/fiji/Trainable_Segmentation) (TWS) PlugIn.
+
+Similar to Fiji's [Trainable Weka Segmentation](https://github.com/fiji/Trainable_Segmentation) and the stand-alone software [ilastik](https://www.ilastik.org/), CATS learns an image segmentation from user drawn annotations by computing image features and feeding them into a [Random Forest](https://en.wikipedia.org/wiki/Random_forest) classifier. Again similar to TWS and ilastik, the image features of CATS are based on the Eigenvalues of the [Hessian matrix](https://en.wikipedia.org/wiki/Hessian_matrix) and the [Structure Tensor](https://en.wikipedia.org/wiki/Structure_tensor), which provide rotationally invariant information about edges and ridges in an image's gray-value distribution. 
+
+In order to improve context learning, CATS however also computes "Deep Eigenvalue Features", such as, e.g.:
+
+```
+HS( Bin3( SM( Bin3( HL( image ) ) ) ) )
+```
+, with abbreviations
+
+``` 
+HS = Largest Eigenvalue of Hessian Matrix
+HS = Smallest Eigenvalue of Hessian Matrix
+SM = Middle Eigenvalue of Structure Tensor
+Bin3 = 3x3x3 Binning 
+```
+, where the alteration between image feature computation and image binning is inspired by the architecture of deep convolutional neural networks (DCNN) as, e.g., used in the popular [3D U-Net](https://arxiv.org/abs/1606.06650).
+
+Similar to ilastik, but in contrast to the TWS PlugIn, CATS internally uses a tiling strategy for image segmentation and thus can be applied to arbitrarily large image data sets.
+
+Furthermore, CATS supports:
+
+- 2D and 3D images 
+- Time-lapse image data
+- Multi-channel image data
+- Cluster computing (Slurm)
+- Label review
+- Object segmentation
 
 ## Installation
 
 CATS runs as a PlugIn within Fiji.
 
 - Please install Fiji (fiji.sc)
-- Within Fiji, please enable the update site: EMBL-CBA; and restart Fiji.
+- Within Fiji, please enable the following Update Sites: 
+    - [X] EMBL-CBA
+    - [X] ImageScience
 
 ## Start CATS
 
 [Fiji > Plugins > Segmentation > CATS]
 
-## Hardware requirements
 
-The plugin should work on any computer however the computations are quite heavy and can thus be slow. The code is multi-threaded such that the execution speed scales basically linearly with the number of cores. 
-
-Labels:
-- For a convolution depth of 3 we observed a pixel classification speed of ~100 kiloVoxel / second using a 32 core Linux CentOS 7 machine.
-- For a convolution depth of 3 we observed a pixel classification speed of ~10 kiloVoxel / second using a 4 core MacBook Air.
-
-## Installation
-
-Download below files and place them in your Fiji plugins folder:
-- https://git.embl.de/grp-almf/fiji-plugin-deep-segmentation/blob/master/out/artifacts/fiji_plugin_trainableDeepSegmentation.jar
-- https://github.com/de.embl.cba.cats.weka/fiji-plugin-bigDataTools/blob/master/out/artifacts/fiji_plugin_bigDataTools.jar
-- install the ImageScience plugins:
-	- [Fiji > Help > Update ...] 
-	- [Manage update sites]
-	- [X] ImageScience
- 
-
-The latter plugin enables streaming large data sets from disk.
-
-## Usage
-
-### Open a data set
-
-You can either simply load a data set into Fiji or you can use [Plugins > BigDataTools > DataStreamingTools] in order to stream a data set from disk; this is useful for data sets that come close to or exceed the RAM of your computer. 
-
-Once you opened the data set you launch the segmentation via [Plugins > Segmentation > Trainable Deep Segmentation]; the graphical user interface will appear around your data set.
-
-Supported data types:
-
-- The streaming currenlty only works for Tiff or Hdf5 based data.
-- The trainable segmentation supports:
-    - 2D+c+t, 3D+c+t
-    - spatially anisotropic data 
-
-### Define your classes
-
-- The first class must always be the background class
-	- e.g., to mark everything that is outside your sample
-- Create a class: [Create new class]
-- Rename a class: [Settings]
-	- The class names will be there and you can change them
-
-### Set up your results image
-
-- [Create result image]
-- For creating a disk-resident results image: `[X] Disk`
-	- This is recommended, because you'll have your results even if something crashes
-- If you do not check `Disk` the results image will be created in RAM
-
-#### Tip
-
-The following folder structure works well:
-Assuming the name of your image is 'cell'
-
-- `cell-segmentation-project`
-	- `cell-raw`
-		- here is your data
-	- `cell-classified`
-		- here the tool will store the classification results (see below)
-	- `cell-labels`
-		- here you can store your labels
-	- `cell-for-imaris`
-
-### Logging
-
-Information about what is happening is printed into IJ's log window.
-In addition, when you chose to save your classification results to disk (see above), another folder with the ending "--log" will be automatically created next to your results folder. The content of the logging window will be constantly written into a file in this folder.
-
-#### Put labels
-
-- in Fiji select the "Freehand line tool" 
-	- adapt line width to your sample: 'double click'
-
-- for each class you have to minimally out one label
-	- draw a line on you image
-	- add label to class by clicking on the class names or by the keyboard shortcuts [1],[2],...
-
-##### Tips
-
-- don't draw the lables to long, because it will take a lot of memory and time to compute the features for this label
-
-#### Train classifier
-
-- [Train classifier]
-
-#### Apply classifier
-
-- Make sure the classifier is up to date, if in doubt again: [Train classifier]
-- Using Fiji's rectangle ROI select a x-y region to be classified
-- [Apply classifier]
-- This will select a minimal z-range
-- You can specify a larger z-region by typing into the "Range" field, e.g.
-	- '300,500' will classify all z-slices between these numbers
-
-#### Save labels
 
 - [Save labels]
 	- This stores all your labels and also the computed image features for each label
-- 
+- ## Usage Instructions
+  
+  ### Open a data set
+  
+  You can either simply load a data set into Fiji or you can use [Plugins > BigDataTools > DataStreamingTools] in order to stream a data set from disk; this is useful for data sets that come close to or exceed the RAM of your computer. 
+  
+  Once you opened the data set you launch the segmentation via [Plugins > Segmentation > Trainable Deep Segmentation]; the graphical user interface will appear around your data set.
+  
+  Supported data types:
+  
+  - The streaming currenlty only works for Tiff or Hdf5 based data.
+  - The trainable segmentation supports:
+      - 2D+c+t, 3D+c+t
+      - spatially anisotropic data 
+  
+  ### Define your classes
+  
+  - The first class must always be the background class
+  	- e.g., to mark everything that is outside your sample
+  - Create a class: [Create new class]
+  - Rename a class: [Settings]
+  	- The class names will be there and you can change them
+  
+  ### Set up your results image
+  
+  - [Create result image]
+  - For creating a disk-resident results image: `[X] Disk`
+  	- This is recommended, because you'll have your results even if something crashes
+  - If you do not check `Disk` the results image will be created in RAM
+  
+  #### Tip
+  
+  The following folder structure works well:
+  Assuming the name of your image is 'cell'
+  
+  - `cell-segmentation-project`
+  	- `cell-raw`
+  		- here is your data
+  	- `cell-classified`
+  		- here the tool will store the classification results (see below)
+  	- `cell-labels`
+  		- here you can store your labels
+  	- `cell-for-imaris`
+  
+  ### Logging
+  
+  Information about what is happening is printed into IJ's log window.
+  In addition, when you chose to save your classification results to disk (see above), another folder with the ending "--log" will be automatically created next to your results folder. The content of the logging window will be constantly written into a file in this folder.
+  
+  #### Put labels
+  
+  - in Fiji select the "Freehand line tool" 
+  	- adapt line width to your sample: 'double click'
+  
+  - for each class you have to minimally out one label
+  	- draw a line on you image
+  	- add label to class by clicking on the class names or by the keyboard shortcuts [1],[2],...
+  
+  ##### Tips
+  
+  - don't draw the lables to long, because it will take a lot of memory and time to compute the features for this label
+  
+  #### Train classifier
+  
+  - [Train classifier]
+  
+  #### Apply classifier
+  
+  - Make sure the classifier is up to date, if in doubt again: [Train classifier]
+  - Using Fiji's rectangle ROI select a x-y region to be classified
+  - [Apply classifier]
+  - This will select a minimal z-range
+  - You can specify a larger z-region by typing into the "Range" field, e.g.
+  	- '300,500' will classify all z-slices between these numbers
+  
+  #### Save labels
 
 
 ### Reload an existing project

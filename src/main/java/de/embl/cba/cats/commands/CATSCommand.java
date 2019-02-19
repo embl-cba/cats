@@ -13,7 +13,6 @@ import de.embl.cba.cats.utils.IntervalUtils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.Prefs;
 import ij.gui.GenericDialog;
 import net.imglib2.FinalInterval;
 import org.scijava.command.Command;
@@ -34,6 +33,7 @@ public class CATSCommand implements Command, Interactive
 {
     public static final String ARFF = ".ARFF";
     public static final String CLASSIFIER = ".classifier";
+
     @Parameter ( required = true )
     public ImagePlus inputImage;
 
@@ -60,7 +60,7 @@ public class CATSCommand implements Command, Interactive
     public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
     public static final String CHANGE_CLASSIFIER_SETTINGS = "Change classifier settings";
     public static final String CHANGE_FEATURE_SETTINGS = "Change feature settings";
-    public static final String CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS = "Change advanced feature settings";
+    public static final String CHANGE_ADVANCED_FEATURE_SETTINGS = "Change advanced feature settings";
     public static final String SEGMENT_OBJECTS = "Segment objects";
     public static final String REVIEW_OBJECTS = "Review objects";
     public static final String REVIEW_LABELS = "Review labels";
@@ -103,7 +103,7 @@ public class CATSCommand implements Command, Interactive
 //                    IO_LOAD_CLASSIFIER
 //                    RECOMPUTE_LABEL_FEATURE_VALUES,
 //                    CHANGE_DEBUG_SETTINGS,
-//                    CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS
+//                    CHANGE_ADVANCED_FEATURE_SETTINGS
             } )
 
     private String basicActionInput = ADD_CLASS;
@@ -168,8 +168,6 @@ public class CATSCommand implements Command, Interactive
 
         cats.initialisationDialog();
 
-        cats.featureSettingsDialog( false );
-
         overlays = new Overlays( cats );
 
         labelButtonsPanel = new LabelButtonsPanel( cats, overlays );
@@ -211,11 +209,14 @@ public class CATSCommand implements Command, Interactive
                         cats.showClassifierSettingsDialog();
                         break;
                     case CHANGE_FEATURE_SETTINGS:
-						final boolean settingsChanged = cats.featureSettingsDialog( false );
+                        boolean settingsChanged =
+                                cats.featureSettingsDialog( false );
 						if ( settingsChanged ) saveLabelInstances();
                         break;
-                    case CHANGE_ADVANCED_FEATURE_COMPUTATION_SETTINGS:
-                        cats.featureSettingsDialog( true );
+                    case CHANGE_ADVANCED_FEATURE_SETTINGS:
+                        settingsChanged =
+                                cats.featureSettingsDialog( true );
+                        if ( settingsChanged ) saveLabelInstances();
                         break;
                     case IO_LOAD_CLASSIFIER:
                         dirFile = getOpenDirFile( "Please choose a classifier file" );

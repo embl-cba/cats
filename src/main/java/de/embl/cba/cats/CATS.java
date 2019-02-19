@@ -1,19 +1,19 @@
 package de.embl.cba.cats;
 
-import java.awt.*;
-import java.awt.image.ColorModel;
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
 import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
+import de.embl.cba.cats.classification.AttributeSelector;
+import de.embl.cba.cats.classification.ClassifierInstancesMetadata;
+import de.embl.cba.cats.classification.ClassifierManager;
+import de.embl.cba.cats.classification.ClassifierUtils;
 import de.embl.cba.cats.commands.ApplyClassifierOnSlurmCommand;
 import de.embl.cba.cats.features.DownSampler;
+import de.embl.cba.cats.features.FeatureProvider;
+import de.embl.cba.cats.featuresettings.FeatureSettings;
+import de.embl.cba.cats.featuresettings.FeatureSettingsUtils;
+import de.embl.cba.cats.instances.InstancesAndMetadata;
+import de.embl.cba.cats.instances.InstancesManager;
+import de.embl.cba.cats.instances.InstancesUtils;
+import de.embl.cba.cats.instances.ReusableDenseInstance;
 import de.embl.cba.cats.labelimagetraining.AccuracyEvaluation;
 import de.embl.cba.cats.labels.Label;
 import de.embl.cba.cats.labels.LabelManager;
@@ -21,16 +21,19 @@ import de.embl.cba.cats.labels.LabelUtils;
 import de.embl.cba.cats.objects.ObjectReview;
 import de.embl.cba.cats.objects.ObjectSegmentation;
 import de.embl.cba.cats.objects.SegmentedObjects;
-import de.embl.cba.cats.featuresettings.FeatureSettings;
-import de.embl.cba.cats.ui.DeepSegmentationIJ1Plugin;
+import de.embl.cba.cats.results.ResultImage;
+import de.embl.cba.cats.results.ResultImageDisk;
+import de.embl.cba.cats.results.ResultImageFrameSetter;
+import de.embl.cba.cats.results.ResultImageRAM;
 import de.embl.cba.cats.utils.*;
+import de.embl.cba.cats.weka.fastRandomForest.FastRandomForest;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import de.embl.cba.utils.logging.Logger;
-
-import de.embl.cba.cats.weka.fastRandomForest.FastRandomForest;
 import fiji.util.gui.GenericDialogPlus;
 import ij.*;
-import ij.gui.*;
+import ij.gui.GenericDialog;
+import ij.gui.NonBlockingGenericDialog;
+import ij.gui.Roi;
 import ij.io.FileInfo;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
@@ -43,25 +46,7 @@ import inra.ijpb.measure.GeometricMeasures3D;
 import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
 import javafx.geometry.Point3D;
-
 import net.imglib2.FinalInterval;
-import de.embl.cba.cats.classification.AttributeSelector;
-import de.embl.cba.cats.classification.ClassifierInstancesMetadata;
-import de.embl.cba.cats.classification.ClassifierManager;
-import de.embl.cba.cats.classification.ClassifierUtils;
-import de.embl.cba.cats.features.FeatureProvider;
-import de.embl.cba.cats.instances.InstancesAndMetadata;
-import de.embl.cba.cats.instances.ReusableDenseInstance;
-import de.embl.cba.cats.results.ResultImage;
-import de.embl.cba.cats.results.ResultImageDisk;
-import de.embl.cba.cats.results.ResultImageFrameSetter;
-import de.embl.cba.cats.instances.InstancesUtils;
-import de.embl.cba.cats.instances.InstancesManager;
-import de.embl.cba.cats.results.ResultImageRAM;
-import de.embl.cba.cats.featuresettings.FeatureSettingsUtils;
-
-//import inra.ijpb.segment.Threshold;
-
 import net.imglib2.util.Intervals;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instance;
@@ -69,7 +54,22 @@ import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
 
+import java.awt.*;
+import java.awt.image.ColorModel;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 import static de.embl.cba.cats.utils.IntervalUtils.*;
+
 
 
 /**
@@ -111,8 +111,6 @@ public class CATS
             Color.orange,
             Color.black
     };
-
-    public DeepSegmentationIJ1Plugin catsIJ1Plugin;
 
 	public String resultImageType = RESULT_IMAGE_RAM;
 
@@ -465,9 +463,6 @@ public class CATS
 	{
 		return featureSettings.imageBackground;
 	}
-
-
-	private String imagingModality = de.embl.cba.cats.ui.DeepSegmentationIJ1Plugin.FLUORESCENCE_IMAGING;
 
 	public AtomicInteger totalThreadsExecuted = new AtomicInteger(0);
 

@@ -19,7 +19,7 @@ public class ObjectSegmentation
 {
 
     ObjectSegmentationSettings settings;
-    CATS CATS;
+    CATS cats;
 
     class ObjectSegmentationSettings
     {
@@ -33,9 +33,9 @@ public class ObjectSegmentation
         public boolean showSegmentationImages;
     }
 
-    public ObjectSegmentation( CATS CATS )
+    public ObjectSegmentation( CATS cats )
     {
-        this.CATS = CATS;
+        this.cats = cats;
     }
 
     public SegmentedObjects runFromUI( )
@@ -80,7 +80,7 @@ public class ObjectSegmentation
         }
 
 
-        CATS.logger.info( "\nSegmentation done in [s]: " + ( System.currentTimeMillis() - start ) / 1000 );
+        cats.logger.info( "\nSegmentation done in [s]: " + ( System.currentTimeMillis() - start ) / 1000 );
         return segmentedObjects;
     }
 
@@ -96,7 +96,7 @@ public class ObjectSegmentation
 
         SegmentedObjects segmentedObjects = new SegmentedObjects();
         segmentedObjects.objects3DPopulation = objects3DPopulation;
-        segmentedObjects.name = CATS.getClassName( settings.classId );
+        segmentedObjects.name = cats.getClassName( settings.classId );
         return segmentedObjects;
 
     }
@@ -109,21 +109,17 @@ public class ObjectSegmentation
     {
         GenericDialog gd = new GenericDialogPlus("Object Segmentation");
 
-        gd.addChoice( "Class", CATS.getClassNames().toArray( new String[0] ), CATS.getClassNames().get( 1 ) );
+        gd.addChoice( "Class",
+                cats.getClassNames().toArray( new String[0] ), cats.getClassNames().get( 1 ) );
 
         gd.addNumericField( "Time frame ", 1, 0 );
 
-//        gd.addNumericField( "Certainty threshold [0-1] ", 0.20, 2);
-
-//        gd.addChoice( "Do segmentation using ", new String[]{MORPHOLIBJ,IMAGE_SUITE_3D}, IMAGE_SUITE_3D);
-
         gd.addStringField( "Binning during segmentation", "1,1,1", 10  );
-
-//        gd.addCheckbox( "Show (binned) segmentation images", true );
 
         gd.showDialog();
 
         if ( gd.wasCanceled() ) return null;
+
         return gd;
     }
 
@@ -133,7 +129,7 @@ public class ObjectSegmentation
 
         gd.addMessage( "Please inspect the probability image to decide on a threshold." );
 
-        int maxThreshold = CATS.getResultImage().getProbabilityRange();
+        int maxThreshold = cats.getResultImage().getProbabilityRange();
 
         gd.addNumericField( "Threshold [ 1 - " + maxThreshold + " ]", 3, 0 );
 
@@ -155,56 +151,51 @@ public class ObjectSegmentation
         settings.showSegmentationImages = true; // gd.getNextBoolean();
     }
 
-    private SegmentedObjects segmentUsingMorphoLibJ( ObjectSegmentationSettings settings, ImagePlus probabilities )
+    private SegmentedObjects segmentUsingMorphoLibJ(
+            ObjectSegmentationSettings settings, ImagePlus probabilities )
     {
 
-        double threshold = CATS.getResultImage().getProbabilityRange() * settings.probabilityThreshold;
+        double threshold = cats.getResultImage().getProbabilityRange()
+                * settings.probabilityThreshold;
 
         int connectivity = 6;
 
-        CATS.logger.info( "\nComputing label mask..." );
+        cats.logger.info( "\nComputing label mask..." );
 
-        CATS.logger.info( "\nApplying threshold: " + threshold + " ..." );
+        cats.logger.info( "\nApplying threshold: " + threshold + " ..." );
         ImagePlus binary = Threshold.threshold( probabilities, threshold, 255.0 );
 
-        CATS.logger.info( "\nApplying object size filter: " + settings.minVolumeInPixels + " ..." );
+        cats.logger.info( "\nApplying object size filter: " + settings.minVolumeInPixels + " ..." );
         binary = new ImagePlus( "", AttributeFiltering.volumeOpening( binary.getStack(), settings.minVolumeInPixels) );
 
-        CATS.logger.info( "\nComputing connected components..." );
+        cats.logger.info( "\nComputing connected components..." );
         ImagePlus labelMask = BinaryImages.componentsLabeling( binary, connectivity, 16 );
         int numObjects = (int) labelMask.getDisplayRangeMax();
-        CATS.logger.info( "...found objects: " + numObjects );
+        cats.logger.info( "...found objects: " + numObjects );
 
-        CATS.logger.info( "\nConverting label mask to objects..." );
+        cats.logger.info( "\nConverting label mask to objects..." );
         SegmentedObjects segmentedObjects = getSegmentedObjects( ImageInt.wrap( labelMask ) );
 
         return segmentedObjects;
-
-        //cats.logger.info( "\nVolume measurements..." );
-        //ResultsTable volumes = GeometricMeasures3D.volume( labelMask.getStack(), new double[]{ 1, 1, 1 } );
-        //volumes.show( "Volumes" );
-
-        //double[][] centroids = GeometricMeasures3D.centroids( labelMask.getStack(), getAllLabels( numObjects ) );
-
     }
 
     private ImagePlus getBinnedProbabilityImage( ObjectSegmentationSettings settings )
     {
         ResultExportSettings resultExportSettings = new ResultExportSettings();
-        resultExportSettings.resultImage = CATS.getResultImage();
+        resultExportSettings.resultImage = cats.getResultImage();
         resultExportSettings.binning = settings.binning;
-        resultExportSettings.classLutWidth = CATS.getResultImage().getProbabilityRange();
+        resultExportSettings.classLutWidth = cats.getResultImage().getProbabilityRange();
 
         ImagePlus probabilities =  ResultExport.getBinnedClassImageMemoryEfficient(
                 settings.classId, resultExportSettings, settings.t,
-                CATS.getLogger(), CATS.numThreads );
+                cats.getLogger(), cats.numThreads );
 
         probabilities.setTitle( "probabilities" );
 
         if ( settings.showSegmentationImages )
         {
             probabilities.show();
-            probabilities.setDisplayRange( 0, CATS.getResultImage().getProbabilityRange() );
+            probabilities.setDisplayRange( 0, cats.getResultImage().getProbabilityRange() );
         }
 
         return probabilities;
@@ -214,7 +205,7 @@ public class ObjectSegmentation
     private SegmentedObjects segmentUsing3dImageSuite( ObjectSegmentationSettings settings, ImagePlus probabilities )
     {
 
-        CATS.logger.info( "\nSegmenting image..." );
+        cats.logger.info( "\nSegmenting image..." );
 
         ImageLabeller labeler = new ImageLabeller();
 
@@ -230,13 +221,13 @@ public class ObjectSegmentation
         ImageInt bin = img.thresholdAboveInclusive( settings.threshold );
         ImageInt lbl = labeler.getLabels( bin );
 
-        CATS.logger.info( "...done. " );
+        cats.logger.info( "...done. " );
 
-        CATS.logger.info( "\nCreating objects..." );
+        cats.logger.info( "\nCreating objects..." );
         SegmentedObjects segmentedObjects = getSegmentedObjects( lbl );
         segmentedObjects.objects3DPopulation.setScaleXY( settings.binning[ 0 ] );
         segmentedObjects.objects3DPopulation.setScaleZ( settings.binning[ 2 ] );
-        CATS.logger.info( "...found objects: " + segmentedObjects.objects3DPopulation.getNbObjects()  );
+        cats.logger.info( "...found objects: " + segmentedObjects.objects3DPopulation.getNbObjects()  );
 
         return segmentedObjects;
 
@@ -245,7 +236,7 @@ public class ObjectSegmentation
     private float ensureThresholdWithinRange( float threshold )
     {
         threshold = (float) Math.max( threshold, 1.0 );
-        threshold = (float) Math.min( threshold, CATS.getResultImage().getProbabilityRange() );
+        threshold = (float) Math.min( threshold, cats.getResultImage().getProbabilityRange() );
         return threshold;
     }
 
@@ -266,7 +257,7 @@ public class ObjectSegmentation
 
         SegmentedObjects segmentedObjects = new SegmentedObjects();
         segmentedObjects.objects3DPopulation = objects3DPopulation;
-        segmentedObjects.name = CATS.getClassName( settings.classId );
+        segmentedObjects.name = cats.getClassName( settings.classId );
         return segmentedObjects;
     }
 

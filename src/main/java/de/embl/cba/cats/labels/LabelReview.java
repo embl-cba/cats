@@ -1,28 +1,20 @@
 package de.embl.cba.cats.labels;
 
 import de.embl.cba.cats.CATS;
-import de.embl.cba.cats.ui.DeepSegmentationIJ1Plugin;
 import de.embl.cba.cats.ui.Overlays;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
-import ij.gui.Overlay;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
-import ij.plugin.Duplicator;
 import ij.plugin.frame.RoiManager;
-
-import java.awt.*;
 import java.util.*;
 
 public class LabelReview
 {
 
-    DeepSegmentationIJ1Plugin catsIJ1Plugin;
     CATS CATS;
 
     ImagePlus inputImage;
-
-    ImagePlus imageAroundCurrentSelection;
 
     Map < String, Label > labelMap;
     ArrayList < String > underReview;
@@ -31,15 +23,9 @@ public class LabelReview
 
     private final static String KEY = "key";
 
-    public LabelReview( DeepSegmentationIJ1Plugin catsIJ1Plugin )
+    public LabelReview( ArrayList< Label > labelMap, CATS cats )
     {
-        this.catsIJ1Plugin = catsIJ1Plugin;
-        this.inputImage = catsIJ1Plugin.inputImage;
-    }
-
-    public LabelReview( ArrayList< Label > labelMap, CATS CATS )
-    {
-        this.inputImage = CATS.getInputImage();
+        this.inputImage = cats.getInputImage();
         setLabelsAsMap( labelMap );
 
     }

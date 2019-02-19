@@ -1,20 +1,20 @@
 package de.embl.cba.cats.objects;
 
 import de.embl.cba.cats.CATS;
-import de.embl.cba.cats.ui.DeepSegmentationIJ1Plugin;
 import de.embl.cba.cats.ui.Overlays;
 import de.embl.cba.cats.utils.Utils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.gui.*;
+import ij.gui.GenericDialog;
+import ij.gui.OvalRoi;
+import ij.gui.PointRoi;
+import ij.gui.Roi;
 import ij.plugin.frame.RoiManager;
 import mcib3d.geom.Object3D;
 import mcib3d.geom.Objects3DPopulation;
-import mcib3d.geom.Objects3DPopulationAnalysis;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 
 public class ObjectReview
@@ -22,7 +22,6 @@ public class ObjectReview
 	public static final String OBJECT_ID = "ObjectId";
 	RoiManager roiManager;
     CATS cats;
-    DeepSegmentationIJ1Plugin catsIJ1Plugin;
 
     String objectsName;
     public double minCalibratedVolume;
@@ -33,7 +32,6 @@ public class ObjectReview
 	public ObjectReview( CATS cats )
     {
         this.cats = cats;
-        this.catsIJ1Plugin = cats.catsIJ1Plugin; // TODO: ?
     }
 
     public void runUI( )
