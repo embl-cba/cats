@@ -1,3 +1,20 @@
+/**
+* License: GPL
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License 2
+* as published by the Free Software Foundation.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
 package de.embl.cba.cats;
 
 import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
@@ -1264,20 +1281,21 @@ public class CATS
         gd.addMessage( "DATA SET NAME\n \n" +
                 "Please enter/confirm the name of this data set.\n" +
                 "This is important for keeping track of which instances have been trained with which image." );
-        gd.addStringField( "Name", inputImage.getTitle(), 50 );
 
-        gd.addMessage( "RESULT IMAGE\n \n" +
+        gd.addStringField( "  ", inputImage.getTitle(), 50 );
+
+        gd.addMessage( "RESULT IMAGE LOCATION\n \n" +
                 "For large data sets it can be necessary to store the results " +
                 "on disk rather than in RAM.\n" +
                 "The speed of this plugin does hardly depend on this choice.\n" +
                 "If you choose 'Disk' a dialog window will appear to select the storage directory.\n" +
                 "You can point to a directory containing previous segmentation results and they will be loaded (not overwritten)." );
 
-        gd.addChoice( "Location" ,
+        gd.addChoice( "  " ,
                 new String[]{
                         RESULT_IMAGE_DISK_SINGLE_TIFF,
                         RESULT_IMAGE_RAM },
-                        RESULT_IMAGE_RAM );
+						RESULT_IMAGE_DISK_SINGLE_TIFF );
 
 
         gd.showDialog();
