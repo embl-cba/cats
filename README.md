@@ -1,11 +1,20 @@
 
-Trainable Deep Weka Segmentation
-======================
-The **Trainable Deep Weka Segmentation** is a Fiji plugin for trainable segmentation using deep convolution. It is heavily based on the original **Trainable Weka Segmentation** plugin.
+# Context Aware Trainable Segmentation (CATS)
 
-## Software requirements
+## Overview
 
-You need Fiji running Java 1.8; older version will run Java 1.6, which does not work for this plugin. The easiest way to have Fiji running Java 1.8 is to reinstall Fiji from scratch.
+CATS is a Fiji PlugIn for trainable segmentation using "Deep Eigenvalue" features. The code is partly based on Fiji's [Trainable Weka Segmentation PlugIn](https://github.com/fiji/Trainable_Segmentation).
+
+## Installation
+
+CATS runs as a PlugIn within Fiji.
+
+- Please install Fiji (fiji.sc)
+- Within Fiji, please enable the update site: EMBL-CBA; and restart Fiji.
+
+## Start CATS
+
+[Fiji > Plugins > Segmentation > CATS]
 
 ## Hardware requirements
 

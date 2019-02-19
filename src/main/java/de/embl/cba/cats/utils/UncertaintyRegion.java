@@ -1,4 +1,4 @@
-package de.embl.cba.cats;
+package de.embl.cba.cats.utils;
 
 /**
  * Created by de.embl.cba.cats.weka on 12/08/17.

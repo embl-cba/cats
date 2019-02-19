@@ -23,8 +23,7 @@ import de.embl.cba.cats.objects.ObjectSegmentation;
 import de.embl.cba.cats.objects.SegmentedObjects;
 import de.embl.cba.cats.featuresettings.FeatureSettings;
 import de.embl.cba.cats.ui.DeepSegmentationIJ1Plugin;
-import de.embl.cba.cats.utils.CommandUtils;
-import de.embl.cba.cats.utils.IOUtils;
+import de.embl.cba.cats.utils.*;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import de.embl.cba.utils.logging.Logger;
 
@@ -63,8 +62,6 @@ import de.embl.cba.cats.featuresettings.FeatureSettingsUtils;
 
 //import inra.ijpb.segment.Threshold;
 
-import de.embl.cba.cats.utils.IntervalUtils;
-import de.embl.cba.cats.utils.ThreadUtils;
 import net.imglib2.util.Intervals;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instance;
@@ -330,7 +327,7 @@ public class CATS
 
 	public static final IJLazySwingLogger logger = new IJLazySwingLogger();
 
-	private ArrayList<UncertaintyRegion> uncertaintyRegions = new ArrayList<>();
+	private ArrayList<UncertaintyRegion > uncertaintyRegions = new ArrayList<>();
 
 	public boolean isTrainingCompleted = true;
 
