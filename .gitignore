@@ -13,3 +13,9 @@ target/
 out/
 .DS_Store
 *.iml
+
+# General #
+lib/
+publication/
+literature/
+.DS_Store
