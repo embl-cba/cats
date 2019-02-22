@@ -1,6 +1,6 @@
 package de.embl.cba.cats.utils;
 
-import de.embl.cba.bigdataconverter.BigDataConverter;
+import de.embl.cba.bigdataprocessor.BigDataProcessor;
 import de.embl.cba.utils.fileutils.FileRegMatcher;
 import ij.IJ;
 import ij.ImagePlus;
@@ -73,7 +73,7 @@ public class IOUtils
             String directory, String namingScheme, String filePattern, String hdf5DataSetName  )
     {
 
-        BigDataConverter bdc = new BigDataConverter();
+        BigDataProcessor bdc = new BigDataProcessor();
         ImagePlus image = bdc.openFromDirectory(
                 directory,
                 namingScheme,

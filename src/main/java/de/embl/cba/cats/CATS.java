@@ -17,7 +17,7 @@
 
 package de.embl.cba.cats;
 
-import de.embl.cba.bigdataconverter.virtualstack2.VirtualStack2;
+import de.embl.cba.bigdataprocessor.virtualstack2.VirtualStack2;
 import de.embl.cba.cats.classification.AttributeSelector;
 import de.embl.cba.cats.classification.ClassifierInstancesMetadata;
 import de.embl.cba.cats.classification.ClassifierManager;

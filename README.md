@@ -56,7 +56,7 @@ CATS can be found within Fiji's menu tree:
 
 ### Input Image Data
 
-As it is common in Fiji, CATS operates on the currently active image window. Thus, before CATS can be started, one must open an image. As CATS supports multi-channel 2D and 3D time-lapse data any image can be used as input. For analyzing big image data (e.g., data that exceeds the available RAM) ImageJ's VirtualStack functionality should be used; see, e.g., [VirtualStackOpener](https://imagej.nih.gov/ij/plugins/virtual-opener.html) or [BigDataConverter](https://github.com/tischi/fiji-plugin-bigdataconverter#big-data-converter) on how to open VirtualStacks.
+As it is common in Fiji, CATS operates on the currently active image window. Thus, before CATS can be started, one must open an image. As CATS supports multi-channel 2D and 3D time-lapse data any image can be used as input. For analyzing big image data (e.g., data that exceeds the available RAM) ImageJ's VirtualStack functionality should be used; see, e.g., [VirtualStackOpener](https://imagej.nih.gov/ij/plugins/virtual-opener.html) or [BigDataProcessor](https://github.com/tischi/fiji-plugin-bigdataprocessor#big-data-converter) on how to open VirtualStacks.
 
 ### Input Image Calibration
 
@@ -215,9 +215,9 @@ The aim is to have a folder with files named like below:
 
 Note: You do not need to save the background class
 
-#### Using the BigDataConverter to generate one Tiff file per class
+#### Using the BigDataProcessor to generate one Tiff file per class
 
-- Open classification results folder in BigDataConverter
+- Open classification results folder in BigDataProcessor
 	- `Streaming`
 		- `File naming scheme`: select the one with "classified..."
 			- adapt the amount of z-slices to match you raw data: you may have to look this up

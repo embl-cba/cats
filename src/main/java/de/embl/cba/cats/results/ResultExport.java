@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static de.embl.cba.bigdataconverter.utils.Utils.applyIntensityGate;
+import static de.embl.cba.bigdataprocessor.utils.Utils.applyIntensityGate;
 import static de.embl.cba.cats.CATS.logger;
 import static de.embl.cba.cats.utils.IntervalUtils.*;
 

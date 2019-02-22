@@ -17,7 +17,7 @@
 
 
 		/*
-		BigDataConverter dst = new BigDataConverter();
+		BigDataProcessor dst = new BigDataProcessor();
 		dst.openFromDirectory(
 				"/Users/de.embl.cba.cats.weka/Desktop/raw/",
 				"None",

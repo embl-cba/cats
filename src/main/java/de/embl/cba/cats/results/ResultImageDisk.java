@@ -1,8 +1,8 @@
 package de.embl.cba.cats.results;
 
-import de.embl.cba.bigdataconverter.BigDataConverter;
-import de.embl.cba.bigdataconverter.utils.ImageDataInfo;
-import de.embl.cba.bigdataconverter.virtualstack2.VirtualStack2;
+import de.embl.cba.bigdataprocessor.BigDataProcessor;
+import de.embl.cba.bigdataprocessor.utils.ImageDataInfo;
+import de.embl.cba.bigdataprocessor.virtualstack2.VirtualStack2;
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.utils.IntervalUtils;
 import de.embl.cba.utils.logging.Logger;
@@ -83,7 +83,7 @@ public class ResultImageDisk implements ResultImage {
     {
         // TODO: check for cancel!
 
-        BigDataConverter bdc = new BigDataConverter();
+        BigDataProcessor bdc = new BigDataProcessor();
         String tMax = String.format( "%05d", dimensions[ IntervalUtils.T ] );
         String zMax = String.format( "%05d", dimensions[ IntervalUtils.Z ] );
 

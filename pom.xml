@@ -165,7 +165,7 @@
 
 		<dependency>
 			<groupId>de.embl.cba</groupId>
-			<artifactId>fiji_plugin_bigDataConverter</artifactId>
+			<artifactId>fiji_plugin_bigDataProcessor</artifactId>
 			<version>0.5.56</version>
 		</dependency>
 

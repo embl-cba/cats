@@ -1,6 +1,6 @@
 package de.embl.cba.cats.results;
 
-import de.embl.cba.bigdataconverter.utils.Utils;
+import de.embl.cba.bigdataprocessor.utils.Utils;
 import de.embl.cba.cats.CATS;
 import de.embl.cba.utils.logging.Logger;
 
