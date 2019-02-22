@@ -17,7 +17,7 @@
 
 
 		/*
-		DataStreamingTools dst = new DataStreamingTools();
+		BigDataConverter dst = new BigDataConverter();
 		dst.openFromDirectory(
 				"/Users/de.embl.cba.cats.weka/Desktop/raw/",
 				"None",
@@ -69,7 +69,7 @@
 
 		/*
 		ImagePlus inputImage = IJ.getImage();
-		VirtualStackOfStacks vss = (VirtualStackOfStacks) inputImage.getStack();
+		VirtualStack2 vss = (VirtualStack2) inputImage.getStack();
 		Region5D region5D = new Region5D();
 		region5D.size = new Point3D(40.0,40.0,40.0);
 		region5D.offset = new Point3D(0,0,0);

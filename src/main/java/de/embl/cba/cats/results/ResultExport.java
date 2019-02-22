@@ -1,11 +1,11 @@
 package de.embl.cba.cats.results;
 
-import de.embl.cba.bigDataTools.hdf5.H5DataCubeWriter;
-import de.embl.cba.bigDataTools.imaris.ImarisDataSet;
-import de.embl.cba.bigDataTools.imaris.ImarisUtils;
-import de.embl.cba.bigDataTools.imaris.ImarisWriter;
 import de.embl.cba.cats.postprocessing.ProximityFilter3D;
 import de.embl.cba.cats.utils.IOUtils;
+import de.embl.cba.imaris.H5DataCubeWriter;
+import de.embl.cba.imaris.ImarisDataSet;
+import de.embl.cba.imaris.ImarisUtils;
+import de.embl.cba.imaris.ImarisWriter;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static de.embl.cba.bigdataconverter.utils.Utils.applyIntensityGate;
 import static de.embl.cba.cats.CATS.logger;
 import static de.embl.cba.cats.utils.IntervalUtils.*;
 
@@ -553,7 +554,7 @@ public abstract class ResultExport
     {
         int[] intensityGate = new int[]{ classId * settings.classLutWidth + 1, (classId + 1 ) * settings.classLutWidth };
 
-        de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( impClass, intensityGate );
+        applyIntensityGate( impClass, intensityGate );
     }
 
     public static void convertToProperBitDepth( ImagePlus impClass,

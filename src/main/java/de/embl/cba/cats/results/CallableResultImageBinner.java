@@ -1,22 +1,18 @@
 package de.embl.cba.cats.results;
 
-import de.embl.cba.cats.results.ResultImage;
+import de.embl.cba.bigdataconverter.utils.Utils;
 import de.embl.cba.utils.logging.Logger;
-import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.plugin.Binner;
-import ij.process.StackProcessor;
 
 import java.util.concurrent.Callable;
 
 import static de.embl.cba.cats.utils.IntervalUtils.X;
 import static de.embl.cba.cats.utils.IntervalUtils.Y;
-import static de.embl.cba.cats.utils.IntervalUtils.Z;
 
 public class CallableResultImageBinner
 {
-
 
     public static Callable<ImagePlus> getBinned( ResultExportSettings settings,
                                                  int classId,
@@ -46,7 +42,7 @@ public class CallableResultImageBinner
             }
 
             ImagePlus gated = new ImagePlus( "gated-" + classId, tmpStack );
-            de.embl.cba.bigDataTools.utils.Utils.applyIntensityGate( gated, intensityGate );
+            Utils.applyIntensityGate( gated, intensityGate );
 //            tmpImage.show();
 
             ImagePlus binned = gated;

@@ -10,12 +10,12 @@
 	</parent>
 
 	<groupId>de.embl.cba</groupId>
-	<artifactId>fiji_plugin_deepSegmentation</artifactId>
-	<version>0.6.72</version>
+	<artifactId>fiji_plugin_cats</artifactId>
+	<version>0.6.73</version>
 
-	<name>Fiji plugin for trainable segmentation using deep convolution</name>
-	<description>A plugin for trainable segmentation using deep convolution.</description>
-	<url>https://github.com/tischi/</url>
+	<name>Fiji plugin for context aware trainable segmentation</name>
+	<description>A plugin for context aware trainable segmentation.</description>
+	<url>https://github.com/embl-cba/</url>
 	<inceptionYear>2017</inceptionYear>
 	<organization>
 		<name>EMBL</name>
@@ -58,76 +58,13 @@
 				<role>maintainer</role>
 			</roles>
 		</developer>
-		<developer>
-			<id>iarganda</id>
-			<name>Ignacio Arganda-Carreras</name>
-			<url>http://imagej.net/User:Iarganda</url>
-			<roles>
-				<role>developer</role>
-				<role>debugger</role>
-				<role>reviewer</role>
-				<role>support</role>
-				<role>maintainer</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>ctrueden</id>
-			<name>Curtis Rueden</name>
-			<url>http://imagej.net/User:Rueden</url>
-			<roles>
-				<role>maintainer</role>
-			</roles>
-		</developer>
 	</developers>
 	<contributors>
 		<contributor>
-			<name>Verena Kaynig</name>
-			<url>http://imagej.net/User:Verena</url>
-			<roles><role>founder</role></roles>
-			<properties><id>vkaynig</id></properties>
+			<id>iarganda</id>
+			<name>Ignacio Arganda-Carreras</name>
+			<url>http://imagej.net/User:Iarganda</url>
 		</contributor>
-		<contributor>
-			<name>Johannes Schindelin</name>
-			<url>http://imagej.net/User:Schindelin</url>
-			<roles><role>founder</role></roles>
-			<properties><id>dscho</id></properties>
-		</contributor>
-		<contributor>
-			<name>Albert Cardona</name>
-			<url>http://imagej.net/User:Albertcardona</url>
-			<properties><id>acardona</id></properties>
-		</contributor>
-		<contributor>
-			<name>Jan Eglinger</name>
-			<url>http://imagej.net/User:Eglinger</url>
-			<properties><id>imagejan</id></properties>
-		</contributor>
-		<contributor>
-			<name>Patrice Freydiere</name>
-			<properties><id>frett27</id></properties>
-		</contributor>
-		<contributor>
-			<name>Jan Funke</name>
-			<url>http://imagej.net/User:Funke</url>
-			<properties><id>funkey</id></properties>
-		</contributor>
-		<contributor>
-			<name>Mark Hiner</name>
-			<url>http://imagej.net/User:Hinerm</url>
-			<properties><id>hinerm</id></properties>
-		</contributor>
-		<contributor>
-			<name>Larry Lindsey</name>
-			<url>http://imagej.net/User:Lindsey</url>
-			<properties><id>larrylindsey</id></properties>
-		</contributor>
-		<contributor><name>Eibe Frank</name></contributor>
-		<contributor><name>Richard Kirkby</name></contributor>
-		<contributor><name>Julien Prados</name></contributor>
-		<contributor><name>Fran Supek</name></contributor>
-		<contributor><name>Len Trigg</name></contributor>
-		<contributor><name>Santi Villalba</name></contributor>
-		<contributor><name>Yong Wang</name></contributor>
 	</contributors>
 
 	<mailingLists>
@@ -136,20 +73,6 @@
 			<archive>http://forum.imagej.net/</archive>
 		</mailingList>
 	</mailingLists>
-
-    <!--
-	<scm>
-		<connection>scm:git:git://github.com/de.embl.cba.catseveloperConnection>scm:git:git@github.com:de.embl.cba.catsion>
-		<tag>HEAD</tag>
-		<url>https://github.com/tischi</url>
-
-	</scm>
-
-	<issueManagement>
-		<system>GitHub Issues</system>
-		<url>https://github.com/tischi</url>
-	</issueManagement>
-    -->
 
 	<properties>
 		<package-name>de.embl.cba.cats</package-name>
@@ -243,25 +166,28 @@
 		</dependency>
 
 
-        <dependency>
-            <groupId>com.github.ssgpers</groupId>
-            <artifactId>java-utils-embl</artifactId>
-            <version>572a856481d2d88cfed4405833f9861195a8392b</version>
-        </dependency>
-
-
-		<!-- bintray  -->
+        <!--<dependency>-->
+            <!--<groupId>com.github.ssgpers</groupId>-->
+            <!--<artifactId>java-utils-embl</artifactId>-->
+            <!--<version>572a856481d2d88cfed4405833f9861195a8392b</version>-->
+        <!--</dependency>-->
 
 		<dependency>
 			<groupId>de.embl.cba</groupId>
-			<artifactId>fiji_plugin_bigDataTools</artifactId>
-			<version>0.5.52</version>
+			<artifactId>fiji_plugin_bigDataConverter</artifactId>
+			<version>0.5.56</version>
 		</dependency>
 
 		<dependency>
 			<groupId>de.embl.cba</groupId>
 			<artifactId>fiji-slurm</artifactId>
 			<version>0.4.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>de.embl.cba</groupId>
+			<artifactId>imaris-writer</artifactId>
+			<version>0.1.0</version>
 		</dependency>
 
 		<!-- Fiji dependencies -->

@@ -1,6 +1,6 @@
 package de.embl.cba.cats.utils;
 
-import de.embl.cba.bigDataTools.dataStreamingTools.DataStreamingTools;
+import de.embl.cba.bigdataconverter.BigDataConverter;
 import de.embl.cba.utils.fileutils.FileRegMatcher;
 import ij.IJ;
 import ij.ImagePlus;
@@ -69,11 +69,12 @@ public class IOUtils
         return image;
     }
 
-    public static ImagePlus openImageWithLazyLoadingTools( String directory, String namingScheme, String filePattern, String hdf5DataSetName  )
+    public static ImagePlus openImageLazy(
+            String directory, String namingScheme, String filePattern, String hdf5DataSetName  )
     {
 
-        DataStreamingTools dst = new DataStreamingTools();
-        ImagePlus image = dst.openFromDirectory(
+        BigDataConverter bdc = new BigDataConverter();
+        ImagePlus image = bdc.openFromDirectory(
                 directory,
                 namingScheme,
                 filePattern,

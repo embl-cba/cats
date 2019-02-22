@@ -1,6 +1,6 @@
 package de.embl.cba.cats.utils;
 
-import de.embl.cba.bigDataTools.Region5D;
+import de.embl.cba.bigdataconverter.utils.Region5D;
 import ij.ImagePlus;
 import ij.ImageStack;
 import javafx.geometry.Point3D;

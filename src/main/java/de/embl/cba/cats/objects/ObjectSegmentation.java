@@ -1,6 +1,6 @@
 package de.embl.cba.cats.objects;
 
-import de.embl.cba.bigDataTools.utils.Utils;
+import de.embl.cba.bigdataconverter.utils.Utils;
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.results.ResultExportSettings;
 import de.embl.cba.cats.results.ResultExport;
@@ -145,10 +145,9 @@ public class ObjectSegmentation
         settings = new ObjectSegmentationSettings();
         settings.classId = gd.getNextChoiceIndex();
         settings.t = (int) gd.getNextNumber() - 1;
-//        featuresettings.probabilityThreshold = gd.getNextNumber();
-        settings.method = IMAGE_SUITE_3D; //      featuresettings.method = gd.getNextChoice();
+        settings.method = IMAGE_SUITE_3D;
         settings.binning =  Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
-        settings.showSegmentationImages = true; // gd.getNextBoolean();
+        settings.showSegmentationImages = true;
     }
 
     private SegmentedObjects segmentUsingMorphoLibJ(

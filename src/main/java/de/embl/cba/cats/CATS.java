@@ -17,7 +17,7 @@
 
 package de.embl.cba.cats;
 
-import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
+import de.embl.cba.bigdataconverter.virtualstack2.VirtualStack2;
 import de.embl.cba.cats.classification.AttributeSelector;
 import de.embl.cba.cats.classification.ClassifierInstancesMetadata;
 import de.embl.cba.cats.classification.ClassifierManager;
@@ -2674,10 +2674,10 @@ public class CATS
 	private void configureInputImageLoading( Map< String, Object > parameters )
     {
 
-        if ( inputImage.getStack() instanceof VirtualStackOfStacks )
+        if ( inputImage.getStack() instanceof VirtualStack2 )
 		{
 			parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_LAZY_LOADING_TOOLS );
-			VirtualStackOfStacks vss = ( VirtualStackOfStacks ) inputImage.getStack();
+			VirtualStack2 vss = ( VirtualStack2 ) inputImage.getStack();
 			parameters.put( IOUtils.INPUT_IMAGE_VSS_DIRECTORY, vss.getDirectory() );
             parameters.put( IOUtils.INPUT_IMAGE_VSS_PATTERN, vss.getFilterPattern() );
             parameters.put( IOUtils.INPUT_IMAGE_VSS_SCHEME, vss.getNamingScheme() );

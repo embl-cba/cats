@@ -1,6 +1,6 @@
 package de.embl.cba.cats.results;
 
-import de.embl.cba.bigDataTools.utils.Utils;
+import de.embl.cba.bigdataconverter.utils.Utils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;

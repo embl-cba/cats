@@ -414,9 +414,9 @@
 
     		if ( region5D != null )
     		{
-    			if (inputImage.getImageStack() instanceof VirtualStackOfStacks)
+    			if (inputImage.getImageStack() instanceof VirtualStack2)
     			{
-    				VirtualStackOfStacks vss = (VirtualStackOfStacks) inputImage.getStack();
+    				VirtualStack2 vss = (VirtualStack2) inputImage.getStack();
     				inputImage = vss.getDataCube(region5D, 0, numThreads);
     			}
     			else
@@ -3143,9 +3143,9 @@
 
 		if ( region5D != null )
 		{
-			if (trainingImage.getImageStack() instanceof VirtualStackOfStacks)
+			if (trainingImage.getImageStack() instanceof VirtualStack2)
 			{
-				VirtualStackOfStacks vss = (VirtualStackOfStacks) trainingImage.getStack();
+				VirtualStack2 vss = (VirtualStack2) trainingImage.getStack();
 				imageToClassify = vss.getDataCube(region5D, 0, numThreads);
 			}
 			else
@@ -3351,9 +3351,9 @@
 
 		if ( region5DToClassify != null )
 		{
-			if (trainingImage.getImageStack() instanceof VirtualStackOfStacks)
+			if (trainingImage.getImageStack() instanceof VirtualStack2)
 			{
-				VirtualStackOfStacks vss = (VirtualStackOfStacks) trainingImage.getStack();
+				VirtualStack2 vss = (VirtualStack2) trainingImage.getStack();
 				imageToClassify = vss.getDataCube( region5DToClassify, 0, numThreads );
 
 				logger.info("Loaded " +
@@ -3557,7 +3557,7 @@
 			region5D.subSampling = new Point3D(1, 1, 1);
 
 			// compute feature values for pixels at and around the label
-			VirtualStackOfStacks vss = (VirtualStackOfStacks) trainingImage.getStack();
+			VirtualStack2 vss = (VirtualStack2) trainingImage.getStack();
 
 			FeatureImages featureImages = new FeatureImagesMultiResolution();
 			featureImages.setNumFeatureScales(nFeatureScales);
@@ -4716,7 +4716,7 @@
 
         		return () -> {
 
-        			VirtualStackOfStacks classifiedImageStack = (VirtualStackOfStacks) classifiedImage.getStack();
+        			VirtualStack2 classifiedImageStack = (VirtualStack2) classifiedImage.getStack();
 
         			int sliceDest = (int) region5D.offset.getZ() + z + 1;
         			byte[] pixels = (byte[]) classifiedImageStack.getProcessor(sliceDest).getPixels();
@@ -5658,7 +5658,7 @@
 				public void run()
 				{
 
-					int[] sizesMinMax = de.embl.cba.bigDataToolsutils.Utils.delimitedStringToIntegerArray(sizeRange,",");
+					int[] sizesMinMax = de.embl.cba.bigdataconverterutils.Utils.delimitedStringToIntegerArray(sizeRange,",");
 
 					int zs, ze, zc;
 					if ( zRange.equals("None") )
@@ -5669,7 +5669,7 @@
 					}
 					else
 					{
-						int[] tmp = de.embl.cba.bigDataToolsutils.Utils.delimitedStringToIntegerArray(zRange,",");
+						int[] tmp = de.embl.cba.bigdataconverterutils.Utils.delimitedStringToIntegerArray(zRange,",");
 						zs = tmp[0] - 1; ze = tmp[1] - 1;
 						zc = ( ze + zs ) / 2;
 					}
@@ -5745,9 +5745,9 @@ private static Runnable setClassificationResult(
 
 		return () -> {
 
-			if ( classifiedImage.getStack() instanceof VirtualStackOfStacks )
+			if ( classifiedImage.getStack() instanceof VirtualStack2 )
 			{
-				VirtualStackOfStacks classifiedImageStack = (VirtualStackOfStacks) classifiedImage.getStack();
+				VirtualStack2 classifiedImageStack = (VirtualStack2) classifiedImage.getStack();
 				try
 				{
 					Region5D region5D = ImageUtils.convertIntervalToRegion5D( singleSlice );

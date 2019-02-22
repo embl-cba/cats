@@ -185,7 +185,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
             logService.info( "Naming scheme: " + inputImageVSSScheme );
             logService.info( "Exclusion: " + inputImageVSSPattern );
             logService.info( "Hdf5 data set name: " + inputImageVSSHdf5DataSetName );
-            inputImage = IOUtils.openImageWithLazyLoadingTools( inputImageVSSDirectory, inputImageVSSScheme, inputImageVSSPattern, inputImageVSSHdf5DataSetName );
+            inputImage = IOUtils.openImageLazy( inputImageVSSDirectory, inputImageVSSScheme, inputImageVSSPattern, inputImageVSSHdf5DataSetName );
         }
 
         logService.info( "Loaded image: " + inputImage.getTitle() );

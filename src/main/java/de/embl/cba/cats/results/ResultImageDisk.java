@@ -1,16 +1,16 @@
 package de.embl.cba.cats.results;
 
-import de.embl.cba.bigDataTools.VirtualStackOfStacks.VirtualStackOfStacks;
-import de.embl.cba.bigDataTools.dataStreamingTools.DataStreamingTools;
+import de.embl.cba.bigdataconverter.BigDataConverter;
+import de.embl.cba.bigdataconverter.utils.ImageDataInfo;
+import de.embl.cba.bigdataconverter.virtualstack2.VirtualStack2;
+import de.embl.cba.cats.CATS;
+import de.embl.cba.cats.utils.IntervalUtils;
 import de.embl.cba.utils.logging.Logger;
-import de.embl.cba.bigDataTools.utils.ImageDataInfo;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileSaver;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
-import de.embl.cba.cats.utils.IntervalUtils;
-import de.embl.cba.cats.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -74,7 +74,7 @@ public class ResultImageDisk implements ResultImage {
     @Override
     public ImagePlus getDataCubeCopy( FinalInterval interval )
     {
-        VirtualStackOfStacks vss = (VirtualStackOfStacks)result.getStack();
+        VirtualStack2 vss = (VirtualStack2)result.getStack();
         ImagePlus dataCube = vss.getDataCube( IntervalUtils.convertIntervalToRegion5D( interval ), 1 );
         return dataCube;
     }
@@ -83,12 +83,12 @@ public class ResultImageDisk implements ResultImage {
     {
         // TODO: check for cancel!
 
-        DataStreamingTools dst = new DataStreamingTools();
+        BigDataConverter bdc = new BigDataConverter();
         String tMax = String.format( "%05d", dimensions[ IntervalUtils.T ] );
         String zMax = String.format( "%05d", dimensions[ IntervalUtils.Z ] );
 
         String namingPattern = "classified--C<C01-01>--T<T00001-" + tMax + ">--Z<Z00001-"+zMax+">.tif";
-        de.embl.cba.bigDataTools.utils.ImageDataInfo imageDataInfo = new ImageDataInfo();
+        ImageDataInfo imageDataInfo = new ImageDataInfo();
         imageDataInfo.bitDepth = 8;
         int nIOthreads = 3;
 
@@ -105,7 +105,7 @@ public class ResultImageDisk implements ResultImage {
             fileSaver.saveAsTiff( directory + "/" + "classified--C01--T00001--Z00001.tif" );
         }
 
-        ImagePlus result = dst.openFromDirectory(
+        ImagePlus result = bdc.openFromDirectory(
                 directory,
                 namingPattern,
                 "None",
@@ -126,7 +126,7 @@ public class ResultImageDisk implements ResultImage {
     {
         assert interval.min( IntervalUtils.T ) == interval.max( IntervalUtils.T );
 
-        VirtualStackOfStacks stack = ( VirtualStackOfStacks ) result.getStack();
+        VirtualStack2 stack = ( VirtualStack2 ) result.getStack();
         stack.saveByteCube( resultChunk, interval );
 
     }

@@ -77,7 +77,7 @@ public class ClassificationRangeUtils
     {
         try
         {
-            int[] range = de.embl.cba.bigDataTools.utils.Utils.delimitedStringToIntegerArray( rangeString, "," );
+            int[] range = de.embl.cba.bigdataconverter.utils.Utils.delimitedStringToIntegerArray( rangeString, "," );
 
             if ( inputImage.getNFrames() == 1 )
             {

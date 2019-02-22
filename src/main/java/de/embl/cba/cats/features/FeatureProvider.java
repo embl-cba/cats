@@ -1226,7 +1226,7 @@ public class FeatureProvider
         }
         else
         {
-            impWithinBounds = de.embl.cba.bigDataTools.utils.Utils.getDataCube( inputImage, IntervalUtils.convertIntervalToRegion5D( intersect5D ), 1 );
+            impWithinBounds = de.embl.cba.bigdataconverter.utils.Utils.getDataCube( inputImage, IntervalUtils.convertIntervalToRegion5D( intersect5D ), 1 );
         }
 
         // - copy impWithinBounds into a larger imp
@@ -1292,7 +1292,8 @@ public class FeatureProvider
         }
         else
         {
-            return de.embl.cba.bigDataTools.utils.Utils.getDataCube( inputImage, IntervalUtils.convertIntervalToRegion5D( interval ), 1 );
+            return de.embl.cba.bigdataconverter.utils.Utils.getDataCube(
+            		inputImage, IntervalUtils.convertIntervalToRegion5D( interval ), 1 );
         }
     }
 
