@@ -46,7 +46,6 @@
 
 	<developers>
 		<developer>
-			<id>tischi</id>
 			<name>Christian Tischer</name>
 			<url>http://imagej.net/User:EMBL-CBA</url>
 			<roles>
@@ -61,7 +60,6 @@
 	</developers>
 	<contributors>
 		<contributor>
-			<id>iarganda</id>
 			<name>Ignacio Arganda-Carreras</name>
 			<url>http://imagej.net/User:Iarganda</url>
 		</contributor>
@@ -150,7 +148,7 @@
 		<dependency>
 			<groupId>com.github.mcib3d</groupId>
 			<artifactId>mcib3d-core</artifactId>
-			<version>master-SNAPSHOT</version>
+			<version>3.9</version>
 			<exclusions>
 				<exclusion>  <!-- declare the exclusion here -->
 					<groupId>weka</groupId>
@@ -162,15 +160,8 @@
 		<dependency>
 			<groupId>com.github.mcib3d</groupId>
 			<artifactId>mcib3d-plugins</artifactId>
-			<version>master-SNAPSHOT</version>
+			<version>master-3.9-gb1cad5c-26</version>
 		</dependency>
-
-
-        <!--<dependency>-->
-            <!--<groupId>com.github.ssgpers</groupId>-->
-            <!--<artifactId>java-utils-embl</artifactId>-->
-            <!--<version>572a856481d2d88cfed4405833f9861195a8392b</version>-->
-        <!--</dependency>-->
 
 		<dependency>
 			<groupId>de.embl.cba</groupId>
