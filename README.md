@@ -3,12 +3,12 @@
 
 ## Citation
 
-Christian Tischer. (2019, February 21). embl-cba/fiji-plugin-cats: Register at Zenodo (Version v0.5.0-alpha). Zenodo. http://doi.org/10.5281/zenodo.2574736
+Christian Tischer. (2019, February 21). Fiji Plugin for Context Aware Trainable Segmentation. http://doi.org/10.5281/zenodo.2574736
 
 ## Overview
 
-CATS is a big image data compatible [Fiji](http://fiji.sc/) PlugIn for trainable image segmentation. 
-The code is partly based on Fiji's [Trainable Weka Segmentation](https://github.com/fiji/Trainable_Segmentation) (TWS) PlugIn.
+CATS is a big image data compatible [Fiji](http://fiji.sc/) plugin for trainable image segmentation. 
+The code is partly based on Fiji's [Trainable Weka Segmentation](https://github.com/fiji/Trainable_Segmentation) (TWS) plugin.
 
 Similar to Fiji's [Trainable Weka Segmentation](https://github.com/fiji/Trainable_Segmentation) and the stand-alone software [ilastik](https://www.ilastik.org/), CATS learns an image segmentation from user drawn annotations by computing image features and feeding them into a [Random Forest](https://en.wikipedia.org/wiki/Random_forest) classifier. Again similar to TWS and ilastik, the image features of CATS are based on the Eigenvalues of the [Hessian matrix](https://en.wikipedia.org/wiki/Hessian_matrix) and the [Structure Tensor](https://en.wikipedia.org/wiki/Structure_tensor), which provide rotationally invariant information about edges and ridges in an image's gray-value distribution. 
 
