@@ -3,6 +3,7 @@
 
 ## Citation
 
+Github repository, registered at [ZENODO](https://zenodo.org/):
 - Tischer, C. (2019) CATS, a Fiji plugin for context aware trainable image segmentation. http://doi.org/10.5281/zenodo.2574736
 
 ## Overview
