@@ -1,4 +1,4 @@
-package de.embl.cba.cats.commands;
+package de.embl.cba.cats.ui;
 
 /*
  * To the extent possible under law, the ImageJ developers have waived
@@ -34,7 +34,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import static de.embl.cba.cats.commands.ApplyClassifierCommand.PLUGIN_NAME;
+import static de.embl.cba.cats.ui.ApplyClassifierCommand.PLUGIN_NAME;
 import static de.embl.cba.cats.utils.IntervalUtils.XYZT;
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>"+PLUGIN_NAME )

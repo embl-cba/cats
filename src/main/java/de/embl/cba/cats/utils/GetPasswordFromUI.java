@@ -1,13 +1,8 @@
 package de.embl.cba.cats.utils;
 
-import de.embl.cba.cats.commands.GetPasswordCommand;
-import org.scijava.module.Module;
-import org.scijava.module.ModuleInfo;
 import org.scijava.module.ModuleService;
 import org.scijava.plugin.Parameter;
 import org.scijava.script.ScriptService;
-
-import java.util.concurrent.ExecutionException;
 
 public class GetPasswordFromUI
 {

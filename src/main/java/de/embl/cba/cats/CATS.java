@@ -22,7 +22,7 @@ import de.embl.cba.cats.classification.AttributeSelector;
 import de.embl.cba.cats.classification.ClassifierInstancesMetadata;
 import de.embl.cba.cats.classification.ClassifierManager;
 import de.embl.cba.cats.classification.ClassifierUtils;
-import de.embl.cba.cats.commands.ApplyClassifierOnSlurmCommand;
+import de.embl.cba.cats.ui.ApplyClassifierOnSlurmCommand;
 import de.embl.cba.cats.features.DownSampler;
 import de.embl.cba.cats.features.FeatureProvider;
 import de.embl.cba.cats.featuresettings.FeatureSettings;
@@ -86,8 +86,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static de.embl.cba.cats.utils.IntervalUtils.*;
-
-
 
 /**
  * This class contains all the library methods to perform image segmentation

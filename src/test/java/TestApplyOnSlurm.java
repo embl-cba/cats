@@ -1,5 +1,5 @@
-import de.embl.cba.cats.commands.ApplyClassifierOnSlurmCommand;
-import de.embl.cba.cats.commands.ApplyClassifierCommand;
+import de.embl.cba.cats.ui.ApplyClassifierOnSlurmCommand;
+import de.embl.cba.cats.ui.ApplyClassifierCommand;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.cats.utils.IntervalUtils;
 import ij.IJ;

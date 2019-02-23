@@ -1,4 +1,4 @@
-import de.embl.cba.cats.commands.BatchClassificationOnSlurmCommand;
+import de.embl.cba.cats.ui.BatchClassificationOnSlurmCommand;
 import net.imagej.ImageJ;
 
 public class TestRunSylwiasWorkflowOnSlurm

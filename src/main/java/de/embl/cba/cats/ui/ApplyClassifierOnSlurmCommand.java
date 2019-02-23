@@ -1,4 +1,4 @@
-package de.embl.cba.cats.commands;
+package de.embl.cba.cats.ui;
 
 import de.embl.cba.cluster.ImageJCommandsSubmitter;
 import de.embl.cba.cluster.JobFuture;

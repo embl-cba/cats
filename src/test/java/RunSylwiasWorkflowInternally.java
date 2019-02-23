@@ -1,6 +1,6 @@
 import net.imagej.ImageJ;
-import de.embl.cba.cats.commands.AnalyzeObjectsCommand;
-import de.embl.cba.cats.commands.ApplyClassifierCommand;
+import de.embl.cba.cats.ui.AnalyzeObjectsCommand;
+import de.embl.cba.cats.ui.ApplyClassifierCommand;
 import de.embl.cba.cats.utils.IOUtils;
 
 import java.io.File;

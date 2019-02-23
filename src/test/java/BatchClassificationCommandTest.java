@@ -1,4 +1,4 @@
-import de.embl.cba.cats.commands.BatchClassificationCommand;
+import de.embl.cba.cats.ui.BatchClassificationCommand;
 import net.imagej.ImageJ;
 
 public class BatchClassificationCommandTest

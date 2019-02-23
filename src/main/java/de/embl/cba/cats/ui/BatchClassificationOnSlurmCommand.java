@@ -1,14 +1,12 @@
-package de.embl.cba.cats.commands;
+package de.embl.cba.cats.ui;
 
 import de.embl.cba.cluster.ImageJCommandsSubmitter;
 import de.embl.cba.cluster.JobFuture;
 import de.embl.cba.cluster.JobSettings;
 import de.embl.cba.cluster.SlurmJobMonitor;
-import de.embl.cba.cats.utils.CommandUtils;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.utils.fileutils.PathMapper;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
-import net.imagej.ops.image.ImageNamespace;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;

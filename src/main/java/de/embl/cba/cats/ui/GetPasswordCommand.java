@@ -1,4 +1,4 @@
-package de.embl.cba.cats.commands;
+package de.embl.cba.cats.ui;
 
 import org.scijava.ItemIO;
 import org.scijava.command.Command;

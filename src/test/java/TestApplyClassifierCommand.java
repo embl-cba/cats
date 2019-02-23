@@ -3,7 +3,7 @@ import de.embl.cba.cats.utils.IntervalUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import net.imagej.ImageJ;
-import de.embl.cba.cats.commands.ApplyClassifierCommand;
+import de.embl.cba.cats.ui.ApplyClassifierCommand;
 import net.imglib2.FinalInterval;
 
 import java.io.File;

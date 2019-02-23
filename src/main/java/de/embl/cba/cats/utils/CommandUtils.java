@@ -1,7 +1,7 @@
 package de.embl.cba.cats.utils;
 
 import de.embl.cba.cluster.ImageJCommandsSubmitter;
-import de.embl.cba.cats.commands.ApplyClassifierOnSlurmCommand;
+import de.embl.cba.cats.ui.ApplyClassifierOnSlurmCommand;
 import de.embl.cba.utils.fileutils.PathMapper;
 import ij.IJ;
 import org.scijava.Context;

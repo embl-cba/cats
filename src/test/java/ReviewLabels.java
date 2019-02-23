@@ -10,19 +10,25 @@ public class ReviewLabels
 {
 	public static void main( String[] args )
 	{
-		ImagePlus inputImagePlus = IJ.openImage( ResultsExport2D.class.getResource( "boat2d/boat2d.zip" ).getFile() );
+		ImagePlus inputImage = IJ.openImage( ResultsExport2D.class.getResource( "boat2d/boat2d.zip" ).getFile() );
 
 		new ImageJ();
 
 		CATS cats = new CATS();
-		cats.setInputImage( inputImagePlus );
+		cats.setInputImage( inputImage );
 		cats.setResultImageRAM( );
-		cats.loadInstancesAndMetadata( ResultsExport2D.class.getResource("boat2d/boat2d.ARFF" ).getFile() );
+		cats.loadInstancesAndMetadata(
+				ResultsExport2D.class.getResource("boat2d/boat2d.ARFF" ).getFile() );
 
-		inputImagePlus.show();
+		inputImage.show();
 
 		Overlays overlays = new Overlays( cats );
-		LabelButtonsPanel labelButtonsPanel = new LabelButtonsPanel( cats, overlays );
+		LabelButtonsPanel labelButtonsPanel = new LabelButtonsPanel(
+				cats,
+				overlays,
+				inputImage.getWindow().getLocation(),
+				inputImage.getWindow().getWidth() );
+
 		Listeners listeners = new Listeners( cats, overlays, labelButtonsPanel );
 		cats.reserveKeyboardShortcuts();
 

@@ -1,13 +1,10 @@
-package de.embl.cba.cats.commands;
+package de.embl.cba.cats.ui;
 
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.classification.ClassificationRangeUtils;
 import de.embl.cba.cats.features.ImageScience;
 import de.embl.cba.cats.instances.InstancesAndMetadata;
 import de.embl.cba.cats.results.ResultImageExportGUI;
-import de.embl.cba.cats.ui.LabelButtonsPanel;
-import de.embl.cba.cats.ui.Listeners;
-import de.embl.cba.cats.ui.Overlays;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.cats.utils.IntervalUtils;
 import fiji.util.gui.GenericDialogPlus;
@@ -15,6 +12,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import net.imglib2.FinalInterval;
+import org.scijava.ItemVisibility;
 import org.scijava.command.Command;
 import org.scijava.command.Interactive;
 import org.scijava.plugin.Parameter;
@@ -65,14 +63,14 @@ public class CATSCommand implements Command, Interactive
     public static final String REVIEW_OBJECTS = "Review objects";
     public static final String REVIEW_LABELS = "Review labels";
 	public static final String CREATE_OBJECTS_IMAGE = "Create object image";
-    public static final String UPDATE_LABELS_AND_TRAIN_CLASSIFIER = "Update labels and train classifier";
+    public static final String UPDATE_LABELS_AND_TRAIN_CLASSIFIER =
+            "Update labels and train classifier";
     public static final String LOAD_LABELS_AND_TRAIN_CLASSIFIER = "Load labels and train classifier";
-
     public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
     public static final String CHANGE_DEBUG_SETTINGS = "Change development featuresettings";
 
-    @Parameter( label = "Execute action", callback = "performBasicAction" )
-    private Button performActionButton;
+    @Parameter( label = "Execute Action", callback = "executeAction" )
+    private Button executeActionButton;
 
     @Parameter(label = "Actions", persist = false,
             choices = {
@@ -80,22 +78,20 @@ public class CATSCommand implements Command, Interactive
                     CHANGE_CLASS_NAMES,
                     CHANGE_COLORS,
                     UPDATE_LABEL_INSTANCES,
-                    TRAIN_CLASSIFIER,
-                    APPLY_CLASSIFIER,
                     REVIEW_LABELS,
-//                    IO_SAVE_LABELS,
+                    IO_LOAD_LABEL_INSTANCES,
+                    TRAIN_CLASSIFIER,
                     IO_LOAD_CLASSIFIER,
                     IO_SAVE_CLASSIFIER,
                     APPLY_CLASSIFIER_ON_SLURM,
-                    IO_LOAD_LABEL_INSTANCES,
                     SEGMENT_OBJECTS,
                     REVIEW_OBJECTS,
                     CREATE_OBJECTS_IMAGE,
                     IO_EXPORT_RESULT_IMAGE,
                     CHANGE_FEATURE_SETTINGS,
-//                    CHANGE_RESULT_OVERLAY_OPACITY,
                     CHANGE_CLASSIFIER_SETTINGS,
                     STOP_CLASSIFICATION
+//                    CHANGE_RESULT_OVERLAY_OPACITY,
 //                    UPDATE_LABELS,
 //                    IO_LOAD_LABEL_IMAGE,
 //                    TRAIN_FROM_LABEL_IMAGE,
@@ -106,22 +102,25 @@ public class CATSCommand implements Command, Interactive
 //                    CHANGE_ADVANCED_FEATURE_SETTINGS
             } )
 
-    private String basicActionInput = ADD_CLASS;
+    private String action = ADD_CLASS;
 
-    @Parameter(label = "Classification range", persist = false,
-        choices = { ClassificationRangeUtils.SELECTION_ROI, ClassificationRangeUtils.WHOLE_DATA_SET, ClassificationRangeUtils.SELECTION_PM10Z })
-    private String range = ClassificationRangeUtils.SELECTION_ROI;
+    @Parameter( visibility = ItemVisibility.MESSAGE )
+    private String emptySpace01 = "   \n\n";
 
-    @Parameter( label = "Execute combined actions", callback = "performAdvancedAction" )
-    private Button performAdvancedActionButton;
+    @Parameter( label = "Train Classifier",
+            callback = "updateLabelsAndTrainClassifier" )
+    private Button updateLabelsAndTrainClassifierButton;
 
-    @Parameter(label = "Combined actions", persist = false,
+    @Parameter( label = "Apply Classifier",
+            callback = "applyClassifier" )
+    private Button applyClassifierButton;
+
+    @Parameter(label = "Classification Range", persist = false,
             choices = {
-					UPDATE_LABELS_AND_TRAIN_CLASSIFIER,
-					LOAD_LABELS_AND_TRAIN_CLASSIFIER,
-            } )
-
-    private String advancedActionInput = ADD_CLASS;
+                    ClassificationRangeUtils.SELECTION_ROI,
+                    ClassificationRangeUtils.WHOLE_DATA_SET,
+                    ClassificationRangeUtils.SELECTION_PM10Z })
+    private String range = ClassificationRangeUtils.SELECTION_ROI;
 
 
     /*
@@ -157,7 +156,6 @@ public class CATSCommand implements Command, Interactive
             IJ.showMessage( "Please install ImageScience! [ Help > Update > Manage Update Sites ]" );
         }
 
-
         IJ.setTool( "freeline" );
 
         cats = new CATS( );
@@ -170,7 +168,12 @@ public class CATSCommand implements Command, Interactive
 
         overlays = new Overlays( cats );
 
-        labelButtonsPanel = new LabelButtonsPanel( cats, overlays );
+        labelButtonsPanel = new LabelButtonsPanel(
+                cats,
+                overlays,
+                inputImage.getWindow().getLocation(),
+                inputImage.getWindow().getWidth()
+                );
 
         listeners = new Listeners( cats, overlays, labelButtonsPanel );
 
@@ -178,94 +181,138 @@ public class CATSCommand implements Command, Interactive
 
     }
 
-    protected void performBasicAction()
+    protected void executeAction()
     {
 
-        Thread thread = new Thread(new Runnable()
-        {
-            //exec.submit(new Runnable() {
-            public void run()
-            {
+        Thread thread = new Thread( () -> {
 
-                FinalInterval interval;
-                String[] dirFile;
-                GenericDialogPlus gdWait;
+			FinalInterval interval;
+			String[] dirFile;
+			GenericDialogPlus gdWait;
 
-                switch ( basicActionInput )
-                {
-                    case SEGMENT_OBJECTS:
-                        cats.segmentObjects();
-                        break;
-                    case REVIEW_OBJECTS:
-                        cats.reviewObjects();
-                        break;
-					case CREATE_OBJECTS_IMAGE:
-                        createObjectsImage();
-                        break;
-					case REVIEW_LABELS:
-                        overlays.reviewLabelsInRoiManagerUI( listeners );
-                        break;
-                    case CHANGE_CLASSIFIER_SETTINGS:
-                        cats.showClassifierSettingsDialog();
-                        break;
-                    case CHANGE_FEATURE_SETTINGS:
-                        boolean settingsChanged =
-                                cats.featureSettingsDialog( false );
-						if ( settingsChanged ) saveLabelInstances();
-                        break;
-                    case CHANGE_ADVANCED_FEATURE_SETTINGS:
-                        settingsChanged =
-                                cats.featureSettingsDialog( true );
-                        if ( settingsChanged ) saveLabelInstances();
-                        break;
-                    case IO_LOAD_CLASSIFIER:
-                        dirFile = getOpenDirFile( "Please choose a classifier file" );
-                        cats.loadClassifier( dirFile[ 0 ], dirFile[ 1 ] );
-                        break;
-                    case ADD_CLASS:
-                        String inputName = IOUtils.classNameDialog();
-                        if ( inputName == null ) return;
-                        cats.addClass( inputName );
-                        labelButtonsPanel.updateButtons();
-                        break;
-                    case CHANGE_CLASS_NAMES:
-                        cats.changeClassNamesDialog();
-                        labelButtonsPanel.updateButtons();
-                        break;
-                    case CHANGE_RESULT_OVERLAY_OPACITY:
-                        //showResultsOverlayOpacityDialog();
-                        break;
-                    case CHANGE_COLORS:
-                        overlays.changeClassColorViaGUI( labelButtonsPanel );
-                        break;
-                    case IO_SAVE_CLASSIFIER:
-                        dirFile = getSaveDirFile( "Please choose output file", ".classifier" );
-                        cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
-                        break;
-                    case STOP_CLASSIFICATION:
+			switch ( action )
+			{
+				case SEGMENT_OBJECTS:
+					cats.segmentObjects();
+					break;
+				case REVIEW_OBJECTS:
+					cats.reviewObjects();
+					break;
+				case CREATE_OBJECTS_IMAGE:
+					createObjectsImage();
+					break;
+				case REVIEW_LABELS:
+					overlays.reviewLabelsInRoiManagerUI( listeners );
+					break;
+				case CHANGE_CLASSIFIER_SETTINGS:
+					cats.showClassifierSettingsDialog();
+					break;
+				case CHANGE_FEATURE_SETTINGS:
+					boolean settingsChanged =
+							cats.featureSettingsDialog( false );
+					if ( settingsChanged ) saveLabelInstances();
+					break;
+				case CHANGE_ADVANCED_FEATURE_SETTINGS:
+					settingsChanged =
+							cats.featureSettingsDialog( true );
+					if ( settingsChanged ) saveLabelInstances();
+					break;
+				case IO_LOAD_CLASSIFIER:
+					dirFile = getOpenDirFile( "Please choose a classifier file" );
+					cats.loadClassifier( dirFile[ 0 ], dirFile[ 1 ] );
+					break;
+				case ADD_CLASS:
+					String inputName = IOUtils.classNameDialog();
+					if ( inputName == null ) return;
+					cats.addClass( inputName );
+					labelButtonsPanel.updateButtons();
+					break;
+				case CHANGE_CLASS_NAMES:
+					cats.changeClassNamesDialog();
+					labelButtonsPanel.updateButtons();
+					break;
+				case CHANGE_RESULT_OVERLAY_OPACITY:
+					//showResultsOverlayOpacityDialog();
+					break;
+				case CHANGE_COLORS:
+					overlays.changeClassColorViaGUI( labelButtonsPanel );
+					break;
+				case IO_SAVE_CLASSIFIER:
+					dirFile = getSaveDirFile( "Please choose output file", ".classifier" );
+					cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
+					break;
+				case STOP_CLASSIFICATION:
 
-                        cats.stopCurrentTasks = true;
+					cats.stopCurrentTasks = true;
 
-                        String dotDotDot = "...";
+					String dotDotDot = "...";
 
-                        while ( cats.isBusy )
-                        {
-                            logger.progress( "Waiting for tasks to finish", dotDotDot );
-                            dotDotDot += ".";
-                            try { Thread.sleep( 3000 ); }
-                            catch ( InterruptedException e ) { e.printStackTrace(); };
-                        }
+					while ( cats.isBusy )
+					{
+						logger.progress( "Waiting for tasks to finish", dotDotDot );
+						dotDotDot += ".";
+						try { Thread.sleep( 3000 ); }
+						catch ( InterruptedException e ) { e.printStackTrace(); };
+					}
 
-                        logger.info("...all tasks finished.");
+					logger.info("...all tasks finished.");
 
-                        cats.stopCurrentTasks = false;
-                        break;
+					cats.stopCurrentTasks = false;
+					break;
 
-                    case IO_LOAD_LABEL_INSTANCES:
-                        loadLabelInstances();
-                        break;
+				case IO_LOAD_LABEL_INSTANCES:
+					loadLabelInstances();
+					break;
 
+				case CHANGE_DEBUG_SETTINGS:
+					//showDebugSettingsDialog();
+					break;
 
+				case IO_EXPORT_RESULT_IMAGE:
+					ResultImageExportGUI.showExportGUI(
+							cats.getInputImage().getTitle(),
+							cats.getResultImage(),
+							cats.getInputImage(),
+							cats.getClassNames() );
+					break;
+
+				case APPLY_CLASSIFIER_ON_SLURM:
+
+					if ( ! isSelectionFullWidthAndHeight() )
+					{
+						logger.error( "Classification on cluster is only " +
+                                "possible when the whole xy range of the image " +
+                                "is selected. " +
+								"You could use Ctrl+A on the image to do so. " +
+                                "Or choose to classify the whole data set." );
+						break;
+					}
+
+					dirFile = getSaveDirFile( "Save classifier", ".classifier" );
+					cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
+					cats.applyClassifierOnSlurm( getIntervalFromUI() );
+					break;
+
+				case UPDATE_LABEL_INSTANCES:
+					updateLabelInstances( );
+					break;
+
+				case TRAIN_CLASSIFIER:
+					trainClassifier();
+					break;
+
+                //                    case APPLY_BG_FG_CLASSIFIER:
+//                        //applyBgFgClassification();
+//                        break;
+//                    case TRAIN_FROM_LABEL_IMAGE:
+//                        //trainFromLabelImage();
+//                        break;
+//                    case GET_LABEL_IMAGE_TRAINING_ACCURACIES:
+//                        //computeLabelImageBasedAccuracies();
+//                        break;
+//                    case UPDATE_LABELS:
+//                        //updateLabelsTrainingData();
+//                        break;
 //                    case IO_SAVE_LABELS:
 //                        dirFile = getSaveDirFile( "Save file", instancesFilename, ".ARFF" );
 //                        instancesFilename = dirFile[ 1 ];
@@ -279,72 +326,23 @@ public class CATSCommand implements Command, Interactive
 //                    case RECOMPUTE_LABEL_FEATURE_VALUES:
 //                        //recomputeLabelFeaturesAndRetrainClassifier();
 //                        break;
-
-                    case CHANGE_DEBUG_SETTINGS:
-                        //showDebugSettingsDialog();
-                        break;
-
-                    case IO_EXPORT_RESULT_IMAGE:
-                        ResultImageExportGUI.showExportGUI(
-                                cats.getInputImage().getTitle(),
-                                cats.getResultImage(),
-                                cats.getInputImage(),
-                                cats.getClassNames() );
-                        break;
-
-                    case APPLY_CLASSIFIER:
-
-                        if ( cats.hasClassifier() )
-                        {
-                            cats.applyClassifierWithTiling( getIntervalFromUI() );
-                            overlays.showProbabilities();
-                        }
-                        else
-                        {
-                            IJ.showMessage("Please train a classifier first." );
-                        }
-
-                        break;
-
-                    case APPLY_CLASSIFIER_ON_SLURM:
-
-                        if ( ! isSelectionFullWidthAndHeight() )
-                        {
-                            logger.error( "Classification on cluster is only possible when the whole xy range of the image is selected. " +
-                                    "You could use Ctrl+A on the image to do so. Or choose to classify the whole data set." );
-                            break;
-                        }
-
-                        dirFile = getSaveDirFile( "Save classifier", ".classifier" );
-                        cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
-                        cats.applyClassifierOnSlurm( getIntervalFromUI() );
-                        break;
-
-//                    case APPLY_BG_FG_CLASSIFIER:
-//                        //applyBgFgClassification();
-//                        break;
-//                    case TRAIN_FROM_LABEL_IMAGE:
-//                        //trainFromLabelImage();
-//                        break;
-//                    case GET_LABEL_IMAGE_TRAINING_ACCURACIES:
-//                        //computeLabelImageBasedAccuracies();
-//                        break;
-//                    case UPDATE_LABELS:
-//                        //updateLabelsTrainingData();
-//                        break;
-
-                    case UPDATE_LABEL_INSTANCES:
-                        updateLabelInstances( );
-                        break;
-
-                    case TRAIN_CLASSIFIER:
-                        trainClassifier();
-                        break;
-                }
-            }
-        } );
+			}
+		} );
 
         thread.start();
+    }
+
+    private void applyClassifier()
+    {
+        if ( cats.hasClassifier() )
+		{
+			cats.applyClassifierWithTiling( getIntervalFromUI() );
+			overlays.showProbabilities();
+		}
+		else
+		{
+			IJ.showMessage("Please train a classifier first." );
+		}
     }
 
     private boolean isSelectionFullWidthAndHeight()
@@ -478,33 +476,10 @@ public class CATSCommand implements Command, Interactive
 		return null;
     }
 
-    protected void performAdvancedAction()
+    private void updateLabelsAndTrainClassifier()
     {
-
-        Thread thread = new Thread(new Runnable()
-        {
-            //exec.submit(new Runnable() {
-            public void run()
-            {
-
-                switch ( advancedActionInput )
-                {
-
-                    case UPDATE_LABELS_AND_TRAIN_CLASSIFIER:
-                        updateLabelInstances();
-                        trainClassifier();
-                        break;
-
-                    case LOAD_LABELS_AND_TRAIN_CLASSIFIER:
-                        loadLabelInstances();
-                        trainClassifier();
-                        break;
-
-                }
-            }
-        } );
-
-        thread.start();
+        updateLabelInstances();
+        trainClassifier();
     }
 
     private void createObjectsImage()

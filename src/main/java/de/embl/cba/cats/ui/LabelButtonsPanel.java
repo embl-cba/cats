@@ -15,19 +15,31 @@ public class LabelButtonsPanel extends JPanel implements ActionListener
     final Overlays overlays;
     JFrame frame;
 
-    public LabelButtonsPanel( CATS cats, Overlays overlays )
+    public LabelButtonsPanel( CATS cats, Overlays overlays, Point location, int width )
     {
         this.cats = cats;
         this.overlays = overlays;
 
+        addButtons();
+        setFrameAndLocation( location, width );
+        createAndShowGUI( );
+    }
+
+    private void addButtons()
+    {
         buttons = new ArrayList<>(  );
 
         for ( int i = 0; i < 2; ++i )
         {
             addLabelButton( i );
         }
+    }
 
-        createAndShowGUI( );
+    private void setFrameAndLocation( Point location, int width )
+    {
+        this.frame = new JFrame( "Labels" );
+        location.x = location.x + width;
+        frame.setLocation( location );
     }
 
     private JButton addLabelButton( int classIndex )
@@ -130,7 +142,6 @@ public class LabelButtonsPanel extends JPanel implements ActionListener
     {
 
         //Create and set up the window.
-        frame = new JFrame( "Labels" );
         frame.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
 
         //Create and set up the content pane.

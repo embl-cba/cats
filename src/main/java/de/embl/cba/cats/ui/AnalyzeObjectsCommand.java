@@ -1,4 +1,4 @@
-package de.embl.cba.cats.commands;
+package de.embl.cba.cats.ui;
 
 import de.embl.cba.cluster.commands.Commands;
 import de.embl.cba.cats.utils.IOUtils;
@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static de.embl.cba.cats.commands.AnalyzeObjectsCommand.PLUGIN_NAME;
+import static de.embl.cba.cats.ui.AnalyzeObjectsCommand.PLUGIN_NAME;
 
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>" + PLUGIN_NAME )

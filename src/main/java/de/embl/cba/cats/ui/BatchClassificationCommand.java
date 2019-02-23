@@ -1,12 +1,8 @@
-package de.embl.cba.cats.commands;
+package de.embl.cba.cats.ui;
 
-import de.embl.cba.cluster.ImageJCommandsSubmitter;
-import de.embl.cba.cluster.JobFuture;
-import de.embl.cba.cluster.SlurmJobMonitor;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import ij.IJ;
-import ij.Prefs;
 import org.scijava.command.Command;
 import org.scijava.command.CommandModule;
 import org.scijava.command.CommandService;
@@ -15,9 +11,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

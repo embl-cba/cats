@@ -1,6 +1,6 @@
 import de.embl.cba.cats.utils.IOUtils;
 import net.imagej.ImageJ;
-import de.embl.cba.cats.commands.AnalyzeObjectsCommand;
+import de.embl.cba.cats.ui.AnalyzeObjectsCommand;
 
 import java.io.File;
 import java.util.HashMap;

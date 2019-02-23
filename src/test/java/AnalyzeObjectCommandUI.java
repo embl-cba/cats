@@ -1,9 +1,5 @@
-import de.embl.cba.cats.commands.AnalyzeObjectsCommand;
-import de.embl.cba.cats.utils.IOUtils;
+import de.embl.cba.cats.ui.AnalyzeObjectsCommand;
 import net.imagej.ImageJ;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class AnalyzeObjectCommandUI
 {
