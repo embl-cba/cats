@@ -1,6 +1,10 @@
 
 # Context Aware Trainable Segmentation (CATS)
 
+## Citation
+
+Christian Tischer. (2019, February 21). embl-cba/fiji-plugin-cats: Register at Zenodo (Version v0.5.0-alpha). Zenodo. http://doi.org/10.5281/zenodo.2574736
+
 ## Overview
 
 CATS is a big image data compatible [Fiji](http://fiji.sc/) PlugIn for trainable image segmentation. 
