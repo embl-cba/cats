@@ -21,7 +21,7 @@ package de.embl.cba.cats.features;
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
-import de.embl.cba.cats.featuresettings.FeatureSettings;
+import de.embl.cba.cats.features.settings.FeatureSettings;
 import de.embl.cba.utils.logging.Logger;
 import de.embl.cba.cats.CATS;
 import ij.IJ;

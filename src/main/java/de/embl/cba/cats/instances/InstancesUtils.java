@@ -1,7 +1,7 @@
 package de.embl.cba.cats.instances;
 
 import de.embl.cba.cats.labels.Label;
-import de.embl.cba.cats.featuresettings.FeatureSettings;
+import de.embl.cba.cats.features.settings.FeatureSettings;
 import de.embl.cba.utils.logging.Logger;
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
@@ -9,7 +9,7 @@ import net.imglib2.FinalInterval;
 import de.embl.cba.cats.*;
 import de.embl.cba.cats.features.FeatureProvider;
 import de.embl.cba.cats.results.ResultImage;
-import de.embl.cba.cats.featuresettings.FeatureSettingsUtils;
+import de.embl.cba.cats.features.settings.FeatureSettingsUtils;
 import de.embl.cba.cats.utils.IntervalUtils;
 import weka.core.Attribute;
 import weka.core.DenseInstance;

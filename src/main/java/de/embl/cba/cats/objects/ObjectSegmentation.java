@@ -86,8 +86,8 @@ public class ObjectSegmentation
 
     private void setThreshold( float threshold )
     {
-        settings.threshold = threshold; // (float) cats.getResultImage().getProbabilityRange() * (float) featuresettings.probabilityThreshold;
-//        featuresettings.threshold  = ensureThresholdWithinRange( featuresettings.threshold  );
+        settings.threshold = threshold; // (float) cats.getResultImage().getProbabilityRange() * (float) settings.probabilityThreshold;
+//        settings.threshold  = ensureThresholdWithinRange( settings.threshold  );
     }
 
     private SegmentedObjects getSegmentedObjects( ImageInt labelMask )

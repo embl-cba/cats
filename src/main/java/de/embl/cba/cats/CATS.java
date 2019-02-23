@@ -13,6 +13,12 @@
 * You should have received a copy of the GNU General Public License
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*
+* Authors: Christian Tischer (Christian.Tischer@EMBL.DE)
+*
+* Substantial parts of the code are taken from:
+* 		https://github.com/fiji/Trainable_Segmentation
+*
 */
 
 package de.embl.cba.cats;
@@ -25,8 +31,8 @@ import de.embl.cba.cats.classification.ClassifierUtils;
 import de.embl.cba.cats.ui.ApplyClassifierOnSlurmCommand;
 import de.embl.cba.cats.features.DownSampler;
 import de.embl.cba.cats.features.FeatureProvider;
-import de.embl.cba.cats.featuresettings.FeatureSettings;
-import de.embl.cba.cats.featuresettings.FeatureSettingsUtils;
+import de.embl.cba.cats.features.settings.FeatureSettings;
+import de.embl.cba.cats.features.settings.FeatureSettingsUtils;
 import de.embl.cba.cats.instances.InstancesAndMetadata;
 import de.embl.cba.cats.instances.InstancesManager;
 import de.embl.cba.cats.instances.InstancesUtils;
@@ -1398,7 +1404,7 @@ public class CATS
 
 		if ( ! featureSettings.equals( loadedFeatureSettings ) )
 		{
-			logger.info( "Feature featuresettings have been changed!" );
+			logger.info( "Feature settings have been changed!" );
 		}
 
 		featureSettings = loadedFeatureSettings;
@@ -1647,13 +1653,13 @@ public class CATS
         }
 
 
-        logger.info( "Setting feature computation featuresettings from loaded instances..." );
+        logger.info( "Setting feature computation settings from loaded instances..." );
 
 		final FeatureSettings loadedFeatureSettings = FeatureSettingsUtils.getFeatureSettingsFromInstancesMetadata( instancesAndMetadata );
 
 		if ( ! featureSettings.equals( loadedFeatureSettings ) )
 		{
-			logger.info( "Feature featuresettings have been changed!" );
+			logger.info( "Feature settings have been changed!" );
 		}
 
 		featureSettings = loadedFeatureSettings;

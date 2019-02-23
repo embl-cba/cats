@@ -1,4 +1,4 @@
-package de.embl.cba.cats.featuresettings;
+package de.embl.cba.cats.features.settings;
 
 import de.embl.cba.cats.features.DownSampler;
 import de.embl.cba.cats.instances.InstancesAndMetadata;

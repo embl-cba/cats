@@ -67,7 +67,7 @@ public class CATSCommand implements Command, Interactive
             "Update labels and train classifier";
     public static final String LOAD_LABELS_AND_TRAIN_CLASSIFIER = "Load labels and train classifier";
     public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
-    public static final String CHANGE_DEBUG_SETTINGS = "Change development featuresettings";
+    public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
 
     @Parameter( label = "Execute Action", callback = "executeAction" )
     private Button executeActionButton;
