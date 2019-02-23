@@ -1,5 +1,5 @@
 
-# Context Aware Trainable Segmentation (CATS)
+# CATS - Context Aware Trainable Segmentation
 
 ## Citation
 
