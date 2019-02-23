@@ -3,7 +3,7 @@
 
 ## Citation
 
-Christian Tischer. (2019, February 21). Fiji Plugin for Context Aware Trainable Segmentation. http://doi.org/10.5281/zenodo.2574736
+- Tischer, C. (2019) Fiji Plugin for Context Aware Trainable Segmentation. http://doi.org/10.5281/zenodo.2574736
 
 ## Overview
 
