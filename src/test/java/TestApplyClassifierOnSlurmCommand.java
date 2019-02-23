@@ -14,7 +14,7 @@ import java.util.Map;
 import static de.embl.cba.cats.utils.IntervalUtils.Z;
 
 
-public class TestApplyOnSlurm
+public class TestApplyClassifierOnSlurmCommand
 {
 
     public static void main ( String... args )
@@ -22,7 +22,7 @@ public class TestApplyOnSlurm
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        ImagePlus imp = IJ.openImage( TestApplyOnSlurm.class.getResource( "fib-sem--cell--8x8x8nm.zip" ).getFile() );
+        ImagePlus imp = IJ.openImage( TestApplyClassifierOnSlurmCommand.class.getResource( "fib-sem--cell--8x8x8nm.zip" ).getFile() );
 
         FinalInterval fullImageInterval = IntervalUtils.getInterval( imp );
         long[] min = new long[ 5 ];

@@ -52,7 +52,9 @@ public class ResultsExport
 
         try
         {
-            SpimDataMinimal spimData = Imaris.openIms( ResultsExport.class.getResource("3d-objects-export/meta.ims" ).getFile() );
+            SpimDataMinimal spimData = Imaris.openIms(
+                    ResultsExport.class.getResource(
+                            "3d-objects-export/meta.ims" ).getFile() );
             BdvFunctions.show( spimData );
         }
         catch ( IOException e )

@@ -87,22 +87,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static de.embl.cba.cats.utils.IntervalUtils.*;
 
-/**
- * This class contains all the library methods to perform image segmentation
- * based on the Weka classifiersComboBox.
- */
+
 public class CATS
 {
-
-	/**
-	 * maximum number of classes (labels) allowed
-	 */
 	public static final int MAX_NUM_CLASSES = 20;
 	public static final String RESULT_IMAGE_DISK_SINGLE_TIFF = "Disk";
 	public static final String RESULT_IMAGE_RAM = "RAM";
 
-
-	/** available classColors for available classes */
     public Color[] classColors = new Color[]{
             Color.gray,
             Color.green,
@@ -128,12 +119,7 @@ public class CATS
     };
 
 	public String resultImageType = RESULT_IMAGE_RAM;
-
-	/**
-	 * image to be used in the instances
-	 */
 	private ImagePlus inputImage;
-
 	private ResultImage resultImage = null;
 	private ObjectReview objectReview;
 
@@ -180,6 +166,7 @@ public class CATS
 
 	public void setResultImageBgFg( ResultImage resultImageBgFg )
 	{
+
 		this.resultImageBgFg = resultImageBgFg;
 	}
 

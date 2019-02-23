@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 import static de.embl.cba.cats.utils.IntervalUtils.T;
 
-public class MitochondriaLabelImageTraining
+public class LabelImageTrainingMitochondria
 {
 
     final static String ROOT_PATH = "/Users/tischer/Documents/segmentation-challenges/mitochondria/";

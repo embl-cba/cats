@@ -10,7 +10,8 @@ import java.util.ArrayList;
 
 import static de.embl.cba.cats.utils.IntervalUtils.*;
 
-public class TrainLabel {
+public class LabelImageTrainingBrain
+{
 
     final static String ROOT_PATH = "/Volumes/cba/tischer/segmentation-challenges--data/brainiac/";
     // final static String ROOT_PATH = "/g/cba/tischer/segmentation-challenges--data/brainiac/";

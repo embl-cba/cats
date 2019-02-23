@@ -105,7 +105,7 @@ public class CATSCommand implements Command, Interactive
     private String action = ADD_CLASS;
 
     @Parameter( visibility = ItemVisibility.MESSAGE )
-    private String emptySpace01 = "   \n\n";
+    private String emptySpace01 = "\n\n";
 
     @Parameter( label = "Train Classifier",
             callback = "updateLabelsAndTrainClassifier" )

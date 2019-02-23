@@ -14,11 +14,10 @@ import static de.embl.cba.cats.utils.IntervalUtils.*;
 
 public class ClassificationRangeUtils
 {
-    public static final String SELECTION_ROI = "Selected roi";
+    public static final String SELECTION_ROI = "Selected ROI";
     public static final String WHOLE_DATA_SET = "Whole data set";
-    public static final String SELECTION_PM10Z = "Selected roi +/-10 z-slices";
+    public static final String SELECTION_PM10Z = "Selected ROI +/-10 z-slices";
     static Logger logger = CATS.logger;
-
 
     public static FinalInterval getIntervalFromRoi( ImagePlus inputImage, String rangeString )
     {

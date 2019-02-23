@@ -7,7 +7,7 @@ import ij.IJ;
 import java.io.File;
 import java.util.ArrayList;
 
-public class Tobias
+public class APIExample02
 {
 
 	final static String IMAGES_DIR = "/Volumes/almfspim/tischi/test_tobi";

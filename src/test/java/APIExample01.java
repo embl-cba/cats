@@ -3,7 +3,7 @@ import de.embl.cba.cats.results.ResultExportSettings;
 import de.embl.cba.cats.results.ResultImage;
 import ij.IJ;
 
-public class TestMinimalAPI
+public class APIExample01
 {
 	public static void main( String[] args )
 	{

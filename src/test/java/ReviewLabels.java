@@ -10,7 +10,8 @@ public class ReviewLabels
 {
 	public static void main( String[] args )
 	{
-		ImagePlus inputImage = IJ.openImage( ResultsExport2D.class.getResource( "boat2d/boat2d.zip" ).getFile() );
+		ImagePlus inputImage = IJ.openImage(
+				ResultsExport2D.class.getResource( "boat2d/boat2d.zip" ).getFile() );
 
 		new ImageJ();
 

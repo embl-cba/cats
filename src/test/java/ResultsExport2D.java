@@ -14,7 +14,8 @@ public class ResultsExport2D
 	{
 		new ImageJ();
 
-		ImagePlus inputImagePlus = IJ.openImage( ResultsExport2D.class.getResource( "boat2d/boat2d.zip" ).getFile() );
+		ImagePlus inputImagePlus = IJ.openImage(
+				ResultsExport2D.class.getResource( "boat2d/boat2d.zip" ).getFile() );
 
 		CATS cats = new CATS();
 		cats.setInputImage( inputImagePlus );
