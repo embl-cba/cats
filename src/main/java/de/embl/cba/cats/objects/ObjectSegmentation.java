@@ -185,9 +185,10 @@ public class ObjectSegmentation
         resultExportSettings.binning = settings.binning;
         resultExportSettings.classLutWidth = cats.getResultImage().getProbabilityRange();
 
-        ImagePlus probabilities =  ResultExport.getBinnedClassImageMemoryEfficient(
-                settings.classId, resultExportSettings, settings.t,
-                cats.getLogger(), cats.numThreads );
+        ImagePlus probabilities =
+                ResultExport.getBinnedClassImageMemoryEfficient(
+                    settings.classId, resultExportSettings, settings.t,
+                    cats.getLogger(), cats.numThreads );
 
         probabilities.setTitle( "probabilities" );
 

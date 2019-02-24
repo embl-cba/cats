@@ -137,7 +137,7 @@ public abstract class ResultExport
             de.embl.cba.utils.logging.Logger logger, int numThreads )
     {
 
-        logger.info( "\nComputing binned probability image using " + numThreads + " threads." );
+        logger.info( "\nComputing probability image, using " + numThreads + " threads." );
 
         int nz = (int) resultExportSettings.resultImage.getDimensions()[ Z ];
         int nx = (int) resultExportSettings.resultImage.getDimensions()[ X ];
@@ -147,7 +147,11 @@ public abstract class ResultExport
         int dy = resultExportSettings.binning[1];
         int dz = resultExportSettings.binning[2];
 
-        ImageStack binnedStack = new ImageStack( nx / dx, ny / dy,  (int) Math.ceil( 1.0 * nz / dz ) );
+        ImageStack binnedStack =
+                new ImageStack(
+                        nx / dx,
+                        ny / dy,
+                        (int) Math.ceil( 1.0 * nz / dz ) );
 
         long startTime = System.currentTimeMillis();
 
@@ -194,7 +198,8 @@ public abstract class ResultExport
         exe.shutdown();
         System.gc();
 
-        ImagePlus binnedClassImage = new ImagePlus( "binned_class_" + classId, binnedStack );
+        ImagePlus binnedClassImage =
+                new ImagePlus( "binned_class_" + classId, binnedStack );
 
         return binnedClassImage;
     }

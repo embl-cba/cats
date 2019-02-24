@@ -135,19 +135,14 @@ Saves the current pixel classifier to disk such that it can be reused, e.g. usin
 
 Loads a classifier such that it can be applied on the current image.
 
+#### Change feature settings
+
+Shows a user interface for changing the image feature settings.
+
 #### Apply classifier on slurm cluster
 
 Applies the current cluster by sending jobs to a slurm managed computer cluster.
 In addition to access to such a cluster, this also requires that all data (input image, output probabilities, and a classifier) are stored in a location that is accessible to the cluster nodes.
-
-#### Segment objects
-
-Performs a simple thresholding based object segmentation on the pixel probabilities.
-This function does currently __not work__ on "big image data", i.e. all data must fit into the computers RAM.
-
-#### Review objects
-
-Allows one to browse through the segmented objects.
 
 ### Further information
 

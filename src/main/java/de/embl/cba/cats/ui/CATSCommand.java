@@ -19,6 +19,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.Button;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -83,9 +84,9 @@ public class CATSCommand implements Command, Interactive
                     IO_LOAD_CLASSIFIER,
                     IO_SAVE_CLASSIFIER,
                     APPLY_CLASSIFIER_ON_SLURM,
-                    SEGMENT_OBJECTS,
-                    REVIEW_OBJECTS,
-                    CREATE_OBJECTS_IMAGE,
+//                    SEGMENT_OBJECTS,   // TODO
+//                    REVIEW_OBJECTS,	// TODO
+//                    CREATE_OBJECTS_IMAGE, // TODO
                     CHANGE_FEATURE_SETTINGS,
                     CHANGE_CLASSIFIER_SETTINGS,
 //                    TRAIN_CLASSIFIER,
@@ -337,15 +338,16 @@ public class CATSCommand implements Command, Interactive
 
 	private void applyClassifier()
     {
-        if ( cats.hasClassifier() )
-		{
-			cats.applyClassifierWithTiling( getIntervalFromUI() );
-			overlays.showProbabilities();
-		}
-		else
-		{
-			IJ.showMessage("Please train a classifier first." );
-		}
+		SwingUtilities.invokeLater( () -> {
+			if ( cats.hasClassifier() )
+			{
+				cats.applyClassifierWithTiling( getIntervalFromUI() );
+				overlays.showProbabilities();
+			} else
+			{
+				IJ.showMessage( "Please train a classifier first." );
+			}
+		});
     }
 
     private boolean isSelectionFullWidthAndHeight()
@@ -481,8 +483,10 @@ public class CATSCommand implements Command, Interactive
 
     private void updateLabelsAndTrainClassifier()
     {
-        updateLabelInstances();
-        trainClassifier();
+		SwingUtilities.invokeLater( () -> {
+			updateLabelInstances();
+			trainClassifier();
+		} );
     }
 
     private void createObjectsImage()
