@@ -338,16 +338,18 @@ public class CATSCommand implements Command, Interactive
 
 	private void applyClassifier()
     {
-		SwingUtilities.invokeLater( () -> {
+		new Thread( () ->
+		{
 			if ( cats.hasClassifier() )
 			{
 				cats.applyClassifierWithTiling( getIntervalFromUI() );
 				overlays.showProbabilities();
-			} else
+			}
+			else
 			{
 				IJ.showMessage( "Please train a classifier first." );
 			}
-		});
+		}).start();
     }
 
     private boolean isSelectionFullWidthAndHeight()
@@ -483,10 +485,10 @@ public class CATSCommand implements Command, Interactive
 
     private void updateLabelsAndTrainClassifier()
     {
-		SwingUtilities.invokeLater( () -> {
+		new Thread( () -> {
 			updateLabelInstances();
 			trainClassifier();
-		} );
+		} ).start();
     }
 
     private void createObjectsImage()
