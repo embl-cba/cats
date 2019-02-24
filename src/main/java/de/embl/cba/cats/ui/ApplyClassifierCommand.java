@@ -37,7 +37,7 @@ import java.util.Map;
 import static de.embl.cba.cats.ui.ApplyClassifierCommand.PLUGIN_NAME;
 import static de.embl.cba.cats.utils.IntervalUtils.XYZT;
 
-@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>"+PLUGIN_NAME )
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>CATS>"+PLUGIN_NAME )
 public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 {
     public static final String PLUGIN_NAME = "Apply Classifier";

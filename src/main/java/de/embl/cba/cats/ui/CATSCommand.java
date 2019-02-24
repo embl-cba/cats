@@ -26,7 +26,7 @@ import static de.embl.cba.cats.CATS.logger;
 import static de.embl.cba.cats.utils.IOUtils.getOpenDirFile;
 import static de.embl.cba.cats.utils.IOUtils.getSaveDirFile;
 
-@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>CATS", initializer = "init")
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>CATS>CATS", initializer = "init")
 public class CATSCommand implements Command, Interactive
 {
     public static final String ARFF = ".ARFF";
@@ -52,7 +52,7 @@ public class CATSCommand implements Command, Interactive
     public static final String IO_SAVE_LABELS = "Save label instances of current image";
     public static final String IO_EXPORT_RESULT_IMAGE = "Export results";
     public static final String TRAIN_FROM_LABEL_IMAGE = "Train from label image";
-    public static final String APPLY_CLASSIFIER_ON_SLURM = "Apply classifier on cluster";
+    public static final String APPLY_CLASSIFIER_ON_SLURM = "Apply classifier on slurm cluster";
     public static final String APPLY_BG_FG_CLASSIFIER = "Apply BgFg classifier (development)";
     public static final String DUPLICATE_RESULT_IMAGE_TO_RAM = "Show result image";
     public static final String GET_LABEL_IMAGE_TRAINING_ACCURACIES = "Label image training accuracies";
@@ -77,20 +77,19 @@ public class CATSCommand implements Command, Interactive
                     ADD_CLASS,
                     CHANGE_CLASS_NAMES,
                     CHANGE_COLORS,
-                    UPDATE_LABEL_INSTANCES,
-                    REVIEW_LABELS,
+					IO_EXPORT_RESULT_IMAGE,
+					REVIEW_LABELS,
                     IO_LOAD_LABEL_INSTANCES,
-                    TRAIN_CLASSIFIER,
                     IO_LOAD_CLASSIFIER,
                     IO_SAVE_CLASSIFIER,
                     APPLY_CLASSIFIER_ON_SLURM,
                     SEGMENT_OBJECTS,
                     REVIEW_OBJECTS,
                     CREATE_OBJECTS_IMAGE,
-                    IO_EXPORT_RESULT_IMAGE,
                     CHANGE_FEATURE_SETTINGS,
                     CHANGE_CLASSIFIER_SETTINGS,
-                    STOP_CLASSIFICATION
+//                    TRAIN_CLASSIFIER,
+//                    UPDATE_LABEL_INSTANCES,
 //                    CHANGE_RESULT_OVERLAY_OPACITY,
 //                    UPDATE_LABELS,
 //                    IO_LOAD_LABEL_IMAGE,
@@ -122,6 +121,9 @@ public class CATSCommand implements Command, Interactive
                     ClassificationRangeUtils.SELECTION_PM10Z })
     private String range = ClassificationRangeUtils.SELECTION_ROI;
 
+	@Parameter( label = "Interrupt Classifier",
+			callback = "interruptClassifier" )
+	private Button interruptClassifierButton;
 
     /*
     @Parameter( visibility = ItemVisibility.MESSAGE )
@@ -241,27 +243,9 @@ public class CATSCommand implements Command, Interactive
 					dirFile = getSaveDirFile( "Please choose output file", ".classifier" );
 					cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
 					break;
-				case STOP_CLASSIFICATION:
-
-					cats.stopCurrentTasks = true;
-
-					String dotDotDot = "...";
-
-					while ( cats.isBusy )
-					{
-						logger.progress( "Waiting for tasks to finish", dotDotDot );
-						dotDotDot += ".";
-						try { Thread.sleep( 3000 ); }
-						catch ( InterruptedException e ) { e.printStackTrace(); };
-					}
-
-					logger.info("...all tasks finished.");
-
-					cats.stopCurrentTasks = false;
-					break;
-
 				case IO_LOAD_LABEL_INSTANCES:
 					loadLabelInstances();
+					trainClassifier();
 					break;
 
 				case CHANGE_DEBUG_SETTINGS:
@@ -332,7 +316,26 @@ public class CATSCommand implements Command, Interactive
         thread.start();
     }
 
-    private void applyClassifier()
+	private void interruptClassification()
+	{
+		cats.stopCurrentTasks = true;
+
+		String dotDotDot = "...";
+
+		while ( cats.isBusy )
+		{
+			logger.progress( "Waiting for tasks to finish", dotDotDot );
+			dotDotDot += ".";
+			try { Thread.sleep( 3000 ); }
+			catch ( InterruptedException e ) { e.printStackTrace(); };
+		}
+
+		logger.info("...all tasks finished.");
+
+		cats.stopCurrentTasks = false;
+	}
+
+	private void applyClassifier()
     {
         if ( cats.hasClassifier() )
 		{

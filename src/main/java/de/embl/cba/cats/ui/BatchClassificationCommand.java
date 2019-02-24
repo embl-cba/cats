@@ -18,7 +18,7 @@ import java.util.concurrent.Future;
 
 import static de.embl.cba.cats.utils.Utils.getSimpleString;
 
-@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>Batch Classification" )
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>CATS>Apply Classifier in Batch Mode" )
 public class BatchClassificationCommand implements Command
 {
 	@Parameter
@@ -103,7 +103,8 @@ public class BatchClassificationCommand implements Command
 		parameters.put( "inputImageVSSPattern", "" );
 		parameters.put( "inputImageVSSHdf5DataSetName", "" );
 
-		final Future< CommandModule > run = commandService.run( ApplyClassifierCommand.class, true, parameters );
+		final Future< CommandModule > run = commandService.run(
+				ApplyClassifierCommand.class, true, parameters );
 
 		while ( ! run.isDone() )
 		{

@@ -27,7 +27,7 @@ import static de.embl.cba.cats.utils.IntervalUtils.*;
 import static de.embl.cba.cats.utils.Utils.getSimpleString;
 
 
-@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>Apply Classifier On Slurm" )
+@Plugin(type = Command.class, menuPath = "Plugins>Segmentation>CATS>Apply Classifier on Slurm" )
 public class ApplyClassifierOnSlurmCommand implements Command
 {
 

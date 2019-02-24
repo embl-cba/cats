@@ -13,12 +13,12 @@ public class RunCatsCommand
         ij.ui().showUI();
 
         ImagePlus imp = IJ.openImage(
-                RunCatsCommand.class.getResource( "boat2d/boat2d.zip" ).getFile() );
+                RunCatsCommand.class.getResource(
+                        "fib-sem-cell/fib-sem--cell--8x8x8nm.zip" ).getFile() );
 
 		imp.show();
 
         ij.command().run( CATSCommand.class, true );
-
     }
 
 
