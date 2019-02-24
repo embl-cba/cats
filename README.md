@@ -98,7 +98,7 @@ The following folder structure proved to work well:
 
 To train a pixel classifier, the freehand line tool from ImageJ is used to draw labels on the image. One can assign labels to a certain class by either
 - clicking the respective button in the "Labels" window, or
-- typing the keyboard short-cuts 1,2,... 
+- typing respective the keyboard short-cuts 1,2,... 
 
 Once a couple of labels have been added one can click __[Train Classifier]__, which will compute image features and train a random forest classifier. Every time the training is finished a file dialog will prompt the user to save the training data to disk. This ensures that the valuable training data, containing all the manually drawn labels is always safe.
 
@@ -158,7 +158,7 @@ In addition to access to such a cluster, this also requires that all data (input
 - Open your input image in ImageJ
 - Start CATS
 - Choose the corresponding probabilities folder 
-- Use the "Load labels" action to load your annotations.
+- Use the "Load labels" action to load your previous annotations (stored in a ".ARFF" text file).
 
 #### Logging
 
