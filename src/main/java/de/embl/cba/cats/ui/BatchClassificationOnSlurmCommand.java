@@ -161,10 +161,12 @@ public class BatchClassificationOnSlurmCommand implements Command
 
     }
 
-    private ArrayList< JobFuture > submitJobsOnSlurm( String imageJ, Path jobDirectory, Path classifierPath, List< Path > dataSetPatterns )
+    private ArrayList< JobFuture > submitJobsOnSlurm(
+            String imageJ, Path jobDirectory, Path classifierPath, List< Path > dataSetPatterns )
     {
 
-        ImageJCommandsSubmitter commandsSubmitter = getImageJCommandsSubmitter( imageJ, jobDirectory );
+        ImageJCommandsSubmitter commandsSubmitter = getImageJCommandsSubmitter(
+                imageJ, jobDirectory );
 
         JobSettings jobSettings = getJobSettings();
 
@@ -201,7 +203,8 @@ public class BatchClassificationOnSlurmCommand implements Command
     }
 
 
-    private void setCommandAndParameterStrings( ImageJCommandsSubmitter commandsSubmitter, Path inputImagePath, Path classifierPath )
+    private void setCommandAndParameterStrings(
+            ImageJCommandsSubmitter commandsSubmitter, Path inputImagePath, Path classifierPath )
     {
 
         Map< String, Object > parameters = new HashMap<>();
