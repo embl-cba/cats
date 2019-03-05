@@ -67,9 +67,8 @@ public class CATSCommand implements Command, Interactive
     public static final String SEGMENT_OBJECTS = "Segment objects";
     public static final String REVIEW_OBJECTS = "Review objects";
     public static final String REVIEW_LABELS = "Review labels";
-	public static final String CREATE_OBJECTS_IMAGE = "Create object image";
-    public static final String UPDATE_LABELS_AND_TRAIN_CLASSIFIER =
-            "Update labels and train classifier";
+    public static final String CREATE_OBJECTS_IMAGE = "Create object image";
+    public static final String UPDATE_LABELS_AND_TRAIN_CLASSIFIER = "Update labels and train classifier";
     public static final String LOAD_LABELS_AND_TRAIN_CLASSIFIER = "Load labels and train classifier";
     public static final String RECOMPUTE_LABEL_FEATURE_VALUES = "Recompute all feature values";
     public static final String CHANGE_DEBUG_SETTINGS = "Change development settings";
@@ -106,7 +105,7 @@ public class CATSCommand implements Command, Interactive
 //                    CHANGE_ADVANCED_FEATURE_SETTINGS
             } )
 
-    private String action = ADD_CLASS;
+	private String action = ADD_CLASS;
 
 	@Parameter( visibility = ItemVisibility.MESSAGE )
 	private String space03 = "\n";
@@ -117,20 +116,18 @@ public class CATSCommand implements Command, Interactive
 	@Parameter( visibility = ItemVisibility.MESSAGE )
 	private String space04 = "\n";
 
-	@Parameter( label = "Train Classifier",
-            callback = "updateLabelsAndTrainClassifier" )
-    private Button updateLabelsAndTrainClassifierButton;
+	@Parameter( label = "Train Classifier", callback = "updateLabelsAndTrainClassifier" )
+	private Button updateLabelsAndTrainClassifierButton;
 
-    @Parameter( label = "Apply Classifier",
+	@Parameter( label = "Apply Classifier",
             callback = "applyClassifier" )
-    private Button applyClassifierButton;
+	private Button applyClassifierButton;
 
-    @Parameter(label = "Classification Range", persist = false,
-            choices = {
+	@Parameter(label = "Classification Range", persist = false, choices = {
                     ClassificationRangeUtils.SELECTION_ROI,
                     ClassificationRangeUtils.WHOLE_DATA_SET,
                     ClassificationRangeUtils.SELECTION_PM10Z })
-    private String range = ClassificationRangeUtils.SELECTION_ROI;
+	private String range = ClassificationRangeUtils.SELECTION_ROI;
 
 	@Parameter( label = "Interrupt Classifier",
 			callback = "interruptClassifier" )
