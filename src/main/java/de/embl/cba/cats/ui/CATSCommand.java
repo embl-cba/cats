@@ -108,10 +108,16 @@ public class CATSCommand implements Command, Interactive
 
     private String action = ADD_CLASS;
 
-    @Parameter( visibility = ItemVisibility.MESSAGE )
-    private String space01 = "\n\n";
+	@Parameter( visibility = ItemVisibility.MESSAGE )
+	private String space03 = "\n";
 
-    @Parameter( label = "Train Classifier",
+	@Parameter( visibility = ItemVisibility.MESSAGE )
+	private String line01 = "________________________";
+
+	@Parameter( visibility = ItemVisibility.MESSAGE )
+	private String space04 = "\n";
+
+	@Parameter( label = "Train Classifier",
             callback = "updateLabelsAndTrainClassifier" )
     private Button updateLabelsAndTrainClassifierButton;
 
@@ -131,7 +137,13 @@ public class CATSCommand implements Command, Interactive
 	private Button interruptClassifierButton;
 
 	@Parameter( visibility = ItemVisibility.MESSAGE )
-	private String space03 = "\n\n\n";
+	private String space05 = "\n";
+
+	@Parameter( visibility = ItemVisibility.MESSAGE )
+	private String line02 = "________________________";
+
+	@Parameter( visibility = ItemVisibility.MESSAGE )
+	private String space06 = "\n";
 
 	@Parameter( label = "Usage Instructions",
 			callback = "instructions" )
