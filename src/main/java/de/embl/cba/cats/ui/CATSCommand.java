@@ -19,13 +19,17 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.Button;
 
-import javax.swing.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Set;
 
 import static de.embl.cba.cats.CATS.logger;
 import static de.embl.cba.cats.utils.IOUtils.getOpenDirFile;
 import static de.embl.cba.cats.utils.IOUtils.getSaveDirFile;
+import static java.awt.Desktop.getDesktop;
+import static java.awt.Desktop.isDesktopSupported;
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>CATS>CATS", initializer = "init")
 public class CATSCommand implements Command, Interactive
@@ -105,7 +109,7 @@ public class CATSCommand implements Command, Interactive
     private String action = ADD_CLASS;
 
     @Parameter( visibility = ItemVisibility.MESSAGE )
-    private String emptySpace01 = "\n\n";
+    private String space01 = "\n\n";
 
     @Parameter( label = "Train Classifier",
             callback = "updateLabelsAndTrainClassifier" )
@@ -125,6 +129,22 @@ public class CATSCommand implements Command, Interactive
 	@Parameter( label = "Interrupt Classifier",
 			callback = "interruptClassifier" )
 	private Button interruptClassifierButton;
+
+	@Parameter( visibility = ItemVisibility.MESSAGE )
+	private String space03 = "\n\n\n";
+
+	@Parameter( label = "Usage Instructions",
+			callback = "instructions" )
+	private Button helpButton;
+
+	@Parameter( label = "How to Cite",
+			callback = "cite" )
+	private Button citeButton;
+
+	@Parameter( label = "Report Issues",
+			callback = "issues" )
+	private Button issuesButton;
+
 
     /*
     @Parameter( visibility = ItemVisibility.MESSAGE )
@@ -468,13 +488,15 @@ public class CATSCommand implements Command, Interactive
             else if ( selectedInstances.size() == 1 )
             {
                 String key = selectedInstances.get( 0 );
-                final InstancesAndMetadata instancesAndMetadata = cats.getInstancesManager().getInstancesAndMetadata( selectedInstances.get( 0 ) );
+                final InstancesAndMetadata instancesAndMetadata =
+						cats.getInstancesManager().getInstancesAndMetadata( selectedInstances.get( 0 ) );
                 cats.trainClassifierWithFeatureSelection( instancesAndMetadata );
                 return key + ".classifier";
             }
             else
             {
-                final InstancesAndMetadata combinedInstancesAndMetadata = cats.getInstancesManager().getCombinedInstancesAndMetadata( selectedInstances );
+                final InstancesAndMetadata combinedInstancesAndMetadata =
+						cats.getInstancesManager().getCombinedInstancesAndMetadata( selectedInstances );
                 cats.trainClassifierWithFeatureSelection( combinedInstancesAndMetadata );
                 return "combined.classifier";
             }
@@ -520,5 +542,36 @@ public class CATSCommand implements Command, Interactive
         }
     }
 
+    private void instructions()
+	{
+		openURL( "https://github.com/embl-cba/fiji-plugin-cats#using-cats" );
+	}
+
+	private void cite()
+	{
+		openURL( "https://github.com/embl-cba/fiji-plugin-cats#citation" );
+	}
+
+	private void issues()
+	{
+		openURL( "https://github.com/embl-cba/fiji-plugin-cats/issues" );
+	}
+
+
+	public static void openURL( String url )
+	{
+		if ( isDesktopSupported() ) {
+			try {
+				final URI uri = new URI( url );
+				getDesktop().browse(uri);
+			} catch (URISyntaxException uriEx) {
+				logger.error(uriEx.toString());
+			} catch (IOException ioEx) {
+				logger.error(ioEx.toString());
+			}
+		} else {
+			logger.error("Could not open web browser...");
+		}
+	}
 
 }

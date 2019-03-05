@@ -39,7 +39,7 @@ public class FeatureSettings
 
     public boolean onlyUseDifferenceFeatures;
 
-    public boolean normalize = false;
+    public boolean normalize;
 
 	public boolean equals( FeatureSettings featureSettings )
     {
