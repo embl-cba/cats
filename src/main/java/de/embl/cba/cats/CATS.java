@@ -1376,8 +1376,11 @@ public class CATS
 
 	public void loadClassifier( String directory, String filename )
 	{
-		ClassifierInstancesMetadata classifierInstancesMetadata = ClassifierUtils.loadClassifierInstancesMetadata( directory, filename );
-		final FeatureSettings loadedFeatureSettings = FeatureSettingsUtils.getFeatureSettingsFromInstancesMetadata( classifierInstancesMetadata.instancesAndMetadata );
+		ClassifierInstancesMetadata classifierInstancesMetadata =
+				ClassifierUtils.loadClassifierInstancesMetadata( directory, filename );
+		final FeatureSettings loadedFeatureSettings =
+				FeatureSettingsUtils.getFeatureSettingsFromInstancesMetadata(
+						classifierInstancesMetadata.instancesAndMetadata );
 
 		if ( ! featureSettings.equals( loadedFeatureSettings ) )
 		{

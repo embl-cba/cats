@@ -142,11 +142,11 @@ public class CATSCommand implements Command, Interactive
 	@Parameter( visibility = ItemVisibility.MESSAGE )
 	private String space06 = "\n";
 
-	@Parameter( label = "Usage Instructions",
+	@Parameter( label = "Help",
 			callback = "instructions" )
 	private Button helpButton;
 
-	@Parameter( label = "How to Cite",
+	@Parameter( label = "Cite",
 			callback = "cite" )
 	private Button citeButton;
 
@@ -252,6 +252,7 @@ public class CATSCommand implements Command, Interactive
 				case IO_LOAD_CLASSIFIER:
 					dirFile = getOpenDirFile( "Please choose a classifier file" );
 					cats.loadClassifier( dirFile[ 0 ], dirFile[ 1 ] );
+					labelButtonsPanel.updateButtons();
 					break;
 				case ADD_CLASS:
 					String inputName = IOUtils.classNameDialog();
@@ -270,7 +271,8 @@ public class CATSCommand implements Command, Interactive
 					overlays.changeClassColorViaGUI( labelButtonsPanel );
 					break;
 				case IO_SAVE_CLASSIFIER:
-					dirFile = getSaveDirFile( "Please choose output file", ".classifier" );
+					dirFile = getSaveDirFile(
+							"Please choose output file", ".classifier" );
 					cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
 					break;
 				case IO_LOAD_LABEL_INSTANCES:
@@ -401,9 +403,7 @@ public class CATSCommand implements Command, Interactive
         final String key = cats.loadInstancesAndMetadata( dirFile[ 0 ], dirFile[ 1 ] );
         labelButtonsPanel.updateButtons();
         if ( key.equals( inputImage.getTitle() ) )
-		{
 			labelButtonsPanel.setLabellingInformations();
-		}
     }
 
     private void updateLabelInstances( )

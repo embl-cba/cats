@@ -49,7 +49,8 @@ public class FeatureSettings
         if ( ! ( activeChannels.equals( featureSettings.activeChannels ) ) ) return false;
         if ( ! ( classNames.equals( featureSettings.classNames ) ) ) return false;
         if ( ! ( downSamplingMethod == featureSettings.downSamplingMethod ) ) return false;
-        if ( ! ( boundingBoxExpansionsForGeneratingInstancesFromLabels.equals( featureSettings.boundingBoxExpansionsForGeneratingInstancesFromLabels ) ) ) return false;
+        if ( ! ( boundingBoxExpansionsForGeneratingInstancesFromLabels.equals(
+        		featureSettings.boundingBoxExpansionsForGeneratingInstancesFromLabels ) ) ) return false;
         if ( ! ( binFactors.equals( featureSettings.binFactors ) ) ) return false;
         if ( ! ( smoothingScales.equals( featureSettings.smoothingScales ) ) ) return false;
         if ( ! ( computeGaussian == featureSettings.computeGaussian ) ) return false;
