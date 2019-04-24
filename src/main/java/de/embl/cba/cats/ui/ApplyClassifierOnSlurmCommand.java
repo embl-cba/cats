@@ -185,8 +185,7 @@ public class ApplyClassifierOnSlurmCommand implements Command
     {
 
         String dataSetID = getDataSetID( inputImagePath );
-
-
+        
         Map< String, Object > parameters = new HashMap<>();
 
         String intervalXYZT = getIntervalAsCsvString( tile );

@@ -545,26 +545,33 @@ public abstract class ResultExport
     {
         Duplicator duplicator = new Duplicator();
 
-        ImagePlus impClass = duplicator.run( settings.resultImagePlus, 1, 1, 1, settings.resultImagePlus.getNSlices(), t + 1, t + 1 );
+        ImagePlus impClass = duplicator.run( settings.resultImagePlus,
+                1, 1,
+                1, settings.resultImagePlus.getNSlices(),
+                t + 1, t + 1 );
 
         applyClassIntensityGate( classId, settings, impClass );
 
-        convertToProperBitDepth( impClass, settings, classId );
+        convertToProperBitDepth( impClass, settings );
 
         return ( impClass );
 
     }
 
-    private static void applyClassIntensityGate( int classId, ResultExportSettings settings, ImagePlus impClass )
+    private static void applyClassIntensityGate(
+            int classId,
+            ResultExportSettings settings,
+            ImagePlus impClass )
     {
-        int[] intensityGate = new int[]{ classId * settings.classLutWidth + 1, (classId + 1 ) * settings.classLutWidth };
+        int[] intensityGate = new int[]{
+                classId * settings.classLutWidth + 1,
+                (classId + 1 ) * settings.classLutWidth };
 
         applyIntensityGate( impClass, intensityGate );
     }
 
     public static void convertToProperBitDepth( ImagePlus impClass,
-                                                ResultExportSettings settings,
-                                                int classId )
+                                                ResultExportSettings settings )
     {
         int factorToFillBitDepth = (int) ( 255.0  / settings.classLutWidth );
 
@@ -580,6 +587,7 @@ public abstract class ResultExport
             factorToFillBitDepth = (int) ( 255.0  / settings.classLutWidth );
         }
 
-        IJ.run( impClass, "Multiply...", "value=" + factorToFillBitDepth + " stack");
+        IJ.run( impClass, "Multiply...", "value=" +
+                factorToFillBitDepth + " stack");
     }
 }

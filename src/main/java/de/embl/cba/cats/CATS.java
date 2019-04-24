@@ -5,7 +5,6 @@ import de.embl.cba.cats.classification.AttributeSelector;
 import de.embl.cba.cats.classification.ClassifierInstancesMetadata;
 import de.embl.cba.cats.classification.ClassifierManager;
 import de.embl.cba.cats.classification.ClassifierUtils;
-import de.embl.cba.cats.ui.ApplyClassifierOnSlurmCommand;
 import de.embl.cba.cats.features.DownSampler;
 import de.embl.cba.cats.features.FeatureProvider;
 import de.embl.cba.cats.features.settings.FeatureSettings;
@@ -25,8 +24,8 @@ import de.embl.cba.cats.results.ResultImage;
 import de.embl.cba.cats.results.ResultImageDisk;
 import de.embl.cba.cats.results.ResultImageFrameSetter;
 import de.embl.cba.cats.results.ResultImageRAM;
+import de.embl.cba.cats.ui.ApplyClassifierOnSlurmCommand;
 import de.embl.cba.cats.utils.*;
-import de.embl.cba.cats.weka.fastRandomForest.FastRandomForest;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import de.embl.cba.utils.logging.Logger;
 import fiji.util.gui.GenericDialogPlus;
@@ -1360,6 +1359,7 @@ public class CATS
 	 */
 	public void setFeatureSettings( FeatureSettings featureSettings )
 	{
+
 		this.featureSettings = featureSettings;
 	}
 
@@ -2455,7 +2455,9 @@ public class CATS
 	 * and current classifier featureSettings
 	 * and current active features
 	 */
-	public String trainClassifier( InstancesAndMetadata instancesAndMetadata, int[] attIndicesWindow  )
+	public String trainClassifier(
+			InstancesAndMetadata instancesAndMetadata,
+			int[] attIndicesWindow  )
 	{
 		isTrainingCompleted = false;
 
@@ -2529,7 +2531,8 @@ public class CATS
             // ...and keep the classifier, only with used instances (important for feature computation)
             // also note that the "buildClassifier" command above takes care of reassigning the attribute
             // ids on the tree nodes to only account for the used attributes.
-            classifierKey = getClassifierManager().setClassifier( classifier, instancesAndMetadataAttributeSubset );
+            classifierKey = getClassifierManager().
+					setClassifier( classifier, instancesAndMetadataAttributeSubset );
         }
         else
         {
@@ -3129,81 +3132,81 @@ public class CATS
 			boolean isLogging )
 	{
 
-		return new Runnable() {
+		return () -> {
 
-			public void run()
+			if ( Thread.currentThread().isInterrupted() )
+				return;
+
+			final int FIRST_CLASS_ID = 0, SECOND_CLASS_ID = 1, FIRST_CLASS_PROB = 2,
+					SECOND_CLASS_PROB = 3, NUM_TREES_EVALUATED = 4;
+
+
+			FinalInterval interval = featureProvider.getInterval();
+
+			// create reusable instance
+			double[] featureValues = new double[ featureProvider.getNumActiveFeatures() + 1 ];
+			final ReusableDenseInstance ins = new ReusableDenseInstance(
+					1.0,
+					featureValues );
+			ins.setDataset( instancesHeader );
+
+			// create empty reusable feature slice
+			double[][][] featureSlice = null;
+
+			// create empty, reusable results array
+			double[] result = null;
+
+			try
 			{
-
-				if ( Thread.currentThread().isInterrupted() )
-					return;
-
-				final int FIRST_CLASS_ID = 0, SECOND_CLASS_ID = 1, FIRST_CLASS_PROB = 2,
-						SECOND_CLASS_PROB = 3, NUM_TREES_EVALUATED = 4;
-
-
-				FinalInterval interval = featureProvider.getInterval();
-
-				// create reusable instance
-				double[] featureValues = new double[ featureProvider.getNumActiveFeatures() + 1 ];
-				final ReusableDenseInstance ins = new ReusableDenseInstance( 1.0, featureValues );
-				ins.setDataset( instancesHeader );
-
-				// create empty reusable feature slice
-				double[][][] featureSlice = null;
-
-				// create empty, reusable results array
-				double[] result = null;
-
-				try
+				for ( long z = zMin; z <= zMax; ++z )
 				{
-
-					for ( long z = zMin; z <= zMax; ++z )
+					if ( isLogging )
 					{
-						if ( isLogging )
-						{
-							// logger.info( "Classifying slice " + z + "...; chunk of this thread contains: min = " + zMin + ", max = " + zMax  );
-						}
+						// logger.info( "Classifying slice " + z + "...; chunk of this thread contains: min = " + zMin + ", max = " + zMax  );
+					}
 
-						featureSlice = featureProvider.getCachedFeatureSlice( ( int ) z );
-						if ( featureSlice == null )
-						{
-							featureSlice = featureProvider.getReusableFeatureSlice();
-							featureProvider.setFeatureSlicesValues( ( int ) z, featureSlice, numThreads );
-						}
+					featureSlice = featureProvider.getCachedFeatureSlice( ( int ) z );
+					if ( featureSlice == null )
+					{
+						featureSlice = featureProvider.getReusableFeatureSlice();
+						featureProvider.setFeatureSlicesValues( ( int ) z,
+								featureSlice, numThreads );
+					}
 
-						for ( long y = interval.min( Y ); y <= interval.max( Y ); ++y )
+					for ( long y = interval.min( Y ); y <= interval.max( Y ); ++y )
+					{
+						for ( long x = interval.min( X ); x <= interval.max( X ); ++x )
 						{
-							for ( long x = interval.min( X ); x <= interval.max( X ); ++x )
+
+							// set instance values
+							featureValues =
+									featureProvider.getValuesFromFeatureSlice(
+											( int ) x, ( int ) y, featureSlice );
+							ins.setValues( 1.0, featureValues );
+
+							result = classifier.distributionForInstance( ins, accuracy );
+
+							double certainty = ( result[ FIRST_CLASS_PROB ] - result[ SECOND_CLASS_PROB ] );
+
+							resultSetter.set( x, y, z, ( int ) result[ FIRST_CLASS_ID ], certainty );
+
+							pixelsClassified.incrementAndGet();
+
+							// record tree usage stats
+							rfStatsTreesEvaluated.addAndGet( ( int ) result[ NUM_TREES_EVALUATED ] );
+							if ( result[ NUM_TREES_EVALUATED ] > classifierStatsMaximumTreesUsed.get() )
 							{
-
-								// set instance values
-								featureValues = featureProvider.getValuesFromFeatureSlice( ( int ) x, ( int ) y, featureSlice );
-								ins.setValues( 1.0, featureValues );
-
-								result = classifier.distributionForInstance( ins, accuracy );
-
-								double certainty = ( result[ FIRST_CLASS_PROB ] - result[ SECOND_CLASS_PROB ] );
-
-								resultSetter.set( x, y, z, ( int ) result[ FIRST_CLASS_ID ], certainty );
-
-								pixelsClassified.incrementAndGet();
-
-								// record tree usage stats
-								rfStatsTreesEvaluated.addAndGet( ( int ) result[ NUM_TREES_EVALUATED ] );
-								if ( result[ NUM_TREES_EVALUATED ] > classifierStatsMaximumTreesUsed.get() )
-								{
-									classifierStatsMaximumTreesUsed.set( ( int ) result[ NUM_TREES_EVALUATED ] );
-								}
+								classifierStatsMaximumTreesUsed.set( ( int ) result[ NUM_TREES_EVALUATED ] );
 							}
 						}
 					}
-
-				} catch ( Exception e )
-				{
-					IJ.showMessage( "Could not apply Classifier!" );
-					e.printStackTrace();
-					return;
 				}
+
+			} catch ( Exception e )
+			{
+				IJ.showMessage( "Could not apply Classifier!" );
+				e.printStackTrace();
+				return;
 			}
 		};
 	}

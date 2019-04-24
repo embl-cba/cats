@@ -1,8 +1,9 @@
 package de.embl.cba.cats.classification;
 
 import de.embl.cba.cats.CATS;
-import de.embl.cba.cats.weka.fastRandomForest.FastRandomForest;
 import de.embl.cba.cats.instances.InstancesAndMetadata;
+import de.embl.cba.classifiers.weka.FastRandomForest;
+
 import weka.core.Attribute;
 import weka.core.Instances;
 
@@ -20,6 +21,7 @@ public class ClassifierUtils {
             FastRandomForest classifier,
             Instances instances)
     {
+
 
         CATS.logger.info( "\n# Classifier characteristics");
 

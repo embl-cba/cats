@@ -1,7 +1,7 @@
 package de.embl.cba.cats.classification;
 
+import de.embl.cba.classifiers.weka.FastRandomForest;
 import de.embl.cba.utils.logging.Logger;
-import de.embl.cba.cats.weka.fastRandomForest.*;
 import weka.core.Instances;
 
 import java.util.ArrayList;
@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import static de.embl.cba.cats.classification.ClassifierUtils.getAttributesSortedByUsage;
 
 public abstract class AttributeSelector {
-
 
     public static ArrayList< Integer > getGonersBasedOnUsage(
             FastRandomForest classifier,
