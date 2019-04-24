@@ -56,7 +56,7 @@ public class CallableResultImageBinner
 //            binned.setTitle( "binned-" + classId );
 //            binned.show();
 
-            ResultExport.convertToProperBitDepth( binned, settings, classId );
+            ResultExport.convertToProperBitDepth( binned, settings );
 //            binned.setTitle( "binned-bitdepth-" + classId );
 //            binned.show();
 

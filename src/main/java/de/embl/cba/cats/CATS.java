@@ -26,6 +26,7 @@ import de.embl.cba.cats.results.ResultImageFrameSetter;
 import de.embl.cba.cats.results.ResultImageRAM;
 import de.embl.cba.cats.ui.ApplyClassifierOnSlurmCommand;
 import de.embl.cba.cats.utils.*;
+import de.embl.cba.classifiers.weka.FastRandomForest;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import de.embl.cba.utils.logging.Logger;
 import fiji.util.gui.GenericDialogPlus;

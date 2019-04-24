@@ -2,12 +2,15 @@ package de.embl.cba.cats.classification;
 
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.instances.InstancesAndMetadata;
-import de.embl.cba.cats.weka.fastRandomForest.FastRandomForest;
+import de.embl.cba.classifiers.weka.FastRandomForest;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instances;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.*;
 
 public class ClassifierManager {

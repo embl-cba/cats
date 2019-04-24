@@ -167,12 +167,6 @@
 <!--		</dependency>-->
 
 		<dependency>
-			<groupId>com.github.mcib3d</groupId>
-			<artifactId>mcib3d-plugins</artifactId>
-			<version>master-3.9-gb1cad5c-26</version>
-		</dependency>
-
-		<dependency>
 			<groupId>de.embl.cba</groupId>
 			<artifactId>fiji_plugin_bigDataProcessor</artifactId>
 			<version>0.5.56</version>
@@ -280,6 +274,18 @@
 		<dependency>
 			<groupId>cisd</groupId>
 			<artifactId>jhdf5</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.mcib3d</groupId>
+			<artifactId>mcib3d-plugins</artifactId>
+			<version>master-3.9-gb1cad5c-26</version>
+			<exclusions>
+				<exclusion>  <!-- declare the exclusion here -->
+					<groupId>weka</groupId>
+					<artifactId>weka</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 	</dependencies>

@@ -21,8 +21,6 @@ public class ClassifierUtils {
             FastRandomForest classifier,
             Instances instances)
     {
-
-
         CATS.logger.info( "\n# Classifier characteristics");
 
         int numDecisionNodes = classifier.getDecisionNodes();
