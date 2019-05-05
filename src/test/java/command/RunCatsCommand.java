@@ -1,3 +1,5 @@
+package command;
+
 import de.embl.cba.cats.ui.CATSCommand;
 import ij.IJ;
 import ij.ImagePlus;
@@ -13,8 +15,7 @@ public class RunCatsCommand
         ij.ui().showUI();
 
         ImagePlus imp = IJ.openImage(
-                RunCatsCommand.class.getResource(
-                        "blobs/input/blobs_00.tif" ).getFile() );
+               "/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/blobs/input/blobs_00.tif" );
 
 		imp.show();
 

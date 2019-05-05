@@ -3,7 +3,6 @@ package de.embl.cba.cats.classification;
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.instances.InstancesAndMetadata;
 import de.embl.cba.classifiers.weka.FastRandomForest;
-
 import weka.core.Attribute;
 import weka.core.Instances;
 
@@ -116,29 +115,30 @@ public class ClassifierUtils {
     public static ClassifierInstancesMetadata loadClassifierInstancesMetadata( String directory, String filename )
     {
         String filepath = directory + File.separator + filename;
-
         CATS.logger.info("\n# Loading classifier from " + filepath + " ..." );
-
         ClassifierInstancesMetadata classifierInstancesMetadata = new ClassifierInstancesMetadata();
 
         try
         {
             File selected = new File( filepath );
-
-            InputStream is = new FileInputStream(selected);
+            InputStream is = new FileInputStream( selected );
             ObjectInputStream objectInputStream = new ObjectInputStream(is);
 
-            classifierInstancesMetadata.classifier = (FastRandomForest) objectInputStream.readObject();
-            classifierInstancesMetadata.instancesAndMetadata = new InstancesAndMetadata( (Instances ) objectInputStream.readObject() );
-            classifierInstancesMetadata.instancesAndMetadata.moveMetadataFromInstancesToMetadata();
 
+            classifierInstancesMetadata.classifier = ( FastRandomForest )
+                    objectInputStream.readObject();
+
+            classifierInstancesMetadata.instancesAndMetadata =
+                    new InstancesAndMetadata( (Instances ) objectInputStream.readObject() );
+
+            classifierInstancesMetadata.instancesAndMetadata.moveMetadataFromInstancesToMetadata();
             objectInputStream.close();
 
         }
         catch (Exception e)
         {
             CATS.logger.error("Error while loading classifier!");
-            CATS.logger.info(e.toString());
+            CATS.logger.error(e.toString());
             return null;
         }
 

@@ -62,12 +62,12 @@ public class ClassifierManager {
                 .instancesAndMetadata
                 .getInstances()
                 .enumerateAttributes() ) );
-
     }
 
     public Instances getInstancesHeader( String key )
     {
-        Instances instancesHeader = new Instances( classifiers.get( key ).instancesAndMetadata.getInstances(), 1 );
+        Instances instancesHeader = new Instances(
+                classifiers.get( key ).instancesAndMetadata.getInstances(), 1 );
 
         return ( instancesHeader );
     }
@@ -81,9 +81,7 @@ public class ClassifierManager {
         ArrayList< String > attributeNames = new ArrayList<>();
 
         for ( Attribute attribute : attributes )
-        {
             attributeNames.add( attribute.name() );
-        }
 
         return ( attributeNames );
     }

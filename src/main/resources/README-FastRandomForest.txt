@@ -50,7 +50,7 @@ Ave, Cambridge, MA 02139, USA.
 Using from own Java code
 ------------------------
 
-Just add FastRandomForest.jar to your Java VM classpath by using the -cp 
+Just add FastRandomForest.jar to your Java VM classpath by using the -cp
 switch, or by changing project dependencies in NetBeans/Eclipse/whatever IDE 
 you use. Then use FastRandomForest as you would use
 any other classifier, see instructions at the WekaWiki:
@@ -91,7 +91,7 @@ in the "Classify" tab. Enjoy.
 Using from Weka Explorer or Experimenter (3-5-7 or earlier)
 -----------------------------------------------------------
 
-1. Add the FastRandomForest.jar to your Java classpath when starting Weka. This 
+1. Add the FastRandomForest.jar to your Java classpath when starting Weka. This
 is normally done by editing the line beginning with �cp=� in �RunWeka.ini�
 If "cp=" doesn't exist, search for "cmd_default=" and add after "#wekajar#;".
 

@@ -1366,7 +1366,7 @@ public class CATS
 
 	public void loadClassifier( File file )
 	{
-		loadClassifier( file.getParent().toString(),  file.getName().toString() );
+		loadClassifier( file.getParent(), file.getName() );
 	}
 
 	public void loadClassifier( String filePath )
@@ -1384,9 +1384,7 @@ public class CATS
 						classifierInstancesMetadata.instancesAndMetadata );
 
 		if ( ! featureSettings.equals( loadedFeatureSettings ) )
-		{
 			logger.info( "Feature settings have been changed!" );
-		}
 
 		featureSettings = loadedFeatureSettings;
 
