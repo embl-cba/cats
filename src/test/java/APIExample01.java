@@ -28,6 +28,8 @@ public class APIExample01
 		// cats.setResultImageDisk( directory );
 		cats.setResultImageRAM();
 
+		cats.setNumThreads( 4 );
+
 		// load classifier (to be trained and saved before using the UI)
 		cats.loadClassifier( classifierPath );
 

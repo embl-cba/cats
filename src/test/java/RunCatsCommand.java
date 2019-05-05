@@ -14,7 +14,7 @@ public class RunCatsCommand
 
         ImagePlus imp = IJ.openImage(
                 RunCatsCommand.class.getResource(
-                        "fib-sem-cell/fib-sem--cell--8x8x8nm.zip" ).getFile() );
+                        "blobs/input/blobs_00.tif" ).getFile() );
 
 		imp.show();
 
