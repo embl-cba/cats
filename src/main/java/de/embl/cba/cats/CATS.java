@@ -130,17 +130,17 @@ public class CATS
         new MacroInstaller().install(macros);
     }
 
-    public void setMaxMemory( long maxMemory )
+    public void setMaxMemoryBytes( long maxMemory )
 	{
-		this.maxMemory = maxMemory;
+		this.maxMemoryBytes = maxMemory;
 	}
 
-	public long getMaxMemory( )
+	public long getMaxMemoryBytes( )
 	{
-		return maxMemory;
+		return maxMemoryBytes;
 	}
 
-	private long maxMemory;
+	private long maxMemoryBytes;
 
 	public ResultImage getResultImageBgFg()
 	{
@@ -292,6 +292,11 @@ public class CATS
 		threadsRegion = (int) ( Math.sqrt( numThreads ) + 0.5 );
 		threadsPerRegion = (int) ( Math.sqrt( numThreads ) + 0.5 );
 		threadsClassifierTraining = numThreads;
+	}
+
+	public int getNumThreads()
+	{
+		return numThreads;
 	}
 
 	public int numThreads;
@@ -913,7 +918,7 @@ public class CATS
 
 		labelManager = new LabelManager();
 
-		maxMemory = IJ.maxMemory();
+		setMaxMemoryBytes( IJ.maxMemory() );
 
 		setNumThreads( Prefs.getThreads() );
 
@@ -2056,13 +2061,10 @@ public class CATS
 	public long getMaximalNumberOfVoxelsPerRegion( int numFeatures )
 	{
 		long currentMemory = IJ.currentMemory();
-
-		long freeMemory = maxMemory - currentMemory;
-
+		long freeMemory = maxMemoryBytes - currentMemory;
 		double maxNumVoxelsPerRegion =  1.0 * freeMemory;
 		maxNumVoxelsPerRegion /= 1.0 * getApproximatelyNeededBytesPerVoxel( numFeatures );
 		maxNumVoxelsPerRegion /= 1.0 * threadsRegion * threadsPerRegion;
-
 		return (long) maxNumVoxelsPerRegion;
 	}
 
@@ -2075,18 +2077,12 @@ public class CATS
 
 	public int getMaximalRegionWidth( int numFeatures )
 	{
-
 		int maxRegionWidth;
 
 		if ( isInputImage2D() || this.featureSettings.anisotropy > 10 )
-		{
 			maxRegionWidth = ( int ) Math.pow( getMaximalNumberOfVoxelsPerRegion( numFeatures ), 1.0 / 2.0 );
-		}
 		else
-		{
 			maxRegionWidth = ( int ) Math.pow( getMaximalNumberOfVoxelsPerRegion( numFeatures ), 1.0 / 3.0 );
-		}
-
 
 		// remove borders, which go into the memory
 		// considerations, but should not be explicitly

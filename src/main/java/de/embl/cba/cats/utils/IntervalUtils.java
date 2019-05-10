@@ -179,7 +179,8 @@ public abstract class IntervalUtils {
             {
                 if ( numTiles > 0 )
                 {
-                    tileSizes[ d ] = ( int ) Math.ceil( 1.0 * classificationInterval.dimension( d ) / Math.pow( numTilesPerTimePoint, 1.0 / volumeDimensionality ) );
+                    tileSizes[ d ] = ( int ) Math.ceil( 1.0 * classificationInterval.dimension( d )
+                            / Math.pow( numTilesPerTimePoint, 1.0 / volumeDimensionality ) );
                 }
                 else if ( classificationInterval.dimension( d ) <= cats.getMaximalRegionWidth( numFeatures ) )
                 {
@@ -189,7 +190,8 @@ public abstract class IntervalUtils {
                 else
                 {
                     // we need to tile
-                    int n = ( int ) Math.ceil( ( 1.0 * classificationInterval.dimension( d ) ) / cats.getMaximalRegionWidth( numFeatures ) );
+                    int n = ( int ) Math.ceil( ( 1.0 * classificationInterval.dimension( d ) )
+                            / cats.getMaximalRegionWidth( numFeatures ) );
                     tileSizes[ d ] = ( int ) Math.ceil( 1.0 * classificationInterval.dimension( d ) / n );
                 }
             }
@@ -305,10 +307,9 @@ public abstract class IntervalUtils {
 
     public static long getApproximatelyNeededBytesPerVoxel( double numFeatures )
     {
-        long oneByte = 8;
-        long floatingPointImp = 32;
-        long mem = (long) ( 2 * numFeatures * floatingPointImp / oneByte );
-        return mem;
+        long floatingPointBytes = 4; // 32-bit
+        long neededBytesPerVoxel = (long) ( 2 * numFeatures * floatingPointBytes );
+        return neededBytesPerVoxel;
     }
 
     public static long getApproximatelyNeededBytes( FinalInterval interval, double numFeatures )
@@ -316,9 +317,7 @@ public abstract class IntervalUtils {
         long bytes = getApproximatelyNeededBytesPerVoxel( numFeatures );
 
         for ( int d = 0; d < interval.numDimensions(); ++d )
-        {
             bytes *= interval.dimension( d );
-        }
 
         return bytes;
 

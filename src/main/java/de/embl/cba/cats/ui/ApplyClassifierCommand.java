@@ -293,7 +293,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
         cats = new CATS();
         cats.setNumThreads( numWorkers );
-        cats.setMaxMemory( memoryMB * 1000000L ); // MB -> Byte
+        cats.setMaxMemoryBytes( memoryMB * 1000000L ); // MB -> Byte
         cats.setInputImage( inputImage );
 
         if ( outputModality.equals( IOUtils.STREAM_TO_RESULT_IMAGE_DISK ) )

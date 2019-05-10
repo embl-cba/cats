@@ -5,7 +5,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import net.imagej.ImageJ;
 
-public class RunCatsCommand
+public class RunCatsCommandBlobs
 {
 
     public static void main( final String... args )

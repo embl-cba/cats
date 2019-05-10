@@ -11,6 +11,7 @@ import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
+import ij.gui.NonBlockingGenericDialog;
 import net.imglib2.FinalInterval;
 import org.scijava.ItemVisibility;
 import org.scijava.command.Command;
@@ -51,7 +52,9 @@ public class CATSCommand implements Command, Interactive
     public static final String UPDATE_LABEL_INSTANCES = "Update labels";
     public static final String UPDATE_LABELS = "Update labels";
     public static final String TRAIN_CLASSIFIER = "Train classifier";
-    public static final String IO_LOAD_LABEL_IMAGE = "Load label image";
+	public static final String SET_MEMORY_AND_THREADS = "Set memory and threads";
+
+	public static final String IO_LOAD_LABEL_IMAGE = "Load label image";
     public static final String IO_LOAD_LABEL_INSTANCES = "Load labels";
     public static final String STOP_CLASSIFICATION = "Stop classification";
     public static final String IO_SAVE_LABELS = "Save label instances of current image";
@@ -92,6 +95,7 @@ public class CATSCommand implements Command, Interactive
 //                    CREATE_OBJECTS_IMAGE, // TODO
                     CHANGE_FEATURE_SETTINGS,
                     CHANGE_CLASSIFIER_SETTINGS,
+					SET_MEMORY_AND_THREADS
 //                    TRAIN_CLASSIFIER,
 //                    UPDATE_LABEL_INSTANCES,
 //                    CHANGE_RESULT_OVERLAY_OPACITY,
@@ -317,6 +321,9 @@ public class CATSCommand implements Command, Interactive
 					trainClassifier();
 					break;
 
+				case SET_MEMORY_AND_THREADS:
+					setMemoryAndThreads();
+
                 //                    case APPLY_BG_FG_CLASSIFIER:
 //                        //applyBgFgClassification();
 //                        break;
@@ -347,6 +354,20 @@ public class CATSCommand implements Command, Interactive
 
         thread.start();
     }
+
+	private void setMemoryAndThreads()
+	{
+		double mega = 1024D * 1024D;
+
+		final NonBlockingGenericDialog gd = new NonBlockingGenericDialog( "Memory and Threads" );
+
+		gd.addNumericField( "Memory", cats.getMaxMemoryBytes() / mega, 0, 10, "MB" );
+		gd.addNumericField( "Number of threads", cats.getNumThreads(), 0 );
+		gd.showDialog();
+		if ( gd.wasCanceled() ) return;
+		cats.setMaxMemoryBytes( (long) ( gd.getNextNumber() * mega ) );
+		cats.setNumThreads( (int) gd.getNextNumber() );
+	}
 
 	private void interruptClassification()
 	{
