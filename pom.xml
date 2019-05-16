@@ -11,7 +11,7 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>fiji_plugin_cats</artifactId>
-	<version>0.6.77</version>
+	<version>0.6.79</version>
 
 	<name>Fiji plugin for context aware trainable segmentation</name>
 	<description>A plugin for context aware trainable segmentation.</description>
@@ -152,19 +152,7 @@
 		</dependency>
 
 
-		<!-- github -->
-
-<!--		<dependency>-->
-<!--			<groupId>com.github.mcib3d</groupId>-->
-<!--			<artifactId>mcib3d-core</artifactId>-->
-<!--			<version>3.9</version>-->
-<!--			<exclusions>-->
-<!--				<exclusion>  &lt;!&ndash; declare the exclusion here &ndash;&gt;-->
-<!--					<groupId>weka</groupId>-->
-<!--					<artifactId>weka</artifactId>-->
-<!--				</exclusion>-->
-<!--			</exclusions>-->
-<!--		</dependency>-->
+		<!-- CBA -->
 
 		<dependency>
 			<groupId>de.embl.cba</groupId>
@@ -191,6 +179,7 @@
 		</dependency>
 
 		<!-- Fiji dependencies -->
+
         <dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>Anisotropic_Diffusion_2D</artifactId>
@@ -212,6 +201,7 @@
 		</dependency>
 
 		<!-- ImgLib2 dependencies -->
+
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
@@ -234,6 +224,7 @@
 
 
 		<!-- Java3D dependencies -->
+
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>vecmath</artifactId>
@@ -251,6 +242,7 @@
 		</dependency>
 
 		<!-- Imagescience -->
+
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>imagescience</artifactId>
@@ -258,6 +250,7 @@
 		</dependency>
 
         <!-- Test scope dependencies -->
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -265,6 +258,7 @@
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.jcraft/jsch -->
+
 		<dependency>
 			<groupId>com.jcraft</groupId>
 			<artifactId>jsch</artifactId>

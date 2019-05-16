@@ -7,7 +7,6 @@ import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import ij.IJ;
 import org.scijava.command.Command;
-import org.scijava.command.CommandService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -21,9 +20,6 @@ public class BatchClassificationCommand implements Command
 	@Parameter
 	public LogService logService;
 
-	@Parameter
-	public CommandService commandService;
-
 	@Parameter (label = "Input directory containing the images", style = "directory" )
 	public File inputDirectory;
 
@@ -35,6 +31,13 @@ public class BatchClassificationCommand implements Command
 
 	@Parameter (label = "Output directory", style = "directory" )
 	public File outputDirectory;
+
+	@Parameter (label = "Number of threads" )
+	public int numThreads = Runtime.getRuntime().availableProcessors();
+
+	@Parameter (label = "Memory [MB]" )
+	public long memoryMB = IJ.maxMemory() / ( 1024 * 1024 );
+
 
 	IJLazySwingLogger logger = new IJLazySwingLogger();
 
@@ -79,7 +82,8 @@ public class BatchClassificationCommand implements Command
 		// cats.setResultImageDisk( directory );
 		cats.setResultImageRAM();
 
-		cats.setNumThreads( Runtime.getRuntime().availableProcessors() );
+		cats.setNumThreads( numThreads );
+		cats.setMaxMemoryBytes( memoryMB * 1024 * 1024 );
 
 		// load classifier (to be trained and saved before using the UI)
 		cats.loadClassifier( classifierPath );
