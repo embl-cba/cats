@@ -176,8 +176,19 @@ Now, when you select `Train classifier` it will save a new file on disk: `em01.t
 
 To combine training data from more data sets (e.g. `em02.tif`) you can simply add as many as you want by the `Load labels` action. 
 
+### Instances selection
+
 <img width="774" alt="image" src="https://user-images.githubusercontent.com/2157566/57906131-3d84cc80-7879-11e9-806e-d80cf3962817.png">
 
+### Data management
+
+If you follow above workflow for training on multiple data sets, your data on disk might look somewhat like this:
+
+<img width="337" alt="image" src="https://user-images.githubusercontent.com/2157566/57906419-33170280-787a-11e9-8afe-112d38cf58f1.png">
+
+<img width="471" alt="image" src="https://user-images.githubusercontent.com/2157566/57906454-517cfe00-787a-11e9-8de0-360d07711142.png">
+
+The main idea is that you have one .ARFF file per image data set, but you can combine those .ARFF files into one combined classifier.
 
 
 ### Further information
