@@ -112,9 +112,13 @@ public abstract class ResultExport
     }
 
 
-    private static void logDone( ResultExportSettings resultExportSettings, String className, int t, String s )
+    private static void logDone( ResultExportSettings resultExportSettings,
+                                 String className,
+                                 int t,
+                                 String s )
     {
-        logger.progress( s + className + ", frame:", ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames() );
+        logger.progress( s + className + ", frame:",
+                ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames() );
     }
 
     public static ImagePlus getBinnedClassImage( int classId, ResultExportSettings resultExportSettings, int t )
@@ -276,7 +280,7 @@ public abstract class ResultExport
         imp.setDimensions( 1, numSlices, numTimepoints );
         imp.setOpenAsHyperStack( true );
 
-        logDone( resultExportSettings, className, numTimepoints, "Created " );
+        logDone( resultExportSettings, className, numTimepoints - 1, "Created " );
 
         return imp;
 
