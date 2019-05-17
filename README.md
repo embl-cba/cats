@@ -176,7 +176,7 @@ Now, when you select `Train classifier` it will save a new file on disk: `em01.t
 
 To combine training data from more data sets (e.g. `em02.tif`) you can simply add as many as you want by the `Load labels` action. 
 
-
+<img width="774" alt="image" src="https://user-images.githubusercontent.com/2157566/57906131-3d84cc80-7879-11e9-806e-d80cf3962817.png">
 
 
 
