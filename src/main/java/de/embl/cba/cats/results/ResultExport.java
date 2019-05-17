@@ -255,28 +255,39 @@ public abstract class ResultExport
 
         String className = resultExportSettings.classNames.get( classId );
 
-        final ImageStack stackOfAllTimepoints = new ImageStack( resultExportSettings.inputImagePlus.getWidth(), resultExportSettings.inputImagePlus.getHeight() );
+        final ImageStack stackOfAllTimepoints =
+                new ImageStack(
+                        resultExportSettings.inputImagePlus.getWidth(),
+                        resultExportSettings.inputImagePlus.getHeight() );
 
         int numSlices = resultExportSettings.inputImagePlus.getNSlices();
 
-        int numTimepoints = resultExportSettings.timePointsFirstLast[ 1 ] - resultExportSettings.timePointsFirstLast[ 0 ] + 1;
+        int numTimepoints =
+                resultExportSettings.timePointsFirstLast[ 1 ]
+                        - resultExportSettings.timePointsFirstLast[ 0 ] + 1;
 
-        for ( int t = resultExportSettings.timePointsFirstLast[ 0 ]; t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
+        for ( int t = resultExportSettings.timePointsFirstLast[ 0 ];
+              t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
         {
-            ImagePlus impClass = getBinnedAndProximityFilteredClassImage( classId, resultExportSettings, t );
+            ImagePlus impClass =
+                    getBinnedAndProximityFilteredClassImage( classId, resultExportSettings, t );
 
             final ImageStack stackOfThisTimepoint = impClass.getStack();
 
             for ( int slice = 0; slice < numSlices; ++slice )
-            {
                 stackOfAllTimepoints.addSlice( stackOfThisTimepoint.getProcessor( slice + 1 ) );
-            }
-
         }
 
-        setSliceLabels( resultExportSettings.inputImagePlus.getStack(), stackOfAllTimepoints, className );
+        setSliceLabels(
+                resultExportSettings.inputImagePlus.getStack(),
+                stackOfAllTimepoints,
+                className );
 
-        final ImagePlus imp = new ImagePlus( resultExportSettings.exportNamesPrefix + className, stackOfAllTimepoints );
+        final ImagePlus imp =
+                new ImagePlus(
+                        resultExportSettings.exportNamesPrefix + className,
+                        stackOfAllTimepoints );
+
         imp.setDimensions( 1, numSlices, numTimepoints );
         imp.setOpenAsHyperStack( true );
 
@@ -333,13 +344,24 @@ public abstract class ResultExport
 
     }
 
-    private static void setSliceLabels( ImageStack source, ImageStack target, String className )
+    private static void setSliceLabels(
+            ImageStack source,
+            ImageStack target,
+            String className )
     {
+
+        if ( source.getSize() != target.getSize() )
+        {
+            logger.info( "Results slice naming not yet " +
+                    "implemented for multi-channel images." );
+            return;
+        }
+
         final int numImagePlanes = source.getSize();
 
         for ( int planeId = 0; planeId < numImagePlanes; ++planeId )
         {
-            String sliceLabel = source.getSliceLabel( planeId + 1);
+            String sliceLabel = source.getSliceLabel( planeId + 1 );
 
             if ( sliceLabel != null )
             {
