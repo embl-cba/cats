@@ -151,6 +151,35 @@ Shows a user interface for changing the image feature settings.
 Applies the current cluster by sending jobs to a slurm managed computer cluster.
 In addition to access to such a cluster, this also requires that all data (input image, output probabilities, and a classifier) are stored in a location that is accessible to the cluster nodes.
 
+
+## Training a classifier on multiple data sets
+
+Let's say you have three different files: `em00.tif`, `em01.tif`, and `em02.tif`; and want to train a classifier on all of them. This is how you can do it.
+
+First train on the first image, this will result in an `em00.tif.ARFF` file on your disk.
+Close CATS and close the first image. 
+
+Now open the second image, e.g., `em01.tif`, and start CATS again, on the second image.
+Next, within CATS choose `Load labels` and point to the labels file from the previous image, i.e. `em00.tif.ARFF`. If you closely inspect the log window you will find this message: 
+
+```
+Loaded instances relation name: em00.tif
+does not match image name: em01.tif
+Labels will thus not be populated.
+```
+
+This means CATS realised that the labels in this file belong to another image and will thus not show the labels as ROIs on this image. However, the labels file also contains training data from which a classifier can be trained and CATS will do so. 
+
+If you now click `Apply classifier` you will see how well the training data on the first image works on this image. Most likely there will be mistakes in the classification. Thus, you can now, as usual, paint labels in the regions where improvements are needed. 
+
+Now, when you select `Train classifier` it will save a new file on disk: `em01.tif.ARFF`, containing the training data specific to this image. However, also a window will pop up with the title `Instances selection` where you can select either/or training instances from the current or previous image. The point is that CATS now has access to two different training data sets and would like to know from which one (or both) it should train a classifier. Typically you would select both. The classifier you have now is trained on both training data. That means if you now choose to `Save classifier`, this will contain the training information of all selected data sets.
+
+To combine training data from more data sets (e.g. `em02.tif`) you can simply add as many as you want by the `Load labels` action. 
+
+
+
+
+
 ### Further information
 
 #### Continue working on an existing project
