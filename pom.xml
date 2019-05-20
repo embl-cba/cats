@@ -11,7 +11,7 @@
 
 	<groupId>de.embl.cba</groupId>
 	<artifactId>fiji_plugin_cats</artifactId>
-	<version>0.6.79</version>
+	<version>0.6.80</version>
 
 	<name>Fiji plugin for context aware trainable segmentation</name>
 	<description>A plugin for context aware trainable segmentation.</description>

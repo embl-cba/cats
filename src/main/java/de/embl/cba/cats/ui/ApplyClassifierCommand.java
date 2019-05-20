@@ -9,13 +9,14 @@ package de.embl.cba.cats.ui;
  */
 
 
-import de.embl.cba.cluster.commands.Commands;
+import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.results.ResultExportSettings;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.cats.utils.StringUtils;
+import de.embl.cba.cluster.commands.Commands;
 import ij.IJ;
 import ij.ImagePlus;
-import net.imagej.*;
+import net.imagej.DatasetService;
 import net.imagej.legacy.IJ1Helper;
 import net.imagej.legacy.LegacyService;
 import net.imagej.ops.OpService;
@@ -28,7 +29,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
-import de.embl.cba.cats.*;
 
 import java.io.File;
 import java.util.HashMap;
@@ -74,7 +74,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     @Parameter ( label = "Input image path" )
     public File inputImageFile;
 
-    @Parameter (label = "Classification interval [x0,x1,y0,y1,z0,z1,t0,t1]", required = false )
+    @Parameter (label = "Classification interval (zero-based) [x0,x1,y0,y1,z0,z1,t0,t1]", required = false )
     public String classificationIntervalXYZT = WHOLE_IMAGE;
     public static final String CLASSIFICATION_INTERVAL = "classificationIntervalXYZT";
     public static final String WHOLE_IMAGE = "Whole image";
@@ -137,7 +137,6 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
     public void run()
     {
-
         logService.info( "# " + PLUGIN_NAME );
 
         logCommandLineCall();
@@ -197,13 +196,9 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     private void manageProbabilitiesOutput()
     {
         if ( outputModality.equals( IOUtils.STREAM_TO_RESULT_IMAGE_DISK ) )
-        {
-            logService.info( "Results have been saved into the specified disk resident resultImagePlus image." );
-        }
+            logService.info( "Results have been saved into the specified disk resident image folder." );
         else
-        {
             saveOutputImages();
-        }
     }
 
     private void saveOutputImages()
@@ -211,13 +206,9 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         logService.info( "Saving classification output images..." );
 
         if ( outputModality.equals( IOUtils.SHOW_AS_ONE_IMAGE ) )
-        {
             cats.getResultImage().getWholeImageCopy().show();
-        }
         else
-        {
             saveAsFiles();
-        }
 
         logService.info( "Saving classification output images: done!" );
 
@@ -239,8 +230,10 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
 
             for ( String className : cats.getClassNames() )
             {
-                resultsTable.addValue( "FileName_ApplyClassifier_" + className + "_IMG", dataSetID + "--" + className + outputFileType );
-                resultsTable.addValue( "PathName_ApplyClassifier_" + className + "_IMG", outputDirectory.getPath() );
+                resultsTable.addValue( "FileName_ApplyClassifier_" + className + "_IMG",
+                        dataSetID + "--" + className + outputFileType );
+                resultsTable.addValue( "PathName_ApplyClassifier_" + className + "_IMG",
+                        outputDirectory.getPath() );
             }
 
             logService.info( "Saving results table: " + outputDirectory.getPath() + "/" + dataSetID + "--ApplyClassifier.csv" );
@@ -259,6 +252,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         resultExportSettings.exportNamesPrefix = dataSetID + "--";
         resultExportSettings.classNames = cats.getClassNames();
         resultExportSettings.saveRawData = false;
+        resultExportSettings.inputImagePlus = inputImage;
 
         if( outputModality.equals(  IOUtils.SAVE_AS_IMARIS ) )
         {
@@ -302,22 +296,17 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
         }
         else
         {
-            if ( classificationIntervalXYZT.equals( WHOLE_IMAGE ) )
-            {
+
+            if ( classificationIntervalXYZT.equals( WHOLE_IMAGE ) || classificationIntervalXYZT.equals("") )
                 cats.setResultImageRAM();
-            }
             else
-            {
                 cats.setResultImageRAM( getInterval() );
-            }
         }
 
         cats.loadClassifier( classifierFile.getAbsolutePath() );
 
-        if ( classificationIntervalXYZT.equals( WHOLE_IMAGE ) )
-        {
+        if ( classificationIntervalXYZT.equals( WHOLE_IMAGE ) || classificationIntervalXYZT.equals("") )
             cats.applyClassifierWithTiling();
-        }
         else
         {
             FinalInterval interval = getInterval();

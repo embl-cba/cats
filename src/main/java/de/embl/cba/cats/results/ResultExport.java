@@ -129,7 +129,10 @@ public abstract class ResultExport
         if ( resultExportSettings.binning[0] * resultExportSettings.binning[1] * resultExportSettings.binning[2] > 1 )
         {
             Binner binner = new Binner();
-            impClass = binner.shrink( impClass, resultExportSettings.binning[ 0 ], resultExportSettings.binning[ 1 ], resultExportSettings.binning[ 2 ], Binner.AVERAGE );
+            impClass = binner.shrink( impClass,
+                    resultExportSettings.binning[ 0 ],
+                    resultExportSettings.binning[ 1 ],
+                    resultExportSettings.binning[ 2 ], Binner.AVERAGE );
         }
 
         return impClass;
@@ -202,8 +205,7 @@ public abstract class ResultExport
         exe.shutdown();
         System.gc();
 
-        ImagePlus binnedClassImage =
-                new ImagePlus( "binned_class_" + classId, binnedStack );
+        ImagePlus binnedClassImage = new ImagePlus( "binned_class_" + classId, binnedStack );
 
         return binnedClassImage;
     }
