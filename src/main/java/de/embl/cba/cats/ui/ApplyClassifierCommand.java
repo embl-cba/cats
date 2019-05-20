@@ -74,7 +74,7 @@ public class ApplyClassifierCommand<T extends RealType<T>> implements Command
     @Parameter ( label = "Input image path" )
     public File inputImageFile;
 
-    @Parameter (label = "Classification interval (zero-based) [x0,x1,y0,y1,z0,z1,t0,t1]", required = false )
+    @Parameter (label = "Classification interval (zero-based, leave empty to classify whole data set) [x0,x1,y0,y1,z0,z1,t0,t1]", required = false )
     public String classificationIntervalXYZT = WHOLE_IMAGE;
     public static final String CLASSIFICATION_INTERVAL = "classificationIntervalXYZT";
     public static final String WHOLE_IMAGE = "Whole image";

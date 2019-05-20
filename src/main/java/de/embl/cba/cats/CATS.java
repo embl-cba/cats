@@ -949,7 +949,7 @@ public class CATS
 
         featureSettings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
 
-        if( calibration.pixelWidth != calibration.pixelHeight )
+        if(  Math.round( calibration.pixelWidth * 100.0) != Math.round( calibration.pixelWidth * 100.0)  )
         {
             logger.error("Image calibration in x and y is not the same; currently cannot take this into " +
                     "account; but you can still use this plugin, may work anyway...");
