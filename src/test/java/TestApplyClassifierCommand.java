@@ -3,7 +3,7 @@ import de.embl.cba.cats.utils.IntervalUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import net.imagej.ImageJ;
-import de.embl.cba.cats.ui.ApplyClassifierCommand;
+import de.embl.cba.cats.ui.ApplyClassifierAdvancedCommand;
 import net.imglib2.FinalInterval;
 
 import java.io.File;
@@ -37,28 +37,28 @@ public class TestApplyClassifierCommand
 
         parameters.clear();
 
-        parameters.put( ApplyClassifierCommand.DATASET_ID, "007" );
+        parameters.put( ApplyClassifierAdvancedCommand.DATASET_ID, "007" );
         parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGEJ1 );
         parameters.put( IOUtils.INPUT_IMAGE_FILE, new File( "/Users/tischer/Documents/fiji-plugin-CATS/src/test/resources/fib-sem--cell--8x8x8nm.zip" )  );
 
         File classifierFile = new File( "/Volumes/cba/tischer/projects/em-automated-segmentation--data/fib-sem--cell.classifier" );
         String outputDirectory = "/Volumes/cba/tischer/projects/em-automated-segmentation--data/fib-sem--cell--classification/";
 
-        parameters.put( ApplyClassifierCommand.CLASSIFICATION_INTERVAL, getIntervalAsCsvString( classificationInterval ) );
+        parameters.put( ApplyClassifierAdvancedCommand.CLASSIFICATION_INTERVAL, getIntervalAsCsvString( classificationInterval ) );
 
-        parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, classifierFile );
+        parameters.put( ApplyClassifierAdvancedCommand.CLASSIFIER_FILE, classifierFile );
 
         parameters.put( IOUtils.OUTPUT_MODALITY, IOUtils.SAVE_AS_MULTI_CLASS_TIFF_SLICES );
 
-        parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, outputDirectory  );
+        parameters.put( ApplyClassifierAdvancedCommand.OUTPUT_DIRECTORY, outputDirectory  );
 
-        parameters.put( ApplyClassifierCommand.NUM_WORKERS, 4 );
-        parameters.put( ApplyClassifierCommand.MEMORY_MB, 8000 );
+        parameters.put( ApplyClassifierAdvancedCommand.NUM_WORKERS, 4 );
+        parameters.put( ApplyClassifierAdvancedCommand.MEMORY_MB, 8000 );
 
-        parameters.put( ApplyClassifierCommand.SAVE_RESULTS_TABLE, false );
-        parameters.put( ApplyClassifierCommand.QUIT_AFTER_RUN, true );
+        parameters.put( ApplyClassifierAdvancedCommand.SAVE_RESULTS_TABLE, false );
+        parameters.put( ApplyClassifierAdvancedCommand.QUIT_AFTER_RUN, true );
 
-        ij.command().run( ApplyClassifierCommand.class, false, parameters );
+        ij.command().run( ApplyClassifierAdvancedCommand.class, false, parameters );
 
     }
 

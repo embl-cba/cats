@@ -1,6 +1,6 @@
 package command;
 
-import de.embl.cba.cats.ui.ApplyClassifierCommand;
+import de.embl.cba.cats.ui.ApplyClassifierAdvancedCommand;
 import net.imagej.ImageJ;
 
 public class RunApplyClassifierCommand
@@ -10,6 +10,6 @@ public class RunApplyClassifierCommand
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        ij.command().run( ApplyClassifierCommand.class, true );
+        ij.command().run( ApplyClassifierAdvancedCommand.class, true );
     }
 }

@@ -45,7 +45,7 @@ import inra.ijpb.binary.BinaryImages;
 import inra.ijpb.measure.GeometricMeasures3D;
 import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
-import javafx.geometry.Point3D;
+import de.embl.cba.bigdataprocessor.utils.Point3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.util.Intervals;
 import weka.classifiers.AbstractClassifier;
@@ -950,16 +950,12 @@ public class CATS
         featureSettings.anisotropy = 1.0 * calibration.pixelDepth / calibration.pixelWidth;
 
         if(  Math.round( calibration.pixelWidth * 100.0) != Math.round( calibration.pixelWidth * 100.0)  )
-        {
             logger.error("Image calibration in x and y is not the same; currently cannot take this into " +
                     "account; but you can still use this plugin, may work anyway...");
-        }
 
         Set< Integer > channelsToConsider = new TreeSet<>();
         for ( int c = 0; c < inputImage.getNChannels(); c++ )
-        {
             channelsToConsider.add(c); // zero-based
-        }
 
         featureSettings.activeChannels = channelsToConsider;
 

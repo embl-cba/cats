@@ -74,7 +74,9 @@ public abstract class ResultExport
 
         for ( int c = 0; c < imarisDataSet.getNumChannels(); ++c )
         {
-            for ( int t = resultExportSettings.timePointsFirstLast[ 0 ]; t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
+            for ( int t = resultExportSettings.timePointsFirstLast[ 0 ];
+                  t <= resultExportSettings.timePointsFirstLast[ 1 ];
+                  ++t )
             {
 
                 logger.progress( "Writing " + fileName,

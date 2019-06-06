@@ -1,5 +1,5 @@
 import de.embl.cba.cats.ui.ApplyClassifierOnSlurmCommand;
-import de.embl.cba.cats.ui.ApplyClassifierCommand;
+import de.embl.cba.cats.ui.ApplyClassifierAdvancedCommand;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.cats.utils.IntervalUtils;
 import ij.IJ;
@@ -44,7 +44,7 @@ public class TestApplyClassifierOnSlurmCommand
 
         parameters.put( ApplyClassifierOnSlurmCommand.INTERVAL, interval );
 
-        parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, classifierFile );
+        parameters.put( ApplyClassifierAdvancedCommand.CLASSIFIER_FILE, classifierFile );
 
         parameters.put( IOUtils.INPUT_IMAGE_FILE, inputImagePath );
 

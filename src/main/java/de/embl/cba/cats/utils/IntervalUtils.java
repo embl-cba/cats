@@ -3,7 +3,7 @@ package de.embl.cba.cats.utils;
 import de.embl.cba.bigdataprocessor.utils.Region5D;
 import ij.ImagePlus;
 import ij.ImageStack;
-import javafx.geometry.Point3D;
+import de.embl.cba.bigdataprocessor.utils.Point3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import de.embl.cba.cats.*;

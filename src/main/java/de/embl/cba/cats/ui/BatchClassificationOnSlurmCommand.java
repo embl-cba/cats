@@ -217,25 +217,25 @@ public class BatchClassificationOnSlurmCommand implements Command
         String dataSetID = getSimpleString( inputImagePath.getFileName().toString() );
 
         parameters.clear();
-        parameters.put( ApplyClassifierCommand.DATASET_ID, dataSetID );
+        parameters.put( ApplyClassifierAdvancedCommand.DATASET_ID, dataSetID );
 
         parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_IMAGEJ1_IMAGE_SEQUENCE );
         parameters.put( IOUtils.INPUT_IMAGE_FILE, PathMapper.asEMBLClusterMounted( inputImagePath ) );
-        parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, PathMapper.asEMBLClusterMounted( classifierPath ) );
-        parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, PathMapper.asEMBLClusterMounted( outputDirectory ) );
+        parameters.put( ApplyClassifierAdvancedCommand.CLASSIFIER_FILE, PathMapper.asEMBLClusterMounted( classifierPath ) );
+        parameters.put( ApplyClassifierAdvancedCommand.OUTPUT_DIRECTORY, PathMapper.asEMBLClusterMounted( outputDirectory ) );
         parameters.put( IOUtils.OUTPUT_MODALITY, IOUtils.SAVE_AS_TIFF_STACKS );
-        parameters.put( ApplyClassifierCommand.NUM_WORKERS, numWorkers );
-        parameters.put( ApplyClassifierCommand.MEMORY_MB, memoryMB );
-        parameters.put( ApplyClassifierCommand.CLASSIFICATION_INTERVAL, ApplyClassifierCommand.WHOLE_IMAGE );
-        parameters.put( ApplyClassifierCommand.QUIT_AFTER_RUN, true );
-        parameters.put( ApplyClassifierCommand.SAVE_RESULTS_TABLE, true );
+        parameters.put( ApplyClassifierAdvancedCommand.NUM_WORKERS, numWorkers );
+        parameters.put( ApplyClassifierAdvancedCommand.MEMORY_MB, memoryMB );
+        parameters.put( ApplyClassifierAdvancedCommand.CLASSIFICATION_INTERVAL, ApplyClassifierAdvancedCommand.WHOLE_IMAGE );
+        parameters.put( ApplyClassifierAdvancedCommand.QUIT_AFTER_RUN, true );
+        parameters.put( ApplyClassifierAdvancedCommand.SAVE_RESULTS_TABLE, true );
 
         parameters.put( "inputImageVSSDirectory", "" );
         parameters.put( "inputImageVSSScheme", "" );
         parameters.put( "inputImageVSSPattern", "" );
         parameters.put( "inputImageVSSHdf5DataSetName", "" );
 
-        commandsSubmitter.addIJCommandWithParameters( ApplyClassifierCommand.PLUGIN_NAME , parameters );
+        commandsSubmitter.addIJCommandWithParameters( ApplyClassifierAdvancedCommand.PLUGIN_NAME , parameters );
 
         //
         // Object analysis

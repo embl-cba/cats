@@ -191,7 +191,7 @@ public class ApplyClassifierOnSlurmCommand implements Command
         String intervalXYZT = getIntervalAsCsvString( tile );
 
         parameters.clear();
-        parameters.put( ApplyClassifierCommand.DATASET_ID, dataSetID );
+        parameters.put( ApplyClassifierAdvancedCommand.DATASET_ID, dataSetID );
 
         parameters.put( IOUtils.INPUT_MODALITY, inputModality );
 
@@ -208,21 +208,21 @@ public class ApplyClassifierOnSlurmCommand implements Command
             parameters.put( IOUtils.INPUT_IMAGE_VSS_HDF5_DATA_SET_NAME, inputImageVSSHdf5DataSetName );
         }
 
-        parameters.put( ApplyClassifierCommand.CLASSIFICATION_INTERVAL, intervalXYZT );
+        parameters.put( ApplyClassifierAdvancedCommand.CLASSIFICATION_INTERVAL, intervalXYZT );
 
-        parameters.put( ApplyClassifierCommand.CLASSIFIER_FILE, PathMapper.asEMBLClusterMounted( classifierPath ) );
+        parameters.put( ApplyClassifierAdvancedCommand.CLASSIFIER_FILE, PathMapper.asEMBLClusterMounted( classifierPath ) );
 
         parameters.put( IOUtils.OUTPUT_MODALITY, IOUtils.SAVE_AS_MULTI_CLASS_TIFF_SLICES );
 
-        parameters.put( ApplyClassifierCommand.OUTPUT_DIRECTORY, PathMapper.asEMBLClusterMounted( outputDirectory ) );
+        parameters.put( ApplyClassifierAdvancedCommand.OUTPUT_DIRECTORY, PathMapper.asEMBLClusterMounted( outputDirectory ) );
 
-        parameters.put( ApplyClassifierCommand.NUM_WORKERS, numWorkers );
-        parameters.put( ApplyClassifierCommand.MEMORY_MB, getApproximatelyNeededMemoryMB( tile ) );
+        parameters.put( ApplyClassifierAdvancedCommand.NUM_WORKERS, numWorkers );
+        parameters.put( ApplyClassifierAdvancedCommand.MEMORY_MB, getApproximatelyNeededMemoryMB( tile ) );
 
-        parameters.put( ApplyClassifierCommand.SAVE_RESULTS_TABLE, false );
-        parameters.put( ApplyClassifierCommand.QUIT_AFTER_RUN, true );
+        parameters.put( ApplyClassifierAdvancedCommand.SAVE_RESULTS_TABLE, false );
+        parameters.put( ApplyClassifierAdvancedCommand.QUIT_AFTER_RUN, true );
 
-        commandsSubmitter.addIJCommandWithParameters( ApplyClassifierCommand.PLUGIN_NAME , parameters );
+        commandsSubmitter.addIJCommandWithParameters( ApplyClassifierAdvancedCommand.PLUGIN_NAME , parameters );
 
     }
 
