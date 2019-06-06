@@ -2895,7 +2895,6 @@ public class CATS
 
 		return () ->
 		{
-
 			if ( ThreadUtils.stopThreads( logger, stopCurrentTasks, tileCounter, tileCounterMax ) ) return;
 
 			boolean isLogging = configureLogging( tileCounter, doNotLog );
