@@ -1,5 +1,11 @@
+// INPUT
+
+directoryWithImages = "/Users/tischer/Documents/sam/Resized"
+
+// CODE
+
 run("Close All");
-run("Image Sequence...", "open=/Users/tischer/Documents/sam/Resized sort use");
+run("Image Sequence...", "open=["+directoryWithImages+"] sort use");
 rename("input_images");
 
 setBatchMode(true);
