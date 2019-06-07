@@ -1508,7 +1508,8 @@ public class CATS
 	public void applyBgFgClassification( FinalInterval interval,
 										 String key )
 	{
-		InstancesAndMetadata instancesAndMetadata = getInstancesManager().getInstancesAndMetadata( key );
+		InstancesAndMetadata instancesAndMetadata =
+				getInstancesManager().getInstancesAndMetadata( key );
 		applyBgFgClassification( interval, instancesAndMetadata);
 	}
 
@@ -1587,19 +1588,15 @@ public class CATS
 				false );
 
 		resultImage.getDataCubeCopy( interval ).show();
-
-
-
-
-
-
 	}
 
 	public String loadInstancesAndMetadata( String filePath )
 	{
 		Path p = Paths.get(filePath);
 
-		String key = loadInstancesAndMetadata( p.getParent().toString(),  p.getFileName().toString());
+		String key = loadInstancesAndMetadata(
+				p.getParent().toString(),
+				p.getFileName().toString());
 
 		return key;
 	}
@@ -2549,14 +2546,29 @@ public class CATS
     public void applyClassifierWithTiling()
 	{
 		String mostRecentClassifierKey = getClassifierManager().getMostRecentClassifierKey();
-		FinalInterval interval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( getInputImage() );
-		applyClassifierWithTiling( mostRecentClassifierKey, interval, -1, null , false );
+
+		FinalInterval interval =
+				IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( getInputImage() );
+
+		applyClassifierWithTiling(
+				mostRecentClassifierKey,
+				interval,
+				-1,
+				null ,
+				false );
 	}
 
-	public void applyClassifierWithTiling( FinalInterval interval )
+	public void applyClassifierWithTiling( FinalInterval classificationInterval )
 	{
-		String mostRecentClassifierKey = getClassifierManager().getMostRecentClassifierKey();
-		applyClassifierWithTiling( mostRecentClassifierKey, interval, -1, null , false );
+		String mostRecentClassifierKey =
+				getClassifierManager().getMostRecentClassifierKey();
+
+		applyClassifierWithTiling(
+				mostRecentClassifierKey,
+				classificationInterval,
+				-1,
+				null ,
+				false );
 	}
 
 	public boolean hasClassifier()
@@ -2566,12 +2578,18 @@ public class CATS
 
 	public void applyClassifierWithTiling( String classifierKey, FinalInterval interval )
 	{
-		applyClassifierWithTiling(  classifierKey, interval, -1, null , false );
+		applyClassifierWithTiling(
+				classifierKey,
+				interval,
+				-1,
+				null ,
+				false );
 	}
 
 	public void applyClassifierOnSlurm(  Map< String, Object > parameters )
 	{
-		FinalInterval interval = IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( inputImage );
+		FinalInterval interval =
+				IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( inputImage );
 		applyClassifierOnSlurm( parameters, interval );
 	}
 
@@ -2664,24 +2682,27 @@ public class CATS
 
 
     public void applyClassifierWithTiling( String classifierKey,
-										   FinalInterval interval,
+										   FinalInterval classificationInterval,
 										   Integer numTiles,
 										   FeatureProvider externalFeatureProvider,
 										   boolean doNotLog )
 	{
-		isBusy = true;
-
 		logger.info("\n# Apply classifier");
+
+		if ( classificationInterval == null )
+		{
+			CATS.logger.error( "The classification interval was NULL." );
+			return;
+		}
+
+		isBusy = true;
 
 		// set up tiling
         if ( debugUseWholeImageForFeatureComputation )
-        {
             numTiles = 1;
-        }
-
 
 		ArrayList<FinalInterval> tiles = createTiles(
-				interval,
+				classificationInterval,
 				IntervalUtils.getInterval( inputImage ),
 				numTiles,
 				classifierManager.getClassifierAttributeNames( classifierKey ).size(),

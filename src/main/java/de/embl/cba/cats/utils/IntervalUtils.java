@@ -1,12 +1,12 @@
 package de.embl.cba.cats.utils;
 
+import de.embl.cba.bigdataprocessor.utils.Point3D;
 import de.embl.cba.bigdataprocessor.utils.Region5D;
+import de.embl.cba.cats.CATS;
 import ij.ImagePlus;
 import ij.ImageStack;
-import de.embl.cba.bigdataprocessor.utils.Point3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
-import de.embl.cba.cats.*;
 
 import java.util.ArrayList;
 
@@ -61,9 +61,7 @@ public abstract class IntervalUtils {
         CATS.logger.info("Interval: ");
 
         for ( int d : XYZT )
-        {
             CATS.logger.info( dimNames[d] + ": " + interval.min(d) + ", " + interval.max(d));
-        }
 
     }
 
@@ -146,13 +144,14 @@ public abstract class IntervalUtils {
         return ( region5D );
     }
 
-    public static ArrayList<FinalInterval> createTiles( FinalInterval classificationInterval,
-                                                        FinalInterval wholeImageInterval,
-                                                        Integer numTiles,
-                                                        int numFeatures,
-                                                        boolean normalizeIntensities, // we do not
-                                                        boolean doNotTileInXY,
-                                                        CATS cats )
+    public static ArrayList<FinalInterval> createTiles(
+            FinalInterval classificationInterval,
+            FinalInterval wholeImageInterval,
+            Integer numTiles,
+            int numFeatures,
+            boolean normalizeIntensities, // we do not do this
+            boolean doNotTileInXY,
+            CATS cats )
     {
 
         CATS.logger.info( "# Generating tiles for interval:" );

@@ -394,7 +394,15 @@ public class CATSCommand implements Command, Interactive
 		{
 			if ( cats.hasClassifier() )
 			{
-				cats.applyClassifierWithTiling( getIntervalFromUI() );
+				final FinalInterval classificationInterval = getIntervalFromUI();
+				if ( classificationInterval == null )
+				{
+					logger.error( "Apply classifier:\n" +
+							"Could not determine the classification interval!" );
+					return;
+				}
+
+				cats.applyClassifierWithTiling( classificationInterval );
 				overlays.showProbabilities();
 			}
 			else
@@ -562,14 +570,10 @@ public class CATSCommand implements Command, Interactive
 
     private FinalInterval getIntervalFromUI()
     {
-        if ( range.equals( ClassificationRangeUtils.WHOLE_DATA_SET) )
-        {
-            return ( IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( cats.getInputImage() ) );
-        }
+        if ( range.equals( ClassificationRangeUtils.WHOLE_DATA_SET ) )
+            return IntervalUtils.getIntervalWithChannelsDimensionAsSingleton( cats.getInputImage() );
         else
-        {
-            return ( ClassificationRangeUtils.getIntervalFromRoi( inputImage, range ) );
-        }
+            return ClassificationRangeUtils.getIntervalFromRoi( inputImage, range );
     }
 
     private void instructions()
