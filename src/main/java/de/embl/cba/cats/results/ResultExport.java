@@ -266,7 +266,9 @@ public abstract class ResultExport
         }
     }
 
-    private static ImagePlus createImagePlusForClass( int classId, ResultExportSettings resultExportSettings )
+    private static ImagePlus createProbabilitiyImagePlusForClass(
+            int classId,
+            ResultExportSettings resultExportSettings )
     {
 
         String className = resultExportSettings.classNames.get( classId );
@@ -330,18 +332,15 @@ public abstract class ResultExport
         return rawDataFrame;
     }
 
-    public static ArrayList< ImagePlus > exportResults( ResultExportSettings resultExportSettings )
+    public static ArrayList< ImagePlus > exportResults(
+            ResultExportSettings resultExportSettings )
     {
         logger.info( "Exporting results, using modality: " + resultExportSettings.exportType );
 
-        if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
-        {
-            logger.info( "Exporting results to: " + resultExportSettings.directory );
-        }
-
         configureTimePointsExport( resultExportSettings );
 
-        createExportDirectory( resultExportSettings );
+        if ( ! showOnly( resultExportSettings ) )
+            IOUtils.createDirectoryIfNotExists( resultExportSettings.directory );
 
         configureClassExport( resultExportSettings );
 
@@ -394,12 +393,12 @@ public abstract class ResultExport
         }
     }
 
-    private static void createExportDirectory( ResultExportSettings resultExportSettings )
+    public static boolean showOnly( ResultExportSettings resultExportSettings )
     {
-        if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
-        {
-            IOUtils.createDirectoryIfNotExists( resultExportSettings.directory );
-        }
+        return resultExportSettings.exportType.equals(
+                ResultExportSettings.SHOW_AS_PROBABILITIES ) ||
+                resultExportSettings.exportType.equals(
+                        ResultExportSettings.SHOW_AS_LABEL_MASKS );
     }
 
     private static void configureClassExport( ResultExportSettings resultExportSettings )
@@ -435,15 +434,18 @@ public abstract class ResultExport
         {
             if ( resultExportSettings.saveRawData )
             {
-                if ( resultExportSettings.exportType.equals( ResultExportSettings.IMARIS_STACKS ) )
+                if ( resultExportSettings.exportType.equals(
+                        ResultExportSettings.IMARIS_STACKS ) )
                 {
                     saveRawDataAsImaris( resultExportSettings );
                 }
-                else if ( resultExportSettings.exportType.equals( ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS ) )
+                else if ( resultExportSettings.exportType.equals(
+                        ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS ) )
                 {
                     // TODO
                 }
-                else if ( resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
+                else if ( resultExportSettings.exportType.equals(
+                        ResultExportSettings.SHOW_AS_PROBABILITIES ) )
                 {
                     // TODO
                 }
@@ -451,48 +453,58 @@ public abstract class ResultExport
         }
     }
 
-    private static ArrayList< ImagePlus > exportClasses( ResultExportSettings resultExportSettings )
+    private static ArrayList< ImagePlus > exportClasses(
+            ResultExportSettings settings )
     {
         final ArrayList< ImagePlus > classImps = new ArrayList<>();
 
-        if ( resultExportSettings.exportType.equals(
+        if ( settings.exportType.equals(
                 ResultExportSettings.CLASS_PROBABILITIES_TIFF_SLICES ) )
         {
-            saveAsMultiClassTiffSlices( resultExportSettings );
+            saveAsMultiClassTiffSlices( settings );
         }
-        else if ( resultExportSettings.exportType.equals(
+        else if ( settings.exportType.equals(
                 ResultExportSettings.SAVE_AS_CLASS_LABEL_MASK_TIFF_STACKS ) )
         {
-            saveAsClassLabelMaskTiffStacks( resultExportSettings );
+            saveAsClassLabelMaskTiffStacks( settings );
+        }
+        else if ( settings.exportType.equals(
+                ResultExportSettings.SHOW_AS_LABEL_MASKS ) )
+        {
+            showAsClassLabelMask( settings );
         }
         else
         {
-            prepareProximityFilter( resultExportSettings );
+            prepareProximityFilter( settings );
 
             for ( int classIndex = 0;
-                  classIndex < resultExportSettings.classesToBeExported.size(); ++classIndex )
+                  classIndex < settings.classesToBeExported.size(); ++classIndex )
             {
-                if ( resultExportSettings.classesToBeExported.get( classIndex ) )
+                if ( settings.classesToBeExported.get( classIndex ) )
                 {
-                    if ( resultExportSettings.exportType.equals(
+                    if ( settings.exportType.equals(
                             ResultExportSettings.IMARIS_STACKS ) )
                     {
-                        saveClassAsImaris( classIndex, resultExportSettings );
+                        saveClassAsImaris( classIndex, settings );
                     }
-                    else if ( resultExportSettings.exportType.equals(
+                    else if ( settings.exportType.equals(
                             ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS ) )
                     {
-                        saveClassAsTiff( classIndex, resultExportSettings );
+                        saveClassAsTiff( classIndex, settings );
                     }
-                    else if ( resultExportSettings.exportType.equals(
-                            ResultExportSettings.SHOW_IN_IMAGEJ ) )
+                    else if ( settings.exportType.equals(
+                            ResultExportSettings.SHOW_AS_PROBABILITIES ) )
                     {
-                        createImagePlusForClass( classIndex, resultExportSettings ).show();
+                        final ImagePlus imp = createProbabilitiyImagePlusForClass(
+                                classIndex, settings );
+                        imp.show();
                     }
-                    else if ( resultExportSettings.exportType.equals(
+                    else if ( settings.exportType.equals(
                             ResultExportSettings.GET_AS_IMAGEPLUS_ARRAYLIST ) )
                     {
-                        classImps.add( createImagePlusForClass( classIndex, resultExportSettings ) );
+                        classImps.add(
+                                createProbabilitiyImagePlusForClass(
+                                        classIndex, settings ) );
                     }
                 }
             }
@@ -532,40 +544,65 @@ public abstract class ResultExport
         String directory = settings.directory;
         final ImagePlus result = settings.resultImagePlus;
 
-        final Duplicator duplicator = new Duplicator();
 
         for ( int t = settings.timePointsFirstLast[ 0 ];
               t <= settings.timePointsFirstLast[ 1 ]; ++t )
         {
             final int frame =  t + 1;
 
-            ImagePlus resultFrame = duplicator.run(
-                    result,
-                    1, 1,
-                    1, result.getNSlices(),
-                    frame, frame );
-
-            for ( int z = 1; z <= resultFrame.getNSlices(); z++ )
-            {
-                final ImageProcessor processor = resultFrame.getStack().getProcessor( z );
-                byte[] pixels = (byte[]) processor.getPixels();
-
-                /**
-                 * 0 = Not classified at all
-                 * 1 - classLutWidth -> 1 = class 1
-                 * classLutWidth + 1 - 2 * classLutWidth -> 2 = class 2
-                 * ...
-                 */
-                for ( int i = 0; i < pixels.length; i++ )
-                    pixels[ i ] = ( byte ) Math.ceil( 1.0 * pixels[ i ] / settings.classLutWidth );
-
-            }
-
-            resultFrame.setDisplayRange(0, settings.classNames.size());
+            ImagePlus resultFrame = getLabelMask( settings, result, frame );
 
             IJ.saveAsTiff( resultFrame, getLabelMaskPath( settings, directory, frame ) );
         }
 
+    }
+
+    private static void showAsClassLabelMask( ResultExportSettings settings )
+    {
+        // TODO: Binning is currently ignored here
+
+        final ImagePlus result = settings.resultImagePlus;
+
+        for ( int t = settings.timePointsFirstLast[ 0 ];
+              t <= settings.timePointsFirstLast[ 1 ]; ++t )
+        {
+            final int frame =  t + 1;
+
+            ImagePlus resultFrame = getLabelMask( settings, result, frame );
+
+            resultFrame.show();
+        }
+
+    }
+
+    private static ImagePlus getLabelMask(
+            ResultExportSettings settings, ImagePlus result, int frame )
+    {
+        ImagePlus resultFrame = new Duplicator().run(
+                result,
+                1, 1,
+                1, result.getNSlices(),
+                frame, frame );
+
+        for ( int z = 1; z <= resultFrame.getNSlices(); z++ )
+        {
+            final ImageProcessor processor = resultFrame.getStack().getProcessor( z );
+            byte[] pixels = (byte[]) processor.getPixels();
+
+            /**
+             * 0 = Not classified at all
+             * 1 - classLutWidth -> 1 = class 1
+             * classLutWidth + 1 - 2 * classLutWidth -> 2 = class 2
+             * ...
+             */
+            for ( int i = 0; i < pixels.length; i++ )
+                pixels[ i ] = ( byte ) Math.ceil( 1.0 * pixels[ i ] / settings.classLutWidth );
+
+        }
+
+        resultFrame.setDisplayRange(0, settings.classNames.size());
+        resultFrame.setTitle( "class label mask" );
+        return resultFrame;
     }
 
     private static String getLabelMaskPath(

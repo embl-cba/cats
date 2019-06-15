@@ -11,13 +11,16 @@ import java.util.ArrayList;
 public abstract class ResultImageExportGUI
 {
 
-    public static void showExportGUI( String inputImageTitle,
-                                      ResultImage resultImage,
+    public static void showExportGUI( ResultImage resultImage,
                                       ImagePlus rawData,
                                       ArrayList< String > classNames )
     {
 
-        String[] exportChoices = new String[]{ ResultExportSettings.SHOW_IN_IMAGEJ, ResultExportSettings.IMARIS_STACKS, ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS };
+        String[] exportChoices = new String[]{
+                ResultExportSettings.SHOW_AS_LABEL_MASKS,
+                ResultExportSettings.SHOW_AS_PROBABILITIES,
+                ResultExportSettings.IMARIS_STACKS,
+                ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS };
 
         GenericDialog gd = new GenericDialogPlus("Export Segmentation Results");
 
@@ -30,21 +33,13 @@ public abstract class ResultImageExportGUI
         gd.addCheckbox( "raw data", true );
 
         for ( String className : classNames )
-        {
             gd.addCheckbox( className, true );
-        }
-
-
-//        gd.addMessage( "--- Spatial proximity filtering (currently not working for movies) ---" );
-
-//        gd.addCheckbox( "Do spatial proximity filtering", false );
-//        gd.addNumericField( "Distance (after binning) [pixels]:", 10, 0 );
-
-//        gd.addChoice( "Reference class:", classNames.toArray( new String[classNames.size()] ), classNames.get( 0 ) );
 
         gd.addMessage( "--- Export modality ---" );
 
-        gd.addChoice( "Export as:", exportChoices, ResultExportSettings.SHOW_IN_IMAGEJ );
+        gd.addChoice( "Export as:",
+                exportChoices,
+                ResultExportSettings.SHOW_AS_LABEL_MASKS );
 
         // gd.addStringField( "TimePoints [from, to] ", "1," + inputImagePlus.getNFrames());
 
@@ -52,28 +47,25 @@ public abstract class ResultImageExportGUI
 
         if ( gd.wasCanceled() ) return;
 
-        ResultExportSettings resultExportSettings = new ResultExportSettings();
-        resultExportSettings.classNames = classNames;
-        resultExportSettings.resultImage = resultImage;
-        resultExportSettings.inputImagePlus = rawData;
-        resultExportSettings.timePointsFirstLast = new int[] { 0, rawData.getNFrames() - 1 };
+        ResultExportSettings settings = new ResultExportSettings();
+        settings.classNames = classNames;
+        settings.resultImage = resultImage;
+        settings.inputImagePlus = rawData;
+        settings.timePointsFirstLast = new int[] { 0, rawData.getNFrames() - 1 };
 
-        setSettingsFromGUI( classNames, gd, resultExportSettings );
+        setSettingsFromGUI( classNames, gd, settings );
 
-        if ( getOutputDirectory( resultExportSettings ) ) return;
+        if ( ! ResultExport.showOnly( settings ) )
+            if ( ! getOutputDirectory( settings ) ) return;
 
-        resultImage.exportResults( resultExportSettings );
-
+        resultImage.exportResults( settings );
     }
 
-    private static boolean getOutputDirectory( ResultExportSettings resultExportSettings )
+    private static boolean getOutputDirectory( ResultExportSettings settings )
     {
-        if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
-        {
-            resultExportSettings.directory = IJ.getDirectory("Select output directory");
-            if ( resultExportSettings.directory == null ) return true;
-        }
-        return false;
+        settings.directory = IJ.getDirectory("Select output directory");
+        if ( settings.directory == null ) return false;
+        return true;
     }
 
     private static void setSettingsFromGUI( ArrayList< String > classNames, GenericDialog gd, ResultExportSettings resultExportSettings )

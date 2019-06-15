@@ -290,7 +290,6 @@ public class CATSCommand implements Command, Interactive
 
 				case IO_EXPORT_RESULT_IMAGE:
 					ResultImageExportGUI.showExportGUI(
-							cats.getInputImage().getTitle(),
 							cats.getResultImage(),
 							cats.getInputImage(),
 							cats.getClassNames() );

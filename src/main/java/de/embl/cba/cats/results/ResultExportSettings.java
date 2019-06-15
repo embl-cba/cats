@@ -11,8 +11,10 @@ public class ResultExportSettings
     public static final String SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS = "Save as probabilities - Tiff";
     public static final String SAVE_AS_CLASS_LABEL_MASK_TIFF_STACKS = "Save as label mask - Tiff";
     public static final String CLASS_PROBABILITIES_TIFF_SLICES = "Save as probabilities - Tiff slices";
-    public static final String SHOW_IN_IMAGEJ = "Show as probabilities";
-	public static final String GET_AS_IMAGEPLUS_ARRAYLIST = "Get as ImagePlus Array";
+    public static final String SHOW_AS_PROBABILITIES = "Show as probabilities";
+    public static final String SHOW_AS_LABEL_MASKS = "Show as label masks";
+
+    public static final String GET_AS_IMAGEPLUS_ARRAYLIST = "Get as ImagePlus Array";
 	public String directory;
     public String exportNamesPrefix = "";
     public ArrayList< Boolean > classesToBeExported;

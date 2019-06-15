@@ -28,7 +28,7 @@ public class ResultsExport2D
 		//
 		// Show in ImageJ
 		//
-		resultExportSettings.exportType = ResultExportSettings.SHOW_IN_IMAGEJ;
+		resultExportSettings.exportType = ResultExportSettings.SHOW_AS_PROBABILITIES;
 		resultExportSettings.classNames = cats.getClassNames();
 		resultExportSettings.inputImagePlus = cats.getInputImage();
 		resultExportSettings.resultImage = cats.getResultImage();
