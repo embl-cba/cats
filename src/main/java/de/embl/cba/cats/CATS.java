@@ -730,7 +730,10 @@ public class CATS
 		if( directory != null )
         {
             logger.info( "\n# Saving instances..." );
-            InstancesUtils.saveInstancesAndMetadataAsARFF( instancesManager.getInstancesAndMetadata( instancesKey ), directory, "Instances-" + numInstances + ".ARFF" );
+            InstancesUtils.saveInstancesAndMetadataAsARFF(
+            		instancesManager.getInstancesAndMetadata( instancesKey ),
+					directory,
+					"Instances-" + numInstances + ".ARFF" );
             logger.info( "...done" );
         }
 		return numInstances;

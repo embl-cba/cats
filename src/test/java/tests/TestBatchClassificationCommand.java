@@ -27,7 +27,7 @@ public class TestBatchClassificationCommand
 		command.numThreads = Prefs.getThreads();
 		command.memoryMB = (int) ( IJ.maxMemory() / ( 1024 * 1024 ) );
 
-		final File testOutputFile = new File( command.outputDirectory + File.separator + "blobs_00_background.tif" );
+		final File testOutputFile = new File( command.outputDirectory + File.separator + "blobs_00--background.tif" );
 
 		if ( testOutputFile.exists() )
 		{

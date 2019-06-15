@@ -7,6 +7,7 @@ import de.embl.cba.cats.instances.InstancesAndMetadata;
 import de.embl.cba.cats.results.ResultImageExportGUI;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.cats.utils.IntervalUtils;
+import de.embl.cba.cats.utils.Utils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
@@ -445,13 +446,19 @@ public class CATSCommand implements Command, Interactive
 
 	private void saveLabelInstances()
 	{
-		String[] dirFile = IOUtils.getSaveDirFile( "Save instances...", inputImage.getTitle() + ARFF, ARFF );
+		String[] dirFile = IOUtils.getSaveDirFile(
+				"Save instances...",
+				Utils.removeExtension(inputImage.getTitle() ) + ARFF,
+				ARFF );
 
 		if ( dirFile != null )
 		{
 			GenericDialogPlus gdWait;
 			gdWait = showWaitDialog( "I/O operation in progress...\nPlease wait until this window disappears!" );
-			cats.saveInstances( inputImage.getTitle(), dirFile[ 0 ], dirFile[ 1 ] );
+			cats.saveInstances(
+					Utils.removeExtension( inputImage.getTitle() ),
+					dirFile[ 0 ],
+					dirFile[ 1 ] );
 			gdWait.dispose();
 		}
 	}
@@ -486,7 +493,8 @@ public class CATSCommand implements Command, Interactive
 		}
 		else if ( numInstances == 1 )
 		{
-			final InstancesAndMetadata instancesAndMetadata = cats.getInstancesManager().getInstancesAndMetadata( keys[ 0 ] );
+			final InstancesAndMetadata instancesAndMetadata =
+					cats.getInstancesManager().getInstancesAndMetadata( keys[ 0 ] );
 			cats.trainClassifierWithFeatureSelection( instancesAndMetadata );
 		}
 		else
@@ -494,9 +502,7 @@ public class CATSCommand implements Command, Interactive
 			final GenericDialog gd = new GenericDialog( "Instances selection" );
 
 			if ( instancesSelection == null || instancesSelection.length != numInstances )
-			{
 				instancesSelection = new boolean[ numInstances ];
-			}
 
 			gd.addCheckboxGroup( numInstances, 1, keys, instancesSelection );
 			gd.showDialog();
