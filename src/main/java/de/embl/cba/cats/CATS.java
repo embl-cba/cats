@@ -1691,16 +1691,16 @@ public class CATS
             return false;
         }
 
-		boolean success = InstancesUtils.saveInstancesAndMetadataAsARFF( instancesAndMetadata, directory, filename );
+		boolean success =
+				InstancesUtils.saveInstancesAndMetadataAsARFF(
+						instancesAndMetadata,
+						directory,
+						filename );
 
 		if ( success )
-		{
 			logger.info( "...done." );
-		}
 		else
-		{
 			logger.error( "Saving instances failed." );
-		}
 
 		return success;
 	}

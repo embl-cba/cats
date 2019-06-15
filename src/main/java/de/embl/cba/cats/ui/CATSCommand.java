@@ -456,7 +456,7 @@ public class CATSCommand implements Command, Interactive
 			GenericDialogPlus gdWait;
 			gdWait = showWaitDialog( "I/O operation in progress...\nPlease wait until this window disappears!" );
 			cats.saveInstances(
-					Utils.removeExtension( inputImage.getTitle() ),
+					inputImage.getTitle(), // this is the key, which should just be the image name
 					dirFile[ 0 ],
 					dirFile[ 1 ] );
 			gdWait.dispose();
