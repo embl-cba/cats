@@ -32,13 +32,15 @@ public class CallableResultImageBinner
             int dz = settings.binning[2];
 
             int classLutWidth = settings.resultImage.getProbabilityRange();
-            int[] intensityGate = new int[]{ classId * classLutWidth + 1, (classId + 1 ) * classLutWidth };
+            int[] intensityGate =
+                    new int[]{ classId * classLutWidth + 1, (classId + 1 ) * classLutWidth };
 
             ImageStack tmpStack = new ImageStack ( nx , ny );
 
             for ( int z = z0; z <= z1; ++z )
             {
-                tmpStack.addSlice( settings.resultImage.getSlice( z + 1, t + 1 ).duplicate()  );
+                tmpStack.addSlice(
+                        settings.resultImage.getSlice( z + 1, t + 1 ).duplicate()  );
             }
 
             ImagePlus gated = new ImagePlus( "gated-" + classId, tmpStack );

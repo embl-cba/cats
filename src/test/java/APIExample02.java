@@ -45,7 +45,7 @@ public class APIExample02
 			final ResultImage resultImage = cats.getResultImage();
 			final ResultExportSettings resultExportSettings = new ResultExportSettings();
 			resultExportSettings.inputImagePlus = cats.getInputImage();
-			resultExportSettings.exportType = ResultExportSettings.TIFF_STACKS;
+			resultExportSettings.exportType = ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS;
 			resultExportSettings.directory = RESULTS_DIR;
 			resultExportSettings.exportNamesPrefix = test + "-";
 			resultExportSettings.classNames = cats.getClassNames();

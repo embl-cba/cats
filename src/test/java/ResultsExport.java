@@ -42,7 +42,7 @@ public class ResultsExport
 
         ResultExportSettings resultExportSettings = new ResultExportSettings();
         resultExportSettings.directory = ResultsExport.class.getResource("3d-objects-export" ).getPath();
-        resultExportSettings.exportType = ResultExportSettings.SEPARATE_IMARIS;
+        resultExportSettings.exportType = ResultExportSettings.IMARIS_STACKS;
         resultExportSettings.classNames = cats.getClassNames();
         resultExportSettings.timePointsFirstLast = new int[]{ 0, 0 };
         resultExportSettings.saveRawData = true;
@@ -79,27 +79,27 @@ public class ResultsExport
         //min[ Z ] = 2; max[ Z ] = 5;
         FinalInterval interval = new FinalInterval( min, max );
 
-        CATS CATS = new CATS();
-        CATS.setInputImage( imp );
-        CATS.setResultImageRAM( interval );
-        CATS.loadInstancesAndMetadata( "/Users/tischer/Documents/fiji-plugin-CATS/src/test/resources/fib-sem--cell--8x8x8nm.ARFF" );
+        CATS cats = new CATS();
+        cats.setInputImage( imp );
+        cats.setResultImageRAM( interval );
+        cats.loadInstancesAndMetadata( "/Users/tischer/Documents/fiji-plugin-CATS/src/test/resources/fib-sem--cell--8x8x8nm.ARFF" );
 
-        CATS.classifierNumTrees = 10;
-        CATS.trainClassifier( "fib-sem--cell--8x8x8nm.tif" );
-        CATS.applyClassifierWithTiling( interval );
+        cats.classifierNumTrees = 10;
+        cats.trainClassifier( "fib-sem--cell--8x8x8nm.tif" );
+        cats.applyClassifierWithTiling( interval );
 
-        CATS.getInputImage().show();
-        CATS.getResultImage().getWholeImageCopy().show();
+        cats.getInputImage().show();
+        cats.getResultImage().getWholeImageCopy().show();
 
         ResultExportSettings resultExportSettings = new ResultExportSettings();
         resultExportSettings.directory = "/Users/tischer/Desktop/tmp4";
-        resultExportSettings.exportType = ResultExportSettings.SEPARATE_IMARIS;
-        resultExportSettings.classNames = CATS.getClassNames();
+        resultExportSettings.exportType = ResultExportSettings.IMARIS_STACKS;
+        resultExportSettings.classNames = cats.getClassNames();
         resultExportSettings.timePointsFirstLast = new int[]{ 0, 1 };
         resultExportSettings.saveRawData = true;
         resultExportSettings.inputImagePlus = imp;
 
-        CATS.getResultImage().exportResults( resultExportSettings );
+        cats.getResultImage().exportResults( resultExportSettings );
 
         try
 		{

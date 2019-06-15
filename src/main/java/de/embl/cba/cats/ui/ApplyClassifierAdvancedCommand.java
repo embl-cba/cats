@@ -131,7 +131,7 @@ public class ApplyClassifierAdvancedCommand<T extends RealType<T>> implements Co
     CATS cats;
     String outputFileType;
 
-    // /Applications/Fiji.app/Contents/MacOS/ImageJ-macosx --run "Apply Classifier" "quitAfterRun='true',inputImageFile='/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/image-sequence/.*--W00016--P00003--.*',classifierFile='/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/transmission-cells-3d.classifier',outputModality='Save class probabilities as tiff files',outputDirectory='/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/image-sequence--classified'"
+    // /Applications/Fiji.app/Contents/MacOS/ImageJ-macosx --run "Apply Classifier" "quitAfterRun='true',inputImageFile='/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/image-sequence/.*--W00016--P00003--.*',classifierFile='/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/transmission-cells-3d.classifier',outputModality='Save de.embl.cba.bigdataprocessor.Point3Dobabilities as tiff files',outputDirectory='/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/image-sequence--classified'"
 
     // xvfb-run -a /g/almf/software/Fiji.app/ImageJ-linux64 --run "Apply Classifier" "quitAfterRun='true',inputImageFile='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences/.*--W00016--P00004--.*',classifierFile='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/transmission-cells-3d.classifier',outputDirectory='/g/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data/small-test-image-sequences--classified/DataSet--W00016--P00004--',outputModality='Save class probabilities as tiff files'"
 
@@ -258,7 +258,7 @@ public class ApplyClassifierAdvancedCommand<T extends RealType<T>> implements Co
         {
             logService.info( "Saving as Imaris..." );
             outputFileType = ".ims";
-            resultExportSettings.exportType = ResultExportSettings.SEPARATE_IMARIS;
+            resultExportSettings.exportType = ResultExportSettings.IMARIS_STACKS;
             cats.getResultImage().exportResults( resultExportSettings );
         }
 
@@ -266,7 +266,7 @@ public class ApplyClassifierAdvancedCommand<T extends RealType<T>> implements Co
         {
             logService.info( "Saving as Tiff stacks..." );
             outputFileType = ".tif";
-            resultExportSettings.exportType = ResultExportSettings.TIFF_STACKS;
+            resultExportSettings.exportType = ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS;
             cats.getResultImage().exportResults( resultExportSettings );
         }
 
@@ -274,7 +274,7 @@ public class ApplyClassifierAdvancedCommand<T extends RealType<T>> implements Co
         {
             logService.info( "Saving as Tiff slices..." );
             outputFileType = ".tif";
-            resultExportSettings.exportType = ResultExportSettings.SEPARATE_MULTI_CLASS_TIFF_SLICES;
+            resultExportSettings.exportType = ResultExportSettings.CLASS_PROBABILITIES_TIFF_SLICES;
             cats.getResultImage().exportResults( resultExportSettings );
         }
 

@@ -41,7 +41,7 @@ public class ResultsExport2D
 		//
 		// Save as Tiff
 		//
-		resultExportSettings.exportType = ResultExportSettings.TIFF_STACKS;
+		resultExportSettings.exportType = ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS;
 		resultExportSettings.directory = ResultsExport2D.class.getResource("boat2d" ).getPath();
 		resultExportSettings.classNames = cats.getClassNames();
 		resultExportSettings.inputImagePlus = cats.getInputImage();

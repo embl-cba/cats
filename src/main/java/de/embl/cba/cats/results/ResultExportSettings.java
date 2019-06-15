@@ -7,10 +7,11 @@ import java.util.ArrayList;
 
 public class ResultExportSettings
 {
-    public static final String SEPARATE_IMARIS = "Save as Imaris";
-    public static final String TIFF_STACKS = "Save as Tiff stacks";
-    public static final String SEPARATE_MULTI_CLASS_TIFF_SLICES = "Save as Tiff slices";
-    public static final String SHOW_IN_IMAGEJ = "Show in ImageJ";
+    public static final String IMARIS_STACKS = "Save as probabilities - Imaris";
+    public static final String SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS = "Save as probabilities - Tiff";
+    public static final String SAVE_AS_CLASS_LABEL_MASK_TIFF_STACKS = "Save as label mask - Tiff";
+    public static final String CLASS_PROBABILITIES_TIFF_SLICES = "Save as probabilities - Tiff slices";
+    public static final String SHOW_IN_IMAGEJ = "Show as probabilities";
 	public static final String GET_AS_IMAGEPLUS_ARRAYLIST = "Get as ImagePlus Array";
 	public String directory;
     public String exportNamesPrefix = "";

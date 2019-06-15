@@ -123,7 +123,10 @@ public abstract class ResultExport
                 ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames() );
     }
 
-    public static ImagePlus getBinnedClassImage( int classId, ResultExportSettings resultExportSettings, int t )
+    public static ImagePlus getBinnedClassImage(
+            int classId,
+            ResultExportSettings resultExportSettings,
+            int t )
     {
 
         ImagePlus impClass = getClassImage( classId, t, resultExportSettings );
@@ -213,14 +216,19 @@ public abstract class ResultExport
     }
 
 
-    public static ImagePlus getBinnedAndProximityFilteredClassImage( int classId, ResultExportSettings resultExportSettings, int t )
+    public static ImagePlus getBinnedAndProximityFilteredClassImage(
+            int classId, ResultExportSettings resultExportSettings, int t )
     {
-        ImagePlus impClass = getBinnedClassImageMemoryEfficient( classId, resultExportSettings, t, logger, Prefs.getThreads() );
+        ImagePlus impClass =
+                getBinnedClassImageMemoryEfficient(
+                        classId, resultExportSettings, t, logger, Prefs.getThreads() );
 
         if ( resultExportSettings.proximityFilterSettings.doSpatialProximityFiltering )
         {
             logger.info( "Applying proximity filter..." );
-            impClass = ProximityFilter3D.multiply( impClass, resultExportSettings.proximityFilterSettings.dilatedBinaryReferenceMask );
+            impClass = ProximityFilter3D.multiply(
+                    impClass,
+                    resultExportSettings.proximityFilterSettings.dilatedBinaryReferenceMask );
         }
 
         return impClass;
@@ -228,30 +236,34 @@ public abstract class ResultExport
 
     public static void saveClassAsTiff( int classId, ResultExportSettings resultExportSettings )
     {
-
         String className = resultExportSettings.classNames.get( classId );
 
-        for ( int t = resultExportSettings.timePointsFirstLast[ 0 ]; t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
+        for ( int t = resultExportSettings.timePointsFirstLast[ 0 ];
+              t <= resultExportSettings.timePointsFirstLast[ 1 ]; ++t )
         {
 
-            ImagePlus impClass = getBinnedAndProximityFilteredClassImage( classId, resultExportSettings, t );
+            ImagePlus impClass =
+                    getBinnedAndProximityFilteredClassImage( classId, resultExportSettings, t );
 
             String path;
 
             if ( resultExportSettings.resultImagePlus.getNFrames() > 1 )
             {
-                path = resultExportSettings.directory + File.separator + resultExportSettings.exportNamesPrefix + className + "--T" + String.format( "%05d", t ) + ".tif";
+                path = resultExportSettings.directory +
+                        File.separator + resultExportSettings.exportNamesPrefix
+                        + className + "--T" + String.format( "%05d", t ) + ".tif";
             }
             else
             {
-                path = resultExportSettings.directory + File.separator + resultExportSettings.exportNamesPrefix + className + ".tif";
+                path = resultExportSettings.directory +
+                        File.separator + resultExportSettings.exportNamesPrefix
+                        + className + ".tif";
             }
 
             IJ.saveAsTiff( impClass, path );
 
             logDone( resultExportSettings, className, t, "Done with export of " );
         }
-
     }
 
     private static ImagePlus createImagePlusForClass( int classId, ResultExportSettings resultExportSettings )
@@ -320,7 +332,6 @@ public abstract class ResultExport
 
     public static ArrayList< ImagePlus > exportResults( ResultExportSettings resultExportSettings )
     {
-
         logger.info( "Exporting results, using modality: " + resultExportSettings.exportType );
 
         if ( ! resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
@@ -345,7 +356,6 @@ public abstract class ResultExport
         logger.info( "Export of results finished." );
 
         return classImps;
-
     }
 
     private static void setSliceLabels(
@@ -396,7 +406,8 @@ public abstract class ResultExport
     {
         if ( resultExportSettings.classesToBeExported == null )
         {
-            resultExportSettings.classesToBeExported = selectAllClasses( resultExportSettings.classNames );
+            resultExportSettings.classesToBeExported
+                    = selectAllClasses( resultExportSettings.classNames );
         }
     }
 
@@ -412,7 +423,7 @@ public abstract class ResultExport
 
     private static void createImarisHeader( ResultExportSettings resultExportSettings )
     {
-        if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_IMARIS ) )
+        if ( resultExportSettings.exportType.equals( ResultExportSettings.IMARIS_STACKS ) )
         {
             ImarisUtils.createImarisMetaFile( resultExportSettings.directory );
         }
@@ -420,15 +431,15 @@ public abstract class ResultExport
 
     private static void exportRawData( ResultExportSettings resultExportSettings )
     {
-        if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_IMARIS ) )
+        if ( resultExportSettings.exportType.equals( ResultExportSettings.IMARIS_STACKS ) )
         {
             if ( resultExportSettings.saveRawData )
             {
-                if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_IMARIS ) )
+                if ( resultExportSettings.exportType.equals( ResultExportSettings.IMARIS_STACKS ) )
                 {
                     saveRawDataAsImaris( resultExportSettings );
                 }
-                else if ( resultExportSettings.exportType.equals( ResultExportSettings.TIFF_STACKS ) )
+                else if ( resultExportSettings.exportType.equals( ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS ) )
                 {
                     // TODO
                 }
@@ -444,31 +455,42 @@ public abstract class ResultExport
     {
         final ArrayList< ImagePlus > classImps = new ArrayList<>();
 
-        if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_MULTI_CLASS_TIFF_SLICES ) )
+        if ( resultExportSettings.exportType.equals(
+                ResultExportSettings.CLASS_PROBABILITIES_TIFF_SLICES ) )
         {
-            saveAsSeparateMultiClassTiffSlices( resultExportSettings );
+            saveAsMultiClassTiffSlices( resultExportSettings );
+        }
+        else if ( resultExportSettings.exportType.equals(
+                ResultExportSettings.SAVE_AS_CLASS_LABEL_MASK_TIFF_STACKS ) )
+        {
+            saveAsClassLabelMaskTiffStacks( resultExportSettings );
         }
         else
         {
             prepareProximityFilter( resultExportSettings );
 
-            for ( int classIndex = 0; classIndex < resultExportSettings.classesToBeExported.size(); ++classIndex )
+            for ( int classIndex = 0;
+                  classIndex < resultExportSettings.classesToBeExported.size(); ++classIndex )
             {
                 if ( resultExportSettings.classesToBeExported.get( classIndex ) )
                 {
-                    if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_IMARIS ) )
+                    if ( resultExportSettings.exportType.equals(
+                            ResultExportSettings.IMARIS_STACKS ) )
                     {
                         saveClassAsImaris( classIndex, resultExportSettings );
                     }
-                    else if ( resultExportSettings.exportType.equals( ResultExportSettings.TIFF_STACKS ) )
+                    else if ( resultExportSettings.exportType.equals(
+                            ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS ) )
                     {
                         saveClassAsTiff( classIndex, resultExportSettings );
                     }
-                    else if ( resultExportSettings.exportType.equals( ResultExportSettings.SHOW_IN_IMAGEJ ) )
+                    else if ( resultExportSettings.exportType.equals(
+                            ResultExportSettings.SHOW_IN_IMAGEJ ) )
                     {
                         createImagePlusForClass( classIndex, resultExportSettings ).show();
                     }
-                    else if ( resultExportSettings.exportType.equals( ResultExportSettings.GET_AS_IMAGEPLUS_ARRAYLIST ) )
+                    else if ( resultExportSettings.exportType.equals(
+                            ResultExportSettings.GET_AS_IMAGEPLUS_ARRAYLIST ) )
                     {
                         classImps.add( createImagePlusForClass( classIndex, resultExportSettings ) );
                     }
@@ -480,8 +502,10 @@ public abstract class ResultExport
 
     }
 
-    private static void saveAsSeparateMultiClassTiffSlices( ResultExportSettings resultExportSettings )
+    private static void saveAsMultiClassTiffSlices( ResultExportSettings resultExportSettings )
     {
+        // TODO: Binning is ignored here
+
         FinalInterval interval = resultExportSettings.resultImage.getInterval();
 
         String directory = resultExportSettings.directory;
@@ -493,12 +517,71 @@ public abstract class ResultExport
                 int slice = (int) z + 1;
                 int frame = (int) t + 1;
                 ImageProcessor ip = resultExportSettings.resultImage.getSlice( slice, frame);
-                String filename = "classified--C01--T" + String.format( "%05d", frame ) + "--Z" + String.format( "%05d", slice ) + ".tif";
+                String filename = "classified--C01--T" + String.format( "%05d", frame )
+                        + "--Z" + String.format( "%05d", slice ) + ".tif";
                 String path = directory + File.separator + filename;
                 IJ.saveAsTiff( new ImagePlus( filename, ip ), path );
             }
         }
+    }
 
+    private static void saveAsClassLabelMaskTiffStacks( ResultExportSettings settings )
+    {
+        // TODO: Binning is currently ignored here
+
+        String directory = settings.directory;
+        final ImagePlus result = settings.resultImagePlus;
+
+        final Duplicator duplicator = new Duplicator();
+
+        for ( int t = settings.timePointsFirstLast[ 0 ];
+              t <= settings.timePointsFirstLast[ 1 ]; ++t )
+        {
+            final int frame =  t + 1;
+
+            ImagePlus resultFrame = duplicator.run(
+                    result,
+                    1, 1,
+                    1, result.getNSlices(),
+                    frame, frame );
+
+            for ( int z = 1; z <= resultFrame.getNSlices(); z++ )
+            {
+                final ImageProcessor processor = resultFrame.getStack().getProcessor( z );
+                byte[] pixels = (byte[]) processor.getPixels();
+
+                /**
+                 * 0 = Not classified at all
+                 * 1 - classLutWidth -> 1 = class 1
+                 * classLutWidth + 1 - 2 * classLutWidth -> 2 = class 2
+                 * ...
+                 */
+                for ( int i = 0; i < pixels.length; i++ )
+                    pixels[ i ] = ( byte ) Math.ceil( 1.0 * pixels[ i ] / settings.classLutWidth );
+
+            }
+
+            resultFrame.setDisplayRange(0, settings.classNames.size());
+
+            IJ.saveAsTiff( resultFrame, getLabelMaskPath( settings, directory, frame ) );
+        }
+
+    }
+
+    private static String getLabelMaskPath(
+            ResultExportSettings settings,
+            String directory,
+            int frame )
+    {
+        String filename;
+        if ( settings.resultImagePlus.getNFrames() > 1 )
+            filename = settings.exportNamesPrefix
+                    + "labelMask" + "--T" + String.format( "%05d", frame ) + ".tif";
+        else
+            filename = settings.exportNamesPrefix
+                    + "labelMask.tif";
+
+        return directory + File.separator + filename;
     }
 
     private static void prepareProximityFilter( ResultExportSettings resultExportSettings )
@@ -508,52 +591,13 @@ public abstract class ResultExport
         if (  settings.doSpatialProximityFiltering )
         {
             logger.info( "Computing proximity mask..." );
-            ImagePlus impReferenceClass = getBinnedClassImage( settings.referenceClassId, resultExportSettings, 0  );
-            settings.dilatedBinaryReferenceMask = ProximityFilter3D.getDilatedBinaryUsingEDT( impReferenceClass, settings.distanceInPixelsAfterBinning  );
+            ImagePlus impReferenceClass =
+                    getBinnedClassImage( settings.referenceClassId, resultExportSettings, 0  );
+            settings.dilatedBinaryReferenceMask =
+                    ProximityFilter3D.getDilatedBinaryUsingEDT(
+                            impReferenceClass,
+                            settings.distanceInPixelsAfterBinning  );
         }
-    }
-
-
-    public static void saveClassesAsFiles( ResultExportSettings resultExportSettings )
-    {
-        // if ( checkMaximalVolume( resultImagePlus, binning, logger ) ) return;
-
-        configureClassExport( resultExportSettings );
-
-        configureExportBinning( resultExportSettings );
-
-        for ( int classIndex = 0; classIndex < resultExportSettings.classesToBeExported.size(); ++classIndex )
-        {
-            if ( resultExportSettings.classesToBeExported.get( classIndex ) )
-            {
-                if ( resultExportSettings.exportType.equals( ResultExportSettings.SEPARATE_IMARIS ) )
-                {
-                    saveClassAsImaris( classIndex, resultExportSettings );
-                }
-                else if ( resultExportSettings.exportType.equals( ResultExportSettings.TIFF_STACKS ) )
-                {
-                    saveClassAsTiff( classIndex, resultExportSettings );
-                }
-            }
-        }
-    }
-
-
-    public static void showClassesAsImages( ResultExportSettings resultExportSettings )
-    {
-
-        configureClassExport( resultExportSettings );
-
-        configureExportBinning( resultExportSettings );
-
-        for ( int classIndex = 0; classIndex < resultExportSettings.classesToBeExported.size(); ++classIndex )
-        {
-            if ( resultExportSettings.classesToBeExported.get( classIndex ) )
-            {
-                createImagePlusForClass( classIndex, resultExportSettings );
-            }
-        }
-
     }
 
     private static void configureExportBinning( ResultExportSettings resultExportSettings )

@@ -4,8 +4,10 @@ import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.results.ResultExportSettings;
 import de.embl.cba.cats.results.ResultImage;
 import de.embl.cba.cats.utils.IOUtils;
+import de.embl.cba.cats.utils.Utils;
 import de.embl.cba.utils.logging.IJLazySwingLogger;
 import ij.IJ;
+import net.imagej.ImageJ;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -38,6 +40,9 @@ public class BatchClassificationCommand implements Command
 	@Parameter (label = "Memory [MB]" )
 	public long memoryMB = IJ.maxMemory() / ( 1024 * 1024 );
 
+	@Parameter (label = "Export modality", choices = {
+			ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS, ResultExportSettings.SAVE_AS_CLASS_LABEL_MASK_TIFF_STACKS } )
+	public String exportType = ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS;
 
 	IJLazySwingLogger logger = new IJLazySwingLogger();
 
@@ -48,11 +53,11 @@ public class BatchClassificationCommand implements Command
 		List< File > filepaths =
 				IOUtils.getFiles( inputDirectory.getAbsolutePath(), filenameRegExp );
 
-		classifyImages( classifierFile, filepaths, outputDirectory );
+		classifyImagesAndSaveResults( classifierFile, filepaths, outputDirectory );
 	}
 
 
-	private void classifyImages(
+	private void classifyImagesAndSaveResults(
 			File classifierPath,
 			List< File > filePaths,
 			File outputDirectory  )
@@ -61,12 +66,12 @@ public class BatchClassificationCommand implements Command
 		for ( File filePath : filePaths )
 		{
 			logger.info( "Working on: " + filePath  );
-			classifyImage( classifierPath, filePath, outputDirectory  );
+			classifyImageAndSaveResult( classifierPath, filePath, outputDirectory  );
 		}
 
 	}
 
-	private void classifyImage(
+	private void classifyImageAndSaveResult(
 			File classifierPath,
 			File inputImagePath,
 			File outputDirectory )
@@ -94,13 +99,21 @@ public class BatchClassificationCommand implements Command
 		// configure results export
 		final ResultExportSettings resultExportSettings = new ResultExportSettings();
 		resultExportSettings.inputImagePlus = cats.getInputImage();
-		resultExportSettings.exportType = ResultExportSettings.TIFF_STACKS;
+		resultExportSettings.exportType = exportType;
 		resultExportSettings.directory = outputDirectory.getAbsolutePath();
-		resultExportSettings.exportNamesPrefix = inputImagePath.getName() + "_";
+		resultExportSettings.exportNamesPrefix = Utils.removeExtension( inputImagePath.getName() ) + "--" ;
 		resultExportSettings.classNames = cats.getClassNames();
 
 		final ResultImage resultImage = cats.getResultImage();
 		resultImage.exportResults( resultExportSettings );
+	}
+
+	public static void main( final String... args )
+	{
+		final ImageJ ij = new ImageJ();
+		ij.ui().showUI();
+
+		ij.command().run( BatchClassificationCommand.class, true );
 	}
 
 }

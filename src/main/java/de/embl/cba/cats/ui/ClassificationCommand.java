@@ -94,7 +94,7 @@ public class ClassificationCommand implements Command
 		// configure results export
 		final ResultExportSettings resultExportSettings = new ResultExportSettings();
 		resultExportSettings.inputImagePlus = cats.getInputImage();
-		resultExportSettings.exportType = ResultExportSettings.TIFF_STACKS;
+		resultExportSettings.exportType = ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS;
 		resultExportSettings.directory = outputDirectory.getAbsolutePath();
 		resultExportSettings.exportNamesPrefix = inputImagePath.getName() + "_";
 		resultExportSettings.classNames = cats.getClassNames();
