@@ -44,7 +44,7 @@ public class Overlays implements RoiListener
     LabelReview labelReview;
     private Listeners listeners;
 
-    private int roiStrokeWidthDuringLabelReview = 4;
+    private int roiStrokeWidthDuringLabelReview = 1;
     private int zoomLevel = 0;
     private int classID;
 
@@ -304,8 +304,11 @@ public class Overlays implements RoiListener
     {
         GenericDialog gd = new GenericDialogPlus("Label Review");
 
-        gd.addChoice( "Review labels of class", CATS.getClassNames().toArray( new String[0] ), CATS.getClassNames().get( 0 ) );
-        gd.addNumericField( "Roi stroke width during review", roiStrokeWidthDuringLabelReview, 0 );
+        gd.addChoice( "Review labels of class",
+                CATS.getClassNames().toArray( new String[0] ), CATS.getClassNames().get( 0 ) );
+        gd.addNumericField( "Roi stroke width during review",
+                roiStrokeWidthDuringLabelReview, 0 );
+
         gd.addNumericField( "Zoom level [ 0 - 10 ]", 2, 0 );
 
         gd.showDialog();
