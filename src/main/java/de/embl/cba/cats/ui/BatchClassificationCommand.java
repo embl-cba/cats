@@ -63,21 +63,21 @@ public class BatchClassificationCommand implements Command
 			File outputDirectory  )
 	{
 
+		logger.info( "Loading classifier: " + classifierPath  );
+		final CATS cats = getCats( classifierPath );
+
 		for ( File filePath : filePaths )
 		{
-			logger.info( "Working on: " + filePath  );
-			classifyImageAndSaveResult( classifierPath, filePath, outputDirectory  );
+			logger.info( "Classifying: " + filePath  );
+			classifyImageAndSaveResult( filePath, outputDirectory, cats );
 		}
 
 	}
 
 	private void classifyImageAndSaveResult(
-			File classifierPath,
 			File inputImagePath,
-			File outputDirectory )
+			File outputDirectory, CATS cats )
 	{
-		// create instance
-		final CATS cats = new CATS();
 
 		// load and set the image to be classified
 		cats.setInputImage( IJ.openImage( inputImagePath.getAbsolutePath() ) );
@@ -86,12 +86,6 @@ public class BatchClassificationCommand implements Command
 		// for big image data this is not possible and thus there is the other option:
 		// cats.setResultImageDisk( directory );
 		cats.setResultImageRAM();
-
-		cats.setNumThreads( numThreads );
-		cats.setMaxMemoryBytes( memoryMB * 1024 * 1024 );
-
-		// load classifier (to be trained and saved before using the UI)
-		cats.loadClassifier( classifierPath );
 
 		// apply classifier
 		cats.applyClassifierWithTiling();
@@ -106,6 +100,19 @@ public class BatchClassificationCommand implements Command
 
 		final ResultImage resultImage = cats.getResultImage();
 		resultImage.exportResults( resultExportSettings );
+	}
+
+	private CATS getCats( File classifierPath )
+	{
+		// create instance
+		final CATS cats = new CATS();
+
+		cats.setNumThreads( numThreads );
+		cats.setMaxMemoryBytes( memoryMB * 1024 * 1024 );
+
+		// load classifier (to be trained and saved before using the UI)
+		cats.loadClassifier( classifierPath );
+		return cats;
 	}
 
 	public static void main( final String... args )
