@@ -605,8 +605,18 @@ public abstract class ResultExport
 
         }
 
-        resultFrame.setLut( classLabelLUT );
-        //resultFrame.setDisplayRange( 0, settings.classNames.size() );
+
+        ImageProcessor ip = resultFrame.getChannelProcessor();
+        ip.setColorModel( classLabelLUT );
+        if (resultFrame.getStackSize()>1)
+            resultFrame.getStack().setColorModel( classLabelLUT );
+        resultFrame.updateAndRepaintWindow();
+
+        //IJ.run( resultFrame, "Spectrum", "");
+//        IJ.run( resultFrame, "", "" );
+//        resultFrame.setC( 0 );
+        //resultFrame.getProcessor().setLut( classLabelLUT );
+        resultFrame.setDisplayRange( 0, settings.classNames.size() );
         resultFrame.setTitle( "class label mask" );
         resultFrame.show();
         return resultFrame;
