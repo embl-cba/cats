@@ -13,6 +13,7 @@ import ij.Prefs;
 import ij.plugin.Binner;
 import ij.plugin.Duplicator;
 import ij.process.ImageProcessor;
+import ij.process.LUT;
 import net.imglib2.FinalInterval;
 
 import java.io.File;
@@ -41,7 +42,9 @@ public abstract class ResultExport
 
         setChannelName( fileName, imarisDataSet );
 
-        ImarisWriter.writeHeaderFile( imarisDataSet, resultExportSettings.directory, resultExportSettings.exportNamesPrefix + fileName + ".ims" );
+        ImarisWriter.writeHeaderFile(
+                imarisDataSet, resultExportSettings.directory,
+                resultExportSettings.exportNamesPrefix + fileName + ".ims" );
 
         H5DataCubeWriter writer = new H5DataCubeWriter();
 
@@ -49,7 +52,8 @@ public abstract class ResultExport
         {
             ImagePlus impClass = getBinnedAndProximityFilteredClassImage( classId, resultExportSettings, t );
 
-            logger.progress( "Writing " + fileName+ ", frame:", ( t + 1 ) + "/" + resultExportSettings.resultImagePlus.getNFrames() + "..." );
+            logger.progress( "Writing " + fileName+ ", frame:", ( t + 1 )
+                    + "/" + resultExportSettings.resultImagePlus.getNFrames() + "..." );
 
             writer.writeImarisCompatibleResolutionPyramid( impClass, imarisDataSet, 0, t );
         }
@@ -544,7 +548,6 @@ public abstract class ResultExport
         String directory = settings.directory;
         final ImagePlus result = settings.resultImagePlus;
 
-
         for ( int t = settings.timePointsFirstLast[ 0 ];
               t <= settings.timePointsFirstLast[ 1 ]; ++t )
         {
@@ -584,6 +587,8 @@ public abstract class ResultExport
                 1, result.getNSlices(),
                 frame, frame );
 
+        final LUT classLabelLUT = createClassLabelLUT( settings );
+
         for ( int z = 1; z <= resultFrame.getNSlices(); z++ )
         {
             final ImageProcessor processor = resultFrame.getStack().getProcessor( z );
@@ -600,9 +605,28 @@ public abstract class ResultExport
 
         }
 
-        resultFrame.setDisplayRange(0, settings.classNames.size());
+        resultFrame.setLut( classLabelLUT );
+        //resultFrame.setDisplayRange( 0, settings.classNames.size() );
         resultFrame.setTitle( "class label mask" );
+        resultFrame.show();
         return resultFrame;
+    }
+
+    private static LUT createClassLabelLUT( ResultExportSettings settings )
+    {
+        final byte[] red = new byte[ 256 ];
+        final byte[] green = new byte[ 256 ];
+        final byte[] blue = new byte[ 256 ];
+
+        for ( int iClass = 0; iClass < settings.classColors.length; iClass++ )
+        {
+            red[ iClass + 1 ] = ( byte ) ( settings.classColors[ iClass ].getRed() );
+            green[ iClass + 1 ] = ( byte ) ( settings.classColors[ iClass ].getGreen() );
+            blue[ iClass + 1 ] = ( byte ) ( settings.classColors[ iClass ].getBlue() );
+        }
+
+        return new LUT( red, green, blue );
+
     }
 
     private static String getLabelMaskPath(

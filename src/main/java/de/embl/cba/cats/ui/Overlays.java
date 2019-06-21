@@ -4,7 +4,7 @@ import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.labels.LabelReview;
 import de.embl.cba.cats.labels.Label;
 import de.embl.cba.cats.results.ResultImage;
-import de.embl.cba.cats.results.ResultImageDisk;
+import de.embl.cba.cats.results.ResultImageSettings;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
@@ -93,9 +93,9 @@ public class Overlays implements RoiListener
         {
             for ( int iClass = 0; iClass < CATS.MAX_NUM_CLASSES; iClass++)
             {
-                int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
+                int offset = iClass * ResultImageSettings.CLASS_LUT_WIDTH;
 
-                for ( int i = 1; i <= ResultImageDisk.CLASS_LUT_WIDTH; i++)
+                for ( int i = 1; i <= ResultImageSettings.CLASS_LUT_WIDTH; i++)
                 {
                     red[offset + i] = (byte) ( colors[iClass].getRed() );
                     green[offset + i] = (byte) ( colors[iClass].getGreen() );
@@ -112,13 +112,13 @@ public class Overlays implements RoiListener
         {
             for ( int iClass = 0; iClass < CATS.MAX_NUM_CLASSES; iClass++)
             {
-                int offset = iClass * ResultImageDisk.CLASS_LUT_WIDTH;
+                int offset = iClass * ResultImageSettings.CLASS_LUT_WIDTH;
 
-                for ( int i = 1; i <= ResultImageDisk.CLASS_LUT_WIDTH; i++)
+                for ( int i = 1; i <= ResultImageSettings.CLASS_LUT_WIDTH; i++)
                 {
-                    red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / ( ResultImageDisk.CLASS_LUT_WIDTH ));
-                    green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / ( ResultImageDisk.CLASS_LUT_WIDTH ));
-                    blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue() * i / ( ResultImageDisk.CLASS_LUT_WIDTH ));
+                    red[offset + i] = (byte) (1.0 * colors[iClass].getRed() * i / ( ResultImageSettings.CLASS_LUT_WIDTH ));
+                    green[offset + i] = (byte) (1.0 * colors[iClass].getGreen() * i / ( ResultImageSettings.CLASS_LUT_WIDTH ));
+                    blue[offset + i] = (byte) (1.0 * colors[iClass].getBlue() * i / ( ResultImageSettings.CLASS_LUT_WIDTH ));
                 }
             }
 
@@ -308,7 +308,6 @@ public class Overlays implements RoiListener
                 CATS.getClassNames().toArray( new String[0] ), CATS.getClassNames().get( 0 ) );
         gd.addNumericField( "Roi stroke width during review",
                 roiStrokeWidthDuringLabelReview, 0 );
-
         gd.addNumericField( "Zoom level [ 0 - 10 ]", 2, 0 );
 
         gd.showDialog();
@@ -341,9 +340,7 @@ public class Overlays implements RoiListener
         roiManager = new RoiManager();
 
         for ( Roi roi : rois )
-        {
             addRoiToRoiManager( roiManager, inputImage, roi );
-        }
     }
 
     public static void addRoiToRoiManager( RoiManager manager, ImagePlus imp, Roi roi )
@@ -354,13 +351,9 @@ public class Overlays implements RoiListener
     private boolean isNewRoi( Roi roi )
     {
         if ( roi == null )
-        {
             return false;
-        }
         else if ( currentlyDisplayedRoi == null )
-        {
             return true;
-        }
         else
         {
             int x = roi.getBounds().x;

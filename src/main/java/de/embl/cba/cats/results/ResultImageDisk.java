@@ -17,8 +17,6 @@ import java.util.ArrayList;
 
 public class ResultImageDisk implements ResultImage {
 
-    public static final int CLASS_LUT_WIDTH = 10;
-
     ImagePlus result;
     CATS CATS;
     Logger logger;
@@ -43,7 +41,7 @@ public class ResultImageDisk implements ResultImage {
     @Override
     public ArrayList< ImagePlus > exportResults( ResultExportSettings resultExportSettings )
     {
-        resultExportSettings.classLutWidth = CLASS_LUT_WIDTH;
+        resultExportSettings.classLutWidth = ResultImageSettings.CLASS_LUT_WIDTH;
         resultExportSettings.logger = logger;
         resultExportSettings.resultImagePlus = result;
         resultExportSettings.resultImage = this;
@@ -68,7 +66,7 @@ public class ResultImageDisk implements ResultImage {
     @Override
     public int getProbabilityRange()
     {
-        return CLASS_LUT_WIDTH;
+        return ResultImageSettings.CLASS_LUT_WIDTH;
     }
 
     @Override

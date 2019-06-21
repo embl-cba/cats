@@ -293,7 +293,8 @@ public class CATSCommand implements Command, Interactive
 					ResultImageExportGUI.showExportGUI(
 							cats.getResultImage(),
 							cats.getInputImage(),
-							cats.getClassNames() );
+							cats.getClassNames(),
+							cats.classColors );
 					break;
 
 				case APPLY_CLASSIFIER_ON_SLURM:

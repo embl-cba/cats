@@ -4,6 +4,7 @@ import de.embl.cba.cats.results.ResultExportSettings;
 import de.embl.cba.cats.ui.BatchClassificationCommand;
 import ij.IJ;
 import ij.Prefs;
+import net.imagej.ImageJ;
 import org.junit.Test;
 
 import java.io.File;
@@ -72,6 +73,7 @@ public class TestBatchClassificationCommand
 
 	public static void main( String[] args )
 	{
+		new ImageJ(  ).ui().showUI();
 		new TestBatchClassificationCommand().testLabelMaskExport();
 		//new TestBatchClassificationCommand().testProbabilitiesExport();
 	}

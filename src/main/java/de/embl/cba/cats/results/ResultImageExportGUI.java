@@ -6,6 +6,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 public abstract class ResultImageExportGUI
@@ -13,7 +14,7 @@ public abstract class ResultImageExportGUI
 
     public static void showExportGUI( ResultImage resultImage,
                                       ImagePlus rawData,
-                                      ArrayList< String > classNames )
+                                      ArrayList< String > classNames, Color[] classColors )
     {
 
         String[] exportChoices = new String[]{
@@ -52,6 +53,7 @@ public abstract class ResultImageExportGUI
         settings.resultImage = resultImage;
         settings.inputImagePlus = rawData;
         settings.timePointsFirstLast = new int[] { 0, rawData.getNFrames() - 1 };
+        settings.classColors = classColors;
 
         setSettingsFromGUI( classNames, gd, settings );
 

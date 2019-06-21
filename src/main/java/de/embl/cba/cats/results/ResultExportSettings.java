@@ -3,6 +3,7 @@ package de.embl.cba.cats.results;
 import de.embl.cba.utils.logging.Logger;
 import ij.ImagePlus;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 public class ResultExportSettings
@@ -15,7 +16,7 @@ public class ResultExportSettings
     public static final String SHOW_AS_LABEL_MASKS = "Show as label masks";
 
     public static final String GET_AS_IMAGEPLUS_ARRAYLIST = "Get as ImagePlus Array";
-	public String directory;
+    public String directory;
     public String exportNamesPrefix = "";
     public ArrayList< Boolean > classesToBeExported;
     public int[] binning;
@@ -30,4 +31,5 @@ public class ResultExportSettings
     public int classLutWidth;
     public int[] timePointsFirstLast;
 
+    public Color[] classColors;
 }

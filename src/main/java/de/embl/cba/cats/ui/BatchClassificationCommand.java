@@ -50,10 +50,10 @@ public class BatchClassificationCommand implements Command
 	{
 		logger.setLogService( logService );
 
-		List< File > filepaths =
+		List< File > filePaths =
 				IOUtils.getFiles( inputDirectory.getAbsolutePath(), filenameRegExp );
 
-		classifyImagesAndSaveResults( classifierFile, filepaths, outputDirectory );
+		classifyImagesAndSaveResults( classifierFile, filePaths, outputDirectory );
 	}
 
 
@@ -97,6 +97,7 @@ public class BatchClassificationCommand implements Command
 		resultExportSettings.directory = outputDirectory.getAbsolutePath();
 		resultExportSettings.exportNamesPrefix = Utils.removeExtension( inputImagePath.getName() ) + "--" ;
 		resultExportSettings.classNames = cats.getClassNames();
+		resultExportSettings.classColors = cats.classColors;
 
 		final ResultImage resultImage = cats.getResultImage();
 		resultImage.exportResults( resultExportSettings );

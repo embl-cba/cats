@@ -23,9 +23,9 @@ public class ResultImageFrameSetterDisk implements ResultImageFrameSetter {
     @Override
     public void set( long x, long y, long z, int classId, double certainty )
     {
-        int lutCertainty = (int) ( certainty * ( resultImageDisk.CLASS_LUT_WIDTH - 1.0 ) );
+        int lutCertainty = (int) ( certainty * ( ResultImageSettings.CLASS_LUT_WIDTH - 1.0 ) );
 
-        int classOffset = classId * resultImageDisk.CLASS_LUT_WIDTH + 1;
+        int classOffset = classId * ResultImageSettings.CLASS_LUT_WIDTH + 1;
 
         resultChunk[ (int) (z - interval.min( IntervalUtils.Z )) ]
                 [ (int) (y - interval.min ( IntervalUtils.Y )) ]
