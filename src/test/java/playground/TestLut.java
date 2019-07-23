@@ -16,11 +16,12 @@ public class TestLut
 		new ImageJ().ui().showUI();
 
 		final ImagePlus imagePlus =
-				IJ.openImage( "/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/test-data/blobs/input/blobs_00.tif" );
+				IJ.openImage("http://wsr.imagej.net/images/blobs.gif");
 
+		//imagePlus.show();
 		imagePlus.setLut( createClassLabelLUT( ) );
-
 		imagePlus.show();
+
 	}
 
 

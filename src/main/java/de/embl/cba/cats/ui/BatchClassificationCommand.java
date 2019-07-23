@@ -41,7 +41,8 @@ public class BatchClassificationCommand implements Command
 	public long memoryMB = IJ.maxMemory() / ( 1024 * 1024 );
 
 	@Parameter (label = "Export modality", choices = {
-			ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS, ResultExportSettings.SAVE_AS_CLASS_LABEL_MASK_TIFF_STACKS } )
+			ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS,
+			ResultExportSettings.SAVE_AS_CLASS_LABEL_MASK_TIFF_STACKS } )
 	public String exportType = ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS;
 
 	IJLazySwingLogger logger = new IJLazySwingLogger();
