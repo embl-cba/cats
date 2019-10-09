@@ -10,9 +10,9 @@ This github repository can be cited (registered at [ZENODO](https://zenodo.org/)
 
 ```
 <repository>
-    <id>bintray-tischi-snapshots</id>
-    <name>bintray</name>
-    <url>https://dl.bintray.com/tischi/snapshots</url>
+    	<id>bintray-tischi-snapshots</id>
+    	<name>bintray</name>
+    	<url>https://dl.bintray.com/tischi/snapshots</url>
 </repository>
     
 <dependency>
