@@ -18,7 +18,7 @@ This github repository can be cited (registered at [ZENODO](https://zenodo.org/)
 <dependency>
 	<groupId>de.embl.cba</groupId>
 	<artifactId>fiji-plugin-cats</artifactId>
-	<version>0.7.0</version>
+	<version>0.7.1</version>
 <dependency>
 ```
 
