@@ -6,6 +6,24 @@
 This github repository can be cited (registered at [ZENODO](https://zenodo.org/)):
 - Tischer, C., and Pepperkok, R. (2019) CATS: Fiji plugin for context aware trainable segmentation of big image data. http://doi.org/10.5281/zenodo.2574736
 
+## Maven dependency
+
+```
+<repository>
+    	<id>bintray-tischi-snapshots</id>
+    	<name>bintray</name>
+    	<url>https://dl.bintray.com/tischi/snapshots</url>
+</repository>
+    
+<dependency>
+	<groupId>de.embl.cba</groupId>
+	<artifactId>fiji-plugin-cats</artifactId>
+	<version>0.7.1</version>
+<dependency>
+```
+
+For the currently most recent version, please see here: https://github.com/embl-cba/fiji-plugin-cats/blob/master/pom.xml#L14
+
 ## Overview
 
 CATS is a big image data compatible [Fiji](http://fiji.sc/) plugin for trainable image segmentation. 
