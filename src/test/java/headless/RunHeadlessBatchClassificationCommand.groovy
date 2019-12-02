@@ -15,16 +15,16 @@ import ij.Prefs;
 command = new BatchClassificationCommand();
 
 // Specify folder with input images
-command.inputDirectory = new File("/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/blobs/input");
+command.inputDirectory = new File("/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/blobs/input");
 
 // Specify classifier
-command.classifierFile = new File("/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/blobs/classifier/blobs_00.classifier");
+command.classifierFile = new File("/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/blobs/classifier/blobs_00.classifier");
 
 // Regular expression to only classify files in the inputDirectory matching this pattern (".*" matches everything)
 command.filenameRegExp = ".*"; 
 
 // Directory for the output
-command.outputDirectory = new File("/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/blobs/output");
+command.outputDirectory = new File("/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/blobs/output");
 
 // specify resources, you may try to over-commit to see whether it runs faster
 command.numThreads = Prefs.getThreads();;

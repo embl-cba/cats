@@ -2,7 +2,6 @@ package de.embl.cba.cats.utils;
 
 public abstract class StringUtils
 {
-
     public static int[] delimitedStringToIntegerArray(String s, String delimiter) {
         String[] sA = s.split(delimiter);
         int[] nums = new int[sA.length];
@@ -13,5 +12,4 @@ public abstract class StringUtils
 
         return nums;
     }
-
 }

@@ -258,7 +258,7 @@ public class ApplyClassifierAdvancedCommand<T extends RealType<T>> implements Co
         {
             logService.info( "Saving as Imaris..." );
             outputFileType = ".ims";
-            resultExportSettings.exportType = ResultExportSettings.IMARIS_STACKS;
+            resultExportSettings.exportType = ResultExportSettings.SAVE_AS_IMARIS_STACKS;
             cats.getResultImage().exportResults( resultExportSettings );
         }
 
@@ -274,7 +274,7 @@ public class ApplyClassifierAdvancedCommand<T extends RealType<T>> implements Co
         {
             logService.info( "Saving as Tiff slices..." );
             outputFileType = ".tif";
-            resultExportSettings.exportType = ResultExportSettings.CLASS_PROBABILITIES_TIFF_SLICES;
+            resultExportSettings.exportType = ResultExportSettings.SAVE_AS_CLASS_PROBABILITIES_TIFF_SLICES;
             cats.getResultImage().exportResults( resultExportSettings );
         }
 

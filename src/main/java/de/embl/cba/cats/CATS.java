@@ -7,6 +7,7 @@ import de.embl.cba.cats.classification.ClassifierManager;
 import de.embl.cba.cats.classification.ClassifierUtils;
 import de.embl.cba.cats.features.DownSampler;
 import de.embl.cba.cats.features.FeatureProvider;
+import de.embl.cba.cats.features.ImageScience;
 import de.embl.cba.cats.features.settings.FeatureSettings;
 import de.embl.cba.cats.features.settings.FeatureSettingsUtils;
 import de.embl.cba.cats.instances.InstancesAndMetadata;
@@ -45,7 +46,7 @@ import inra.ijpb.binary.BinaryImages;
 import inra.ijpb.measure.GeometricMeasures3D;
 import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
-import de.embl.cba.bigdataprocessor.utils.Point3D;
+import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.util.Intervals;
 import weka.classifiers.AbstractClassifier;
@@ -163,12 +164,9 @@ public class CATS
 
 	public void setResultImageBgFgDisk( String directory )
 	{
-
 		resultImageBgFg = new ResultImageDisk( this, directory, getInputImageDimensions() );
 
 		logger.info("Created disk-resident resultImagePlus image: " + directory);
-
-
 	}
 
 	public Color[] getColors()
@@ -187,9 +185,7 @@ public class CATS
 		{
 			segmentedObjectsMap = new HashMap<>(  );
 		}
-
 		segmentedObjectsMap.put( segmentedObjects.name, segmentedObjects );
-
 	}
 
 	public void segmentObjects()
@@ -893,11 +889,20 @@ public class CATS
 	 */
 	public CATS()
 	{
-		initialize();
+		if ( ! initialize() )  throw new UnsupportedOperationException( "CATS initialisation failed." );
 	}
 
-	private void initialize()
+	private boolean initialize()
 	{
+		try
+		{
+			ImageScience.isAvailable();
+		}
+		catch (final NoClassDefFoundError err)
+		{
+			IJ.showMessage( "Please install ImageScience! [ Help > Update > Manage Update Sites ]" );
+			return false;
+		}
 
 		// set class label names
 		char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
@@ -925,6 +930,7 @@ public class CATS
 
 		setNumThreads( Prefs.getThreads() );
 
+		return true;
 	}
 
 
@@ -2652,24 +2658,20 @@ public class CATS
                 }
             }; thread.start();
         }
-
     }
-
-
 
 	private void configureInputImageLoading( Map< String, Object > parameters )
     {
-
         if ( inputImage.getStack() instanceof VirtualStack2 )
 		{
 			parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_LAZY_LOADING_TOOLS );
-			VirtualStack2 vss = ( VirtualStack2 ) inputImage.getStack();
-			parameters.put( IOUtils.INPUT_IMAGE_VSS_DIRECTORY, vss.getDirectory() );
-            parameters.put( IOUtils.INPUT_IMAGE_VSS_PATTERN, vss.getFilterPattern() );
-            parameters.put( IOUtils.INPUT_IMAGE_VSS_SCHEME, vss.getNamingScheme() );
-            parameters.put( IOUtils.INPUT_IMAGE_VSS_HDF5_DATA_SET_NAME, vss.getH5DataSet() );
+			VirtualStack2 vs2 = ( VirtualStack2 ) inputImage.getStack();
+			parameters.put( IOUtils.INPUT_IMAGE_VSS_DIRECTORY, vs2.getDirectory() );
+            parameters.put( IOUtils.INPUT_IMAGE_VSS_PATTERN, vs2.getFilterPattern() );
+            parameters.put( IOUtils.INPUT_IMAGE_VSS_SCHEME, vs2.getNamingScheme() );
+            parameters.put( IOUtils.INPUT_IMAGE_VSS_HDF5_DATA_SET_NAME, vs2.getH5DataSet() );
 			parameters.put( IOUtils.INPUT_IMAGE_FILE, new File("") ) ;
-			System.out.println( "IOUtils.INPUT_IMAGE_VSS_DIRECTORY: " + vss.getDirectory() );
+			System.out.println( "IOUtils.INPUT_IMAGE_VSS_DIRECTORY: " + vs2.getDirectory() );
         }
 		else if ( inputImage.getStack() instanceof VirtualStack )
 		{
@@ -2682,7 +2684,6 @@ public class CATS
 			parameters.put( IOUtils.INPUT_IMAGE_FILE, getInputImageFile() );
 		}
     }
-
 
     public void applyClassifierWithTiling( String classifierKey,
 										   FinalInterval classificationInterval,

@@ -20,7 +20,7 @@ public abstract class ResultImageExportGUI
         String[] exportChoices = new String[]{
                 ResultExportSettings.SHOW_AS_LABEL_MASKS,
                 ResultExportSettings.SHOW_AS_PROBABILITIES,
-                ResultExportSettings.IMARIS_STACKS,
+                ResultExportSettings.SAVE_AS_IMARIS_STACKS,
                 ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS };
 
         GenericDialog gd = new GenericDialogPlus("Export Segmentation Results");
@@ -57,7 +57,7 @@ public abstract class ResultImageExportGUI
 
         setSettingsFromGUI( classNames, gd, settings );
 
-        if ( ! ResultExport.showOnly( settings ) )
+        if ( ResultExport.isSaveImage( settings ) )
             if ( ! getOutputDirectory( settings ) ) return;
 
         resultImage.exportResults( settings );

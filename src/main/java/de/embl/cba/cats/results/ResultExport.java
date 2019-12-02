@@ -343,7 +343,7 @@ public abstract class ResultExport
 
         configureTimePointsExport( resultExportSettings );
 
-        if ( ! showOnly( resultExportSettings ) )
+        if ( isSaveImage( resultExportSettings ) )
             IOUtils.createDirectoryIfNotExists( resultExportSettings.directory );
 
         configureClassExport( resultExportSettings );
@@ -397,12 +397,21 @@ public abstract class ResultExport
         }
     }
 
-    public static boolean showOnly( ResultExportSettings resultExportSettings )
+    public static boolean isSaveImage( ResultExportSettings resultExportSettings )
     {
-        return resultExportSettings.exportType.equals(
-                ResultExportSettings.SHOW_AS_PROBABILITIES ) ||
-                resultExportSettings.exportType.equals(
-                        ResultExportSettings.SHOW_AS_LABEL_MASKS );
+        switch ( resultExportSettings.exportType )
+        {
+            case ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS:
+                return true;
+            case ResultExportSettings.SAVE_AS_IMARIS_STACKS:
+                return true;
+            case ResultExportSettings.SAVE_AS_CLASS_LABEL_MASK_TIFF_STACKS:
+                return true;
+            case ResultExportSettings.SAVE_AS_CLASS_PROBABILITIES_TIFF_SLICES:
+                return true;
+            default:
+                return false;
+        }
     }
 
     private static void configureClassExport( ResultExportSettings resultExportSettings )
@@ -426,7 +435,7 @@ public abstract class ResultExport
 
     private static void createImarisHeader( ResultExportSettings resultExportSettings )
     {
-        if ( resultExportSettings.exportType.equals( ResultExportSettings.IMARIS_STACKS ) )
+        if ( resultExportSettings.exportType.equals( ResultExportSettings.SAVE_AS_IMARIS_STACKS ) )
         {
             ImarisUtils.createImarisMetaFile( resultExportSettings.directory );
         }
@@ -434,12 +443,12 @@ public abstract class ResultExport
 
     private static void exportRawData( ResultExportSettings resultExportSettings )
     {
-        if ( resultExportSettings.exportType.equals( ResultExportSettings.IMARIS_STACKS ) )
+        if ( resultExportSettings.exportType.equals( ResultExportSettings.SAVE_AS_IMARIS_STACKS ) )
         {
             if ( resultExportSettings.saveRawData )
             {
                 if ( resultExportSettings.exportType.equals(
-                        ResultExportSettings.IMARIS_STACKS ) )
+                        ResultExportSettings.SAVE_AS_IMARIS_STACKS ) )
                 {
                     saveRawDataAsImaris( resultExportSettings );
                 }
@@ -463,7 +472,7 @@ public abstract class ResultExport
         final ArrayList< ImagePlus > classImps = new ArrayList<>();
 
         if ( settings.exportType.equals(
-                ResultExportSettings.CLASS_PROBABILITIES_TIFF_SLICES ) )
+                ResultExportSettings.SAVE_AS_CLASS_PROBABILITIES_TIFF_SLICES ) )
         {
             saveAsMultiClassTiffSlices( settings );
         }
@@ -487,7 +496,7 @@ public abstract class ResultExport
                 if ( settings.classesToBeExported.get( classIndex ) )
                 {
                     if ( settings.exportType.equals(
-                            ResultExportSettings.IMARIS_STACKS ) )
+                            ResultExportSettings.SAVE_AS_IMARIS_STACKS ) )
                     {
                         saveClassAsImaris( classIndex, settings );
                     }

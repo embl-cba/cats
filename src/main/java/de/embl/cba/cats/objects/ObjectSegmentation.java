@@ -1,9 +1,9 @@
 package de.embl.cba.cats.objects;
 
-import de.embl.cba.bigdataprocessor.utils.Utils;
 import de.embl.cba.cats.CATS;
-import de.embl.cba.cats.results.ResultExportSettings;
 import de.embl.cba.cats.results.ResultExport;
+import de.embl.cba.cats.results.ResultExportSettings;
+import de.embl.cba.cats.utils.StringUtils;
 import fiji.util.gui.GenericDialogPlus;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
@@ -13,7 +13,10 @@ import inra.ijpb.binary.BinaryImages;
 import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
 import mcib3d.geom.Objects3DPopulation;
-import mcib3d.image3d.*;
+import mcib3d.image3d.ImageHandler;
+import mcib3d.image3d.ImageInt;
+import mcib3d.image3d.ImageLabeller;
+import mcib3d.image3d.Segment3DImage;
 
 public class ObjectSegmentation
 {
@@ -146,7 +149,7 @@ public class ObjectSegmentation
         settings.classId = gd.getNextChoiceIndex();
         settings.t = (int) gd.getNextNumber() - 1;
         settings.method = IMAGE_SUITE_3D;
-        settings.binning =  Utils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
+        settings.binning = StringUtils.delimitedStringToIntegerArray( gd.getNextString().trim(), ",");
         settings.showSegmentationImages = true;
     }
 

@@ -15,7 +15,7 @@ public class RunCatsCommandFluoCells
         ij.ui().showUI();
 
         ImagePlus imp = IJ.openImage(
-               "/Users/tischer/Documents/fiji-plugin-deepSegmentation/src/test/resources/multi-channel/FluorescentCells.tif" );
+               "/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/multi-channel/FluorescentCells.tif" );
 
 		imp.show();
 

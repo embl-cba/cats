@@ -2,7 +2,6 @@ package de.embl.cba.cats.ui;
 
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.classification.ClassificationRangeUtils;
-import de.embl.cba.cats.features.ImageScience;
 import de.embl.cba.cats.instances.InstancesAndMetadata;
 import de.embl.cba.cats.results.ResultImageExportGUI;
 import de.embl.cba.cats.utils.IOUtils;
@@ -184,15 +183,6 @@ public class CATSCommand implements Command, Interactive
 
     public void init()
     {
-        try
-        {
-            ImageScience.isAvailable();
-        }
-        catch (final NoClassDefFoundError err)
-        {
-            IJ.showMessage( "Please install ImageScience! [ Help > Update > Manage Update Sites ]" );
-        }
-
         IJ.setTool( "freeline" );
 
         cats = new CATS( );

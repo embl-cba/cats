@@ -42,7 +42,7 @@ public class ResultsExport
 
         ResultExportSettings resultExportSettings = new ResultExportSettings();
         resultExportSettings.directory = ResultsExport.class.getResource("3d-objects-export" ).getPath();
-        resultExportSettings.exportType = ResultExportSettings.IMARIS_STACKS;
+        resultExportSettings.exportType = ResultExportSettings.SAVE_AS_IMARIS_STACKS;
         resultExportSettings.classNames = cats.getClassNames();
         resultExportSettings.timePointsFirstLast = new int[]{ 0, 0 };
         resultExportSettings.saveRawData = true;
@@ -93,7 +93,7 @@ public class ResultsExport
 
         ResultExportSettings resultExportSettings = new ResultExportSettings();
         resultExportSettings.directory = "/Users/tischer/Desktop/tmp4";
-        resultExportSettings.exportType = ResultExportSettings.IMARIS_STACKS;
+        resultExportSettings.exportType = ResultExportSettings.SAVE_AS_IMARIS_STACKS;
         resultExportSettings.classNames = cats.getClassNames();
         resultExportSettings.timePointsFirstLast = new int[]{ 0, 1 };
         resultExportSettings.saveRawData = true;
