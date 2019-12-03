@@ -830,10 +830,12 @@ public class InstancesUtils {
         return instancesAndMetadata;
     }
 
-
-    public static boolean saveInstancesAsARFF( Instances instances, String directory, String filename )
+    public static boolean saveInstancesAsARFF(
+            Instances instances,
+            String directory,
+            String filename,
+            int numDecimalPlaces )
     {
-
         BufferedWriter out = null;
         try{
             out = new BufferedWriter(
@@ -845,7 +847,8 @@ public class InstancesUtils {
 
             for(int i = 0; i < instances.numInstances(); i++)
             {
-                out.write(instances.get(i).toString()+"\n");
+                final Instance instance = instances.get( i );
+                out.write( instance.toStringMaxDecimalDigits( numDecimalPlaces )+"\n");
             }
         }
         catch(Exception e)
@@ -866,17 +869,19 @@ public class InstancesUtils {
         return true;
     }
 
-    public static boolean saveInstancesAndMetadataAsARFF( InstancesAndMetadata instancesAndMetadata, String directory, String filename)
+    public static boolean saveInstancesAndMetadataAsARFF(
+            InstancesAndMetadata instancesAndMetadata,
+            String directory,
+            String filename,
+            int numDecimalPlaces )
     {
-
         instancesAndMetadata.putMetadataIntoInstances();
 
-        boolean success = saveInstancesAsARFF( instancesAndMetadata.instances, directory, filename );
+        boolean success = saveInstancesAsARFF( instancesAndMetadata.instances, directory, filename, numDecimalPlaces );
 
         instancesAndMetadata.removeMetadataFromInstances();
 
         return success;
-
     }
 
     public static int getNumLabelIds( InstancesAndMetadata instancesAndMetadata )

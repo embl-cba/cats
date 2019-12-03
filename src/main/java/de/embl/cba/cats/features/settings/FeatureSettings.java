@@ -9,7 +9,6 @@ import java.util.TreeSet;
 
 public class FeatureSettings
 {
-
     public final static String ANISOTROPY = "anisotropy";
     public final static String BIN_FACTOR = "binFactor";
     public final static String MAX_BIN_LEVEL = "maxBinLevel";
@@ -24,6 +23,10 @@ public class FeatureSettings
     public int imageBackground = 0;
 
     public boolean log2 = false;
+
+    public int log2NoiseLevel = 10; // added to all values during log2 transformation
+
+    public int log2Factor = 10000; // multiply all values after log2 transformation to avoid too small values which may be lost during saving to strings (ARFF text file)
 
     public ArrayList< Integer > binFactors = new ArrayList<>(  );
 
@@ -41,7 +44,8 @@ public class FeatureSettings
 
     public boolean normalize;
 
-	public boolean equals( FeatureSettings featureSettings )
+
+    public boolean equals( FeatureSettings featureSettings )
     {
         if ( anisotropy != featureSettings.anisotropy ) return false;
         if ( maxDeepConvLevel != featureSettings.maxDeepConvLevel ) return false;

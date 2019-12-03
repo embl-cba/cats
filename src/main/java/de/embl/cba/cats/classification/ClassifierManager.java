@@ -122,8 +122,6 @@ public class ClassifierManager {
             CATS.logger.info("...done!");
         }
 
-
-
         return saveOK;
     }
 

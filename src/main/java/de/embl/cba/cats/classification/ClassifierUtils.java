@@ -124,7 +124,6 @@ public class ClassifierUtils {
             InputStream is = new FileInputStream( selected );
             ObjectInputStream objectInputStream = new ObjectInputStream(is);
 
-
             classifierInstancesMetadata.classifier = ( FastRandomForest )
                     objectInputStream.readObject();
 

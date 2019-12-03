@@ -202,7 +202,6 @@ public abstract class IntervalUtils {
             tileSizes[ d ] = Math.min( tileSizes[ d ], wholeImageInterval.dimension( d ) );
         }
 
-
         tileSizes[ T ] = 1;
 
         CATS.logger.info("Tile sizes [x,y,z]: " + tileSizes[ X] + ", " + tileSizes[ Y]  + ", " + tileSizes[ Z ]);
@@ -234,7 +233,6 @@ public abstract class IntervalUtils {
                         }
 
                         tiles.add( new FinalInterval(min, max) );
-
                     }
                 }
             }
@@ -307,7 +305,7 @@ public abstract class IntervalUtils {
     public static long getApproximatelyNeededBytesPerVoxel( double numFeatures )
     {
         long floatingPointBytes = 4; // 32-bit
-        long neededBytesPerVoxel = (long) ( 2 * numFeatures * floatingPointBytes );
+        long neededBytesPerVoxel = (long) ( numFeatures * floatingPointBytes );
         return neededBytesPerVoxel;
     }
 

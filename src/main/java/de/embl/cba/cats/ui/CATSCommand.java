@@ -49,8 +49,7 @@ public class CATSCommand implements Command, Interactive
     public static final String CHANGE_CLASS_NAMES = "Change class names";
     public static final String CHANGE_COLORS = "Change class colors";
     public static final String CHANGE_RESULT_OVERLAY_OPACITY = "Overlay opacity";
-    public static final String UPDATE_LABEL_INSTANCES = "Update labels";
-    public static final String UPDATE_LABELS = "Update labels";
+    public static final String RECOMPUTE_LABEL_INSTANCES = "Recompute labels";
     public static final String TRAIN_CLASSIFIER = "Train classifier";
 	public static final String SET_MEMORY_AND_THREADS = "Set memory and threads";
 
@@ -94,10 +93,11 @@ public class CATSCommand implements Command, Interactive
 //                    REVIEW_OBJECTS,	// TODO
 //                    CREATE_OBJECTS_IMAGE, // TODO
                     CHANGE_FEATURE_SETTINGS,
+					CHANGE_ADVANCED_FEATURE_SETTINGS,
                     CHANGE_CLASSIFIER_SETTINGS,
-					SET_MEMORY_AND_THREADS
+					SET_MEMORY_AND_THREADS,
 //                    TRAIN_CLASSIFIER,
-//                    UPDATE_LABEL_INSTANCES,
+					RECOMPUTE_LABEL_INSTANCES
 //                    CHANGE_RESULT_OVERLAY_OPACITY,
 //                    UPDATE_LABELS,
 //                    IO_LOAD_LABEL_IMAGE,
@@ -205,7 +205,6 @@ public class CATSCommand implements Command, Interactive
         listeners = new Listeners( cats, overlays, labelButtonsPanel );
 
         cats.reserveKeyboardShortcuts();
-
     }
 
     protected void executeAction()
@@ -274,11 +273,9 @@ public class CATSCommand implements Command, Interactive
 					loadLabelInstances();
 					trainClassifier();
 					break;
-
 				case CHANGE_DEBUG_SETTINGS:
 					//showDebugSettingsDialog();
 					break;
-
 				case IO_EXPORT_RESULT_IMAGE:
 					ResultImageExportGUI.showExportGUI(
 							cats.getResultImage(),
@@ -286,7 +283,6 @@ public class CATSCommand implements Command, Interactive
 							cats.getClassNames(),
 							cats.classColors );
 					break;
-
 				case APPLY_CLASSIFIER_ON_SLURM:
 
 					if ( ! isSelectionFullWidthAndHeight() )
@@ -303,15 +299,13 @@ public class CATSCommand implements Command, Interactive
 					cats.saveClassifier( dirFile[ 0 ], dirFile[ 1 ] );
 					cats.applyClassifierOnSlurm( getIntervalFromUI() );
 					break;
-
-				case UPDATE_LABEL_INSTANCES:
-					updateLabelInstances( );
+				case RECOMPUTE_LABEL_INSTANCES:
+					recomputeLabelInstances();
+					trainClassifier();
 					break;
-
 				case TRAIN_CLASSIFIER:
 					trainClassifier();
 					break;
-
 				case SET_MEMORY_AND_THREADS:
 					setMemoryAndThreads();
 
@@ -360,7 +354,7 @@ public class CATSCommand implements Command, Interactive
 		cats.setNumThreads( (int) gd.getNextNumber() );
 	}
 
-	private void interruptClassification()
+	private void interruptClassifier()
 	{
 		cats.stopCurrentTasks = true;
 
@@ -434,6 +428,15 @@ public class CATSCommand implements Command, Interactive
 
 		saveLabelInstances();
     }
+
+	private void recomputeLabelInstances( )
+	{
+		cats.recomputeLabelInstances();
+
+		labelButtonsPanel.setLabellingInformations();
+
+		saveLabelInstances();
+	}
 
 	private void saveLabelInstances()
 	{

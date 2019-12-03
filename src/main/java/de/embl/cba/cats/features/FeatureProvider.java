@@ -73,7 +73,7 @@ public class FeatureProvider
 
     private int[] featureImageBorderSizes;
 
-    public CATS CATS = null;
+    public CATS cats = null;
 
     private String showFeatureImageTitle = "";
 
@@ -144,7 +144,7 @@ public class FeatureProvider
 
     public FeatureProvider( CATS cats )
     {
-        this.CATS = cats;
+        this.cats = cats;
         this.inputImage = cats.getInputImage();
         this.resultImageFgDistBg = cats.getResultImageBgFg();
         this.logger = cats.getLogger();
@@ -585,7 +585,7 @@ public class FeatureProvider
     {
         return () ->
         {
-            if ( CATS.stopCurrentTasks ) return;
+            if ( cats.stopCurrentTasks ) return;
 
             double v000,v100,vA00,v010,v110,vA10,v001,v101,vA01,v011,v111,vA11;
             double vAA0,vAA1,vAAA;
@@ -1169,12 +1169,8 @@ public class FeatureProvider
 
 
     /**
-     * Get data cube from data taking into account and out-of-bounds strategy.
+     * Get data cube from data taking into account an out-of-bounds strategy.
      *
-     * @param imp image to read voxel values from
-     * @param region5D region to extract
-     * @param outOfBoundsStrategy out-of-bounds strategy to use
-     * @return data cube with correct voxel values for out-of-bounds positions.
      */
     public < T extends NumericType< T > & NativeType< T >> ImagePlus getDataCube( FinalInterval interval, int channel, String outOfBoundsStrategy )
     {
@@ -1195,7 +1191,6 @@ public class FeatureProvider
         else
         {
             return createDataCubeIncludingOutOfBoundsPixels( interval, channel, requestedInterval3D, intersect3D );
-
         }
 
     }
@@ -1339,7 +1334,7 @@ public class FeatureProvider
         {
             for ( int resolutionLayer = 0; resolutionLayer < numResolutionLevels; ++resolutionLayer )
             {
-                if ( CATS.stopCurrentTasks || Thread.currentThread().isInterrupted() ) return ( false );
+                if ( cats.stopCurrentTasks || Thread.currentThread().isInterrupted() ) return ( false );
 
                 long start = System.currentTimeMillis();
 
@@ -1405,7 +1400,7 @@ public class FeatureProvider
 
             for ( int smoothingScale : featureSettings.smoothingScales )
             {
-                if ( ! featureImage.getTitle().contains( CONV_DEPTH + CATS.featureSettings.maxDeepConvLevel ) )
+                if ( ! featureImage.getTitle().contains( CONV_DEPTH + cats.featureSettings.maxDeepConvLevel ) )
                 {
                     if ( level <= maximumMultithreadedLevel ) // multi-threaded
                     {
@@ -1625,19 +1620,24 @@ public class FeatureProvider
         ImagePlus processedInputImage = getDataCube( expandedInterval, channel, "mirror" );
 
         // pre-processing
-        if ( CATS.featureSettings.log2 && channel != FG_DIST_BG_IMAGE )
+        if ( cats.featureSettings.log2 && channel != FG_DIST_BG_IMAGE )
         {
             // subtract background
-            IJ.run( processedInputImage, "Subtract...", "value=" + CATS.featureSettings.imageBackground + " stack" );
-            // make sure there are no zeros, because the log will give -Infinity
-            IJ.run( processedInputImage, "Add...", "value=1 stack" );
+            if ( cats.featureSettings.imageBackground != 0 )
+                IJ.run( processedInputImage, "Subtract...", "value=" + cats.featureSettings.imageBackground + " stack" );
+
+            // add noise level, should be minimally 1 to avoid log(0)=-Inf
+            IJ.run( processedInputImage, "Add...", "value=" + cats.featureSettings.log2NoiseLevel + " stack" );
 
             // log transformation to go to multiplicative math
             IJ.run( processedInputImage, "32-bit", "" );
-            IJ.run( processedInputImage, "Log", "stack" ); // TODO: maybe too unstable for cluster computing?
+
+            IJ.run( processedInputImage, "Log", "stack" ); // TODO: I think there are some precision issues... I got different results on my computer and on the cluster.
+
+            IJ.run( processedInputImage, "Multiply...", "value=" + cats.featureSettings.log2Factor + " stack" );
         }
 
-        if ( CATS.featureSettings.normalize )
+        if ( cats.featureSettings.normalize )
         {
             ImageStack stack = processedInputImage.getStack();
             ImageStack normalisedStack = new ImageStack( processedInputImage.getWidth(), processedInputImage.getHeight() );
@@ -1663,10 +1663,6 @@ public class FeatureProvider
             processedInputImage.setTitle( "Orig_ch" + channel );
             return processedInputImage;
         }
-
-
-
-
     }
 
     private void putDeepConvFeatLevelIntoTitle(ImagePlus imp)

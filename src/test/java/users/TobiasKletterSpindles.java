@@ -15,7 +15,10 @@ public class TobiasKletterSpindles
 		ij.ui().showUI();
 
 		ImagePlus imp = IJ.openImage(
-				"/Users/tischer/Documents/spindle-feedback-kletter-knime/CATS/Isotropic_spindles_for_CATS.tif" );
+				"/Users/tischer/Documents/spindle-feedback-kletter-knime/CATS/Confocal/3D_Iso0.25um_8bit.tif" );
+
+//		ImagePlus imp = IJ.openImage(
+//				"/Users/tischer/Documents/spindle-feedback-kletter-knime/CATS/SpinningDisc/3D_Iso0.25um_16bit.tif" );
 
 		imp.show();
 		IJ.run("Make Composite", "");

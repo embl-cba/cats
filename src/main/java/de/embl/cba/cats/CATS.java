@@ -718,10 +718,11 @@ public class CATS
 
 	private long saveLabelImageTrainingCurrentInstances( String instancesKey, String directory )
 	{
-		long numInstances;
-		numInstances = instancesManager
+		long numInstances = instancesManager
                 .getInstancesAndMetadata( instancesKey )
                 .getInstances().numInstances();
+
+		int numDecimalPlaces = getFeatureSavingNumDecimalPlaces();
 
 		if( directory != null )
         {
@@ -729,10 +730,28 @@ public class CATS
             InstancesUtils.saveInstancesAndMetadataAsARFF(
             		instancesManager.getInstancesAndMetadata( instancesKey ),
 					directory,
-					"Instances-" + numInstances + ".ARFF" );
+					"Instances-" + numInstances + ".ARFF",
+					numDecimalPlaces  );
+
             logger.info( "...done" );
         }
 		return numInstances;
+	}
+
+	private int getFeatureSavingNumDecimalPlaces()
+	{
+		int numDecimalPlaces;
+
+		if ( featureSettings.log2 )
+		{
+			numDecimalPlaces = 6; // should be fine now due to featureSettings.log2Factor
+		}
+		else
+		{
+			numDecimalPlaces = 6;
+		}
+
+		return numDecimalPlaces;
 	}
 
 	private String evaluateCurrentAccuracies( String instancesKey, int numClassificationTrees, FinalInterval applyInterval, int i )
@@ -1112,7 +1131,6 @@ public class CATS
 
     public boolean featureSettingsDialog( boolean showAdvancedSettings )
     {
-
         NonBlockingGenericDialog gd = new NonBlockingGenericDialog("Image Feature Settings");
 
         for ( int i = 0; i < 5; ++i )
@@ -1124,8 +1142,6 @@ public class CATS
         gd.addNumericField("z/xy anisotropy", featureSettings.anisotropy, 10);
         gd.addStringField("Feature computation: Channels to consider (one-based) [ID,ID,..]",
                 FeatureSettings.getAsCSVString( featureSettings.activeChannels, 1 ) );
-        gd.addCheckbox( "Only use difference features", featureSettings.onlyUseDifferenceFeatures );
-		gd.addCheckbox( "Normalize intensities block-wise (not recommended...)", featureSettings.normalize );
 
         if ( showAdvancedSettings )
         {
@@ -1146,7 +1162,9 @@ public class CATS
 
             gd.addCheckbox( "Use log2 transformation", featureSettings.log2 );
 
-            gd.addCheckbox( "Consider multiple bounding box offsets during loading", considerMultipleBoundingBoxOffsetsDuringInstancesLoading );
+			gd.addCheckbox( "Only use difference features", featureSettings.onlyUseDifferenceFeatures );
+
+			gd.addCheckbox( "Consider multiple bounding box offsets during loading", considerMultipleBoundingBoxOffsetsDuringInstancesLoading );
 
 		}
 
@@ -1222,9 +1240,6 @@ public class CATS
         newFeatureSettings.maxDeepConvLevel = (int) gd.getNextNumber();
         newFeatureSettings.anisotropy = gd.getNextNumber();
         newFeatureSettings.setActiveChannels( gd.getNextString() );
-		newFeatureSettings.onlyUseDifferenceFeatures = gd.getNextBoolean();
-		newFeatureSettings.normalize = gd.getNextBoolean();
-
 
 		if ( showAdvancedSettings )
         {
@@ -1233,8 +1248,8 @@ public class CATS
             newFeatureSettings.setSmoothingScales( gd.getNextString() );
             newFeatureSettings.computeGaussian = gd.getNextBoolean();
             newFeatureSettings.log2 = gd.getNextBoolean();
-            considerMultipleBoundingBoxOffsetsDuringInstancesLoading = gd.getNextBoolean();
-
+			newFeatureSettings.onlyUseDifferenceFeatures = gd.getNextBoolean();
+			considerMultipleBoundingBoxOffsetsDuringInstancesLoading = gd.getNextBoolean();
         }
 
         return newFeatureSettings;
@@ -1633,6 +1648,7 @@ public class CATS
 		}
 		else
         {
+        	// TODO: give user the choice to load labels anyway.
             logger.info( "\nLoaded instances relation name: " + instancesAndMetadata.getRelationName()
                             + "\ndoes not match image name: " + inputImage.getTitle()
                             + "\nLabels will thus not be populated." );
@@ -1653,7 +1669,6 @@ public class CATS
 		setImageBackground( featureSettings.imageBackground );
 
 		return key;
-
 	}
 
 	public boolean saveInstances(  String directory, String filename )
@@ -1670,7 +1685,7 @@ public class CATS
 			return false;
 		}
 
-		boolean success = InstancesUtils.saveInstancesAndMetadataAsARFF( instancesAndMetadata, directory, filename );
+		boolean success = InstancesUtils.saveInstancesAndMetadataAsARFF( instancesAndMetadata, directory, filename, getFeatureSavingNumDecimalPlaces() );
 
 		if ( success )
 		{
@@ -1684,7 +1699,6 @@ public class CATS
 		return success;
 	}
 
-
 	public boolean saveInstances( String key, String directory, String filename )
 	{
 		logger.info("\n# Saving instances " + key + " to " + directory + File.separator + filename );
@@ -1697,11 +1711,10 @@ public class CATS
             return false;
         }
 
-		boolean success =
-				InstancesUtils.saveInstancesAndMetadataAsARFF(
-						instancesAndMetadata,
-						directory,
-						filename );
+		boolean success = InstancesUtils.saveInstancesAndMetadataAsARFF(
+				instancesAndMetadata,
+				directory,
+				filename, getFeatureSavingNumDecimalPlaces() );
 
 		if ( success )
 			logger.info( "...done." );
@@ -2062,11 +2075,12 @@ public class CATS
 
 	public long getMaximalNumberOfVoxelsPerRegion( int numFeatures )
 	{
-		long currentMemory = IJ.currentMemory();
-		long freeMemory = maxMemoryBytes - currentMemory;
-		double maxNumVoxelsPerRegion =  1.0 * freeMemory;
+//		long currentMemory = IJ.currentMemory();
+//		long freeMemory = maxMemoryBytes - currentMemory;
+		double maxNumVoxelsPerRegion =  1.0 * maxMemoryBytes;
 		maxNumVoxelsPerRegion /= 1.0 * getApproximatelyNeededBytesPerVoxel( numFeatures );
 		maxNumVoxelsPerRegion /= 1.0 * threadsRegion * threadsPerRegion;
+
 		return (long) maxNumVoxelsPerRegion;
 	}
 
@@ -2075,7 +2089,6 @@ public class CATS
 	{
 		return ( inputImage.getNSlices() == 1 );
 	}
-
 
 	public int getMaximalRegionWidth( int numFeatures )
 	{
@@ -3194,8 +3207,7 @@ public class CATS
 						{
 
 							// set instance values
-							featureValues =
-									featureProvider.getValuesFromFeatureSlice(
+							featureValues = featureProvider.getValuesFromFeatureSlice(
 											( int ) x, ( int ) y, featureSlice );
 							ins.setValues( 1.0, featureValues );
 
