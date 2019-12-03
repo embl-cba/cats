@@ -14,17 +14,20 @@ public class TobiasKletterSpindles
 		final ImageJ ij = new ImageJ();
 		ij.ui().showUI();
 
+//		ImagePlus imp = IJ.openImage(
+//				"/Users/tischer/Documents/spindle-feedback-kletter-knime/CATS/Confocal/3D_Iso0.25um_8bit.tif" );
+
 		ImagePlus imp = IJ.openImage(
-				"/Users/tischer/Documents/spindle-feedback-kletter-knime/CATS/Confocal/3D_Iso0.25um_8bit.tif" );
+				"/Users/tischer/Documents/spindle-feedback-kletter-knime/CATS/SpinningDisc/3D_Iso0.25um_16bit.tif" );
 
 //		ImagePlus imp = IJ.openImage(
-//				"/Users/tischer/Documents/spindle-feedback-kletter-knime/CATS/SpinningDisc/3D_Iso0.25um_16bit.tif" );
+//				"/Users/tischer/Documents/spindle-feedback-kletter-knime/CATS/SpinningDisc/3D_BrightOtherDNA_iso0.25um_16bit.zip" );
 
 		imp.show();
 		IJ.run("Make Composite", "");
 		imp = IJ.getImage();
 		( ( CompositeImage ) imp ).setC( 2 );
-		IJ.run(imp, "Blue", "");
+		IJ.run(imp, "Grays", "");
 
 		Prefs.setThreads( 4 );
 
