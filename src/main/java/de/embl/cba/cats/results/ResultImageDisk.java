@@ -72,7 +72,7 @@ public class ResultImageDisk implements ResultImage {
     @Override
     public ImagePlus getDataCubeCopy( FinalInterval interval )
     {
-        VirtualStack2 vss = (VirtualStack2)result.getStack();
+        VirtualStack2 vss = (VirtualStack2) result.getStack();
         ImagePlus dataCube = vss.getDataCube( IntervalUtils.convertIntervalToRegion5D( interval ), 1 );
         return dataCube;
     }

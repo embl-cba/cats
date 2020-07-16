@@ -1,4 +1,6 @@
+import bdv.img.imaris.Imaris;
 import bdv.spimdata.SpimDataMinimal;
+import bdv.util.BdvFunctions;
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.results.ResultExportSettings;
 import de.embl.cba.cats.utils.IntervalUtils;
@@ -7,10 +9,7 @@ import ij.ImageJ;
 import ij.ImagePlus;
 import net.imglib2.FinalInterval;
 
-import bdv.util.BdvFunctions;
-
-import bdv.img.imaris.*;
-
+import java.io.File;
 import java.io.IOException;
 
 
@@ -18,35 +17,35 @@ public class ResultsExport
 {
     public static void main( final String[] args )
     {
-
         new ImageJ();
 
 //        fibSemCell();
 
         objects3d2Channels();
-
     }
 
     private static void objects3d2Channels()
     {
         // Open Image
         //
-        ImagePlus inputImagePlus = IJ.openImage( ResultsExport.class.getResource( "3d-objects-2channels.zip" ).getFile() );
+        ImagePlus inputImagePlus = IJ.openImage( "/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/3d-objects-test/3d-objects-input/3d-objects-2ch.zip" );
 
         inputImagePlus.show();
 
         CATS cats = new CATS();
         cats.setInputImage( inputImagePlus );
-        cats.setResultImageDisk( ResultsExport.class.getResource("3d-objects-probabilities" ).getPath() );
-        cats.loadInstancesAndMetadata( ResultsExport.class.getResource("3d-objects-instances/3d-objects.ARFF" ).getFile() );
+        cats.setResultImageDisk( "/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/3d-objects-test/3d-objects-probabilities" );
+        cats.loadInstancesAndMetadata( "/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/3d-objects-test/3d-objects-instances/3d-objects.ARFF"  );
 
         ResultExportSettings resultExportSettings = new ResultExportSettings();
-        resultExportSettings.directory = ResultsExport.class.getResource("3d-objects-export" ).getPath();
+        resultExportSettings.directory = "/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/3d-objects-test/3d-objects-export";
         resultExportSettings.exportType = ResultExportSettings.SAVE_AS_IMARIS_STACKS;
         resultExportSettings.classNames = cats.getClassNames();
         resultExportSettings.timePointsFirstLast = new int[]{ 0, 0 };
         resultExportSettings.saveRawData = true;
         resultExportSettings.inputImagePlus = inputImagePlus;
+
+        deleteFolder( new File( resultExportSettings.directory ) );
 
         cats.getResultImage().exportResults( resultExportSettings );
 
@@ -61,6 +60,20 @@ public class ResultsExport
         {
             e.printStackTrace();
         }
+    }
+
+    public static void deleteFolder(File folder) {
+        File[] files = folder.listFiles();
+        if(files!=null) { //some JVMs return null for empty dirs
+            for(File f: files) {
+                if(f.isDirectory()) {
+                    deleteFolder(f);
+                } else {
+                    f.delete();
+                }
+            }
+        }
+        folder.delete();
     }
 
     private static void fibSemCell()

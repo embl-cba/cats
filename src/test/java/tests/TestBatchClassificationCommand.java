@@ -77,6 +77,4 @@ public class TestBatchClassificationCommand
 		new TestBatchClassificationCommand().testLabelMaskExport();
 		//new TestBatchClassificationCommand().testProbabilitiesExport();
 	}
-
-
 }

@@ -2675,7 +2675,7 @@ public class CATS
 
 	private void configureInputImageLoading( Map< String, Object > parameters )
     {
-        if ( inputImage.getStack() instanceof VirtualStack2 )
+        if ( Utils.vss2Exists() && ( inputImage.getStack() instanceof VirtualStack2 ) )
 		{
 			parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_LAZY_LOADING_TOOLS );
 			VirtualStack2 vs2 = ( VirtualStack2 ) inputImage.getStack();

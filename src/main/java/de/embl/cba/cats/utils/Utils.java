@@ -42,6 +42,16 @@ public final class Utils {
         throw new InstantiationException("This class is not created for instantiation");
     }
 
+    public static boolean vss2Exists()
+	{
+		try {
+			Class.forName( "VirtualStack2" );
+			return true;
+		} catch( ClassNotFoundException e ) {
+			return false;
+		}
+	}
+
 	public static String removeExtension( String s ) {
 
 		String separator = System.getProperty("file.separator");

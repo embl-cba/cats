@@ -29,7 +29,6 @@ import static de.embl.cba.cats.utils.IntervalUtils.*;
 
 public abstract class ResultExport
 {
-
     private static void saveClassAsImaris( int classId, ResultExportSettings resultExportSettings )
     {
         String fileName = resultExportSettings.classNames.get( classId );
@@ -59,10 +58,8 @@ public abstract class ResultExport
         }
     }
 
-
     public static void saveRawDataAsImaris( ResultExportSettings resultExportSettings  )
     {
-
         String fileName = "raw-data";
 
         ImarisDataSet imarisDataSet = new ImarisDataSet(
@@ -95,8 +92,6 @@ public abstract class ResultExport
                 writer.writeImarisCompatibleResolutionPyramid( rawDataFrame, imarisDataSet, c, t );
             }
         }
-
-
     }
 
 
@@ -116,7 +111,6 @@ public abstract class ResultExport
 
         imarisDataSet.setChannelNames( channelNames );
     }
-
 
     private static void logDone( ResultExportSettings resultExportSettings,
                                  String className,
@@ -149,19 +143,18 @@ public abstract class ResultExport
 
 
     public static ImagePlus getBinnedClassImageMemoryEfficient(
-            int classId, ResultExportSettings resultExportSettings, int t,
+            int classId, ResultExportSettings settings, int t,
             de.embl.cba.utils.logging.Logger logger, int numThreads )
     {
+        logger.info( "Computing probability image for " + settings.classNames.get( classId ) + ", using " + numThreads + " threads." );
 
-        logger.info( "\nComputing probability image, using " + numThreads + " threads." );
+        int nz = (int) settings.resultImage.getDimensions()[ Z ];
+        int nx = (int) settings.resultImage.getDimensions()[ X ];
+        int ny = (int) settings.resultImage.getDimensions()[ Y ];
 
-        int nz = (int) resultExportSettings.resultImage.getDimensions()[ Z ];
-        int nx = (int) resultExportSettings.resultImage.getDimensions()[ X ];
-        int ny = (int) resultExportSettings.resultImage.getDimensions()[ Y ];
-
-        int dx = resultExportSettings.binning[0];
-        int dy = resultExportSettings.binning[1];
-        int dz = resultExportSettings.binning[2];
+        int dx = settings.binning[0];
+        int dy = settings.binning[1];
+        int dz = settings.binning[2];
 
         ImageStack binnedStack =
                 new ImageStack(
@@ -179,7 +172,7 @@ public abstract class ResultExport
             futures.add(
                     exe.submit(
                             CallableResultImageBinner.getBinned(
-                                    resultExportSettings,
+                                    settings,
                                     classId,
                                     iz, iz + dz - 1, t,
                                     logger,
@@ -339,7 +332,7 @@ public abstract class ResultExport
     public static ArrayList< ImagePlus > exportResults(
             ResultExportSettings resultExportSettings )
     {
-        logger.info( "Exporting results, using modality: " + resultExportSettings.exportType );
+        logger.info( "# Exporting results, using modality: " + resultExportSettings.exportType );
 
         configureTimePointsExport( resultExportSettings );
 
