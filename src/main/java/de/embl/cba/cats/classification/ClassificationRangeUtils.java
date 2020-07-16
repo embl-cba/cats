@@ -2,7 +2,7 @@ package de.embl.cba.cats.classification;
 
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.utils.IntervalUtils;
-import de.embl.cba.utils.logging.Logger;
+import de.embl.cba.log.Logger;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;

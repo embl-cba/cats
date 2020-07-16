@@ -22,7 +22,7 @@ package de.embl.cba.cats.features;
  */
 
 import de.embl.cba.cats.features.settings.FeatureSettings;
-import de.embl.cba.utils.logging.Logger;
+import de.embl.cba.log.Logger;
 import de.embl.cba.cats.CATS;
 import ij.IJ;
 import ij.ImagePlus;

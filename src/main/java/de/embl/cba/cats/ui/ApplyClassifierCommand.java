@@ -3,7 +3,7 @@ package de.embl.cba.cats.ui;
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.results.ResultExportSettings;
 import de.embl.cba.cats.results.ResultImage;
-import de.embl.cba.utils.logging.IJLazySwingLogger;
+import de.embl.cba.log.IJLazySwingLogger;
 import ij.IJ;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;

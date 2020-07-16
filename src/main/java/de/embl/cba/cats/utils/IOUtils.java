@@ -1,7 +1,7 @@
 package de.embl.cba.cats.utils;
 
 import de.embl.cba.bigdataprocessor.BigDataProcessor;
-import de.embl.cba.utils.fileutils.FileRegMatcher;
+import de.embl.cba.util.FileRegMatcher;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.io.OpenDialog;

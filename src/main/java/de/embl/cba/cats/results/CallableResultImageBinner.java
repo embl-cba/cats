@@ -1,7 +1,7 @@
 package de.embl.cba.cats.results;
 
 import de.embl.cba.bigdataprocessor.utils.Utils;
-import de.embl.cba.utils.logging.Logger;
+import de.embl.cba.log.Logger;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.plugin.Binner;

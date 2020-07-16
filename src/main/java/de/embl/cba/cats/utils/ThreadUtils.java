@@ -1,6 +1,6 @@
 package de.embl.cba.cats.utils;
 
-import de.embl.cba.utils.logging.Logger;
+import de.embl.cba.log.Logger;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;

@@ -5,7 +5,7 @@ import de.embl.cba.bigdataprocessor.utils.ImageDataInfo;
 import de.embl.cba.bigdataprocessor.virtualstack2.VirtualStack2;
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.utils.IntervalUtils;
-import de.embl.cba.utils.logging.Logger;
+import de.embl.cba.log.Logger;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileSaver;
@@ -47,7 +47,6 @@ public class ResultImageDisk implements ResultImage {
         resultExportSettings.resultImage = this;
         return ResultExport.exportResults( resultExportSettings );
     }
-
 
     @Override
     public ImageProcessor getSlice( int slice, int frame )

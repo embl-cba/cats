@@ -6,7 +6,7 @@ import de.embl.cba.cluster.JobSettings;
 import de.embl.cba.cluster.SlurmJobMonitor;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.cats.utils.IntervalUtils;
-import de.embl.cba.utils.fileutils.PathMapper;
+import de.embl.cba.util.PathMapper;
 import net.imagej.ImageJ;
 import net.imglib2.FinalInterval;
 import org.scijava.command.Command;

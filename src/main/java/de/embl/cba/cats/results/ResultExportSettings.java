@@ -1,6 +1,6 @@
 package de.embl.cba.cats.results;
 
-import de.embl.cba.utils.logging.Logger;
+import de.embl.cba.log.Logger;
 import ij.ImagePlus;
 
 import java.awt.*;

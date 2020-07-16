@@ -3,7 +3,7 @@ package de.embl.cba.cats.labelimagetraining;
 import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.results.ResultImage;
 import de.embl.cba.cats.utils.ThreadUtils;
-import de.embl.cba.utils.logging.Logger;
+import de.embl.cba.log.Logger;
 import ij.ImagePlus;
 import ij.Prefs;
 import ij.process.ImageProcessor;
@@ -15,9 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static de.embl.cba.cats.CATS.logger;
-import static de.embl.cba.cats.utils.IntervalUtils.X;
-import static de.embl.cba.cats.utils.IntervalUtils.Y;
-import static de.embl.cba.cats.utils.IntervalUtils.Z;
+import static de.embl.cba.cats.utils.IntervalUtils.*;
 
 public class AccuracyEvaluation
 {

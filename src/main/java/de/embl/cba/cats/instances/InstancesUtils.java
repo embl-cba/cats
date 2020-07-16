@@ -2,7 +2,7 @@ package de.embl.cba.cats.instances;
 
 import de.embl.cba.cats.labels.Label;
 import de.embl.cba.cats.features.settings.FeatureSettings;
-import de.embl.cba.utils.logging.Logger;
+import de.embl.cba.log.Logger;
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;

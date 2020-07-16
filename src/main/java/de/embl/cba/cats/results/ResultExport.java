@@ -6,6 +6,7 @@ import de.embl.cba.imaris.H5DataCubeWriter;
 import de.embl.cba.imaris.ImarisDataSet;
 import de.embl.cba.imaris.ImarisUtils;
 import de.embl.cba.imaris.ImarisWriter;
+import de.embl.cba.log.Logger;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -144,7 +145,7 @@ public abstract class ResultExport
 
     public static ImagePlus getBinnedClassImageMemoryEfficient(
             int classId, ResultExportSettings settings, int t,
-            de.embl.cba.utils.logging.Logger logger, int numThreads )
+            Logger logger, int numThreads )
     {
         logger.info( "Computing probability image for " + settings.classNames.get( classId ) + ", using " + numThreads + " threads." );
 

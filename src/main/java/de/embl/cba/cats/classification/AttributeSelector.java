@@ -1,7 +1,7 @@
 package de.embl.cba.cats.classification;
 
 import de.embl.cba.classifiers.weka.FastRandomForest;
-import de.embl.cba.utils.logging.Logger;
+import de.embl.cba.log.Logger;
 import weka.core.Instances;
 
 import java.util.ArrayList;

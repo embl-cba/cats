@@ -1,8 +1,7 @@
 package de.embl.cba.cats.labels;
 
-import de.embl.cba.cats.labels.Label;
-import de.embl.cba.utils.logging.Logger;
 import de.embl.cba.cats.instances.InstancesAndMetadata;
+import de.embl.cba.log.Logger;
 import weka.core.Instances;
 
 import java.awt.*;
@@ -11,7 +10,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static de.embl.cba.cats.instances.InstancesAndMetadata.Metadata.*;
-import static de.embl.cba.cats.instances.InstancesAndMetadata.Metadata.Metadata_Label_Id;
 
 public abstract class LabelUtils
 {

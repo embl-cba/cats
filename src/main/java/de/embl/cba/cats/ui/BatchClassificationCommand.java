@@ -5,7 +5,7 @@ import de.embl.cba.cats.results.ResultExportSettings;
 import de.embl.cba.cats.results.ResultImage;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.cats.utils.Utils;
-import de.embl.cba.utils.logging.IJLazySwingLogger;
+import de.embl.cba.log.IJLazySwingLogger;
 import ij.IJ;
 import net.imagej.ImageJ;
 import org.scijava.command.Command;
