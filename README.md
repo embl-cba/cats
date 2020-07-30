@@ -6,6 +6,7 @@
 ## Example movies
 
 - Electron microscopy volume segmentation of an [interphase HeLa cell](https://youtu.be/zcXgvvL-n_I)
+- Electron microscopy volume segmentation of a [Platynereis Larvae](https://youtu.be/rtYLA7XL7YQ)
 
 ## Example publications 
 
