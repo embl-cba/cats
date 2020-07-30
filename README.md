@@ -1,6 +1,18 @@
 
 # CATS - Context Aware Trainable Segmentation
 
+<img src="https://user-images.githubusercontent.com/2157566/88903722-69a92500-d254-11ea-9efa-b572a094d776.png" alt="Example" width="400">
+
+## Example movies
+
+- Electron microscopy volume segmentation of an [interphase HeLa cell](https://youtu.be/zcXgvvL-n_I)
+
+## Example publications 
+
+- Alladin A, Chaible L, Garcia Del Valle L, Sabine R, Loeschinger M, Wachsmuth M, Hériché JK, Tischer C, Jechlinger M. (2020) Tracking cells in epithelial acini by light sheet microscopy reveals proximity effects in breast cancer initiation. Elife 9 doi: 10.7554/eLife.54066
+
+## Overview
+
 CATS is a big image data compatible [Fiji](http://fiji.sc/) plugin for trainable image segmentation. 
 The code is partly based on Fiji's [Trainable Weka Segmentation](https://github.com/fiji/Trainable_Segmentation) (TWS) plugin.
 
@@ -31,12 +43,6 @@ Furthermore, CATS supports:
 - Anisotropic image calibration
 - Cluster computing (Slurm)
 - Label review
-
-## Usage Examples
-
-- Electron microscopy volume data (e.g., 220 GB)
-- Light sheet fluorescence microscopy time-lapse data
-  - Alladin A, Chaible L, Garcia Del Valle L, Sabine R, Loeschinger M, Wachsmuth M, Hériché JK, Tischer C, Jechlinger M. (2020) Tracking cells in epithelial acini by light sheet microscopy reveals proximity effects in breast cancer initiation. Elife 9 doi: 10.7554/eLife.54066
 
 
 ## Installation
