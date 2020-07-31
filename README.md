@@ -49,7 +49,7 @@ CATS runs as a PlugIn within Fiji.
 
 - Please install [Fiji](fiji.sc)
 - Within Fiji, please enable the following [Update Sites](https://imagej.net/Update_Sites): 
-    - [X] EMBL-CBA
+    - [X] CATS
     - [X] ImageScience
 
 ## Starting CATS
