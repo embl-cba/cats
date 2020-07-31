@@ -51,6 +51,8 @@ CATS runs as a PlugIn within Fiji.
 - Within Fiji, please enable the following [Update Sites](https://imagej.net/Update_Sites): 
     - [X] CATS
     - [X] ImageScience
+    - [X] BigDataProcessor
+      - Improves the performance of segmenting images larger than the RAM of your computer (see below). 
 
 ## Starting CATS
 
@@ -62,7 +64,13 @@ CATS can be found within Fiji's menu tree:
 
 ### Input Image Data
 
-As it is common in Fiji, CATS operates on the currently active image window. Thus, before CATS can be started, one must open an image. As CATS supports multi-channel 2D and 3D time-lapse data any image can be used as input. For analyzing big image data (e.g., data that exceeds the available RAM) ImageJ's VirtualStack functionality should be used; see, e.g., [VirtualStackOpener](https://imagej.nih.gov/ij/plugins/virtual-opener.html) or [BigDataProcessor](https://github.com/tischi/fiji-plugin-bigdataprocessor#big-data-converter) on how to open VirtualStacks.
+As it is common in Fiji, CATS operates on the currently active image window. Thus, before CATS can be started, one must open an image. As CATS supports multi-channel 2D and 3D time-lapse data any image can be used as input. 
+
+#### Big Image Data
+
+For analyzing "big" image data (i.e., data that exceeds the available RAM) ImageJ's VirtualStack functionality should be used; see
+- [VirtualStackOpener](https://imagej.nih.gov/ij/plugins/virtual-opener.html), or
+- [BigDataProcessor1](https://github.com/bigdataprocessor/bigdataprocessor1#bigdataprocessor1).
 
 ### Input Image Calibration
 
@@ -189,7 +197,6 @@ If you follow above workflow for training on multiple data sets, your data on di
 
 The main idea is that you have one .ARFF file per image data set, but you can combine those .ARFF files into one combined classifier.
 
-
 ### Further information
 
 #### Continue working on an existing project
@@ -204,26 +211,7 @@ The main idea is that you have one .ARFF file per image data set, but you can co
 Information about what is happening is printed into ImageJ's log window.
 In addition, when you chose to save your classification results to disk (see above), another folder with the ending "--log" will be automatically created next to your results folder. The content of the logging window will be constantly written into a file in this folder.
   
-  
-## Citation
+## Cite
 
 This github repository can be cited (registered at [ZENODO](https://zenodo.org/)):
 - Tischer, C., and Pepperkok, R. (2019) CATS: Fiji plugin for context aware trainable segmentation of big image data. http://doi.org/10.5281/zenodo.2574736
-
-## Maven dependency
-
-```
-<repository>
-    	<id>bintray-tischi-snapshots</id>
-    	<name>bintray</name>
-    	<url>https://dl.bintray.com/tischi/snapshots</url>
-</repository>
-    
-<dependency>
-	<groupId>de.embl.cba</groupId>
-	<artifactId>fiji-plugin-cats</artifactId>
-	<version>0.7.1</version>
-<dependency>
-```
-
-For the currently most recent version, please see here: https://github.com/embl-cba/fiji-plugin-cats/blob/master/pom.xml#L14
