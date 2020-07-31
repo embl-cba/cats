@@ -9,10 +9,6 @@
 - Electron microscopy volume segmentation of a [Platynereis Larvae](https://youtu.be/rtYLA7XL7YQ)
 - Electron microscopy volume segmentation of a [mitotic HeLa cell](https://youtu.be/ItdUWGkRdrI)
 
-## Publications using CATS
-
-- Alladin A, Chaible L, Garcia Del Valle L, Sabine R, Loeschinger M, Wachsmuth M, Hériché JK, Tischer C, Jechlinger M. (2020) Tracking cells in epithelial acini by light sheet microscopy reveals proximity effects in breast cancer initiation. Elife 9 doi: 10.7554/eLife.54066
-
 ## Overview
 
 CATS is a big image data compatible [Fiji](http://fiji.sc/) plugin for trainable image segmentation. 
