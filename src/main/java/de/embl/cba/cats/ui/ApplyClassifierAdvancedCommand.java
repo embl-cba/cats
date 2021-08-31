@@ -13,7 +13,7 @@ import de.embl.cba.cats.CATS;
 import de.embl.cba.cats.results.ResultExportSettings;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.cats.utils.StringUtils;
-import de.embl.cba.cluster.commands.Commands;
+import de.embl.cba.cluster.Commands;
 import ij.IJ;
 import ij.ImagePlus;
 import net.imagej.DatasetService;

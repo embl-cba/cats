@@ -1,4 +1,4 @@
-package command;
+package run;
 
 import de.embl.cba.cats.ui.CATSCommand;
 import ij.IJ;

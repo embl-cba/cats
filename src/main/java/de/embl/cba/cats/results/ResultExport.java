@@ -264,7 +264,7 @@ public abstract class ResultExport
         }
     }
 
-    private static ImagePlus createProbabilitiyImagePlusForClass(
+    private static ImagePlus createProbabilityImagePlusForClass(
             int classId,
             ResultExportSettings resultExportSettings )
     {
@@ -502,7 +502,7 @@ public abstract class ResultExport
                     else if ( settings.exportType.equals(
                             ResultExportSettings.SHOW_AS_PROBABILITIES ) )
                     {
-                        final ImagePlus imp = createProbabilitiyImagePlusForClass(
+                        final ImagePlus imp = createProbabilityImagePlusForClass(
                                 classIndex, settings );
                         imp.show();
                     }
@@ -510,7 +510,7 @@ public abstract class ResultExport
                             ResultExportSettings.GET_AS_IMAGEPLUS_ARRAYLIST ) )
                     {
                         classImps.add(
-                                createProbabilitiyImagePlusForClass(
+                                createProbabilityImagePlusForClass(
                                         classIndex, settings ) );
                     }
                 }

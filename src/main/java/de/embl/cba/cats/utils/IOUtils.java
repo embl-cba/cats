@@ -8,7 +8,8 @@ import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 
 import javax.swing.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,7 +20,6 @@ import java.util.regex.Pattern;
 
 public class IOUtils
 {
-
     public static final String SAVE = "Save";
     public static final String SHOW = "Show";
 
@@ -69,10 +69,8 @@ public class IOUtils
         return image;
     }
 
-    public static ImagePlus openImageLazy(
-            String directory, String namingScheme, String filePattern, String hdf5DataSetName  )
+    public static ImagePlus openImageLazy( String directory, String namingScheme, String filePattern, String hdf5DataSetName  )
     {
-
         BigDataProcessor bdc = new BigDataProcessor();
         ImagePlus image = bdc.openFromDirectory(
                 directory,
@@ -89,8 +87,6 @@ public class IOUtils
 
         return image;
     }
-
-
 
     public static String createDataSetNameFromPattern( String dataSetPattern )
     {

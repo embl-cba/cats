@@ -619,7 +619,6 @@ public class InstancesUtils {
 
     public static Instances getInstancesHeader( String instancesName, ArrayList< String > featureNames, ArrayList< String > classNames  )
     {
-
         ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 
         for ( String feature : featureNames )

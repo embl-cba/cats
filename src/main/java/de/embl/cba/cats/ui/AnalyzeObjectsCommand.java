@@ -1,13 +1,12 @@
 package de.embl.cba.cats.ui;
 
-import de.embl.cba.cluster.commands.Commands;
+import de.embl.cba.cats.objects.ObjectSegmentation;
 import de.embl.cba.cats.utils.IOUtils;
+import de.embl.cba.cluster.Commands;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
 import inra.ijpb.measure.GeometricMeasures3D;
-
-
 import net.imagej.DatasetService;
 import net.imagej.ops.OpService;
 import org.scijava.app.StatusService;
@@ -17,7 +16,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
-import de.embl.cba.cats.objects.ObjectSegmentation;
 
 import java.io.File;
 import java.util.ArrayList;

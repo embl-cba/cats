@@ -1,7 +1,7 @@
 package de.embl.cba.cats.utils;
 
-import de.embl.cba.cluster.ImageJCommandsSubmitter;
 import de.embl.cba.cats.ui.ApplyClassifierOnSlurmCommand;
+import de.embl.cba.cluster.JobSubmitter;
 import de.embl.cba.util.PathMapper;
 import ij.IJ;
 import org.scijava.Context;
@@ -23,7 +23,7 @@ public class CommandUtils
     {
         if ( imageJFile == null )
         {
-            return ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_XVFB;
+            return JobSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_XVFB;
         }
         else
         {
@@ -36,7 +36,7 @@ public class CommandUtils
     {
         if ( imageJFile == null )
         {
-            return ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS;
+            return JobSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS;
         }
         else
         {

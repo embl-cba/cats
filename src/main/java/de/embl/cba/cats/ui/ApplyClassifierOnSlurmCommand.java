@@ -1,11 +1,12 @@
 package de.embl.cba.cats.ui;
 
-import de.embl.cba.cluster.ImageJCommandsSubmitter;
-import de.embl.cba.cluster.JobFuture;
-import de.embl.cba.cluster.JobSettings;
-import de.embl.cba.cluster.SlurmJobMonitor;
 import de.embl.cba.cats.utils.IOUtils;
 import de.embl.cba.cats.utils.IntervalUtils;
+import de.embl.cba.cluster.JobExecutor;
+import de.embl.cba.cluster.JobFuture;
+import de.embl.cba.cluster.JobMonitor;
+import de.embl.cba.cluster.JobSettings;
+import de.embl.cba.cluster.JobSubmitter;
 import de.embl.cba.util.PathMapper;
 import net.imagej.ImageJ;
 import net.imglib2.FinalInterval;
@@ -21,16 +22,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static de.embl.cba.cluster.ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS;
 import static de.embl.cba.cats.CATS.logger;
-import static de.embl.cba.cats.utils.IntervalUtils.*;
+import static de.embl.cba.cats.utils.IntervalUtils.X;
+import static de.embl.cba.cats.utils.IntervalUtils.Y;
+import static de.embl.cba.cats.utils.IntervalUtils.Z;
+import static de.embl.cba.cats.utils.IntervalUtils.getIntervalAsCsvString;
 import static de.embl.cba.cats.utils.Utils.getSimpleString;
+import static de.embl.cba.cluster.JobSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS;
 
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>CATS>Apply Classifier on Slurm" )
 public class ApplyClassifierOnSlurmCommand implements Command
 {
-
     @Parameter( label = "Username" )
     private String userName = "tischer";
     public static String USER_NAME = "userName";
@@ -103,19 +106,18 @@ public class ApplyClassifierOnSlurmCommand implements Command
                 IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS,
                 jobDirectory, classifierFile.toPath(), dataSets );
 
-        SlurmJobMonitor slurmJobMonitor = new SlurmJobMonitor( logger );
+        JobMonitor slurmJobMonitor = new JobMonitor( logger );
         slurmJobMonitor.monitorJobProgress( jobFutures, jobStatusMonitoringInterval, 5 );
-
     }
 
     private ArrayList< JobFuture > submitJobsOnSlurm( String imageJ, String jobDirectory, Path classifierPath, List< Path > dataSets )
     {
-
-        ImageJCommandsSubmitter commandsSubmitter = new ImageJCommandsSubmitter(
-                ImageJCommandsSubmitter.EXECUTION_SYSTEM_EMBL_SLURM,
+        JobSubmitter jobSubmitter = new JobSubmitter(
+                new JobExecutor(),
                 jobDirectory ,
                 imageJ,
-                userName, password );
+                userName,
+                password );
 
         ArrayList< JobFuture > jobFutures = new ArrayList<>( );
 
@@ -134,10 +136,10 @@ public class ApplyClassifierOnSlurmCommand implements Command
         {
             for ( FinalInterval tile : tiles )
             {
-                commandsSubmitter.clearCommands();
-                setCommandAndParameterStrings( commandsSubmitter, dataSet, classifierPath, tile );
+                jobSubmitter.clearCommands();
+                setCommandAndParameterStrings( jobSubmitter, dataSet, classifierPath, tile );
                 JobSettings jobSettings = getJobSettings( tile );
-                jobFutures.add( commandsSubmitter.submitCommands( jobSettings ) );
+                jobFutures.add( jobSubmitter.submitJob( jobSettings ) );
 
                 try
                 {
@@ -183,9 +185,8 @@ public class ApplyClassifierOnSlurmCommand implements Command
         return minutesNeeded;
     }
 
-
     private void setCommandAndParameterStrings(
-            ImageJCommandsSubmitter commandsSubmitter,
+            JobSubmitter jobSubmitter,
             Path inputImagePath,
             Path classifierPath,
             FinalInterval tile )
@@ -229,8 +230,7 @@ public class ApplyClassifierOnSlurmCommand implements Command
         parameters.put( ApplyClassifierAdvancedCommand.SAVE_RESULTS_TABLE, false );
         parameters.put( ApplyClassifierAdvancedCommand.QUIT_AFTER_RUN, true );
 
-        commandsSubmitter.addIJCommandWithParameters( ApplyClassifierAdvancedCommand.PLUGIN_NAME , parameters );
-
+        jobSubmitter.addIJCommandWithParameters( ApplyClassifierAdvancedCommand.PLUGIN_NAME , parameters );
     }
 
     private String getDataSetID( Path inputImagePath )

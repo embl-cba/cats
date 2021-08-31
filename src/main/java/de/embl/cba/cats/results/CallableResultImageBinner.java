@@ -1,6 +1,5 @@
 package de.embl.cba.cats.results;
 
-import de.embl.cba.bigdataprocessor.utils.Utils;
 import de.embl.cba.log.Logger;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -10,6 +9,7 @@ import java.util.concurrent.Callable;
 
 import static de.embl.cba.cats.utils.IntervalUtils.X;
 import static de.embl.cba.cats.utils.IntervalUtils.Y;
+import static de.embl.cba.cats.utils.Utils.applyIntensityGate;
 
 public class CallableResultImageBinner
 {
@@ -44,7 +44,7 @@ public class CallableResultImageBinner
             }
 
             ImagePlus gated = new ImagePlus( "gated-" + classId, tmpStack );
-            Utils.applyIntensityGate( gated, intensityGate );
+            applyIntensityGate( gated, intensityGate );
 //            tmpImage.show();
 
             ImagePlus binned = gated;

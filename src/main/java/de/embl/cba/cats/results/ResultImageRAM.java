@@ -1,20 +1,18 @@
 package de.embl.cba.cats.results;
 
-import de.embl.cba.bigdataprocessor.utils.Utils;
 import de.embl.cba.cats.CATS;
 import de.embl.cba.log.Logger;
-
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
 import net.imglib2.FinalInterval;
 import net.imglib2.util.Intervals;
 
-import java.awt.image.ColorModel;
 import java.util.ArrayList;
 
 import static de.embl.cba.cats.utils.IntervalUtils.*;
-
+import static de.embl.cba.cats.utils.Utils.create8bitImagePlus;
+import static de.embl.cba.cats.utils.Utils.getDataCube;
 
 public class ResultImageRAM implements ResultImage {
 
@@ -30,7 +28,7 @@ public class ResultImageRAM implements ResultImage {
     {
         this.CATS = CATS;
         this.logger = CATS.getLogger();
-        this.result = de.embl.cba.cats.utils.Utils.create8bitImagePlus( dimensions );
+        this.result = create8bitImagePlus( dimensions );
         this.dimensions = dimensions;
         this.interval = null;
     }
@@ -41,7 +39,7 @@ public class ResultImageRAM implements ResultImage {
         this.logger = CATS.getLogger();
         this.interval = interval;
         this.dimensions = Intervals.dimensionsAsLongArray( interval );
-        this.result = de.embl.cba.cats.utils.Utils.create8bitImagePlus( dimensions);
+        this.result = create8bitImagePlus( dimensions);
     }
 
     public long[] getDimensions()
@@ -122,8 +120,7 @@ public class ResultImageRAM implements ResultImage {
         assert interval.min( C ) == interval.max( C );
         assert interval.min( T ) == interval.max( T );
 
-        ImagePlus cube = Utils.getDataCube( result,
-                convertIntervalToRegion5D( interval ) );
+        ImagePlus cube = getDataCube( result, convertIntervalToRegion5D( interval ) );
 
         return cube;
     }
@@ -152,7 +149,7 @@ public class ResultImageRAM implements ResultImage {
             ImageProcessor ip = stack.getProcessor(n1);
             String label = stack.getSliceLabel(n1);
             if (stack2 == null) {
-                stack2 = new ImageStack(ip.getWidth(), ip.getHeight(), (ColorModel )null);
+                stack2 = new ImageStack(ip.getWidth(), ip.getHeight(), null);
             }
             stack2.addSlice(label, ip);
         }

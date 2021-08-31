@@ -1,10 +1,11 @@
 package de.embl.cba.cats.ui;
 
-import de.embl.cba.cluster.ImageJCommandsSubmitter;
+import de.embl.cba.cluster.JobExecutor;
 import de.embl.cba.cluster.JobFuture;
+import de.embl.cba.cluster.JobMonitor;
 import de.embl.cba.cluster.JobSettings;
-import de.embl.cba.cluster.SlurmJobMonitor;
 import de.embl.cba.cats.utils.IOUtils;
+import de.embl.cba.cluster.JobSubmitter;
 import de.embl.cba.util.PathMapper;
 import de.embl.cba.log.IJLazySwingLogger;
 import org.scijava.command.Command;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import static de.embl.cba.cats.utils.Utils.getSimpleString;
+import static de.embl.cba.cluster.JobSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS;
 
 @Plugin(type = Command.class, menuPath = "Plugins>Segmentation>Development>Batch Classification On Cluster" )
 public class BatchClassificationOnSlurmCommand implements Command
@@ -76,12 +78,12 @@ public class BatchClassificationOnSlurmCommand implements Command
         List< Path > dataSetPatterns = getDataSetPatterns();
 
         ArrayList< JobFuture > jobFutures = submitJobsOnSlurm(
-                ImageJCommandsSubmitter.IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS,
+                IMAGEJ_EXECTUABLE_ALMF_CLUSTER_HEADLESS,
                 jobDirectory.toPath() ,
                 classifierFile.toPath(),
                 dataSetPatterns );
 
-        SlurmJobMonitor slurmJobMonitor = new SlurmJobMonitor( logger );
+        JobMonitor slurmJobMonitor = new JobMonitor( logger );
         slurmJobMonitor.monitorJobProgress( jobFutures, 60, 5 );
 
     }
@@ -165,7 +167,7 @@ public class BatchClassificationOnSlurmCommand implements Command
             String imageJ, Path jobDirectory, Path classifierPath, List< Path > dataSetPatterns )
     {
 
-        ImageJCommandsSubmitter commandsSubmitter = getImageJCommandsSubmitter(
+        JobSubmitter jobSubmitter = getJobSubmitter(
                 imageJ, jobDirectory );
 
         JobSettings jobSettings = getJobSettings();
@@ -174,9 +176,9 @@ public class BatchClassificationOnSlurmCommand implements Command
 
         for ( Path dataSetPattern : dataSetPatterns )
         {
-            commandsSubmitter.clearCommands();
-            setCommandAndParameterStrings( commandsSubmitter, dataSetPattern, classifierPath );
-            jobFutures.add( commandsSubmitter.submitCommands( jobSettings ) );
+            jobSubmitter.clearCommands();
+            setCommandAndParameterStrings( jobSubmitter, dataSetPattern, classifierPath );
+            jobFutures.add( jobSubmitter.submitJob( jobSettings ) );
         }
 
         return jobFutures;
@@ -192,10 +194,10 @@ public class BatchClassificationOnSlurmCommand implements Command
         return jobSettings;
     }
 
-    private ImageJCommandsSubmitter getImageJCommandsSubmitter( String imageJ, Path jobDirectory )
+    private JobSubmitter getJobSubmitter( String imageJ, Path jobDirectory )
     {
-        return new ImageJCommandsSubmitter(
-                    ImageJCommandsSubmitter.EXECUTION_SYSTEM_EMBL_SLURM,
+        return new JobSubmitter(
+                    new JobExecutor(),
                     PathMapper.asEMBLClusterMounted( jobDirectory.toString() ),
                     imageJ,
                     username,
@@ -203,10 +205,8 @@ public class BatchClassificationOnSlurmCommand implements Command
     }
 
 
-    private void setCommandAndParameterStrings(
-            ImageJCommandsSubmitter commandsSubmitter, Path inputImagePath, Path classifierPath )
+    private void setCommandAndParameterStrings( JobSubmitter jobSubmitter, Path inputImagePath, Path classifierPath )
     {
-
         Map< String, Object > parameters = new HashMap<>();
 
         //
@@ -235,7 +235,7 @@ public class BatchClassificationOnSlurmCommand implements Command
         parameters.put( "inputImageVSSPattern", "" );
         parameters.put( "inputImageVSSHdf5DataSetName", "" );
 
-        commandsSubmitter.addIJCommandWithParameters( ApplyClassifierAdvancedCommand.PLUGIN_NAME , parameters );
+        jobSubmitter.addIJCommandWithParameters( ApplyClassifierAdvancedCommand.PLUGIN_NAME , parameters );
 
         //
         // Object analysis
@@ -254,7 +254,7 @@ public class BatchClassificationOnSlurmCommand implements Command
         parameters.put( AnalyzeObjectsCommand.OUTPUT_MODALITY, IOUtils.SAVE );
         parameters.put( AnalyzeObjectsCommand.QUIT_AFTER_RUN, true );
 
-        commandsSubmitter.addIJCommandWithParameters( AnalyzeObjectsCommand.PLUGIN_NAME , parameters );
+        jobSubmitter.addIJCommandWithParameters( AnalyzeObjectsCommand.PLUGIN_NAME , parameters );
 
     }
 

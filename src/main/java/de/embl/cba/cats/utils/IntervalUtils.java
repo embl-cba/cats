@@ -1,7 +1,7 @@
 package de.embl.cba.cats.utils;
 
-import de.embl.cba.bigdataprocessor.utils.Point3D;
-import de.embl.cba.bigdataprocessor.utils.Region5D;
+import de.embl.cba.util.Point3D;
+import de.embl.cba.util.Region5D;
 import de.embl.cba.cats.CATS;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -11,7 +11,6 @@ import net.imglib2.Interval;
 import java.util.ArrayList;
 
 public abstract class IntervalUtils {
-
 
     public static String[] dimNames = new String[]{"x", "y", "c", "z", "t"};
     public static int X = 0;

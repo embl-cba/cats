@@ -1,4 +1,4 @@
-package command;
+package run;
 
 import de.embl.cba.cats.ui.ApplyClassifierAdvancedCommand;
 import net.imagej.ImageJ;

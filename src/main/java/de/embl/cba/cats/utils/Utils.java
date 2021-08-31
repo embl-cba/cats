@@ -20,6 +20,8 @@ package de.embl.cba.cats.utils;
  * Authors: Ignacio Arganda-Carreras (iarganda@mit.edu)
  */
 
+import de.embl.cba.bigdataprocessor.virtualstack2.VirtualStack2;
+import de.embl.cba.util.Region5D;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -29,6 +31,7 @@ import org.scijava.vecmath.Point3f;
 import util.FindConnectedRegions;
 import util.FindConnectedRegions.Results;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 import static de.embl.cba.cats.utils.IntervalUtils.*;
@@ -42,7 +45,7 @@ public final class Utils {
         throw new InstantiationException("This class is not created for instantiation");
     }
 
-    public static boolean vss2Exists()
+    public static boolean vs2Exists()
 	{
 		try {
 			Class.forName( "VirtualStack2" );
@@ -605,6 +608,142 @@ public final class Utils {
 
 		return trimmedDataSetName;
     }
+
+
+	public static void applyIntensityGate( ImagePlus imp, int[] gate )
+	{
+		if ( ( gate[ 0 ] == -1 ) && ( gate[ 1 ] == -1 ) )
+		{
+			return;
+		}
+
+		ImageStack stack = imp.getStack();
+		int nx = imp.getWidth();
+		int ny = imp.getHeight();
+		long nPixels = nx*ny;
+		int nz = imp.getNSlices();
+		int min = gate[0];
+		int max = gate[1];
+
+		if ( stack.getBitDepth() == 8 )
+		{
+			if ( max == -1 )
+			{
+				max = 255;
+			}
+
+			for (int z = 1; z <= nz; z++)
+			{
+				ImageProcessor ip = stack.getProcessor(z);
+
+				byte[] pixels = (byte[]) ip.getPixels();
+
+				for ( int i = 0; i < nPixels; i++ )
+				{
+					if ( pixels[ i ] > max || pixels[ i ] < min )
+					{
+						pixels[ i ] = 0;
+					}
+					else
+					{
+						pixels[ i ] -= min;
+					}
+				}
+			}
+		}
+
+
+		if ( stack.getBitDepth() == 16 )
+		{
+
+			if ( max == -1 )
+			{
+				max = 65535;
+			}
+
+			for (int z = 1; z <= nz; z++)
+			{
+				ImageProcessor ip = stack.getProcessor(z);
+
+				short[] pixels = (short[]) ip.getPixels();
+
+				for ( int i = 0; i < nPixels; i++ )
+				{
+					if ( pixels[i] > max ||  pixels[i] < min )
+					{
+						pixels[i] = 0;
+					}
+					else
+					{
+						pixels[i] -= min;
+					}
+				}
+			}
+		}
+	}
+
+	public static ImagePlus getDataCube( ImagePlus imp, Region5D region5D, int nThreads )
+	{
+		ImagePlus dataCube = null;
+
+		if( vs2Exists() && ( imp.getStack() instanceof VirtualStack2 ) )
+		{
+			VirtualStack2 vs2 = (VirtualStack2 ) imp.getStack();
+			dataCube = vs2.getDataCube( region5D, nThreads );
+		}
+		else
+		{
+			dataCube = getDataCube( imp, region5D );
+		}
+
+		//dataCube.show();
+
+		return( dataCube );
+	}
+
+	public static ImagePlus getDataCube( ImagePlus imp, Region5D region5D )
+	{
+		Rectangle rect = new Rectangle(
+				(int)region5D.offset.getX(),
+				(int)region5D.offset.getY(),
+				(int)region5D.size.getX(),
+				(int)region5D.size.getY());
+
+		ImageStack stack = imp.getStack();
+		ImageStack stack2 = null;
+
+		int firstT = region5D.t + 1;
+		int lastT = region5D.t + 1;
+		int firstC = region5D.c + 1;
+		int lastC = region5D.c + 1;
+		int firstZ = (int)region5D.offset.getZ() + 1;
+		int lastZ = (int)region5D.offset.getZ() + (int)region5D.size.getZ();
+
+		// TODO:
+		// copy code from VS2 to include an out-of-bounds strategy
+
+		for (int t=firstT; t<=lastT; t++) {
+			for (int z=firstZ; z<=lastZ; z++) {
+				for (int c=firstC; c<=lastC; c++) {
+					int n1 = imp.getStackIndex(c, z, t);
+					ImageProcessor ip = stack.getProcessor(n1);
+					String label = stack.getSliceLabel(n1);
+					ip.setRoi(rect);
+					ip = ip.crop();
+					if (stack2==null)
+						stack2 = new ImageStack(ip.getWidth(), ip.getHeight(), null);
+					stack2.addSlice(label, ip);
+				}
+			}
+		}
+		ImagePlus imp2 = imp.createImagePlus();
+		imp2.setStack("DUP_" + imp.getTitle(), stack2);
+		imp2.setDimensions(lastC - firstC + 1, lastZ - firstZ + 1, lastT - firstT + 1);
+		imp2.setOpenAsHyperStack(true);
+
+		return imp2;
+	}
+
 
 	public static ImagePlus create8bitImagePlus( long[] dimensions )
 	{

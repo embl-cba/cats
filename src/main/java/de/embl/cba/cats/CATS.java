@@ -30,6 +30,7 @@ import de.embl.cba.cats.utils.*;
 import de.embl.cba.classifiers.weka.FastRandomForest;
 import de.embl.cba.log.IJLazySwingLogger;
 import de.embl.cba.log.Logger;
+import de.embl.cba.util.Point3D;
 import fiji.util.gui.GenericDialogPlus;
 import ij.*;
 import ij.gui.GenericDialog;
@@ -46,7 +47,6 @@ import inra.ijpb.binary.BinaryImages;
 import inra.ijpb.measure.GeometricMeasures3D;
 import inra.ijpb.morphology.AttributeFiltering;
 import inra.ijpb.segment.Threshold;
-import javafx.geometry.Point3D;
 import net.imglib2.FinalInterval;
 import net.imglib2.util.Intervals;
 import weka.classifiers.AbstractClassifier;
@@ -1093,7 +1093,6 @@ public class CATS
         setResultImage( resultImage );
     }
 
-
     public ResultImage getResultImage()
 	{
 		return ( resultImage );
@@ -1115,16 +1114,11 @@ public class CATS
             }
 
             setResultImageDisk( directory  );
-
-
         }
         else if ( resultImageType.equals( RESULT_IMAGE_RAM ))
         {
-
-            setResultImageRAM();
-
+        	setResultImageRAM();
             logger.info("Allocated memory for result image." );
-
         }
 
     }
@@ -1277,26 +1271,32 @@ public class CATS
 
         gd.addStringField( "  ", inputImage.getTitle(), 50 );
 
-        gd.addMessage( "RESULT IMAGE LOCATION\n \n" +
-                "For large data sets it can be necessary to store the results " +
-                "on disk rather than in RAM.\n" +
-                "The speed of this plugin does hardly depend on this choice.\n" +
-                "If you choose 'Disk' a dialog window will appear to select the storage directory.\n" +
-                "You can point to a directory containing previous segmentation results and they will be loaded (not overwritten)." );
+        if ( Utils.vs2Exists() )
+		{
+			gd.addMessage( "RESULT IMAGE LOCATION\n \n" +
+					"For large data sets it can be necessary to store the results " +
+					"on disk rather than in RAM.\n" +
+					"The speed of this plugin does hardly depend on this choice.\n" +
+					"If you choose 'Disk' a dialog window will appear to select the storage directory.\n" +
+					"You can point to a directory containing previous segmentation results and they will be loaded (not overwritten)." );
 
-        gd.addChoice( "  " ,
-                new String[]{
-                        RESULT_IMAGE_DISK_SINGLE_TIFF,
-                        RESULT_IMAGE_RAM },
-						RESULT_IMAGE_DISK_SINGLE_TIFF );
-
+			gd.addChoice( "  ",
+					new String[]{
+							RESULT_IMAGE_DISK_SINGLE_TIFF,
+							RESULT_IMAGE_RAM },
+					RESULT_IMAGE_DISK_SINGLE_TIFF );
+		}
 
         gd.showDialog();
 
         if ( gd.wasCanceled() ) return false;
 
         inputImage.setTitle( gd.getNextString()  );
-        assignResultImage( gd.getNextChoice() );
+
+        if ( Utils.vs2Exists() )
+        	assignResultImage( gd.getNextChoice() );
+        else
+        	assignResultImage( RESULT_IMAGE_RAM );
 
         return true;
     }
@@ -1321,7 +1321,7 @@ public class CATS
 
         gd.addStringField("Batch size per tree in percent", classifierBatchSizePercent) ;
 
-        gd.addNumericField("Fraction of random features per node", classifierFractionFeaturesPerNode, 2);
+        gd.addNumericField("Fraction of features to choose from per node", classifierFractionFeaturesPerNode, 2);
 
         gd.addChoice("Feature selection method", new String[]
                         {
@@ -1905,7 +1905,6 @@ public class CATS
 	}
 
 	public ArrayList< String > labelsFeatureNames = null;
-
 
 	public ImagePlus computeTwoClassImage( ResultImage resultImage, int t )
 	{
@@ -2675,7 +2674,7 @@ public class CATS
 
 	private void configureInputImageLoading( Map< String, Object > parameters )
     {
-        if ( Utils.vss2Exists() && ( inputImage.getStack() instanceof VirtualStack2 ) )
+        if ( Utils.vs2Exists() && ( inputImage.getStack() instanceof VirtualStack2 ) )
 		{
 			parameters.put( IOUtils.INPUT_MODALITY, IOUtils.OPEN_USING_LAZY_LOADING_TOOLS );
 			VirtualStack2 vs2 = ( VirtualStack2 ) inputImage.getStack();

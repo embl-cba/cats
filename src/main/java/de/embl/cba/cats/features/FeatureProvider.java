@@ -21,9 +21,13 @@ package de.embl.cba.cats.features;
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
-import de.embl.cba.cats.features.settings.FeatureSettings;
-import de.embl.cba.log.Logger;
 import de.embl.cba.cats.CATS;
+import de.embl.cba.cats.features.settings.FeatureSettings;
+import de.embl.cba.cats.results.ResultImage;
+import de.embl.cba.cats.utils.IntervalUtils;
+import de.embl.cba.cats.utils.ThreadUtils;
+import de.embl.cba.cats.utils.Utils;
+import de.embl.cba.log.Logger;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -42,11 +46,11 @@ import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
-import de.embl.cba.cats.results.ResultImage;
-import de.embl.cba.cats.utils.IntervalUtils;
-import de.embl.cba.cats.utils.ThreadUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 
 /**
@@ -59,7 +63,6 @@ import java.util.concurrent.*;
  */
 public class FeatureProvider
 {
-
     private ImagePlus inputImage;
 
     private Map< String, ImagePlus > featureImages = new LinkedHashMap<>();
@@ -1221,7 +1224,7 @@ public class FeatureProvider
         }
         else
         {
-            impWithinBounds = de.embl.cba.bigdataprocessor.utils.Utils.getDataCube( inputImage, IntervalUtils.convertIntervalToRegion5D( intersect5D ), 1 );
+            impWithinBounds = Utils.getDataCube( inputImage, IntervalUtils.convertIntervalToRegion5D( intersect5D ), 1 );
         }
 
         // - copy impWithinBounds into a larger imp
@@ -1287,8 +1290,7 @@ public class FeatureProvider
         }
         else
         {
-            return de.embl.cba.bigdataprocessor.utils.Utils.getDataCube(
-            		inputImage, IntervalUtils.convertIntervalToRegion5D( interval ), 1 );
+            return Utils.getDataCube( inputImage, IntervalUtils.convertIntervalToRegion5D( interval ), 1 );
         }
     }
 

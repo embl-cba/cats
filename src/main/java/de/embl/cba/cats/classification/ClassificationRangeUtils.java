@@ -11,6 +11,7 @@ import net.imglib2.FinalInterval;
 import java.awt.*;
 
 import static de.embl.cba.cats.utils.IntervalUtils.*;
+import static de.embl.cba.cats.utils.StringUtils.delimitedStringToIntegerArray;
 
 public class ClassificationRangeUtils
 {
@@ -76,7 +77,7 @@ public class ClassificationRangeUtils
     {
         try
         {
-            int[] range = de.embl.cba.bigdataprocessor.utils.Utils.delimitedStringToIntegerArray( rangeString, "," );
+            int[] range = delimitedStringToIntegerArray( rangeString, "," );
 
             if ( inputImage.getNFrames() == 1 )
             {

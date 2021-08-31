@@ -4,11 +4,11 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>27.0.1</version>
+		<version>30.0.0</version>
 	</parent>
 	<groupId>de.embl.cba</groupId>
 	<artifactId>cats</artifactId>
-	<version>0.7.3</version>
+	<version>0.8.0</version>
 	<name>Fiji plugin for context aware trainable segmentation</name>
 	<description>A plugin for context aware trainable segmentation of big image data.</description>
 	<url>https://github.com/embl-cba/</url>
@@ -67,9 +67,15 @@
 		<package-name>de.embl.cba.cats</package-name>
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>EMBL</license.copyrightOwners>
-		<imagej.app.directory>/Applications/Fiji.app/</imagej.app.directory>
+		<scijava.app.directory>/Users/tischer/Desktop/Fiji/Fiji-CATS.app</scijava.app.directory>
 		<license.projectName>Fiji distribution of ImageJ for the life sciences.</license.projectName>
+
 		<imagescience.version>3.0.0</imagescience.version>
+		<imaris-writer.version>0.2.3</imaris-writer.version>
+		<imagej-utils.version>0.6.3</imagej-utils.version>
+		<imagej-cluster.version>0.6.8</imagej-cluster.version>
+		<bigdataprocessor1_.version>0.7.5</bigdataprocessor1_.version>
+
 		<enforcer.skip>true</enforcer.skip>
 	</properties>
 	<distributionManagement>
@@ -101,22 +107,6 @@
 	<dependencies>
 		<!-- ImageJ dependencies -->
 		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-legacy</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-common</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>ij</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>LocalThickness_</artifactId>
 		</dependency>
@@ -129,28 +119,23 @@
 		<dependency>
 			<groupId>de.embl.cba</groupId>
 			<artifactId>bigDataProcessor1_</artifactId>
-			<version>0.7.3</version>
+			<version>${bigdataprocessor1_.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>de.embl.cba</groupId>
 			<artifactId>imagej-utils</artifactId>
-			<version>0.5.1</version>
+			<version>${imagej-utils.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>de.embl.cba</groupId>
-			<artifactId>fiji-slurm</artifactId>
-			<version>0.6.2</version>
+			<artifactId>imagej-cluster</artifactId>
+			<version>${imagej-cluster.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>de.embl.cba</groupId>
 			<artifactId>imaris-writer</artifactId>
-			<version>0.2.1</version>
+			<version>${imaris-writer.version}</version>
 		</dependency>
-<!--		<dependency>-->
-<!--			<groupId>de.embl.cba</groupId>-->
-<!--			<artifactId>classifiers</artifactId>-->
-<!--		</dependency>-->
-		<!-- Fiji dependencies -->
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>Anisotropic_Diffusion_2D</artifactId>

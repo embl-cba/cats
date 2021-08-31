@@ -23,14 +23,14 @@ public class ResultImageDisk implements ResultImage {
     long[] dimensions;
     File directory;
 
-    public ResultImageDisk( CATS CATS, String directory, long[] dimensions)
+    public ResultImageDisk( CATS cats, String directory, long[] dimensions)
     {
         this.directory = new File( directory );
-        this.CATS = CATS;
-        this.logger = CATS.getLogger();
+        this.CATS = cats;
+        this.logger = cats.getLogger();
         this.result = createStream( directory, dimensions );
         this.dimensions = dimensions;
-        this.result.setCalibration( CATS.getInputImage().getCalibration() );
+        this.result.setCalibration( cats.getInputImage().getCalibration() );
     }
 
     public long[] getDimensions()
