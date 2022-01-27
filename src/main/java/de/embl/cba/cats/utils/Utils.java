@@ -48,7 +48,7 @@ public final class Utils {
     public static boolean vs2Exists()
 	{
 		try {
-			Class.forName( "VirtualStack2" );
+			Class.forName( "de.embl.cba.bigdataprocessor.virtualstack2.VirtualStack2" );
 			return true;
 		} catch( ClassNotFoundException e ) {
 			return false;

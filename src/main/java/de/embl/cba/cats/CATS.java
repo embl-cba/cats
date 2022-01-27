@@ -71,7 +71,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static de.embl.cba.cats.utils.IntervalUtils.*;
 
-
 public class CATS
 {
 	public static final int MAX_NUM_CLASSES = 20;
@@ -1262,7 +1261,6 @@ public class CATS
 
     public boolean initialisationDialog(  )
     {
-
         GenericDialog gd = new NonBlockingGenericDialog("Set up");
 
         gd.addMessage( "DATA SET NAME\n \n" +

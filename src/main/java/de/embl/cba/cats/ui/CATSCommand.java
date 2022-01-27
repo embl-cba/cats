@@ -183,6 +183,12 @@ public class CATSCommand implements Command, Interactive
 
     public void init()
     {
+    	if ( inputImage == null )
+		{
+			IJ.showMessage( "Please open an image first." );
+			return;
+		}
+
         IJ.setTool( "freeline" );
 
         cats = new CATS( );
@@ -239,8 +245,7 @@ public class CATSCommand implements Command, Interactive
 					if ( settingsChanged ) saveLabelInstances();
 					break;
 				case CHANGE_ADVANCED_FEATURE_SETTINGS:
-					settingsChanged =
-							cats.featureSettingsDialog( true );
+					settingsChanged = cats.featureSettingsDialog( true );
 					if ( settingsChanged ) saveLabelInstances();
 					break;
 				case IO_LOAD_CLASSIFIER:

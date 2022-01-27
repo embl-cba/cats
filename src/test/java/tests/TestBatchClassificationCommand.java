@@ -18,10 +18,10 @@ public class TestBatchClassificationCommand
 	{
 		final BatchClassificationCommand command = new BatchClassificationCommand();
 
-		command.classifierFile = new File("/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/test-data/blobs/classifier/blobs_00.classifier");
+		command.classifierFile = new File("/Users/tischer/Documents/cats/src/test/resources/test-data/blobs/classifier/blobs_00.classifier");
 		command.filenameRegExp = ".*";
-		command.inputDirectory = new File("/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/test-data/blobs/input");
-		command.outputDirectory = new File("/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/test-data/blobs/output");
+		command.inputDirectory = new File("/Users/tischer/Documents/cats/src/test/resources/test-data/blobs/input");
+		command.outputDirectory = new File("/Users/tischer/Documents/cats/src/test/resources/test-data/blobs/output");
 
 		command.exportType = ResultExportSettings.SAVE_AS_CLASS_PROBABILITY_TIFF_STACKS;
 
@@ -41,16 +41,15 @@ public class TestBatchClassificationCommand
 		assertTrue( testOutputFile.exists() );
 	}
 
-
 	@Test
 	public void testLabelMaskExport( )
 	{
 		final BatchClassificationCommand command = new BatchClassificationCommand();
 
-		command.classifierFile = new File("/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/test-data/blobs/classifier/blobs_00.classifier");
+		command.classifierFile = new File("/Users/tischer/Documents/cats/src/test/resources/test-data/blobs/classifier/blobs_00.classifier");
 		command.filenameRegExp = ".*";
-		command.inputDirectory = new File("/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/test-data/blobs/input");
-		command.outputDirectory = new File("/Users/tischer/Documents/fiji-plugin-cats/src/test/resources/test-data/blobs/output");
+		command.inputDirectory = new File("/Users/tischer/Documents/cats/src/test/resources/test-data/blobs/input");
+		command.outputDirectory = new File("/Users/tischer/Documents/cats/src/test/resources/test-data/blobs/output");
 
 		command.exportType = ResultExportSettings.SAVE_AS_CLASS_LABEL_MASK_TIFF_STACKS;
 

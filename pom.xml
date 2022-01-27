@@ -4,11 +4,14 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>30.0.0</version>
+		<version>31.1.0</version>
 	</parent>
+
+	<!-- mvn clean install -Dscijava.app.directory=/Users/tischer/Desktop/Fiji/Fiji-CATS.app -->
+
 	<groupId>de.embl.cba</groupId>
 	<artifactId>cats</artifactId>
-	<version>0.8.0</version>
+	<version>0.8.1</version>
 	<name>Fiji plugin for context aware trainable segmentation</name>
 	<description>A plugin for context aware trainable segmentation of big image data.</description>
 	<url>https://github.com/embl-cba/</url>
@@ -67,16 +70,14 @@
 		<package-name>de.embl.cba.cats</package-name>
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>EMBL</license.copyrightOwners>
-		<scijava.app.directory>/Users/tischer/Desktop/Fiji/Fiji-CATS.app</scijava.app.directory>
 		<license.projectName>Fiji distribution of ImageJ for the life sciences.</license.projectName>
-
+		<enforcer.skip>true</enforcer.skip>
 		<imagescience.version>3.0.0</imagescience.version>
 		<imaris-writer.version>0.2.3</imaris-writer.version>
-		<imagej-utils.version>0.6.3</imagej-utils.version>
-		<imagej-cluster.version>0.6.8</imagej-cluster.version>
+		<imagej-utils.version>0.6.4</imagej-utils.version>
+		<imagej-cluster.version>1.0.0</imagej-cluster.version>
 		<bigdataprocessor1_.version>0.7.5</bigdataprocessor1_.version>
-
-		<enforcer.skip>true</enforcer.skip>
+		<mcib3d-plugins.version>3.96</mcib3d-plugins.version>
 	</properties>
 	<distributionManagement>
 		<repository>
@@ -105,7 +106,6 @@
 		</repository>
 	</repositories>
 	<dependencies>
-		<!-- ImageJ dependencies -->
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>LocalThickness_</artifactId>
@@ -113,9 +113,7 @@
 		<dependency>
 			<groupId>fr.inra.ijpb</groupId>
 			<artifactId>MorphoLibJ_</artifactId>
-			<version>1.3.3</version>
 		</dependency>
-		<!-- CBA -->
 		<dependency>
 			<groupId>de.embl.cba</groupId>
 			<artifactId>bigDataProcessor1_</artifactId>
@@ -152,7 +150,6 @@
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-vistools</artifactId>
 		</dependency>
-		<!-- ImgLib2 dependencies -->
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
@@ -169,7 +166,6 @@
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-algorithm</artifactId>
 		</dependency>
-		<!-- Java3D dependencies -->
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>vecmath</artifactId>
@@ -178,7 +174,6 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math3</artifactId>
 		</dependency>
-		<!-- Imagescience -->
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>imagescience</artifactId>
@@ -190,11 +185,9 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.jcraft/jsch -->
 		<dependency>
 			<groupId>com.jcraft</groupId>
 			<artifactId>jsch</artifactId>
-			<version>0.1.54</version>
 		</dependency>
 		<dependency>
 			<groupId>cisd</groupId>
@@ -203,10 +196,9 @@
 		<dependency>
 			<groupId>com.github.mcib3d</groupId>
 			<artifactId>mcib3d-plugins</artifactId>
-			<version>3.96</version>
+			<version>${mcib3d-plugins.version}</version>
 			<exclusions>
 				<exclusion>
-					<!-- declare the exclusion here -->
 					<groupId>weka</groupId>
 					<artifactId>weka</artifactId>
 				</exclusion>

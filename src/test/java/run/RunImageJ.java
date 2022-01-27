@@ -1,5 +1,6 @@
 package run;
 
+import ij.IJ;
 import net.imagej.ImageJ;
 
 public class RunImageJ
@@ -8,5 +9,7 @@ public class RunImageJ
     {
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
+
+        IJ.openImage("https://imagej.net/images/boats.gif").show();
     }
 }
