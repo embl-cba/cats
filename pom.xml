@@ -77,7 +77,6 @@
 		<imagej-utils.version>0.6.4</imagej-utils.version>
 		<imagej-cluster.version>1.0.0</imagej-cluster.version>
 		<bigdataprocessor1_.version>0.7.5</bigdataprocessor1_.version>
-		<mcib3d-plugins.version>3.96</mcib3d-plugins.version>
 	</properties>
 	<distributionManagement>
 		<repository>
@@ -179,12 +178,6 @@
 			<artifactId>imagescience</artifactId>
 			<version>${imagescience.version}</version>
 		</dependency>
-		<!-- Test scope dependencies -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
 		<dependency>
 			<groupId>com.jcraft</groupId>
 			<artifactId>jsch</artifactId>
@@ -193,16 +186,11 @@
 			<groupId>cisd</groupId>
 			<artifactId>jhdf5</artifactId>
 		</dependency>
+
 		<dependency>
-			<groupId>com.github.mcib3d</groupId>
-			<artifactId>mcib3d-plugins</artifactId>
-			<version>${mcib3d-plugins.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>weka</groupId>
-					<artifactId>weka</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>
