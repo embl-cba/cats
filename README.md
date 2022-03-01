@@ -1,13 +1,14 @@
-
-# CATS - Context Aware Trainable Segmentation
-
-<img src="https://user-images.githubusercontent.com/2157566/88903722-69a92500-d254-11ea-9efa-b572a094d776.png" alt="Example" width="400">
+<img src="./documentation/cats-title.png" width="600">
 
 ## Example movies
 
 - Electron microscopy volume segmentation of an [interphase HeLa cell](https://youtu.be/zcXgvvL-n_I)
 - Electron microscopy volume segmentation of a [Platynereis Larvae](https://youtu.be/rtYLA7XL7YQ)
 - Electron microscopy volume segmentation of a [mitotic HeLa cell](https://youtu.be/ItdUWGkRdrI)
+
+## Example images
+
+<img src="./documentation/cats-em-seg.png" width="300">
 
 ## Overview
 
