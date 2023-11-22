@@ -17,6 +17,8 @@ The code is partly based on Fiji's [Trainable Weka Segmentation](https://github.
 
 Similar to Fiji's TWS and the stand-alone software [ilastik](https://www.ilastik.org/), CATS learns an image segmentation from user drawn annotations by computing image features and feeding them into a [Random Forest](https://en.wikipedia.org/wiki/Random_forest) classifier. Again similar to TWS and ilastik, the image features of CATS are based on the Eigenvalues of the [Hessian matrix](https://en.wikipedia.org/wiki/Hessian_matrix) and the [Structure Tensor](https://en.wikipedia.org/wiki/Structure_tensor), which provide rotationally invariant information about edges and ridges in an image's gray-value distribution. 
 
+### Deep features
+
 In order to improve context learning, CATS however also computes "Deep Eigenvalue Features", such as, e.g.:
 
 ```
