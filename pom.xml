@@ -77,6 +77,11 @@
 		<imagej-utils.version>0.6.4</imagej-utils.version>
 		<imagej-cluster.version>1.0.0</imagej-cluster.version>
 		<bigdataprocessor1_.version>0.7.5</bigdataprocessor1_.version>
+		<!-- Temporary: remove once janelia-jhdf5 is released. -->
+		<janelia-jhdf5.version>26.10.0-SNAPSHOT</janelia-jhdf5.version>
+		<!-- pom-scijava manages older bytedeco versions; match what janelia-jhdf5 is built against. -->
+		<javacpp.version>1.5.15-SNAPSHOT</javacpp.version>
+		<hdf5.version>2.2.0-${javacpp.version}</hdf5.version>
 	</properties>
 	<distributionManagement>
 		<repository>
@@ -86,6 +91,14 @@
 		</repository>
 	</distributionManagement>
 	<repositories>
+		<!-- Temporary: remove once janelia-jhdf5 is released.
+		     org.bytedeco snapshots (javacpp, hdf5) needed by janelia-jhdf5 until they are released. -->
+		<repository>
+			<id>central-portal-snapshots</id>
+			<url>https://central.sonatype.com/repository/maven-snapshots/</url>
+			<releases><enabled>false</enabled></releases>
+			<snapshots><enabled>true</enabled></snapshots>
+		</repository>
 		<repository>
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
@@ -117,6 +130,14 @@
 			<groupId>de.embl.cba</groupId>
 			<artifactId>bigDataProcessor1_</artifactId>
 			<version>${bigdataprocessor1_.version}</version>
+			<!-- Temporary: remove once this artifact is released with janelia-jhdf5 instead of cisd:jhdf5.
+			     cisd:jhdf5 would shadow janelia-jhdf5 (same packages) on the class path. -->
+			<exclusions>
+				<exclusion>
+					<groupId>cisd</groupId>
+					<artifactId>jhdf5</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>de.embl.cba</groupId>
@@ -132,6 +153,14 @@
 			<groupId>de.embl.cba</groupId>
 			<artifactId>imaris-writer</artifactId>
 			<version>${imaris-writer.version}</version>
+			<!-- Temporary: remove once this artifact is released with janelia-jhdf5 instead of cisd:jhdf5.
+			     cisd:jhdf5 would shadow janelia-jhdf5 (same packages) on the class path. -->
+			<exclusions>
+				<exclusion>
+					<groupId>cisd</groupId>
+					<artifactId>jhdf5</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
@@ -183,8 +212,10 @@
 			<artifactId>jsch</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>cisd</groupId>
-			<artifactId>jhdf5</artifactId>
+			<groupId>org.janelia</groupId>
+			<artifactId>janelia-jhdf5</artifactId>
+			<!-- Temporary: remove the version once janelia-jhdf5 is released and managed by pom-scijava. -->
+			<version>${janelia-jhdf5.version}</version>
 		</dependency>
 
 		<dependency>
